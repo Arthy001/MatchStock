@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "matchstock-dev",
+    "staging": "matchstock-staging",
+    "production": "matchstock-prod"
+  }
+}

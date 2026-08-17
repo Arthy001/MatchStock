@@ -1,0 +1,518 @@
+// ========================================================
+// PRISMA SCHEMA: MATCHSTOCK (MULTI-TENANT WMS & ERP)
+// PostgreSQL (Supabase Dev -> Google Cloud SQL Prod)
+// ========================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ========================================================
+// 1. SUBSCRIPTION & TENANT MANAGEMENT
+// ========================================================
+
+model Tenant {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyName   String   @map("company_name") @db.VarChar(255)
+  taxId         String?  @map("tax_id") @db.VarChar(50)
+  contactEmail  String   @map("contact_email") @db.VarChar(255)
+  contactPhone  String?  @map("contact_phone") @db.VarChar(50)
+  status        String   @default("active") @db.VarChar(50) // 'active', 'suspended', 'cancelled'
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  // Relations
+  subscriptions        Subscription[]
+  subscriptionInvoices SubscriptionInvoice[]
+  users                User[]
+  units                Unit[]
+  categories           Category[]
+  brands               Brand[]
+  manufacturers        Manufacturer[]
+  taxTypes             TaxType[]
+  warehouses           Warehouse[]
+  binLocations         BinLocation[]
+  suppliers            Supplier[]
+  products             Product[]
+  productImages        ProductImage[]
+  productLots          ProductLot[]
+  inventoryBalances    InventoryBalance[]
+  stockTransactions    StockTransaction[]
+  stockTransactionItems StockTransactionItem[]
+  stockCounts          StockCount[]
+  stockCountItems      StockCountItem[]
+
+  @@map("tenants")
+}
+
+model SubscriptionPlan {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code           String   @unique @db.VarChar(50) // 'BASIC_MONTHLY', 'PRO_YEARLY', 'ENTERPRISE'
+  name           String   @db.VarChar(100)
+  description    String?  @db.Text
+  price          Decimal  @default(0.00) @db.Decimal(10, 2)
+  billingCycle   String   @map("billing_cycle") @db.VarChar(20) // 'MONTHLY', 'YEARLY', 'LIFETIME'
+
+  // Quotas
+  maxWarehouses  Int      @default(1) @map("max_warehouses")
+  maxUsers       Int      @default(3) @map("max_users")
+  maxProducts    Int      @default(1000) @map("max_products")
+
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  subscriptions  Subscription[]
+
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id                   String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId             String            @map("tenant_id") @db.Uuid
+  planId               String            @map("plan_id") @db.Uuid
+  status               String            @default("trialing") @db.VarChar(50) // 'trialing', 'active', 'past_due', 'canceled', 'expired'
+  trialEndsAt          DateTime?         @map("trial_ends_at") @db.Timestamptz()
+  currentPeriodStartsAt DateTime         @map("current_period_starts_at") @db.Timestamptz()
+  currentPeriodEndsAt   DateTime         @map("current_period_ends_at") @db.Timestamptz()
+  canceledAt           DateTime?         @map("canceled_at") @db.Timestamptz()
+  createdAt            DateTime          @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt            DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  tenant               Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  plan                 SubscriptionPlan  @relation(fields: [planId], references: [id])
+  invoices             SubscriptionInvoice[]
+
+  @@index([tenantId, status], name: "idx_subscriptions_tenant")
+  @@index([status, currentPeriodEndsAt], name: "idx_subscriptions_expiry")
+  @@map("subscriptions")
+}
+
+model SubscriptionInvoice {
+  id                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId          String       @map("tenant_id") @db.Uuid
+  subscriptionId    String       @map("subscription_id") @db.Uuid
+  invoiceNumber     String       @map("invoice_number") @db.VarChar(100)
+  amount            Decimal      @db.Decimal(10, 2)
+  status            String       @default("PENDING") @db.VarChar(50) // 'PENDING', 'PAID', 'FAILED', 'REFUNDED'
+  paymentMethod     String?      @map("payment_method") @db.VarChar(50)
+  paymentGatewayRef String?      @map("payment_gateway_ref") @db.VarChar(255)
+  paidAt            DateTime?    @map("paid_at") @db.Timestamptz()
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant            Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  subscription      Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, invoiceNumber])
+  @@index([tenantId, status], name: "idx_invoices_tenant")
+  @@map("subscription_invoices")
+}
+
+// ========================================================
+// 2. USER MANAGEMENT
+// ========================================================
+
+model User {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String    @map("tenant_id") @db.Uuid
+  email        String    @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  fullName     String    @map("full_name") @db.VarChar(255)
+  role         String    @default("staff") @db.VarChar(50) // 'admin', 'manager', 'warehouse_staff', 'purchasing_staff'
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdTransactions StockTransaction[] @relation("CreatedByUser")
+  createdStockCounts  StockCount[]       @relation("CountCreatedByUser")
+  approvedStockCounts StockCount[]       @relation("CountApprovedByUser")
+  countedItems        StockCountItem[]   @relation("CountedByUser")
+
+  @@unique([tenantId, email])
+  @@index([tenantId], name: "idx_users_tenant")
+  @@map("users")
+}
+
+// ========================================================
+// 3. MASTER DATA
+// ========================================================
+
+model BarcodeSymbology {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String    @unique @db.VarChar(50) // 'CODE128', 'EAN13', 'QR_CODE'
+  name        String    @db.VarChar(100)
+  description String?   @db.Text
+
+  products    Product[]
+
+  @@map("barcode_symbologies")
+}
+
+model DiscountType {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String    @unique @db.VarChar(50) // 'PERCENTAGE', 'FIXED_AMOUNT'
+  name        String    @db.VarChar(100)
+  description String?   @db.Text
+
+  transactionItems StockTransactionItem[]
+
+  @@map("discount_types")
+}
+
+model Unit {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  code      String    @db.VarChar(50)
+  name      String    @db.VarChar(100)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products  Product[]
+
+  @@unique([tenantId, code])
+  @@map("units")
+}
+
+model Category {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  code      String    @db.VarChar(50)
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products  Product[]
+
+  @@unique([tenantId, code])
+  @@map("categories")
+}
+
+model Brand {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  code        String    @db.VarChar(50)
+  name        String    @db.VarChar(100)
+  description String?   @db.Text
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products    Product[]
+
+  @@unique([tenantId, code])
+  @@map("brands")
+}
+
+model Manufacturer {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  code          String    @db.VarChar(50)
+  name          String    @db.VarChar(255)
+  contactPerson String?   @map("contact_person") @db.VarChar(100)
+  phone         String?   @db.VarChar(50)
+  email         String?   @db.VarChar(100)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products      Product[]
+
+  @@unique([tenantId, code])
+  @@map("manufacturers")
+}
+
+model TaxType {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  code        String    @db.VarChar(50)
+  name        String    @db.VarChar(100)
+  rate        Decimal   @default(0.00) @db.Decimal(5, 2)
+  isInclusive Boolean   @default(false) @map("is_inclusive")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products    Product[]
+
+  @@unique([tenantId, code])
+  @@map("tax_types")
+}
+
+model Warehouse {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  code      String    @db.VarChar(50)
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  binLocations BinLocation[]
+  inventoryBalances InventoryBalance[]
+  fromTransactions StockTransactionItem[] @relation("FromWarehouse")
+  toTransactions   StockTransactionItem[] @relation("ToWarehouse")
+  stockCounts      StockCount[]
+
+  @@unique([tenantId, code])
+  @@map("warehouses")
+}
+
+model BinLocation {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  warehouseId String    @map("warehouse_id") @db.Uuid
+  code        String    @db.VarChar(50)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  inventoryBalances InventoryBalance[]
+  fromBinTransactions StockTransactionItem[] @relation("FromBinLocation")
+  toBinTransactions   StockTransactionItem[] @relation("ToBinLocation")
+  stockCountItems     StockCountItem[]
+
+  @@unique([warehouseId, code])
+  @@index([warehouseId], name: "idx_bins_warehouse")
+  @@map("bin_locations")
+}
+
+model Supplier {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  code          String    @db.VarChar(50)
+  name          String    @db.VarChar(255)
+  contactPerson String?   @map("contact_person") @db.VarChar(100)
+  phone         String?   @db.VarChar(50)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  stockTransactions StockTransaction[]
+
+  @@unique([tenantId, code])
+  @@map("suppliers")
+}
+
+// ========================================================
+// 4. PRODUCTS & INVENTORY
+// ========================================================
+
+model Product {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId            String    @map("tenant_id") @db.Uuid
+  baseUnitId          String    @map("base_unit_id") @db.Uuid
+  categoryId          String?   @map("category_id") @db.Uuid
+  brandId             String?   @map("brand_id") @db.Uuid
+  manufacturerId      String?   @map("manufacturer_id") @db.Uuid
+  barcodeSymbologyId  String?   @map("barcode_symbology_id") @db.Uuid
+  taxTypeId           String?   @map("tax_type_id") @db.Uuid
+
+  code                String    @db.VarChar(100)
+  sku                 String    @db.VarChar(100)
+  barcode             String?   @db.VarChar(100)
+  slug                String?   @db.VarChar(255)
+  name                String    @db.VarChar(255)
+  description         String?   @db.Text
+  warrantyPeriodDays  Int?      @default(0) @map("warranty_period_days")
+  price               Decimal   @default(0.00) @db.Decimal(12, 2)
+
+  weightKg            Decimal?  @default(0.000) @map("weight_kg") @db.Decimal(8, 3)
+  widthCm             Decimal?  @default(0.00) @map("width_cm") @db.Decimal(8, 2)
+  lengthCm            Decimal?  @default(0.00) @map("length_cm") @db.Decimal(8, 2)
+  heightCm            Decimal?  @default(0.00) @map("height_cm") @db.Decimal(8, 2)
+
+  reorderPoint        Decimal?  @default(0.0000) @map("reorder_point") @db.Decimal(12, 4)
+  minReorderQty       Decimal?  @default(0.0000) @map("min_reorder_qty") @db.Decimal(12, 4)
+  isLotControl        Boolean   @default(false) @map("is_lot_control")
+
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  baseUnit            Unit      @relation(fields: [baseUnitId], references: [id], onDelete: Restrict)
+  category            Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  brand               Brand?    @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  manufacturer        Manufacturer? @relation(fields: [manufacturerId], references: [id], onDelete: SetNull)
+  barcodeSymbology    BarcodeSymbology? @relation(fields: [barcodeSymbologyId], references: [id], onDelete: SetNull)
+  taxType             TaxType?  @relation(fields: [taxTypeId], references: [id], onDelete: SetNull)
+
+  images              ProductImage[]
+  lots                ProductLot[]
+  inventoryBalances   InventoryBalance[]
+  transactionItems    StockTransactionItem[]
+  stockCountItems     StockCountItem[]
+
+  @@unique([tenantId, code])
+  @@unique([tenantId, sku])
+  @@unique([tenantId, slug])
+  @@index([tenantId, code], name: "idx_products_tenant_code")
+  @@index([tenantId, sku], name: "idx_products_tenant_sku")
+  @@index([tenantId, barcode], name: "idx_products_barcode")
+  @@index([tenantId, reorderPoint], name: "idx_products_reorder")
+  @@index([tenantId, brandId], name: "idx_products_brand")
+  @@map("products")
+}
+
+model ProductImage {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  productId    String   @map("product_id") @db.Uuid
+  imageUrl     String   @map("image_url") @db.Text
+  isCover      Boolean  @default(false) @map("is_cover")
+  displayOrder Int?     @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, productId], name: "idx_product_images_product")
+  @@map("product_images")
+}
+
+model ProductLot {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String    @map("tenant_id") @db.Uuid
+  productId        String    @map("product_id") @db.Uuid
+  lotNumber        String    @map("lot_number") @db.VarChar(100)
+  manufacturedDate DateTime? @map("manufactured_date") @db.Date
+  expirationDate   DateTime? @map("expiration_date") @db.Date
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product          Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  inventoryBalances InventoryBalance[]
+  transactionItems  StockTransactionItem[]
+  stockCountItems   StockCountItem[]
+
+  @@unique([tenantId, productId, lotNumber])
+  @@index([tenantId, productId, expirationDate], name: "idx_lots_product")
+  @@map("product_lots")
+}
+
+model InventoryBalance {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String       @map("tenant_id") @db.Uuid
+  productId        String       @map("product_id") @db.Uuid
+  warehouseId      String       @map("warehouse_id") @db.Uuid
+  binLocationId    String?      @map("bin_location_id") @db.Uuid
+  lotId            String?      @map("lot_id") @db.Uuid
+  quantityOnHand   Decimal      @default(0.0000) @map("quantity_on_hand") @db.Decimal(12, 4)
+  quantityReserved Decimal      @default(0.0000) @map("quantity_reserved") @db.Decimal(12, 4)
+  updatedAt        DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  tenant           Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product          Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse        Warehouse    @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  binLocation      BinLocation? @relation(fields: [binLocationId], references: [id], onDelete: SetNull)
+  lot              ProductLot?  @relation(fields: [lotId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, productId, warehouseId, binLocationId, lotId], name: "unique_inventory_balance")
+  @@index([tenantId, productId, warehouseId, binLocationId, lotId], name: "idx_balances_lookup")
+  @@map("inventory_balances")
+}
+
+// ========================================================
+// 5. TRANSACTIONS & CYCLE COUNTS
+// ========================================================
+
+model StockTransaction {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  supplierId      String?  @map("supplier_id") @db.Uuid
+  transactionType String   @map("transaction_type") @db.VarChar(50) // 'RECEIVE', 'ISSUE', 'TRANSFER', 'ADJUSTMENT'
+  documentNo      String   @map("document_no") @db.VarChar(100)
+  status          String   @default("COMPLETED") @db.VarChar(50)
+  createdBy       String?  @map("created_by") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  supplier        Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  creator         User?    @relation("CreatedByUser", fields: [createdBy], references: [id], onDelete: SetNull)
+  items           StockTransactionItem[]
+
+  @@unique([tenantId, documentNo])
+  @@index([tenantId, transactionType], name: "idx_transactions_tenant")
+  @@map("stock_transactions")
+}
+
+model StockTransactionItem {
+  id                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId          String       @map("tenant_id") @db.Uuid
+  transactionId     String       @map("transaction_id") @db.Uuid
+  productId         String       @map("product_id") @db.Uuid
+  lotId             String?      @map("lot_id") @db.Uuid
+  fromWarehouseId   String?      @map("from_warehouse_id") @db.Uuid
+  fromBinLocationId String?      @map("from_bin_location_id") @db.Uuid
+  toWarehouseId     String?      @map("to_warehouse_id") @db.Uuid
+  toBinLocationId   String?      @map("to_bin_location_id") @db.Uuid
+
+  quantity          Decimal      @db.Decimal(12, 4)
+  unitPrice         Decimal?     @default(0.00) @map("unit_price") @db.Decimal(12, 2)
+  discountTypeId    String?      @map("discount_type_id") @db.Uuid
+  discountValue     Decimal?     @default(0.00) @map("discount_value") @db.Decimal(12, 2)
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant            Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  transaction       StockTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  product           Product      @relation(fields: [productId], references: [id])
+  lot               ProductLot?  @relation(fields: [lotId], references: [id], onDelete: SetNull)
+  fromWarehouse     Warehouse?   @relation("FromWarehouse", fields: [fromWarehouseId], references: [id], onDelete: SetNull)
+  fromBinLocation   BinLocation? @relation("FromBinLocation", fields: [fromBinLocationId], references: [id], onDelete: SetNull)
+  toWarehouse       Warehouse?   @relation("ToWarehouse", fields: [toWarehouseId], references: [id], onDelete: SetNull)
+  toBinLocation     BinLocation? @relation("ToBinLocation", fields: [toBinLocationId], references: [id], onDelete: SetNull)
+  discountType      DiscountType? @relation(fields: [discountTypeId], references: [id], onDelete: SetNull)
+
+  @@index([transactionId], name: "idx_tx_items_transaction")
+  @@map("stock_transaction_items")
+}
+
+model StockCount {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  countNo     String    @map("count_no") @db.VarChar(100) // e.g. 'SC-202608-001'
+  countType   String    @default("CYCLE_COUNT") @map("count_type") @db.VarChar(50)
+  warehouseId String    @map("warehouse_id") @db.Uuid
+  status      String    @default("DRAFT") @db.VarChar(50) // 'DRAFT', 'IN_PROGRESS', 'COMPLETED', 'APPROVED'
+  notes       String?   @db.Text
+  createdBy   String?   @map("created_by") @db.Uuid
+  approvedBy  String?   @map("approved_by") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+  creator     User?     @relation("CountCreatedByUser", fields: [createdBy], references: [id], onDelete: SetNull)
+  approver    User?     @relation("CountApprovedByUser", fields: [approvedBy], references: [id], onDelete: SetNull)
+  items       StockCountItem[]
+
+  @@unique([tenantId, countNo])
+  @@map("stock_counts")
+}
+
+model StockCountItem {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String       @map("tenant_id") @db.Uuid
+  stockCountId     String       @map("stock_count_id") @db.Uuid
+  productId        String       @map("product_id") @db.Uuid
+  binLocationId    String?      @map("bin_location_id") @db.Uuid
+  lotId            String?      @map("lot_id") @db.Uuid
+
+  systemQuantity   Decimal      @default(0.0000) @map("system_quantity") @db.Decimal(12, 4)
+  countedQuantity  Decimal?     @map("counted_quantity") @db.Decimal(12, 4)
+  varianceQuantity Decimal?     @map("variance_quantity") @db.Decimal(12, 4)
+
+  countedBy        String?      @map("counted_by") @db.Uuid
+  countedAt        DateTime?    @map("counted_at") @db.Timestamptz()
+  updatedAt        DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  tenant           Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  stockCount       StockCount   @relation(fields: [stockCountId], references: [id], onDelete: Cascade)
+  product          Product      @relation(fields: [productId], references: [id])
+  binLocation      BinLocation? @relation(fields: [binLocationId], references: [id], onDelete: SetNull)
+  lot              ProductLot?  @relation(fields: [lotId], references: [id], onDelete: SetNull)
+  counter          User?        @relation("CountedByUser", fields: [countedBy], references: [id], onDelete: SetNull)
+
+  @@index([stockCountId], name: "idx_count_items_count_id")
+  @@map("stock_count_items")
+}
