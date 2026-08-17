@@ -1,0 +1,48 @@
+name: '🐛 Bug Report'
+description: แจ้งข้อผิดพลาดหรือบั๊กที่พบในระบบ
+title: '[BUG]: '
+labels: ['bug']
+assignees: ''
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### 🔍 MatchStock Bug Report Form
+  - type: textarea
+    id: description
+    attributes:
+      label: รายละเอียดของบั๊ก (Bug Description)
+      placeholder: อธิบายอาการของบั๊กที่พบ
+    validations:
+      required: true
+  - type: textarea
+    id: steps_to_reproduce
+    attributes:
+      label: ขั้นตอนการทำให้เกิดบั๊ก (Steps to Reproduce)
+      value: |
+        1. ไปที่หน้า '...'
+        2. กดปุ่ม '...'
+        3. กรอกข้อมูล '...'
+        4. พบ Error '...'
+    validations:
+      required: true
+  - type: textarea
+    id: expected_vs_actual
+    attributes:
+      label: ผลลัพธ์ที่คาดหวัง vs ผลลัพธ์จริง
+      value: |
+        * **ผลลัพธ์ที่คาดหวัง:** 
+        * **ผลลัพธ์จริงที่เกิดขึ้น:** 
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: ระดับความรุนแรง (Severity)
+      options:
+        - 'Critical (ระบบหยุดชะงัก / สต็อกคำนวณผิด / ข้อมูลรั่ว)'
+        - 'High (ฟังก์ชันหลักทำงานไม่ได้)'
+        - 'Medium (ฟังก์ชันย่อยทำงานผิดพลาด)'
+        - 'Low (UI ผิดรูป / ข้อความผิด)'
+    validations:
+      required: true

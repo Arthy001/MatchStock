@@ -1,0 +1,41 @@
+name: '✨ Feature Task / User Story'
+description: สร้างงาน Feature สำหรับการพัฒนาในแต่ละ Sprint
+title: '[FEAT]: '
+labels: ['enhancement']
+assignees: ''
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### 📋 MatchStock Sprint Task Template
+  - type: input
+    id: sprint
+    attributes:
+      label: Sprint Number
+      placeholder: 'เช่น Sprint 1'
+    validations:
+      required: true
+  - type: textarea
+    id: user_story
+    attributes:
+      label: User Story
+      placeholder: 'ในฐานะ [Role] ฉันต้องการ [ฟังก์ชัน] เพื่อที่จะ [ประโยชน์]'
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria (AC)
+      description: เกณฑ์การตรวจรับงาน (Checklist สำหรับ QA และ PM)
+      value: |
+        - [ ] เกณฑ์ข้อที่ 1
+        - [ ] เกณฑ์ข้อที่ 2
+        - [ ] ผ่านการทดสอบ Unit Test / Form Validation
+        - [ ] มี Tenant Isolation (เฉพาะ Back-End)
+    validations:
+      required: true
+  - type: input
+    id: branch_name
+    attributes:
+      label: Recommended Branch Name
+      placeholder: 'เช่น feature/be-01-auth-jwt'
