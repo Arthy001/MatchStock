@@ -81,16 +81,10 @@ graph TD
     QA -->|Bug Reports & Validation| PM
 ```
 
-### 1️⃣ คนที่ 1: Project Manager (PM) + System Analyst (SA)
+### 1️⃣ คนที่ 1: Project Manager (PM) + System Analyst (SA) - @Arthy001
 * **หน้าที่หลัก:**
-  - กำหนด Sequence Diagrams สำหรับ Flow สำคัญ (GR, GI, Transfer, Adjustment, Cycle Count)
+  - กำหนด Flow การทำงาน, Sequence Diagrams สำหรับ Core Flows (GR, GI, Transfer, Adjustment, Cycle Count)
   - กำหนด **API Contract (Swagger/OpenAPI)** ร่วมกับ Back-End ตั้งแต่ต้น Sprint
-  - ออกแบบ Business Rules: กฎ FIFO (ตัดตาม Lot/Expiry), การคำนวณ Variance, Quota ของ Subscription Plan
-  - จัดการ Sprint, Tasks ใน GitHub Projects / Jira และคุม Acceptance Criteria (AC)
-  - จัดทำ User Manual และเอกสารส่งมอบงาน (UAT Sign-off document)
-
----
-
 ### 2️⃣ คนที่ 2: Front-End Developer (React on Firebase Hosting)
 * **หน้าที่หลัก:**
   - **Layout & Design System:** Responsive Dashboard พร้อมระบบ Dynamic Menu ตามสิทธิ์ RBAC
