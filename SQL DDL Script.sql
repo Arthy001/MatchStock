@@ -34,6 +34,14 @@ CREATE TABLE subscription_plans (
     max_users INT NOT NULL DEFAULT 3,
     max_products INT NOT NULL DEFAULT 1000,
     
+    -- Feature & Menu Access Flags
+    has_lot_tracking BOOLEAN NOT NULL DEFAULT FALSE,
+    has_barcode_scanner BOOLEAN NOT NULL DEFAULT FALSE,
+    has_cycle_count BOOLEAN NOT NULL DEFAULT FALSE,
+    has_analytics_reports BOOLEAN NOT NULL DEFAULT FALSE,
+    has_import_export BOOLEAN NOT NULL DEFAULT FALSE,
+    has_api_access BOOLEAN NOT NULL DEFAULT FALSE,
+    
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

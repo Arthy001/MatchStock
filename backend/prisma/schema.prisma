@@ -52,22 +52,30 @@ model Tenant {
 }
 
 model SubscriptionPlan {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  code           String   @unique @db.VarChar(50) // 'BASIC_MONTHLY', 'PRO_YEARLY', 'ENTERPRISE'
-  name           String   @db.VarChar(100)
-  description    String?  @db.Text
-  price          Decimal  @default(0.00) @db.Decimal(10, 2)
-  billingCycle   String   @map("billing_cycle") @db.VarChar(20) // 'MONTHLY', 'YEARLY', 'LIFETIME'
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                String   @unique @db.VarChar(50) // 'BASIC_MONTHLY', 'PRO_YEARLY', 'ENTERPRISE'
+  name                String   @db.VarChar(100)
+  description         String?  @db.Text
+  price               Decimal  @default(0.00) @db.Decimal(10, 2)
+  billingCycle        String   @map("billing_cycle") @db.VarChar(20) // 'MONTHLY', 'YEARLY', 'LIFETIME'
 
-  // Quotas
-  maxWarehouses  Int      @default(1) @map("max_warehouses")
-  maxUsers       Int      @default(3) @map("max_users")
-  maxProducts    Int      @default(1000) @map("max_products")
+  // Quantitative Quotas
+  maxWarehouses       Int      @default(1) @map("max_warehouses")
+  maxUsers            Int      @default(3) @map("max_users")
+  maxProducts         Int      @default(1000) @map("max_products")
 
-  isActive       Boolean  @default(true) @map("is_active")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  // Feature Flags & UI Menu Permissions
+  hasLotTracking      Boolean  @default(false) @map("has_lot_tracking")
+  hasBarcodeScanner   Boolean  @default(false) @map("has_barcode_scanner")
+  hasCycleCount       Boolean  @default(false) @map("has_cycle_count")
+  hasAnalyticsReports Boolean  @default(false) @map("has_analytics_reports")
+  hasImportExport     Boolean  @default(false) @map("has_import_export")
+  hasApiAccess        Boolean  @default(false) @map("has_api_access")
 
-  subscriptions  Subscription[]
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  subscriptions       Subscription[]
 
   @@map("subscription_plans")
 }
