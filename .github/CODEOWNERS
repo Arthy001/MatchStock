@@ -3,14 +3,14 @@
 # กำหนดเจ้าของโฟลเดอร์สำหรับรีวิวโค้ดในแต่ละส่วน
 # ========================================================
 
-# 1. เอกสารระบบ, แผนงาน และสถาปัตยกรรม (PM & SA ดูแล)
-/docs/                        @Arthy001 dechasitbird@gmail.com
-/PROJECT_PLAN.md              @Arthy001 dechasitbird@gmail.com
-/PM_PLAYBOOK.md               @Arthy001 dechasitbird@gmail.com
-/GIT_COLLABORATION_GUIDE.md   @Arthy001 dechasitbird@gmail.com
-/TEAM_WORKFLOW_STEPS.md       @Arthy001 dechasitbird@gmail.com
-/Features.md                  @Arthy001 dechasitbird@gmail.com
-/README.md                    @Arthy001 dechasitbird@gmail.com
+# 1. เอกสารระบบ, แผนงาน, สถาปัตยกรรม และ API Specs (PM + SA ดูแล)
+/docs/                        @Arthy001
+/PROJECT_PLAN.md              @Arthy001
+/PM_PLAYBOOK.md               @Arthy001
+/GIT_COLLABORATION_GUIDE.md   @Arthy001
+/TEAM_WORKFLOW_STEPS.md       @Arthy001
+/Features.md                  @Arthy001
+/README.md                    @Arthy001
 
 # 2. Back-End, Database & Prisma (Back-End Developer ดูแล)
 /backend/                     pairot.buabmee@gmail.com
@@ -21,5 +21,8 @@
 /frontend/                    Thanathat.kj@gmail.com
 /frontend/firebase.json       Thanathat.kj@gmail.com
 
-# 4. CI/CD & Deployment Workflows (PM & Lead ดูแล)
+# 4. QA / Testing & Test Automation (QA / Tester ดูแล)
+/tests/                       dechasitbird@gmail.com
+
+# 5. CI/CD & Deployment Workflows (PM & Lead ดูแล)
 /.github/workflows/           @Arthy001

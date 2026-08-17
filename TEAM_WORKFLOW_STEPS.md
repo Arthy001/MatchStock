@@ -7,13 +7,12 @@
 
 ## 👥 รายชื่อและบทบาททีมงาน
 
-| บทบาท | ผู้รับผิดชอบ (Email / GitHub) | พื้นที่รับผิดชอบ |
-| :--- | :--- | :--- |
-| **1. PM (Lead)** | **@Arthy001** (คุณ) | ภาพรวมโปรเจกต์, `PROJECT_PLAN.md`, `PM_PLAYBOOK.md`, คุม Sprint & Releases |
-| **2. SA (System Analyst)** | **`dechasitbird@gmail.com`** (คุณเดชสิทธิ์) | `/docs/`, `docs/openapi.yaml`, `docs/API_AND_DATA_FLOWS.md`, ERD & Data Dictionary |
-| **3. Back-End Developer** | **`pairot.buabmee@gmail.com`** (คุณไพโรจน์) | `/backend/`, `/backend/prisma/`, `Dockerfile` |
-| **4. Front-End Developer** | **`Thanathat.kj@gmail.com`** (คุณธนทัต) | `/frontend/`, `firebase.json` |
-| **5. QA / Tester** | *(QA Engineer)* | `/tests/`, Test Cases, Postman Testing |
+| ลำดับ | บทบาท | ผู้รับผิดชอบ (Email / GitHub) | พื้นที่รับผิดชอบ |
+| :---: | :--- | :--- | :--- |
+| **1** | **PM + SA (Project Lead & System Analyst)** | **@Arthy001** (คุณ) | ภาพรวมโปรเจกต์, `/docs/`, `PROJECT_PLAN.md`, `PM_PLAYBOOK.md`, API Specs |
+| **2** | **Back-End Developer** | **`pairot.buabmee@gmail.com`** (คุณไพโรจน์) | `/backend/`, `/backend/prisma/`, `Dockerfile` |
+| **3** | **Front-End Developer** | **`Thanathat.kj@gmail.com`** (คุณธนทัต) | `/frontend/`, `firebase.json` |
+| **4** | **QA / Tester** | **`dechasitbird@gmail.com`** (คุณเดชสิทธิ์) | `/tests/`, Test Cases, Postman Testing, Bug Reports |
 
 ---
 
@@ -52,7 +51,7 @@
 
 4. **ลงมือพัฒนา API (Sprint 1):**
    * ระบบ Authentication (JWT Login/Register) + `tenant.middleware.ts`
-   * CRUD APIs สำหรับ Master Data (Products, Warehouses, Bins, Units, Categories, Brands, Suppliers)
+   * CRUD APIs สำหรับ Master Data (Products, Warehouses, Bins, Units, Categories, Brands, Suppliers) อ้างอิงตาม `docs/openapi.yaml`
    * รัน Local Server ด้วยคำสั่ง:
      ```bash
      npm run dev
@@ -95,7 +94,7 @@
 
 3. **ลงมือพัฒนาหน้าจอ React + Tailwind CSS (Sprint 1):**
    * หน้า **Login Screen** (เก็บ JWT Token ลง State/Storage)
-   * หน้า **Dashboard Layout** (Sidebar ตามสิทธิ์ Role, Top Navbar แสดงชื่อผู้ใช้และ Tenant)
+   * หน้า **Dashboard Layout** (Sidebar ตามสิทธิ์ Role & Feature Flags, Top Navbar แสดงชื่อผู้ใช้และ Tenant)
    * หน้า **Master Data Management**:
      * ตารางแสดงรายการสินค้า (Products) พร้อม Search, Filter, Pagination
      * ฟอร์มเพิ่ม/แก้ไข สินค้า (Code, SKU, Barcode, น้ำหนัก, มิติขนาด, Reorder Point)
@@ -111,7 +110,7 @@
 
 ---
 
-## 🧪 3. สำหรับ QA / Tester
+## 🧪 3. สำหรับ คุณเดชสิทธิ์ (QA / Tester)
 
 ```
 [ 1. อ่าน Acceptance Criteria ] ➔ [ 2. เขียน Test Cases / Postman ] ➔ [ 3. ทดสอบบน Staging URL ] ➔ [ 4. รายงานบั๊ก / Sign-off ]
@@ -130,41 +129,27 @@
      1. Steps to Reproduce (ขั้นตอนการทำให้เกิดบั๊ก)
      2. Expected Result (ผลที่ควรจะเป็น)
      3. Actual Result (ผลที่เกิดขึ้นจริง พร้อม Screenshot)
+4. **ทำ QA Sign-off:** สรุปผลการทดสอบเมื่อทุกฟังก์ชันผ่านเกณฑ์เพื่อส่งมอบให้ PM ปล่อย Release
 
 ---
 
-## 📐 4. สำหรับ คุณเดชสิทธิ์ (System Analyst - SA)
+## 👔 4. สำหรับ คุณ @Arthy001 (PM + SA)
 
 ```
-[ 1. วิเคราะห์ Requirements ] ➔ [ 2. เขียน API Spec ใน docs/openapi.yaml ] ➔ [ 3. วาด Data Flow & Sequence Diagrams ] ➔ [ 4. เคลียร์ Business Rules ]
-```
-
-### 📋 ขั้นตอนการทำงานจริง:
-1. **ออกแบบและบำรุงรักษา API Specification (`docs/openapi.yaml`):**
-   * กำหนด Request/Response schemas, Status Codes (`200`, `201`, `400`, `401`, `403`, `404`) ให้ Front-End และ Back-End ใช้ร่วมกัน
-2. **ออกแบบ Data Flows & Sequence Diagrams (`docs/API_AND_DATA_FLOWS.md`):**
-   * วิเคราะห์กระบวนการทำงานที่ซับซ้อน เช่น การตัดสต็อก FIFO, การตรวจนับ Cycle Count และคำนวณ Variance
-3. **ตรวจสอบความสอดคล้องของ Database & Code:**
-   * ตรวจสอบไฟล์ `backend/prisma/schema.prisma` ร่วมกับ Back-End ให้รองรับ Multi-tenancy และ Feature Flags ครบถ้วน
-4. **เปิด PR เข้า `develop` เมื่อมีการอัปเดตเอกสารใน `/docs/`**
-
----
-
-## 👔 5. สำหรับ คุณ @Arthy001 (Project Manager - PM)
-
-```
-[ 1. Daily Standup 15 นาที ] ➔ [ 2. รีวิว & Merge PR เข้า develop ] ➔ [ 3. ตรวจ Staging Auto-Deploy ] ➔ [ 4. Sign-off & Release to main ]
+[ 1. กำหนด API Spec & Data Flow ] ➔ [ 2. Daily Standup 15 นาที ] ➔ [ 3. รีวิว & Merge PR เข้า develop ] ➔ [ 4. ตรวจ Staging Auto-Deploy ] ➔ [ 5. Sign-off & Release to main ]
 ```
 
 ### 📋 ขั้นตอนการทำงานในแต่ละวัน:
-1. **ทุกเช้า 10:00 น. (Daily Standup 15 นาที):**
+1. **ในฐานะ SA:**
+   * ดูแลและอัปเดต [docs/openapi.yaml](docs/openapi.yaml) และ [docs/API_AND_DATA_FLOWS.md](docs/API_AND_DATA_FLOWS.md) เมื่อมี Business Logic หรือ Requirement เพิ่มเติม
+2. **ในฐานะ PM (ทุกเช้า 10:00 น. Daily Standup 15 นาที):**
    * สอบถามความคืบหน้าของทีม และช่วยเคลียร์ Blocker
-2. **เมื่อลูกทีมเปิด Pull Request เข้า `develop`:**
+3. **เมื่อลูกทีมเปิด Pull Request เข้า `develop`:**
    * ตรวจสอบว่าโค้ดไม่มี Conflict และฟังก์ชันครบถ้วน ➔ กด **Approve** และ **Merge pull request**
-3. **ติดตามผลการ Deploy อัตโนมัติ:**
+4. **ติดตามผลการ Deploy อัตโนมัติ:**
    * GitHub Actions จะ Build และ Deploy ขึ้น Firebase Staging และ Cloud Run Staging โดยอัตโนมัติ
-   * แจ้งให้ QA เข้าไปทดสอบบน Staging URL ทันที
-4. **วันศุกร์สิ้น Sprint (Release):**
+   * แจ้งให้ คุณเดชสิทธิ์ (QA) เข้าไปทดสอบบน Staging URL ทันที
+5. **วันศุกร์สิ้น Sprint (Release):**
    * ตรวจสอบรายงานผลการทดสอบจาก QA (QA Sign-off Report)
    * เมื่อผ่าน 100% ➔ **คุณกด Merge จาก `develop` เข้า `main` เพื่อ Release สู่ Production!**
 
