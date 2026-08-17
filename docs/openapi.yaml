@@ -1,0 +1,756 @@
+openapi: 3.0.3
+info:
+  title: MatchStock API Contract
+  description: >
+    MatchStock Multi-Tenant Warehouse Management & Inventory System API Specification.
+    Designed for Front-End (React) and Back-End (Node.js + Prisma) integration.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local Development Server
+  - url: https://matchstock-api-staging-xxxx-as.a.run.app/api/v1
+    description: Staging Environment (Cloud Run)
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ========================================================
+  # 1. AUTHENTICATION & PROFILE
+  # ========================================================
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User Login
+      description: Authenticates user and returns JWT Token containing userId, tenantId, and role.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: admin@matchstock.com
+                password:
+                  type: string
+                  format: password
+                  example: Password123!
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
+                  tenant:
+                    $ref: '#/components/schemas/TenantProfile'
+                  subscription:
+                    $ref: '#/components/schemas/SubscriptionDetail'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get Current User Profile & Permissions
+      description: Returns the authenticated user's profile, tenant, and active subscription feature flags.
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
+                  tenant:
+                    $ref: '#/components/schemas/TenantProfile'
+                  subscription:
+                    $ref: '#/components/schemas/SubscriptionDetail'
+
+  # ========================================================
+  # 2. MASTER DATA: PRODUCTS
+  # ========================================================
+  /products:
+    get:
+      tags:
+        - Products
+      summary: List Products
+      description: Retrieve paginated list of products for the current tenant.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: search
+          in: query
+          description: Search by code, sku, barcode, or name
+          schema:
+            type: string
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: brandId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Product list retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags:
+        - Products
+      summary: Create Product
+      description: Create a new product SKU in the current tenant.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductInput'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /products/{id}:
+    get:
+      tags:
+        - Products
+      summary: Get Product by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Product details retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    put:
+      tags:
+        - Products
+      summary: Update Product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductInput'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Product'
+
+  # ========================================================
+  # 3. MASTER DATA: WAREHOUSES & BINS
+  # ========================================================
+  /warehouses:
+    get:
+      tags:
+        - Warehouses
+      summary: List Warehouses
+      responses:
+        '200':
+          description: List of warehouses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Warehouse'
+    post:
+      tags:
+        - Warehouses
+      summary: Create Warehouse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+                - name
+              properties:
+                code:
+                  type: string
+                  example: WH-01
+                name:
+                  type: string
+                  example: Bangkok Main Hub
+      responses:
+        '201':
+          description: Warehouse created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Warehouse'
+
+  /warehouses/{id}/bins:
+    get:
+      tags:
+        - Warehouses
+      summary: List Bins in Warehouse
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of bin locations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BinLocation'
+    post:
+      tags:
+        - Warehouses
+      summary: Create Bin Location in Warehouse
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  example: A-01-01
+      responses:
+        '201':
+          description: Bin created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/BinLocation'
+
+  # ========================================================
+  # 4. CORE STOCK OPERATIONS & BALANCES (Preview)
+  # ========================================================
+  /inventory/balances:
+    get:
+      tags:
+        - Inventory
+      summary: Real-Time Inventory Balances Lookup
+      parameters:
+        - name: productId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: warehouseId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Current stock balances
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InventoryBalance'
+
+  /inventory/transactions/receive:
+    post:
+      tags:
+        - Inventory Transactions
+      summary: Goods Receive (GR)
+      description: Record incoming stock, create lots (if lot control), and increment inventory balances.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoodsReceiveInput'
+      responses:
+        '201':
+          description: Stock received successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  documentNo:
+                    type: string
+                    example: GR-202608-001
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        fullName:
+          type: string
+        role:
+          type: string
+          enum: [admin, manager, warehouse_staff, purchasing_staff, staff]
+
+    TenantProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyName:
+          type: string
+        status:
+          type: string
+
+    SubscriptionDetail:
+      type: object
+      properties:
+        planCode:
+          type: string
+          example: PRO_YEARLY
+        planName:
+          type: string
+          example: Pro Business Plan
+        status:
+          type: string
+          example: active
+        features:
+          type: object
+          properties:
+            hasLotTracking:
+              type: boolean
+            hasBarcodeScanner:
+              type: boolean
+            hasCycleCount:
+              type: boolean
+            hasAnalyticsReports:
+              type: boolean
+            hasImportExport:
+              type: boolean
+            hasApiAccess:
+              type: boolean
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+          example: PRD-001
+        sku:
+          type: string
+          example: LOGI-MX3S-GRY
+        barcode:
+          type: string
+          example: 8851234567890
+        name:
+          type: string
+          example: Logitech MX Master 3S
+        price:
+          type: number
+          format: float
+          example: 3890.00
+        weightKg:
+          type: number
+          example: 0.141
+        widthCm:
+          type: number
+          example: 8.43
+        lengthCm:
+          type: number
+          example: 12.49
+        heightCm:
+          type: number
+          example: 5.10
+        reorderPoint:
+          type: number
+          example: 10
+        minReorderQty:
+          type: number
+          example: 20
+        isLotControl:
+          type: boolean
+          example: true
+        baseUnit:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            code:
+              type: string
+              example: PCS
+            name:
+              type: string
+              example: ชิ้น
+
+    CreateProductInput:
+      type: object
+      required:
+        - code
+        - sku
+        - name
+        - baseUnitId
+        - price
+      properties:
+        code:
+          type: string
+          example: PRD-002
+        sku:
+          type: string
+          example: KBD-MEC-RGB
+        barcode:
+          type: string
+          example: 8859990001112
+        name:
+          type: string
+          example: Mechanical RGB Keyboard
+        description:
+          type: string
+        baseUnitId:
+          type: string
+          format: uuid
+        categoryId:
+          type: string
+          format: uuid
+        brandId:
+          type: string
+          format: uuid
+        price:
+          type: number
+          example: 2490.00
+        weightKg:
+          type: number
+          example: 0.850
+        widthCm:
+          type: number
+          example: 14.5
+        lengthCm:
+          type: number
+          example: 44.0
+        heightCm:
+          type: number
+          example: 3.8
+        reorderPoint:
+          type: number
+          example: 5
+        minReorderQty:
+          type: number
+          example: 15
+        isLotControl:
+          type: boolean
+          example: false
+
+    Warehouse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+          example: WH-01
+        name:
+          type: string
+          example: คลังสินค้าหลักกรุงเทพ
+
+    BinLocation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        warehouseId:
+          type: string
+          format: uuid
+        code:
+          type: string
+          example: A-01-01
+
+    InventoryBalance:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        warehouseId:
+          type: string
+          format: uuid
+        binLocationId:
+          type: string
+          format: uuid
+        lotId:
+          type: string
+          format: uuid
+        quantityOnHand:
+          type: number
+          example: 50.0
+        quantityReserved:
+          type: number
+          example: 5.0
+
+    GoodsReceiveInput:
+      type: object
+      required:
+        - warehouseId
+        - items
+      properties:
+        warehouseId:
+          type: string
+          format: uuid
+        supplierId:
+          type: string
+          format: uuid
+        items:
+          type: array
+          items:
+            type: object
+            required:
+              - productId
+              - quantity
+            properties:
+              productId:
+                type: string
+                format: uuid
+              binLocationId:
+                type: string
+                format: uuid
+              quantity:
+                type: number
+                example: 100
+              unitPrice:
+                type: number
+                example: 350.00
+              lotNumber:
+                type: string
+                example: LOT-2026-08A
+              manufacturedDate:
+                type: string
+                format: date
+                example: '2026-08-01'
+              expirationDate:
+                type: string
+                format: date
+                example: '2028-08-01'
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        totalCount:
+          type: integer
+          example: 105
+        totalPages:
+          type: integer
+          example: 6
+
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              message:
+                type: string
+                example: Unauthorized access
+
+    ForbiddenError:
+      description: Feature not permitted in current subscription plan or user role
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              message:
+                type: string
+                example: Forbidden: Your subscription plan does not include this feature
+
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              message:
+                type: string
+                example: Resource not found
+
+    ValidationError:
+      description: Invalid request payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              message:
+                type: string
+                example: Validation failed
+              errors:
+                type: array
+                items:
+                  type: string
