@@ -3,12 +3,14 @@
 # กำหนดเจ้าของโฟลเดอร์สำหรับรีวิวโค้ดในแต่ละส่วน
 # ========================================================
 
-# 1. เอกสารระบบ, แผนงาน และภาพรวม (PM + SA ดูแล)
-/docs/                        @Arthy001
-/PROJECT_PLAN.md              @Arthy001
-/PM_PLAYBOOK.md               @Arthy001
-/GIT_COLLABORATION_GUIDE.md   @Arthy001
-/Read Me.md                   @Arthy001
+# 1. เอกสารระบบ, แผนงาน และสถาปัตยกรรม (PM & SA ดูแล)
+/docs/                        @Arthy001 dechasitbird@gmail.com
+/PROJECT_PLAN.md              @Arthy001 dechasitbird@gmail.com
+/PM_PLAYBOOK.md               @Arthy001 dechasitbird@gmail.com
+/GIT_COLLABORATION_GUIDE.md   @Arthy001 dechasitbird@gmail.com
+/TEAM_WORKFLOW_STEPS.md       @Arthy001 dechasitbird@gmail.com
+/Features.md                  @Arthy001 dechasitbird@gmail.com
+/README.md                    @Arthy001 dechasitbird@gmail.com
 
 # 2. Back-End, Database & Prisma (Back-End Developer ดูแล)
 /backend/                     pairot.buabmee@gmail.com

@@ -43,10 +43,11 @@
 
 | ลำดับ | บทบาท | ผู้รับผิดชอบ (Email / GitHub) | พื้นที่ดูแลใน Repository |
 | :---: | :--- | :--- | :--- |
-| **1** | **Project Manager & System Analyst (Lead)** | **@Arthy001** (Project Owner) | `/docs/`, เอกสารแผนงาน, คุม Sprint & Releases |
-| **2** | **Back-End Developer** | **`pairot.buabmee@gmail.com`** (คุณไพโรจน์) | `/backend/`, `/backend/prisma/`, `Dockerfile` |
-| **3** | **Front-End Developer** | **`Thanathat.kj@gmail.com`** (คุณธนทัต) | `/frontend/`, `firebase.json` |
-| **4** | **QA / Tester** | *(QA Engineer)* | `/tests/`, Test Matrix, Postman Testing |
+| **1** | **Project Manager (PM / Lead)** | **@Arthy001** (Project Owner) | แผนงานภาพรวม, คุม Sprint, Review & Releases |
+| **2** | **System Analyst (SA)** | **`dechasitbird@gmail.com`** (คุณเดชสิทธิ์) | `/docs/`, API Contracts (Swagger), Data Flow, ERD |
+| **3** | **Back-End Developer** | **`pairot.buabmee@gmail.com`** (คุณไพโรจน์) | `/backend/`, `/backend/prisma/`, `Dockerfile` |
+| **4** | **Front-End Developer** | **`Thanathat.kj@gmail.com`** (คุณธนทัต) | `/frontend/`, `firebase.json` |
+| **5** | **QA / Tester** | *(QA Engineer)* | `/tests/`, Test Matrix, Postman Testing |
 
 ---
 

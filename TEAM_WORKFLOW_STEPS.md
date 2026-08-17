@@ -9,10 +9,11 @@
 
 | บทบาท | ผู้รับผิดชอบ (Email / GitHub) | พื้นที่รับผิดชอบ |
 | :--- | :--- | :--- |
-| **1. PM + SA (Lead)** | **@Arthy001** (คุณ) | ภาพรวมโปรเจกต์, `/docs/`, `PROJECT_PLAN.md`, `PM_PLAYBOOK.md` |
-| **2. Back-End Developer** | **`pairot.buabmee@gmail.com`** (คุณไพโรจน์) | `/backend/`, `/backend/prisma/`, `Dockerfile` |
-| **3. Front-End Developer** | **`Thanathat.kj@gmail.com`** (คุณธนทัต) | `/frontend/`, `firebase.json` |
-| **4. QA / Tester** | *(QA Engineer)* | `/tests/`, Test Cases, Postman Testing |
+| **1. PM (Lead)** | **@Arthy001** (คุณ) | ภาพรวมโปรเจกต์, `PROJECT_PLAN.md`, `PM_PLAYBOOK.md`, คุม Sprint & Releases |
+| **2. SA (System Analyst)** | **`dechasitbird@gmail.com`** (คุณเดชสิทธิ์) | `/docs/`, `docs/openapi.yaml`, `docs/API_AND_DATA_FLOWS.md`, ERD & Data Dictionary |
+| **3. Back-End Developer** | **`pairot.buabmee@gmail.com`** (คุณไพโรจน์) | `/backend/`, `/backend/prisma/`, `Dockerfile` |
+| **4. Front-End Developer** | **`Thanathat.kj@gmail.com`** (คุณธนทัต) | `/frontend/`, `firebase.json` |
+| **5. QA / Tester** | *(QA Engineer)* | `/tests/`, Test Cases, Postman Testing |
 
 ---
 
@@ -132,7 +133,24 @@
 
 ---
 
-## 👔 4. สำหรับ คุณ @Arthy001 (PM + SA)
+## 📐 4. สำหรับ คุณเดชสิทธิ์ (System Analyst - SA)
+
+```
+[ 1. วิเคราะห์ Requirements ] ➔ [ 2. เขียน API Spec ใน docs/openapi.yaml ] ➔ [ 3. วาด Data Flow & Sequence Diagrams ] ➔ [ 4. เคลียร์ Business Rules ]
+```
+
+### 📋 ขั้นตอนการทำงานจริง:
+1. **ออกแบบและบำรุงรักษา API Specification (`docs/openapi.yaml`):**
+   * กำหนด Request/Response schemas, Status Codes (`200`, `201`, `400`, `401`, `403`, `404`) ให้ Front-End และ Back-End ใช้ร่วมกัน
+2. **ออกแบบ Data Flows & Sequence Diagrams (`docs/API_AND_DATA_FLOWS.md`):**
+   * วิเคราะห์กระบวนการทำงานที่ซับซ้อน เช่น การตัดสต็อก FIFO, การตรวจนับ Cycle Count และคำนวณ Variance
+3. **ตรวจสอบความสอดคล้องของ Database & Code:**
+   * ตรวจสอบไฟล์ `backend/prisma/schema.prisma` ร่วมกับ Back-End ให้รองรับ Multi-tenancy และ Feature Flags ครบถ้วน
+4. **เปิด PR เข้า `develop` เมื่อมีการอัปเดตเอกสารใน `/docs/`**
+
+---
+
+## 👔 5. สำหรับ คุณ @Arthy001 (Project Manager - PM)
 
 ```
 [ 1. Daily Standup 15 นาที ] ➔ [ 2. รีวิว & Merge PR เข้า develop ] ➔ [ 3. ตรวจ Staging Auto-Deploy ] ➔ [ 4. Sign-off & Release to main ]
@@ -140,7 +158,7 @@
 
 ### 📋 ขั้นตอนการทำงานในแต่ละวัน:
 1. **ทุกเช้า 10:00 น. (Daily Standup 15 นาที):**
-   * สอบถามความคืบหน้าของไพโรจน์และธนทัต และช่วยเคาะสเปค API ในฐานะ SA หากมีจุดติดขัด
+   * สอบถามความคืบหน้าของทีม และช่วยเคลียร์ Blocker
 2. **เมื่อลูกทีมเปิด Pull Request เข้า `develop`:**
    * ตรวจสอบว่าโค้ดไม่มี Conflict และฟังก์ชันครบถ้วน ➔ กด **Approve** และ **Merge pull request**
 3. **ติดตามผลการ Deploy อัตโนมัติ:**
