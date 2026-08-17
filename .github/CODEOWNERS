@@ -1,0 +1,23 @@
+# ========================================================
+# GITHUB CODEOWNERS: MATCHSTOCK
+# กำหนดเจ้าของโฟลเดอร์สำหรับรีวิวโค้ดในแต่ละส่วน
+# ========================================================
+
+# 1. เอกสารระบบและแผนงาน (PM + SA ดูแล)
+/docs/                        @Arthy001
+/PROJECT_PLAN.md              @Arthy001
+/PM_PLAYBOOK.md               @Arthy001
+/GIT_COLLABORATION_GUIDE.md   @Arthy001
+/Read Me.md                   @Arthy001
+
+# 2. Back-End, Database & Prisma (Back-End Developer ดูแล)
+/backend/                     @Arthy001
+/backend/prisma/              @Arthy001
+/backend/Dockerfile           @Arthy001
+
+# 3. Front-End, React UI & Firebase (Front-End Developer ดูแล)
+/frontend/                    @Arthy001
+/frontend/firebase.json       @Arthy001
+
+# 4. CI/CD & Deployment Workflows (PM & Lead ดูแล)
+/.github/workflows/           @Arthy001
