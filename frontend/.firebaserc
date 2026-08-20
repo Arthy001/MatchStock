@@ -1,7 +1,7 @@
 {
   "projects": {
-    "default": "DemoMatchStock",
-    "staging": "DemoMatchStock",
-    "production": "DemoMatchStock"
+    "default": "demomatchstock",
+    "staging": "demomatchstock",
+    "production": "demomatchstock"
   }
 }
