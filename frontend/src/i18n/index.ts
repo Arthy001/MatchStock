@@ -38,12 +38,12 @@ export const translations = {
     settings: 'ตั้งค่าระบบ & Multi-Tenant',
 
     // Master Data Sub-tabs
-    tabUserAccess: '1. Tenant & RBAC',
-    tabProducts: '2. Product Catalog & SKU',
-    tabUnits: '3. Units & Dimensions',
-    tabBarcodes: '4. Barcode Support',
-    tabWarehouses: '5. Multi-Warehouse & Bins',
-    tabSuppliers: '6. Suppliers & Tax Masters',
+    tabUserAccess: '1. สิทธิ์ผู้ใช้ & Tenant (RBAC)',
+    tabProducts: '2. แคตตาล็อกสินค้า & SKU',
+    tabUnits: '3. หน่วยนับ & ขนาดมิติ',
+    tabBarcodes: '4. ระบบบาร์โค้ดสากล',
+    tabWarehouses: '5. คลังสินค้า & ตำแหน่ง Bin',
+    tabSuppliers: '6. ผู้จัดจำหน่าย & ภาษี',
 
     // Section Titles
     rbacTitle: 'ผู้ใช้งานและสิทธิ์ระบบ',
@@ -154,7 +154,7 @@ export const translations = {
     settings: 'System Settings & Multi-Tenant',
 
     // Master Data Sub-tabs
-    tabUserAccess: '1. Tenant & RBAC',
+    tabUserAccess: '1. Tenant & User Access (RBAC)',
     tabProducts: '2. Product Catalog & SKU',
     tabUnits: '3. Units & Dimensions',
     tabBarcodes: '4. Barcode Support',

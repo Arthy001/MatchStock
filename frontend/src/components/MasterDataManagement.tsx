@@ -266,26 +266,191 @@ const MOCK_SUPPLIERS: Supplier[] = [
   },
 ];
 
+interface MasterDataManagementProps {
+  lang: Language;
+  theme: ThemeMode;
+  searchQuery: string;
+  activeSubTab?: 'rbac' | 'products' | 'units' | 'barcodes' | 'warehouses' | 'suppliers';
+  onSubTabChange?: (subTab: 'rbac' | 'products' | 'units' | 'barcodes' | 'warehouses' | 'suppliers') => void;
+}
+
 export const MasterDataManagement: React.FC<MasterDataManagementProps> = ({
   lang,
   theme,
   searchQuery,
+  activeSubTab: externalSubTab,
+  onSubTabChange,
 }) => {
   const t = getTranslation(lang);
-  const [activeSubTab, setActiveSubTab] = useState<'rbac' | 'products' | 'units' | 'barcodes' | 'warehouses' | 'suppliers'>('products');
+  const [internalSubTab, setInternalSubTab] = useState<'rbac' | 'products' | 'units' | 'barcodes' | 'warehouses' | 'suppliers'>('products');
+  const activeSubTab = externalSubTab || internalSubTab;
+
   const [selectedProductForBarcode, setSelectedProductForBarcode] = useState<ProductItem | null>(null);
   
   // 480px Slide-Over Drawer State
   const [drawerProduct, setDrawerProduct] = useState<ProductItem | null>(null);
 
+  const [productsList, setProductsList] = useState<ProductItem[]>(MOCK_PRODUCTS);
+  const [usersList, setUsersList] = useState<UserPermissionItem[]>(MOCK_USERS);
+  const [binsList, setBinsList] = useState<WarehouseBin[]>(MOCK_BINS);
+  const [suppliersList, setSuppliersList] = useState<Supplier[]>(MOCK_SUPPLIERS);
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addName, setAddName] = useState('');
+  const [addCode, setAddCode] = useState('');
+  const [addSku, setAddSku] = useState('');
+  const [addCategory, setAddCategory] = useState('Footwear');
+  const [addBrand, setAddBrand] = useState('');
+  const [addPrice, setAddPrice] = useState('120.00');
+  const [addStock, setAddStock] = useState('10');
+  const [addUom, setAddUom] = useState('PCS');
+
+  const [addEmail, setAddEmail] = useState('');
+  const [addRole, setAddRole] = useState<'admin' | 'manager' | 'warehouse_staff' | 'purchasing_staff'>('warehouse_staff');
+
+  const [addWarehouseName, setAddWarehouseName] = useState('WH-Bangkok Main Center');
+  const [addZone, setAddZone] = useState('Zone A');
+  const [addBinCode, setAddBinCode] = useState('');
+  const [addCapacityKg, setAddCapacityKg] = useState('500');
+
+  const [addSupplierName, setAddSupplierName] = useState('');
+  const [addContactPerson, setAddContactPerson] = useState('');
+  const [addPhone, setAddPhone] = useState('');
+  const [addTaxId, setAddTaxId] = useState('');
+
   // Filter products by search query
-  const filteredProducts = MOCK_PRODUCTS.filter(
+  const filteredProducts = productsList.filter(
     (p) =>
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.brand.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleCreateNewItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (activeSubTab === 'products') {
+      const newProd: ProductItem = {
+        id: `prod-${Date.now()}`,
+        code: addCode || `PRD-${Math.floor(1000 + Math.random() * 9000)}`,
+        sku: addSku || `SKU-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
+        slug: (addName || 'new-product').toLowerCase().replace(/\s+/g, '-'),
+        name: addName || 'New Inventory Item',
+        category: addCategory || 'General',
+        brand: addBrand || 'MatchStock',
+        manufacturer: 'MatchStock Partner',
+        uom: addUom || 'PCS',
+        weightKg: 1.0,
+        widthCm: 10,
+        lengthCm: 20,
+        heightCm: 10,
+        price: parseFloat(addPrice) || 99.0,
+        stockOnHand: parseInt(addStock) || 10,
+        reorderLevel: 5,
+        maxLevel: 50,
+        barcodeType: 'CODE128',
+        barcodeValue: `885${Math.floor(1000000000 + Math.random() * 9000000000)}`,
+        status: 'active',
+        imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120&auto=format&fit=crop&q=80',
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+      setProductsList([newProd, ...productsList]);
+    } else if (activeSubTab === 'rbac') {
+      const newUser: UserPermissionItem = {
+        id: `usr-${Date.now()}`,
+        name: addName || 'New Staff User',
+        email: addEmail || 'user@matchstock.com',
+        role: addRole,
+        department: 'Warehouse Operations',
+        lastActive: 'Just now',
+        status: 'active',
+      };
+      setUsersList([newUser, ...usersList]);
+    } else if (activeSubTab === 'warehouses') {
+      const newBin: WarehouseBin = {
+        id: `bin-${Date.now()}`,
+        warehouseId: 'wh-bkk',
+        warehouseName: addWarehouseName || 'WH-Bangkok Main Center',
+        zone: addZone || 'Zone A',
+        rack: 'RACK-05',
+        shelf: 'SHELF-01',
+        binCode: addBinCode || `BIN-A-${Math.floor(10 + Math.random() * 90)}-01`,
+        capacityKg: parseInt(addCapacityKg) || 500,
+        currentItemsCount: 0,
+        status: 'available',
+      };
+      setBinsList([newBin, ...binsList]);
+    } else if (activeSubTab === 'suppliers') {
+      const newSup: Supplier = {
+        id: `sup-${Date.now()}`,
+        code: `SUP-${Math.floor(100 + Math.random() * 900)}`,
+        name: addSupplierName || 'New Global Supplier Co., Ltd.',
+        contactPerson: addContactPerson || 'Sales Admin',
+        phone: addPhone || '+66 2 000 0000',
+        email: addEmail || 'supplier@matchstock.com',
+        taxId: addTaxId || '0105560001122',
+        taxType: 'VAT7',
+        discountTerms: 'Net 30',
+        address: 'Bangkok Industrial Park, Thailand',
+        status: 'active',
+      };
+      setSuppliersList([newSup, ...suppliersList]);
+    }
+
+    setIsAddModalOpen(false);
+    setAddName('');
+    setAddCode('');
+    setAddSku('');
+    setAddBrand('');
+    setAddPrice('120.00');
+    setAddStock('10');
+    setAddEmail('');
+    setAddWarehouseName('WH-Bangkok Main Center');
+    setAddBinCode('');
+    setAddSupplierName('');
+    setAddContactPerson('');
+    setAddPhone('');
+    setAddTaxId('');
+  };
+
+  // Dynamic Title & Subtitle helper based on active sub-tab
+  const getHeaderInfo = () => {
+    switch (activeSubTab) {
+      case 'rbac':
+        return { title: t.rbacTitle, subtitle: t.rbacSubtitle };
+      case 'units':
+        return { title: t.unitsTitle, subtitle: t.unitsSubtitle };
+      case 'barcodes':
+        return { title: t.barcodeTitle, subtitle: t.barcodeSubtitle };
+      case 'warehouses':
+        return { title: t.warehouseTitle, subtitle: t.warehouseSubtitle };
+      case 'suppliers':
+        return { title: t.supplierTitle, subtitle: t.supplierSubtitle };
+      case 'products':
+      default:
+        return { title: t.productTitle, subtitle: t.productSubtitle };
+    }
+  };
+
+  const getAddButtonLabel = () => {
+    switch (activeSubTab) {
+      case 'products':
+        return t.addNewBtn;
+      case 'rbac':
+        return '+ เพิ่มผู้ใช้งานใหม่';
+      case 'warehouses':
+        return '+ เพิ่มคลัง/ตำแหน่ง Bin';
+      case 'suppliers':
+        return '+ เพิ่มผู้จัดจำหน่าย';
+      case 'units':
+      case 'barcodes':
+      default:
+        return null;
+    }
+  };
+
+  const headerInfo = getHeaderInfo();
+  const addButtonLabel = getAddButtonLabel();
 
   return (
     <div className="space-y-6 font-sans">
@@ -294,114 +459,36 @@ export const MasterDataManagement: React.FC<MasterDataManagementProps> = ({
         theme === 'dark' ? 'border-slate-800' : 'border-slate-200'
       }`}>
         <div>
-          <h2 className={`text-lg font-bold tracking-tight ${
-            theme === 'dark' ? 'text-slate-50' : 'text-slate-900'
-          }`}>
-            {t.masterData}
-          </h2>
-          <p className={`text-xs font-normal mt-0.5 ${
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-lg">
+              {t.masterData}
+            </span>
+            <span className="text-slate-400 dark:text-slate-600 text-xs font-semibold">/</span>
+            <h2 className={`text-lg font-bold tracking-tight ${
+              theme === 'dark' ? 'text-slate-50' : 'text-slate-900'
+            }`}>
+              {headerInfo.title}
+            </h2>
+          </div>
+          <p className={`text-xs font-normal mt-1.5 ${
             theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
           }`}>
-            {t.productSubtitle}
+            {headerInfo.subtitle}
           </p>
         </div>
 
-        <button
-          className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition flex items-center gap-2 shrink-0 self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{t.addNewBtn}</span>
-        </button>
+        {addButtonLabel && (
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition flex items-center gap-2 shrink-0 self-start sm:self-auto cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{addButtonLabel}</span>
+          </button>
+        )}
       </div>
 
-      {/* Sub-Tab Navigation Bar: Uniform Font Weight (font-semibold) */}
-      <div className={`flex items-center gap-2 overflow-x-auto pb-1 border-b ${
-        theme === 'dark' ? 'border-slate-800' : 'border-slate-200'
-      }`}>
-        <button
-          onClick={() => setActiveSubTab('products')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 whitespace-nowrap ${
-            activeSubTab === 'products'
-              ? 'bg-blue-600 text-white shadow-xs'
-              : theme === 'dark'
-              ? 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
-              : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'
-          }`}
-        >
-          <Box className="w-3.5 h-3.5" />
-          <span>{t.tabProducts}</span>
-        </button>
 
-        <button
-          onClick={() => setActiveSubTab('rbac')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 whitespace-nowrap ${
-            activeSubTab === 'rbac'
-              ? 'bg-blue-600 text-white shadow-xs'
-              : theme === 'dark'
-              ? 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
-              : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'
-          }`}
-        >
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span>{t.tabUserAccess}</span>
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('units')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 whitespace-nowrap ${
-            activeSubTab === 'units'
-              ? 'bg-blue-600 text-white shadow-xs'
-              : theme === 'dark'
-              ? 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
-              : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'
-          }`}
-        >
-          <Ruler className="w-3.5 h-3.5" />
-          <span>{t.tabUnits}</span>
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('barcodes')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 whitespace-nowrap ${
-            activeSubTab === 'barcodes'
-              ? 'bg-blue-600 text-white shadow-xs'
-              : theme === 'dark'
-              ? 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
-              : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'
-          }`}
-        >
-          <QrCode className="w-3.5 h-3.5" />
-          <span>{t.tabBarcodes}</span>
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('warehouses')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 whitespace-nowrap ${
-            activeSubTab === 'warehouses'
-              ? 'bg-blue-600 text-white shadow-xs'
-              : theme === 'dark'
-              ? 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
-              : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'
-          }`}
-        >
-          <Building className="w-3.5 h-3.5" />
-          <span>{t.tabWarehouses}</span>
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('suppliers')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 whitespace-nowrap ${
-            activeSubTab === 'suppliers'
-              ? 'bg-blue-600 text-white shadow-xs'
-              : theme === 'dark'
-              ? 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
-              : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'
-          }`}
-        >
-          <Truck className="w-3.5 h-3.5" />
-          <span>{t.tabSuppliers}</span>
-        </button>
-      </div>
 
       {/* SUB-TAB 1: PRODUCT CATALOG & SKU */}
       {activeSubTab === 'products' && (
@@ -672,7 +759,7 @@ export const MasterDataManagement: React.FC<MasterDataManagementProps> = ({
                 </tr>
               </thead>
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-slate-800' : 'divide-slate-200'}`}>
-                {MOCK_USERS.map((usr) => (
+                {usersList.map((usr) => (
                   <tr key={usr.id}>
                     <td className={`p-3 font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'}`}>{usr.name}</td>
                     <td className={`p-3 font-normal ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{usr.email}</td>
@@ -960,7 +1047,7 @@ export const MasterDataManagement: React.FC<MasterDataManagementProps> = ({
           </div>
 
           <div className="space-y-4">
-            {MOCK_SUPPLIERS.map((sup) => (
+            {suppliersList.map((sup) => (
               <div
                 key={sup.id}
                 className={`p-5 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm ${
@@ -1140,6 +1227,329 @@ export const MasterDataManagement: React.FC<MasterDataManagementProps> = ({
               <Printer className="w-4 h-4" />
               <span>Print Barcode Label</span>
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ADD MASTER DATA MODAL */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div
+            className={`w-full max-w-lg p-6 rounded-2xl border shadow-xl space-y-5 animate-in zoom-in-95 duration-200 ${
+              theme === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
+            }`}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center font-bold text-sm">
+                  +
+                </div>
+                <div>
+                  <h3 className="font-bold text-base">{t.modalAddTitle}</h3>
+                  <p className="text-xs text-slate-400 font-normal">
+                    {activeSubTab === 'products' && 'เพิ่มรายการสินค้าใหม่ลงในแคตตาล็อก'}
+                    {activeSubTab === 'rbac' && 'เพิ่มบัญชีผู้ใช้และกำหนดบทบาทสิทธิ์ (RBAC)'}
+                    {activeSubTab === 'units' && 'เพิ่มหน่วยนับสินค้าและมิติกายภาพ'}
+                    {activeSubTab === 'barcodes' && 'ผูกบาร์โค้ดสากลและป้ายติดสินค้า'}
+                    {activeSubTab === 'warehouses' && 'เพิ่มคลังสินค้าและตำแหน่งจัดเก็บย่อย (Bin)'}
+                    {activeSubTab === 'suppliers' && 'เพิ่มข้อมูลผู้จัดจำหน่ายและข้อมูลภาษี'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateNewItem} className="space-y-4 text-xs">
+              {/* Product Form Fields */}
+              {(activeSubTab === 'products' || activeSubTab === 'units' || activeSubTab === 'barcodes') && (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-400 font-medium mb-1">{t.productName} *</label>
+                      <input
+                        type="text"
+                        required
+                        value={addName}
+                        onChange={(e) => setAddName(e.target.value)}
+                        placeholder="เช่น Nike Air Max 2026"
+                        className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                          theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 font-medium mb-1">{t.brand}</label>
+                      <input
+                        type="text"
+                        value={addBrand}
+                        onChange={(e) => setAddBrand(e.target.value)}
+                        placeholder="เช่น Nike"
+                        className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                          theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-400 font-medium mb-1">{t.code}</label>
+                      <input
+                        type="text"
+                        value={addCode}
+                        onChange={(e) => setAddCode(e.target.value)}
+                        placeholder="PRD-1005 (สร้างอัตโนมัติถ้าว่าง)"
+                        className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                          theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 font-medium mb-1">{t.sku}</label>
+                      <input
+                        type="text"
+                        value={addSku}
+                        onChange={(e) => setAddSku(e.target.value)}
+                        placeholder="SKU-889911 (สร้างอัตโนมัติถ้าว่าง)"
+                        className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                          theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-slate-400 font-medium mb-1">{t.price} ($)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={addPrice}
+                        onChange={(e) => setAddPrice(e.target.value)}
+                        className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                          theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 font-medium mb-1">{t.stockOnHand}</label>
+                      <input
+                        type="number"
+                        value={addStock}
+                        onChange={(e) => setAddStock(e.target.value)}
+                        className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                          theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 font-medium mb-1">หน่วยนับ (UOM)</label>
+                      <select
+                        value={addUom}
+                        onChange={(e) => setAddUom(e.target.value)}
+                        className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                          theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
+                      >
+                        <option value="PCS">PCS</option>
+                        <option value="PAIR">PAIR</option>
+                        <option value="BOX">BOX</option>
+                        <option value="PACK">PACK</option>
+                        <option value="SET">SET</option>
+                      </select>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* RBAC Form Fields */}
+              {activeSubTab === 'rbac' && (
+                <>
+                  <div>
+                    <label className="block text-slate-400 font-medium mb-1">ชื่อ-นามสกุล ผู้ใช้ *</label>
+                    <input
+                      type="text"
+                      required
+                      value={addName}
+                      onChange={(e) => setAddName(e.target.value)}
+                      placeholder="เช่น สมชาย ใจดี"
+                      className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                        theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-medium mb-1">อีเมลผู้ใช้งาน *</label>
+                    <input
+                      type="email"
+                      required
+                      value={addEmail}
+                      onChange={(e) => setAddEmail(e.target.value)}
+                      placeholder="user@matchstock.com"
+                      className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                        theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-medium mb-1">บทบาทสิทธิ์ใช้งาน (Role)</label>
+                    <select
+                      value={addRole}
+                      onChange={(e) => setAddRole(e.target.value as any)}
+                      className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                        theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                      }`}
+                    >
+                      <option value="admin">{t.roleAdmin} (Admin)</option>
+                      <option value="manager">{t.roleManager} (Manager)</option>
+                      <option value="warehouse_staff">{t.roleWarehouse} (Warehouse Staff)</option>
+                      <option value="purchasing_staff">{t.rolePurchasing} (Purchasing Staff)</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {/* Warehouse & Bins Form Fields */}
+              {activeSubTab === 'warehouses' && (
+                <>
+                  <div>
+                    <label className="block text-slate-400 font-medium mb-1">ชื่อคลังสินค้า *</label>
+                    <input
+                      type="text"
+                      required
+                      value={addWarehouseName}
+                      onChange={(e) => setAddWarehouseName(e.target.value)}
+                      placeholder="WH-Bangkok Main Center"
+                      className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                        theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                      }`}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-400 font-medium mb-1">โซนจัดเก็บ (Zone)</label>
+                      <input
+                        type="text"
+                        value={addZone}
+                        onChange={(e) => setAddZone(e.target.value)}
+                        placeholder="Zone A (Fast Moving)"
+                        className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                          theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 font-medium mb-1">รหัสตำแหน่ง Bin</label>
+                      <input
+                        type="text"
+                        value={addBinCode}
+                        onChange={(e) => setAddBinCode(e.target.value)}
+                        placeholder="BIN-A-01-05"
+                        className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                          theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Suppliers Form Fields */}
+              {activeSubTab === 'suppliers' && (
+                <>
+                  <div>
+                    <label className="block text-slate-400 font-medium mb-1">ชื่อผู้จัดจำหน่าย (Supplier) *</label>
+                    <input
+                      type="text"
+                      required
+                      value={addSupplierName}
+                      onChange={(e) => setAddSupplierName(e.target.value)}
+                      placeholder="เช่น Siam Logistics & Goods Co., Ltd."
+                      className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                        theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                      }`}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-400 font-medium mb-1">ชื่อผู้ติดต่อ</label>
+                      <input
+                        type="text"
+                        value={addContactPerson}
+                        onChange={(e) => setAddContactPerson(e.target.value)}
+                        placeholder="คุณวิชัย"
+                        className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                          theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 font-medium mb-1">เบอร์โทรศัพท์</label>
+                      <input
+                        type="text"
+                        value={addPhone}
+                        onChange={(e) => setAddPhone(e.target.value)}
+                        placeholder="+66 2 123 4567"
+                        className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                          theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-400 font-medium mb-1">อีเมลติดต่อ</label>
+                      <input
+                        type="email"
+                        value={addEmail}
+                        onChange={(e) => setAddEmail(e.target.value)}
+                        placeholder="contact@supplier.co.th"
+                        className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                          theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 font-medium mb-1">เลขประจำตัวผู้เสียภาษี</label>
+                      <input
+                        type="text"
+                        value={addTaxId}
+                        onChange={(e) => setAddTaxId(e.target.value)}
+                        placeholder="0105562099887"
+                        className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
+                          theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Modal Actions */}
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className={`px-4 py-2 rounded-xl border font-semibold text-xs transition ${
+                    theme === 'dark' ? 'border-slate-700 text-slate-300 hover:bg-slate-800' : 'border-slate-300 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  {t.cancel}
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{t.save}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

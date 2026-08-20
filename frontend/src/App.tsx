@@ -37,6 +37,7 @@ export function App() {
   const [theme, setTheme] = useState<ThemeMode>('light');
   const [selectedTenantId, setSelectedTenantId] = useState<string>('tenant-bkk');
   const [activeTab, setActiveTab] = useState<string>('masterData');
+  const [activeMasterSubTab, setActiveMasterSubTab] = useState<'rbac' | 'products' | 'units' | 'barcodes' | 'warehouses' | 'suppliers'>('products');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
@@ -109,7 +110,9 @@ export function App() {
           user={user}
           features={MOCK_TENANTS.find((t) => t.id === selectedTenantId)?.features}
           activeTab={activeTab}
+          activeSubTab={activeMasterSubTab}
           onTabChange={setActiveTab}
+          onSubTabChange={(sub) => setActiveMasterSubTab(sub as any)}
           onLogout={handleLogout}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={handleToggleSidebarCollapse}
@@ -134,7 +137,13 @@ export function App() {
           {/* Content Body Container */}
           <main className="flex-1 p-6 md:p-8 max-w-[1600px] w-full mx-auto space-y-6">
             {activeTab === 'masterData' && (
-              <MasterDataManagement lang={lang} theme={theme} searchQuery={searchQuery} />
+              <MasterDataManagement
+                lang={lang}
+                theme={theme}
+                searchQuery={searchQuery}
+                activeSubTab={activeMasterSubTab}
+                onSubTabChange={(sub) => setActiveMasterSubTab(sub)}
+              />
             )}
 
             {activeTab !== 'masterData' && (

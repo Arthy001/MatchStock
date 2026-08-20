@@ -24,7 +24,9 @@ interface SidebarProps {
   user: User;
   features?: SubscriptionFeatures;
   activeTab: string;
+  activeSubTab?: string;
   onTabChange: (tab: string) => void;
+  onSubTabChange?: (subTab: string) => void;
   onLogout: () => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
@@ -43,7 +45,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     settings: true,
   },
   activeTab,
+  activeSubTab = 'products',
   onTabChange,
+  onSubTabChange,
   onLogout,
   isCollapsed,
   onToggleCollapse,
@@ -168,22 +172,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   {/* Expanded Sub-items */}
                   {!isCollapsed && isMasterDataOpen && (
                     <div className="ml-7 mt-1.5 space-y-1 border-l border-slate-800 pl-3">
-                      <button
-                        onClick={() => onTabChange('masterData')}
-                        className={`w-full text-left text-xs py-1.5 px-2.5 rounded-lg transition truncate ${
-                          activeTab === 'masterData'
-                            ? 'text-blue-400 font-bold bg-blue-500/10'
-                            : 'text-slate-400 hover:text-slate-200'
-                        }`}
-                      >
-                        {t.productTitle}
-                      </button>
-                      <button
-                        onClick={() => onTabChange('masterData')}
-                        className="w-full text-left text-xs py-1.5 px-2.5 rounded-lg text-slate-400 hover:text-slate-200 truncate"
-                      >
-                        {t.warehouseTitle}
-                      </button>
+                      {[
+                        { key: 'rbac', label: t.tabUserAccess },
+                        { key: 'products', label: t.tabProducts },
+                        { key: 'units', label: t.tabUnits },
+                        { key: 'barcodes', label: t.tabBarcodes },
+                        { key: 'warehouses', label: t.tabWarehouses },
+                        { key: 'suppliers', label: t.tabSuppliers },
+                      ].map((item) => {
+                        const isSubActive = activeTab === 'masterData' && activeSubTab === item.key;
+                        return (
+                          <button
+                            key={item.key}
+                            onClick={() => {
+                              onTabChange('masterData');
+                              if (onSubTabChange) onSubTabChange(item.key);
+                            }}
+                            className={`w-full text-left text-xs py-1.5 px-2.5 rounded-lg transition truncate block ${
+                              isSubActive
+                                ? 'text-blue-400 font-bold bg-blue-500/10'
+                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
