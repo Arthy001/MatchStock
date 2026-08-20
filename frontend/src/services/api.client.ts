@@ -1,14 +1,14 @@
 import axios from 'axios';
 
-// Base API URL จาก .env หรือ fallback ไปที่ Localhost Back-End
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
+// Base API URL: ใช้ https://match-stock.ddns.net/api/v1 หรือตามที่ระบุใน .env
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://match-stock.ddns.net/api/v1';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 15000,
 });
 
 // Request Interceptor: แนบ JWT Token และ Tenant ID ไปกับทุก Request อัตโนมัติ
@@ -34,10 +34,10 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // ถ้า Token หมดอายุ ให้เคลียร์และพาไปหน้า Login
       localStorage.removeItem('matchstock_token');
+      localStorage.removeItem('matchstock_tenant_id');
       localStorage.removeItem('matchstock_user');
-      console.warn('Session expired. Please log in again.');
+      console.warn('Session expired or unauthorized. Please log in again.');
     }
     return Promise.reject(error);
   }
