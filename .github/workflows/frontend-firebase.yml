@@ -16,8 +16,8 @@ on:
       - 'frontend/**'
 
 jobs:
-  build_and_check:
-    name: 🛠️ Build & Type Check (React)
+  build_and_deploy:
+    name: 🛠️ Build & Deploy (React to Firebase)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -46,7 +46,7 @@ jobs:
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAGING }}'
-          projectId: matchstock-staging
+          projectId: DemoMatchStock
           channelId: live
 
       - name: Deploy to Firebase Hosting (Production)
@@ -57,5 +57,5 @@ jobs:
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}'
-          projectId: matchstock-prod
+          projectId: DemoMatchStock
           channelId: live
