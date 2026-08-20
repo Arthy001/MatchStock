@@ -1,4 +1,4 @@
-name: Deploy Frontend to Firebase Hosting
+name: Frontend CI & Firebase Hosting
 
 on:
   push:
@@ -8,9 +8,16 @@ on:
     paths:
       - 'frontend/**'
       - '.github/workflows/frontend-firebase.yml'
+  pull_request:
+    branches:
+      - develop
+      - main
+    paths:
+      - 'frontend/**'
 
 jobs:
-  build_and_deploy:
+  build_and_check:
+    name: 🛠️ Build & Type Check (React)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -27,12 +34,14 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Build Application
+      - name: Build Application & Verify Syntax
         working-directory: frontend
         run: npm run build
 
       - name: Deploy to Firebase Hosting (Staging)
-        if: github.ref == 'refs/heads/develop'
+        if: github.ref == 'refs/heads/develop' && env.FIREBASE_SECRET != ''
+        env:
+          FIREBASE_SECRET: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAGING }}
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
@@ -41,7 +50,9 @@ jobs:
           channelId: live
 
       - name: Deploy to Firebase Hosting (Production)
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && env.FIREBASE_SECRET != ''
+        env:
+          FIREBASE_SECRET: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
