@@ -30,3 +30,7 @@ Thumbs.db
 
 # Prisma Generated Clients (Will be generated on build)
 # (Optionally keep if using binary engines, but usually standard)
+
+# Agent Local Rules
+.agents/
+

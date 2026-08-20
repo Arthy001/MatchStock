@@ -1,113 +1,180 @@
-import React from 'react';
-import { Package, Warehouse, BarChart3, QrCode, ShieldCheck, ArrowRightLeft, Bell } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Language, ThemeMode, Tenant, User } from './types';
+import { LoginView } from './components/LoginView';
+import { Sidebar } from './components/Sidebar';
+import { Header } from './components/Header';
+import { MasterDataManagement } from './components/MasterDataManagement';
+import { getTranslation } from './i18n';
+import { LayoutDashboard, Boxes, ShoppingCart, ShoppingBag, BarChart3, Settings } from 'lucide-react';
+
+const MOCK_TENANTS: Tenant[] = [
+  {
+    id: 'tenant-bkk',
+    name: 'WH-Bangkok Center',
+    code: 'WH-BKK-01',
+    plan: 'Enterprise Multi-Tenant',
+    features: { masterData: true, inventory: true, sales: true, purchases: true, reports: true, settings: true },
+  },
+  {
+    id: 'tenant-cnx',
+    name: 'WH-Chiangmai Branch',
+    code: 'WH-CNX-02',
+    plan: 'Standard Plan',
+    features: { masterData: true, inventory: true, sales: false, purchases: true, reports: true, settings: false },
+  },
+  {
+    id: 'tenant-pkt',
+    name: 'WH-Phuket Distribution',
+    code: 'WH-PKT-03',
+    plan: 'Standard Plan',
+    features: { masterData: true, inventory: true, sales: true, purchases: false, reports: false, settings: false },
+  },
+];
 
 export function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [lang, setLang] = useState<Language>('th');
+  const [theme, setTheme] = useState<ThemeMode>('light');
+  const [selectedTenantId, setSelectedTenantId] = useState<string>('tenant-bkk');
+  const [activeTab, setActiveTab] = useState<string>('masterData');
+  const [activeMasterSubTab, setActiveMasterSubTab] = useState<'rbac' | 'products' | 'units' | 'barcodes' | 'warehouses' | 'suppliers'>('products');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+
+  const [user, setUser] = useState<User>({
+    id: 'usr-001',
+    name: 'Kittisak Prasertkul (Admin)',
+    email: 'admin@matchstock.com',
+    role: 'admin',
+    tenantId: 'tenant-bkk',
+    tenantName: 'WH-Bangkok Center',
+  });
+
+  const t = getTranslation(lang);
+
+  // Sync theme class with document root to ensure 100% cross-browser consistency (Chrome, Edge, Firefox, Safari)
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [theme]);
+
+  const handleLoginSuccess = (loggedInUser: User) => {
+    setUser(loggedInUser);
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+  };
+
+  const handleThemeToggle = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
+  const handleToggleSidebarCollapse = () => {
+    setIsSidebarCollapsed((prev) => !prev);
+  };
+
+  // If not logged in, show Clean Login Screen (Username & Password only)
+  if (!isLoggedIn) {
+    return (
+      <div className={theme === 'dark' ? 'dark bg-slate-950 text-slate-50' : 'bg-slate-100 text-slate-900'}>
+        <LoginView
+          lang={lang}
+          onLanguageChange={setLang}
+          theme={theme}
+          onThemeToggle={handleThemeToggle}
+          tenants={MOCK_TENANTS}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      </div>
+    );
+  }
+
+  // Once logged in, show main StockMind Blue-White Layout with high contrast Light/Dark mode
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
-      {/* Top Navbar */}
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <div className="bg-indigo-600 text-white p-2 rounded-lg font-bold flex items-center gap-2">
-            <Package className="w-5 h-5" />
-            <span>MatchStock</span>
-          </div>
-          <span className="text-xs bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded-full border border-indigo-500/30">
-            Multi-Tenant WMS
-          </span>
+    <div className={theme === 'dark' ? 'dark bg-slate-950 text-slate-50' : 'bg-slate-100 text-slate-900'}>
+      <div
+        className={`min-h-screen flex font-sans transition-colors duration-300 ${
+          theme === 'dark' ? 'bg-slate-950 text-slate-50' : 'bg-slate-100 text-slate-900'
+        }`}
+      >
+        {/* Left Sidebar */}
+        <Sidebar
+          lang={lang}
+          theme={theme}
+          user={user}
+          features={MOCK_TENANTS.find((t) => t.id === selectedTenantId)?.features}
+          activeTab={activeTab}
+          activeSubTab={activeMasterSubTab}
+          onTabChange={setActiveTab}
+          onSubTabChange={(sub) => setActiveMasterSubTab(sub as any)}
+          onLogout={handleLogout}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={handleToggleSidebarCollapse}
+        />
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Top Header */}
+          <Header
+            lang={lang}
+            onLanguageChange={setLang}
+            theme={theme}
+            onThemeToggle={handleThemeToggle}
+            user={user}
+            tenants={MOCK_TENANTS}
+            selectedTenantId={selectedTenantId}
+            onTenantSelect={setSelectedTenantId}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
+
+          {/* Content Body Container */}
+          <main className="flex-1 p-6 md:p-8 max-w-[1600px] w-full mx-auto space-y-6">
+            {activeTab === 'masterData' && (
+              <MasterDataManagement
+                lang={lang}
+                theme={theme}
+                searchQuery={searchQuery}
+                activeSubTab={activeMasterSubTab}
+                onSubTabChange={(sub) => setActiveMasterSubTab(sub)}
+              />
+            )}
+
+            {activeTab !== 'masterData' && (
+              <div
+                className={`p-12 text-center rounded-2xl border ${
+                  theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+                }`}
+              >
+                <div className="w-16 h-16 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center mx-auto mb-4">
+                  {activeTab === 'dashboard' && <LayoutDashboard className="w-8 h-8" />}
+                  {activeTab === 'inventory' && <Boxes className="w-8 h-8" />}
+                  {activeTab === 'sales' && <ShoppingCart className="w-8 h-8" />}
+                  {activeTab === 'purchases' && <ShoppingBag className="w-8 h-8" />}
+                  {activeTab === 'reports' && <BarChart3 className="w-8 h-8" />}
+                  {activeTab === 'settings' && <Settings className="w-8 h-8" />}
+                </div>
+                <h3 className="text-xl font-black capitalize text-slate-900 dark:text-slate-50">{activeTab} Module</h3>
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mt-2 max-w-md mx-auto">
+                  โมดูลนี้พร้อมสำหรับการเชื่อมต่อ API ใน Sprint ถัดไป ท่านสามารถดูหน้าแรก **Master Data Management** ได้โดยกดปุ่มเลือกเมนูทางซ้ายมือ
+                </p>
+                <button
+                  onClick={() => setActiveTab('masterData')}
+                  className="mt-6 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition"
+                >
+                  สลับกลับไปหน้า Master Data Management
+                </button>
+              </div>
+            )}
+          </main>
         </div>
-        <div className="flex items-center gap-4">
-          <button className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition">
-            <Bell className="w-5 h-5" />
-          </button>
-          <div className="flex items-center gap-3 border-l border-slate-800 pl-4">
-            <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-sm">
-              AD
-            </div>
-            <div className="text-left hidden sm:block">
-              <p className="text-sm font-medium leading-none">Admin User</p>
-              <p className="text-xs text-slate-400 mt-1">Tenant: WH-Bangkok</p>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 space-y-8">
-        {/* Hero Section */}
-        <section className="bg-gradient-to-br from-indigo-950/60 via-slate-900 to-slate-950 border border-indigo-900/40 rounded-2xl p-8 shadow-xl">
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">
-            ระบบบริหารจัดการคลังสินค้าอัจฉริยะ (WMS)
-          </h1>
-          <p className="text-slate-400 mt-2 max-w-2xl text-sm md:text-base">
-            ยินดีต้อนรับสู่ MatchStock แพลตฟอร์มบริหารคลังสินค้า Multi-tenant พร้อมระบบตัดสต็อก FIFO, ตรวจนับ Cycle Count และสแกนบาร์โค้ด
-          </p>
-        </section>
-
-        {/* Core Modules Grid */}
-        <section>
-          <h2 className="text-lg font-semibold text-slate-200 mb-4">โมดูลหลักของระบบ</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {/* Card 1 */}
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 hover:border-indigo-500/50 transition cursor-pointer group">
-              <div className="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center mb-4 group-hover:scale-110 transition">
-                <Warehouse className="w-5 h-5" />
-              </div>
-              <h3 className="font-semibold text-white">Master Data & Products</h3>
-              <p className="text-xs text-slate-400 mt-1">จัดการ SKU, คลังสินค้า, ตำแหน่ง Bin, ซัพพลายเออร์ และมิติสินค้า</p>
-            </div>
-
-            {/* Card 2 */}
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 hover:border-indigo-500/50 transition cursor-pointer group">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-4 group-hover:scale-110 transition">
-                <ArrowRightLeft className="w-5 h-5" />
-              </div>
-              <h3 className="font-semibold text-white">Stock Transactions</h3>
-              <p className="text-xs text-slate-400 mt-1">บันทึกรับ (GR), จ่าย (GI ตัด FIFO), โอนย้ายข้ามคลัง/Bin และปรับยอดสต็อก</p>
-            </div>
-
-            {/* Card 3 */}
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 hover:border-indigo-500/50 transition cursor-pointer group">
-              <div className="w-10 h-10 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center mb-4 group-hover:scale-110 transition">
-                <QrCode className="w-5 h-5" />
-              </div>
-              <h3 className="font-semibold text-white">Cycle Count & Scanner</h3>
-              <p className="text-xs text-slate-400 mt-1">สแกนบาร์โค้ดผ่านกล้องมือถือ ตรวจนับสต็อกตามรอบ และคำนวณผลต่าง Variance</p>
-            </div>
-
-            {/* Card 4 */}
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 hover:border-indigo-500/50 transition cursor-pointer group">
-              <div className="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center mb-4 group-hover:scale-110 transition">
-                <BarChart3 className="w-5 h-5" />
-              </div>
-              <h3 className="font-semibold text-white">Analytics & Reports</h3>
-              <p className="text-xs text-slate-400 mt-1">รายงาน Stock Card การเคลื่อนไหวสินค้า, วิเคราะห์ Fast/Slow Moving และมูลค่าสต็อก</p>
-            </div>
-
-            {/* Card 5 */}
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 hover:border-indigo-500/50 transition cursor-pointer group">
-              <div className="w-10 h-10 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center mb-4 group-hover:scale-110 transition">
-                <Bell className="w-5 h-5" />
-              </div>
-              <h3 className="font-semibold text-white">Smart Inventory Alerts</h3>
-              <p className="text-xs text-slate-400 mt-1">แจ้งเตือนสินค้าถึงจุด Reorder Point, สินค้าใกล้หมดอายุ และสินค้าเกินความจุ</p>
-            </div>
-
-            {/* Card 6 */}
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 hover:border-indigo-500/50 transition cursor-pointer group">
-              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center mb-4 group-hover:scale-110 transition">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <h3 className="font-semibold text-white">Multi-Tenancy & Security</h3>
-              <p className="text-xs text-slate-400 mt-1">แยกข้อมูล Tenant เด็ดขาด พร้อมกำหนดสิทธิ์ RBAC 4 ระดับบทบาท</p>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
-        MatchStock WMS System &copy; 2026. Built with React (Firebase Hosting) & Node.js Prisma (Cloud Run).
-      </footer>
+      </div>
     </div>
   );
 }
