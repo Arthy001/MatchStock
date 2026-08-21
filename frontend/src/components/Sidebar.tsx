@@ -54,6 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const t = getTranslation(lang);
   const [isMasterDataOpen, setIsMasterDataOpen] = useState(true);
+  const [isInventoryOpen, setIsInventoryOpen] = useState(true);
 
   return (
     <aside
@@ -203,22 +204,66 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               )}
 
-              {/* Inventory */}
+              {/* Inventory / Core Stock Transactions */}
               {features.inventory && (
-                <button
-                  onClick={() => onTabChange('inventory')}
-                  title={t.inventory}
-                  className={`w-full flex items-center ${
-                    isCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3 py-2.5'
-                  } rounded-xl text-sm font-medium transition ${
-                    activeTab === 'inventory'
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
-                  }`}
-                >
-                  <Boxes className="w-5 h-5 shrink-0" />
-                  {!isCollapsed && <span className="truncate">{t.inventory}</span>}
-                </button>
+                <div>
+                  <button
+                    onClick={() => {
+                      onTabChange('inventory');
+                      if (!isCollapsed) setIsInventoryOpen(!isInventoryOpen);
+                    }}
+                    title={t.inventory}
+                    className={`w-full flex items-center ${
+                      isCollapsed ? 'justify-center px-0 py-3' : 'justify-between px-3 py-2.5'
+                    } rounded-xl text-sm font-medium transition ${
+                      activeTab === 'inventory'
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                    }`}
+                  >
+                    <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+                      <Boxes className="w-5 h-5 shrink-0" />
+                      {!isCollapsed && <span className="truncate">{t.inventory}</span>}
+                    </div>
+                    {!isCollapsed &&
+                      (isInventoryOpen ? (
+                        <ChevronDown className="w-4 h-4 text-slate-300 shrink-0" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
+                      ))}
+                  </button>
+
+                  {/* Expanded Sub-items */}
+                  {!isCollapsed && isInventoryOpen && (
+                    <div className="ml-7 mt-1.5 space-y-1 border-l border-slate-800 pl-3">
+                      {[
+                        { key: 'all', label: t.tabAllTransactions },
+                        { key: 'receive', label: t.tabGoodsReceive },
+                        { key: 'issue', label: t.tabGoodsIssue },
+                        { key: 'transfer', label: t.tabStockTransfer },
+                        { key: 'adjustment', label: t.tabStockAdjustment },
+                      ].map((item) => {
+                        const isSubActive = activeTab === 'inventory' && activeSubTab === item.key;
+                        return (
+                          <button
+                            key={item.key}
+                            onClick={() => {
+                              onTabChange('inventory');
+                              if (onSubTabChange) onSubTabChange(item.key);
+                            }}
+                            className={`w-full text-left text-xs py-1.5 px-2.5 rounded-lg transition truncate block ${
+                              isSubActive
+                                ? 'text-blue-400 font-bold bg-blue-500/10'
+                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               )}
 
               {/* Sales */}

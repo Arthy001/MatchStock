@@ -45,6 +45,70 @@ export const translations = {
     tabWarehouses: '5. คลังสินค้า & ตำแหน่ง Bin',
     tabSuppliers: '6. ผู้จัดจำหน่าย & ภาษี',
 
+    // Core Stock Transactions Sub-tabs
+    tabAllTransactions: 'ประวัติธุรกรรมทั้งหมด (Audit Trail)',
+    tabGoodsReceive: '1. รับสินค้าเข้าคลัง (Goods Receive - GR)',
+    tabGoodsIssue: '2. เบิก/จ่ายสินค้าออกจากคลัง (Goods Issue - GI)',
+    tabStockTransfer: '3. โอนย้ายสินค้าระหว่างคลัง/Bin (Stock Transfer)',
+    tabStockAdjustment: '4. ปรับยอดสต็อกสินค้า (Stock Adjustment)',
+
+    // Stock Transactions Titles & Descriptions
+    transTitle: 'ระบบรับ-จ่าย และโอนย้ายสต็อก (Core Stock Transactions)',
+    transSubtitle: 'บันทึกการเคลื่อนไหวสต็อกสินค้าแบบ Real-time รองรับ Lot/Batch, วันหมดอายุ และตัดสต็อกตาม Bin',
+    grTitle: 'บันทึกการรับสินค้าเข้าคลัง (Goods Receive - GR)',
+    grSubtitle: 'รับสินค้าเข้าคลัง ระบุหมายเลข Lot/Batch, วันผลิต (MFG) และวันหมดอายุ (EXP) พร้อมเลือกคลังและตำแหน่ง Bin ปลายทาง',
+    giTitle: 'บันทึกการเบิก/จ่ายสินค้าออกจากคลัง (Goods Issue / Dispatch - GI)',
+    giSubtitle: 'เบิก/จ่ายสินค้าออกจากคลัง ตัดสต็อกตามตำแหน่ง Bin อัตโนมัติ เลือกล็อตแบบ FIFO พร้อมระบุวัตถุประสงค์การเบิก',
+    transferTitle: 'ระบบโอนย้ายสินค้าข้ามคลัง / Bin-to-Bin (Stock Transfer)',
+    transferSubtitle: 'โอนย้ายสินค้าระหว่างสาขา/คลังสินค้า (Inter-warehouse) หรือย้ายตำแหน่งจัดเก็บภายในคลัง (Bin-to-Bin)',
+    adjTitle: 'ระบบปรับปรุงยอดสต็อกสินค้า (Stock Adjustment)',
+    adjSubtitle: 'ปรับเพิ่ม/ลดยอดสต็อกตามผลต่างจริง พร้อมระบุเหตุผล (ชำรุด, สูญหาย, ผลต่างการนับ) เพื่อความโปร่งใส',
+
+    // Transaction Fields & Table Headers
+    docNo: 'เลขที่เอกสาร',
+    transType: 'ประเภทธุรกรรม',
+    transDate: 'วันที่ทำรายการ',
+    performer: 'ผู้ทำรายการ',
+    sourceLocation: 'ต้นทาง (From)',
+    destLocation: 'ปลายทาง (To)',
+    lotBatch: 'หมายเลข Lot/Batch',
+    mfgDate: 'วันผลิต (MFG)',
+    expDate: 'วันหมดอายุ (EXP)',
+    quantity: 'จำนวน',
+    unitPrice: 'ราคาต่อหน่วย',
+    totalValue: 'มูลค่ารวม',
+    reason: 'เหตุผล / วัตถุประสงค์',
+    referenceDoc: 'เอกสารอ้างอิง (PO/SO/Ref)',
+    remarks: 'หมายเหตุเพิ่มเติม',
+    currentQty: 'สต็อกปัจจุบัน',
+    adjustedQty: 'สต็อกหลังปรับ',
+    varianceQty: 'ผลต่าง (+/-)',
+    recipient: 'ผู้รับสินค้า / แผนก',
+    supplier: 'ผู้จัดจำหน่าย (Supplier)',
+    selectProduct: 'เลือกสินค้า',
+    selectWarehouse: 'เลือกคลังสินค้า',
+    selectBin: 'เลือกตำแหน่ง Bin',
+    selectSupplier: 'เลือกซัพพลายเออร์',
+    selectReason: 'เลือกเหตุผล',
+    transferMode: 'รูปแบบการโอนย้าย',
+    interWarehouse: 'โอนย้ายข้ามคลัง (Inter-Warehouse)',
+    binToBin: 'ย้ายตำแหน่งจัดเก็บ (Bin-to-Bin)',
+
+    // Transaction Types & Badges
+    typeReceive: 'รับเข้าคลัง (GR)',
+    typeIssue: 'เบิกจ่ายออก (GI)',
+    typeTransfer: 'โอนย้ายสต็อก (TR)',
+    typeAdjustment: 'ปรับยอดสต็อก (ADJ)',
+    statusCompleted: 'เสร็จสมบูรณ์',
+    statusPending: 'รอดำเนินการ',
+    statusCancelled: 'ยกเลิก',
+
+    // Quick Stats
+    statTodayReceive: 'ยอดรับเข้าวันนี้',
+    statTodayIssue: 'ยอดเบิกจ่ายวันนี้',
+    statActiveTransfers: 'รายการโอนย้ายระหว่างทาง',
+    statTotalAdjustments: 'รายการปรับยอดเดือนนี้',
+
     // Section Titles
     rbacTitle: 'ผู้ใช้งานและสิทธิ์ระบบ',
     rbacSubtitle: 'จัดการผู้ใช้และกำหนดสิทธิ์การเข้าถึงตามบทบาท 4 ระดับ',
@@ -60,7 +124,9 @@ export const translations = {
     supplierSubtitle: 'จัดการข้อมูลซัพพลายเออร์, ประเภทภาษี และรูปแบบส่วนลด',
 
     // Table Headers & Labels
-    addNewBtn: '+ เพิ่มรายการใหม่',
+    addNewBtn: 'เพิ่มรายการใหม่',
+    newTransactionBtn: 'สร้างรายการธุรกรรมใหม่',
+    viewDetails: 'ดูรายละเอียด',
     actions: 'จัดการ',
     status: 'สถานะ',
     role: 'บทบาท',
@@ -110,12 +176,16 @@ export const translations = {
     // Modal
     modalAddTitle: 'เพิ่มรายการ Master Data ใหม่',
     modalEditTitle: 'แก้ไขข้อมูล Master Data',
+    modalNewTransaction: 'สร้างรายการบันทึกสต็อก (Stock Transaction)',
+    drawerTransactionDetail: 'รายละเอียดธุรกรรมสต็อก & Audit Trail',
     save: 'บันทึกข้อมูล',
+    submitTransaction: 'ยืนยันทำรายการสต็อก',
     cancel: 'ยกเลิก',
     close: 'ปิด',
 
     // Footer
     copyright: 'MatchStock WMS System © 2026. พัฒนาด้วย React (Firebase Hosting) & Node.js Prisma (Cloud Run)'
+
   },
   en: {
     // Brand & General
@@ -161,6 +231,70 @@ export const translations = {
     tabWarehouses: '5. Multi-Warehouse & Bins',
     tabSuppliers: '6. Suppliers & Tax Masters',
 
+    // Core Stock Transactions Sub-tabs
+    tabAllTransactions: 'All Transactions (Audit Trail)',
+    tabGoodsReceive: '1. Goods Receive (GR)',
+    tabGoodsIssue: '2. Goods Issue / Dispatch (GI)',
+    tabStockTransfer: '3. Stock Transfer (Inter-WH / Bin)',
+    tabStockAdjustment: '4. Stock Adjustment',
+
+    // Stock Transactions Titles & Descriptions
+    transTitle: 'Core Stock Transactions',
+    transSubtitle: 'Real-time stock movement tracking with Lot/Batch, Expiration dates, and Bin-level deduction',
+    grTitle: 'Goods Receive (GR)',
+    grSubtitle: 'Record inbound goods with Lot/Batch numbers, MFG/EXP dates, and assign destination warehouse bins',
+    giTitle: 'Goods Issue / Dispatch (GI)',
+    giSubtitle: 'Issue and dispatch items with automatic Bin deduction, FIFO lot picking, and purpose tracking',
+    transferTitle: 'Stock Transfer (Inter-Warehouse & Bin-to-Bin)',
+    transferSubtitle: 'Relocate items between branches/warehouses or rearrange storage locations within the same facility',
+    adjTitle: 'Stock Adjustment',
+    adjSubtitle: 'Adjust stock levels according to physical count variances with audit reasons (Damaged, Lost, Found)',
+
+    // Transaction Fields & Table Headers
+    docNo: 'Document No.',
+    transType: 'Transaction Type',
+    transDate: 'Transaction Date',
+    performer: 'Created By',
+    sourceLocation: 'Source (From)',
+    destLocation: 'Destination (To)',
+    lotBatch: 'Lot/Batch No.',
+    mfgDate: 'MFG Date',
+    expDate: 'EXP Date',
+    quantity: 'Quantity',
+    unitPrice: 'Unit Price',
+    totalValue: 'Total Value',
+    reason: 'Reason / Purpose',
+    referenceDoc: 'Reference (PO/SO/Ref)',
+    remarks: 'Remarks',
+    currentQty: 'Current Stock',
+    adjustedQty: 'Adjusted Stock',
+    varianceQty: 'Variance (+/-)',
+    recipient: 'Recipient / Dept',
+    supplier: 'Supplier',
+    selectProduct: 'Select Product',
+    selectWarehouse: 'Select Warehouse',
+    selectBin: 'Select Bin Location',
+    selectSupplier: 'Select Supplier',
+    selectReason: 'Select Reason',
+    transferMode: 'Transfer Mode',
+    interWarehouse: 'Inter-Warehouse Transfer',
+    binToBin: 'Bin-to-Bin Relocation',
+
+    // Transaction Types & Badges
+    typeReceive: 'Goods Receive (GR)',
+    typeIssue: 'Goods Issue (GI)',
+    typeTransfer: 'Stock Transfer (TR)',
+    typeAdjustment: 'Adjustment (ADJ)',
+    statusCompleted: 'Completed',
+    statusPending: 'Pending',
+    statusCancelled: 'Cancelled',
+
+    // Quick Stats
+    statTodayReceive: "Today's Receives",
+    statTodayIssue: "Today's Dispatches",
+    statActiveTransfers: 'Active Transfers',
+    statTotalAdjustments: 'Month Adjustments',
+
     // Section Titles
     rbacTitle: 'Tenant & User Access Control (RBAC)',
     rbacSubtitle: 'Manage users and assign role-based access permissions across 4 roles',
@@ -176,7 +310,9 @@ export const translations = {
     supplierSubtitle: 'Supplier catalog, Tax rules (VAT 7%), and discount structures',
 
     // Table Headers & Labels
-    addNewBtn: '+ Add New Item',
+    addNewBtn: 'Add New Item',
+    newTransactionBtn: 'Create New Transaction',
+    viewDetails: 'View Details',
     actions: 'Action',
     status: 'Status',
     role: 'Role',
@@ -226,7 +362,10 @@ export const translations = {
     // Modal
     modalAddTitle: 'Add New Master Data Record',
     modalEditTitle: 'Edit Master Data Record',
+    modalNewTransaction: 'Create Stock Transaction',
+    drawerTransactionDetail: 'Stock Transaction Details & Audit Trail',
     save: 'Save Changes',
+    submitTransaction: 'Confirm Transaction',
     cancel: 'Cancel',
     close: 'Close',
 
@@ -236,3 +375,4 @@ export const translations = {
 };
 
 export const getTranslation = (lang: Language) => translations[lang] || translations.th;
+

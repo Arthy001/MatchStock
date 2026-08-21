@@ -4,30 +4,26 @@ import { LoginView } from './components/LoginView';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { MasterDataManagement } from './components/MasterDataManagement';
+import { StockTransactions } from './components/StockTransactions';
 import { getTranslation } from './i18n';
 import { LayoutDashboard, Boxes, ShoppingCart, ShoppingBag, BarChart3, Settings } from 'lucide-react';
 
-const MOCK_TENANTS: Tenant[] = [
+import { authService } from './services/auth.service';
+
+const LIVE_TENANTS: Tenant[] = [
   {
-    id: 'tenant-bkk',
-    name: 'WH-Bangkok Center',
+    id: 'f97fe2dc-486e-4054-931c-aadf92823e69',
+    name: 'WH-Bangkok Center (MatchStock Demo)',
     code: 'WH-BKK-01',
     plan: 'Enterprise Multi-Tenant',
     features: { masterData: true, inventory: true, sales: true, purchases: true, reports: true, settings: true },
   },
   {
-    id: 'tenant-cnx',
-    name: 'WH-Chiangmai Branch',
-    code: 'WH-CNX-02',
-    plan: 'Standard Plan',
-    features: { masterData: true, inventory: true, sales: false, purchases: true, reports: true, settings: false },
-  },
-  {
-    id: 'tenant-pkt',
-    name: 'WH-Phuket Distribution',
-    code: 'WH-PKT-03',
-    plan: 'Standard Plan',
-    features: { masterData: true, inventory: true, sales: true, purchases: false, reports: false, settings: false },
+    id: '35213af2-d412-4be7-bcc0-a972ed233e73',
+    name: 'Acme Industrial Supplies (Growth)',
+    code: 'ACME-01',
+    plan: 'Growth Plan',
+    features: { masterData: true, inventory: true, sales: true, purchases: true, reports: true, settings: true },
   },
 ];
 
@@ -35,24 +31,52 @@ export function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [lang, setLang] = useState<Language>('th');
   const [theme, setTheme] = useState<ThemeMode>('light');
-  const [selectedTenantId, setSelectedTenantId] = useState<string>('tenant-bkk');
+  const [selectedTenantId, setSelectedTenantId] = useState<string>('f97fe2dc-486e-4054-931c-aadf92823e69');
   const [activeTab, setActiveTab] = useState<string>('masterData');
   const [activeMasterSubTab, setActiveMasterSubTab] = useState<'rbac' | 'products' | 'units' | 'barcodes' | 'warehouses' | 'suppliers'>('products');
+  const [activeInventorySubTab, setActiveInventorySubTab] = useState<'all' | 'receive' | 'issue' | 'transfer' | 'adjustment'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
   const [user, setUser] = useState<User>({
-    id: 'usr-001',
+    id: '836da6be-afef-410b-9d2f-36d58e4c4109',
     name: 'Kittisak Prasertkul (Admin)',
     email: 'admin@matchstock.com',
     role: 'admin',
-    tenantId: 'tenant-bkk',
-    tenantName: 'WH-Bangkok Center',
+    tenantId: 'f97fe2dc-486e-4054-931c-aadf92823e69',
+    tenantName: 'WH-Bangkok Center (MatchStock Demo)',
   });
 
   const t = getTranslation(lang);
 
-  // Sync theme class with document root to ensure 100% cross-browser consistency (Chrome, Edge, Firefox, Safari)
+  // Restore live session from localStorage on initial load
+  useEffect(() => {
+    const savedToken = localStorage.getItem('matchstock_token');
+    const savedUser = localStorage.getItem('matchstock_user');
+    const savedTenantId = localStorage.getItem('matchstock_tenant_id');
+
+    if (savedToken && savedUser) {
+      try {
+        const parsed = JSON.parse(savedUser);
+        setUser({
+          id: parsed.id || 'usr-001',
+          name: parsed.fullName || parsed.name || parsed.email?.split('@')[0] || 'User',
+          email: parsed.email || '',
+          role: parsed.role || 'admin',
+          tenantId: savedTenantId || parsed.tenantId || 'f97fe2dc-486e-4054-931c-aadf92823e69',
+          tenantName: (savedTenantId === '35213af2-d412-4be7-bcc0-a972ed233e73')
+            ? 'Acme Industrial Supplies'
+            : 'WH-Bangkok Center (MatchStock Demo)',
+        });
+        if (savedTenantId) setSelectedTenantId(savedTenantId);
+        setIsLoggedIn(true);
+      } catch (e) {
+        console.error('Failed to parse saved user:', e);
+      }
+    }
+  }, []);
+
+  // Sync theme class with document root
   useEffect(() => {
     const root = document.documentElement;
     if (theme === 'dark') {
@@ -64,10 +88,12 @@ export function App() {
 
   const handleLoginSuccess = (loggedInUser: User) => {
     setUser(loggedInUser);
+    setSelectedTenantId(loggedInUser.tenantId);
     setIsLoggedIn(true);
   };
 
   const handleLogout = () => {
+    authService.logout();
     setIsLoggedIn(false);
   };
 
@@ -79,7 +105,7 @@ export function App() {
     setIsSidebarCollapsed((prev) => !prev);
   };
 
-  // If not logged in, show Clean Login Screen (Username & Password only)
+  // If not logged in, show Clean Login Screen
   if (!isLoggedIn) {
     return (
       <div className={theme === 'dark' ? 'dark bg-slate-950 text-slate-50' : 'bg-slate-100 text-slate-900'}>
@@ -88,7 +114,7 @@ export function App() {
           onLanguageChange={setLang}
           theme={theme}
           onThemeToggle={handleThemeToggle}
-          tenants={MOCK_TENANTS}
+          tenants={LIVE_TENANTS}
           onLoginSuccess={handleLoginSuccess}
         />
       </div>
@@ -108,11 +134,17 @@ export function App() {
           lang={lang}
           theme={theme}
           user={user}
-          features={MOCK_TENANTS.find((t) => t.id === selectedTenantId)?.features}
+          features={LIVE_TENANTS.find((t) => t.id === selectedTenantId)?.features}
           activeTab={activeTab}
-          activeSubTab={activeMasterSubTab}
+          activeSubTab={activeTab === 'inventory' ? activeInventorySubTab : activeMasterSubTab}
           onTabChange={setActiveTab}
-          onSubTabChange={(sub) => setActiveMasterSubTab(sub as any)}
+          onSubTabChange={(sub) => {
+            if (activeTab === 'inventory') {
+              setActiveInventorySubTab(sub as any);
+            } else {
+              setActiveMasterSubTab(sub as any);
+            }
+          }}
           onLogout={handleLogout}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={handleToggleSidebarCollapse}
@@ -127,7 +159,7 @@ export function App() {
             theme={theme}
             onThemeToggle={handleThemeToggle}
             user={user}
-            tenants={MOCK_TENANTS}
+            tenants={LIVE_TENANTS}
             selectedTenantId={selectedTenantId}
             onTenantSelect={setSelectedTenantId}
             searchQuery={searchQuery}
@@ -146,7 +178,17 @@ export function App() {
               />
             )}
 
-            {activeTab !== 'masterData' && (
+            {activeTab === 'inventory' && (
+              <StockTransactions
+                lang={lang}
+                theme={theme}
+                searchQuery={searchQuery}
+                activeSubTab={activeInventorySubTab}
+                onSubTabChange={(sub) => setActiveInventorySubTab(sub)}
+              />
+            )}
+
+            {activeTab !== 'masterData' && activeTab !== 'inventory' && (
               <div
                 className={`p-12 text-center rounded-2xl border ${
                   theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
@@ -154,7 +196,6 @@ export function App() {
               >
                 <div className="w-16 h-16 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center mx-auto mb-4">
                   {activeTab === 'dashboard' && <LayoutDashboard className="w-8 h-8" />}
-                  {activeTab === 'inventory' && <Boxes className="w-8 h-8" />}
                   {activeTab === 'sales' && <ShoppingCart className="w-8 h-8" />}
                   {activeTab === 'purchases' && <ShoppingBag className="w-8 h-8" />}
                   {activeTab === 'reports' && <BarChart3 className="w-8 h-8" />}
@@ -162,14 +203,22 @@ export function App() {
                 </div>
                 <h3 className="text-xl font-black capitalize text-slate-900 dark:text-slate-50">{activeTab} Module</h3>
                 <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mt-2 max-w-md mx-auto">
-                  โมดูลนี้พร้อมสำหรับการเชื่อมต่อ API ใน Sprint ถัดไป ท่านสามารถดูหน้าแรก **Master Data Management** ได้โดยกดปุ่มเลือกเมนูทางซ้ายมือ
+                  โมดูลนี้พร้อมสำหรับการเชื่อมต่อ API ใน Sprint ถัดไป ท่านสามารถดูหน้า **Master Data Management** หรือ **จัดการคลังและสต็อก (Core Stock Transactions)** ได้โดยกดเลือกเมนูทางซ้ายมือ
                 </p>
-                <button
-                  onClick={() => setActiveTab('masterData')}
-                  className="mt-6 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition"
-                >
-                  สลับกลับไปหน้า Master Data Management
-                </button>
+                <div className="flex items-center justify-center gap-3 mt-6">
+                  <button
+                    onClick={() => setActiveTab('masterData')}
+                    className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition"
+                  >
+                    1. Master Data Management
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('inventory')}
+                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition"
+                  >
+                    2. Core Stock Transactions
+                  </button>
+                </div>
               </div>
             )}
           </main>

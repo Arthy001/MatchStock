@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Base API URL: ใช้ https://match-stock.ddns.net/api/v1 หรือตามที่ระบุใน .env
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://match-stock.ddns.net/api/v1';
+// Base API URL: ใช้ /api/v1 (ผ่าน Vite Proxy) หรือตามที่ระบุใน .env
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,

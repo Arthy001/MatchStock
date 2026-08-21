@@ -13,5 +13,12 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    proxy: {
+      '/api': {
+        target: 'https://match-stock.ddns.net',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 });

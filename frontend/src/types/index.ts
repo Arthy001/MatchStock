@@ -91,3 +91,71 @@ export interface UserPermissionItem {
   lastActive: string;
   status: 'active' | 'inactive';
 }
+
+export type TransactionType = 'RECEIVE' | 'ISSUE' | 'TRANSFER' | 'ADJUSTMENT';
+export type TransactionStatus = 'COMPLETED' | 'PENDING' | 'CANCELLED';
+
+export interface StockTransaction {
+  id: string;
+  documentNo: string;
+  type: TransactionType;
+  status: TransactionStatus;
+  createdAt: string;
+  createdBy: string;
+  referenceNo?: string;
+  notes?: string;
+
+  // GR Specific
+  supplierId?: string;
+  supplierName?: string;
+
+  // GI Specific
+  issueReason?: string;
+  recipientName?: string;
+
+  // Transfer Specific
+  transferType?: 'INTER_WAREHOUSE' | 'BIN_TO_BIN';
+
+  // Adjustment Specific
+  adjustmentReason?: string;
+  adjustmentDirection?: 'INCREASE' | 'DECREASE';
+
+  // Items
+  items: StockTransactionItem[];
+  totalQuantity: number;
+  totalAmount?: number;
+}
+
+export interface StockTransactionItem {
+  id: string;
+  productId: string;
+  productCode: string;
+  productName: string;
+  sku: string;
+  uom: string;
+  quantity: number;
+  unitPrice?: number;
+  totalPrice?: number;
+
+  // Lot / Batch & Expiry
+  lotNumber?: string;
+  mfgDate?: string;
+  expDate?: string;
+
+  // Location details
+  fromWarehouseId?: string;
+  fromWarehouseName?: string;
+  fromBinId?: string;
+  fromBinCode?: string;
+
+  toWarehouseId?: string;
+  toWarehouseName?: string;
+  toBinId?: string;
+  toBinCode?: string;
+
+  // Adjustment variance
+  currentStock?: number;
+  adjustedStock?: number;
+  variance?: number;
+}
+
