@@ -7,6 +7,8 @@ import { MasterDataManagement } from './components/MasterDataManagement';
 import { StockTransactions } from './components/StockTransactions';
 import { MobileBarcodeScanner } from './components/MobileBarcodeScanner';
 import { CycleCountManagement } from './components/CycleCountManagement';
+import { OrdersManagement } from './components/OrdersManagement';
+import { ReportsAnalytics } from './components/ReportsAnalytics';
 import { getTranslation } from './i18n';
 import { LayoutDashboard, Boxes, ShoppingCart, ShoppingBag, BarChart3, Settings } from 'lucide-react';
 
@@ -217,39 +219,63 @@ export function App() {
                 />
               )}
 
-            {activeTab !== 'masterData' && activeTab !== 'inventory' && (
-              <div
-                className={`p-12 text-center rounded-2xl border ${
-                  theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
-                }`}
-              >
-                <div className="w-16 h-16 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center mx-auto mb-4">
-                  {activeTab === 'dashboard' && <LayoutDashboard className="w-8 h-8" />}
-                  {activeTab === 'sales' && <ShoppingCart className="w-8 h-8" />}
-                  {activeTab === 'purchases' && <ShoppingBag className="w-8 h-8" />}
-                  {activeTab === 'reports' && <BarChart3 className="w-8 h-8" />}
-                  {activeTab === 'settings' && <Settings className="w-8 h-8" />}
-                </div>
-                <h3 className="text-xl font-black capitalize text-slate-900 dark:text-slate-50">{activeTab} Module</h3>
-                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mt-2 max-w-md mx-auto">
-                  โมดูลนี้พร้อมสำหรับการเชื่อมต่อ API ใน Sprint ถัดไป ท่านสามารถดูหน้า **Master Data Management** หรือ **จัดการคลังและสต็อก (Core Stock Transactions)** ได้โดยกดเลือกเมนูทางซ้ายมือ
-                </p>
-                <div className="flex items-center justify-center gap-3 mt-6">
-                  <button
-                    onClick={() => setActiveTab('masterData')}
-                    className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition"
-                  >
-                    1. Master Data Management
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('inventory')}
-                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition"
-                  >
-                    2. Core Stock Transactions
-                  </button>
-                </div>
-              </div>
+            {activeTab === 'sales' && (
+              <OrdersManagement
+                type="SALES"
+                lang={lang}
+                theme={theme}
+                searchQuery={searchQuery}
+                onNavigateToStockAction={(actionType, order) => {
+                  setActiveTab('inventory');
+                  setActiveInventorySubTab('issue');
+                }}
+              />
             )}
+
+            {activeTab === 'purchases' && (
+              <OrdersManagement
+                type="PURCHASE"
+                lang={lang}
+                theme={theme}
+                searchQuery={searchQuery}
+                onNavigateToStockAction={(actionType, order) => {
+                  setActiveTab('inventory');
+                  setActiveInventorySubTab('receive');
+                }}
+              />
+            )}
+
+            {(activeTab === 'reports' || activeTab === 'dashboard') && (
+              <ReportsAnalytics
+                lang={lang}
+                theme={theme}
+                searchQuery={searchQuery}
+                onNavigateToPO={() => {
+                  setActiveTab('purchases');
+                }}
+              />
+            )}
+
+            {activeTab !== 'masterData' &&
+              activeTab !== 'inventory' &&
+              activeTab !== 'sales' &&
+              activeTab !== 'purchases' &&
+              activeTab !== 'reports' &&
+              activeTab !== 'dashboard' && (
+                <div
+                  className={`p-12 text-center rounded-2xl border ${
+                    theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+                  }`}
+                >
+                  <div className="w-16 h-16 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center mx-auto mb-4">
+                    <Settings className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-xl font-black capitalize text-slate-900 dark:text-slate-50">{activeTab} Module</h3>
+                  <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mt-2 max-w-md mx-auto">
+                    โมดูลนี้พร้อมสำหรับการเชื่อมต่อ API ใน Sprint ถัดไป ท่านสามารถดูหน้าอื่น ๆ ได้จากเมนูซ้ายมือ
+                  </p>
+                </div>
+              )}
           </main>
         </div>
       </div>

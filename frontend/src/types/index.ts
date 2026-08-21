@@ -217,3 +217,44 @@ export interface CycleCountPlan {
   items: CycleCountItem[];
 }
 
+// --- Section 5: Sales Order & Purchase Order Types ---
+export type OrderType = 'SALES' | 'PURCHASE';
+export type OrderStatus = 'DRAFT' | 'CONFIRMED' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED';
+
+export interface OrderItem {
+  id: string;
+  productId: string;
+  productCode: string;
+  productName: string;
+  sku: string;
+  uom: string;
+  quantity: number;
+  unitPrice: number;
+  discount: number; // percentage or fixed amount
+  totalAmount: number;
+}
+
+export interface Order {
+  id: string;
+  orderNo: string;
+  type: OrderType;
+  status: OrderStatus;
+  partyName: string; // Customer Name (SO) or Supplier Name (PO)
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  orderDate: string;
+  expectedDate: string;
+  warehouseId: string;
+  warehouseName: string;
+  paymentTerms: string;
+  notes?: string;
+  items: OrderItem[];
+  subtotal: number;
+  taxAmount: number;
+  discountTotal: number;
+  grandTotal: number;
+  createdBy: string;
+  createdAt: string;
+}
+
