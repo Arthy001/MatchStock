@@ -111,21 +111,37 @@ export const LoginView: React.FC<LoginViewProps> = ({
         return;
       }
     } catch (err: any) {
-      console.warn('Live API Login failed, checking mock fallback...', err);
+      console.warn('Live API Login failed or CORS preflight blocked, checking demo accounts...', err);
       const apiErrMsg = err.response?.data?.message || err.response?.data?.errors?.[0];
       
-      // Fallback local check ถ้าออฟไลน์
-      if (email === 'admin@matchstock.com' && password === 'Passw0rd!') {
-        const defaultTenant = tenants[0];
-        const mockUser: User = {
-          id: 'usr-001',
-          name: 'Kittisak Prasertkul (Admin)',
-          email: 'admin@matchstock.com',
-          role: 'admin',
-          tenantId: defaultTenant.id,
-          tenantName: defaultTenant.name,
+      // Graceful authentication for demo accounts if live backend DDNS is temporarily unreachable / CORS blocked
+      const matchedDemo = DEMO_ACCOUNTS.find(
+        (a) => a.email.toLowerCase() === email.trim().toLowerCase() &&
+               a.tenantSlug.toLowerCase() === tenantSlug.trim().toLowerCase()
+      );
+
+      if (matchedDemo && password === 'Passw0rd!') {
+        const targetTenantId = tenantSlug === 'acme-demo' ? '35213af2-d412-4be7-bcc0-a972ed233e73' : 'f97fe2dc-486e-4054-931c-aadf92823e69';
+        const tenant = tenants.find((t) => t.id === targetTenantId) || tenants[0];
+        
+        let userRole = 'admin';
+        if (matchedDemo.role === 'Warehouse Staff') userRole = 'warehouse_staff';
+        else if (matchedDemo.role === 'Purchasing Staff') userRole = 'purchasing_staff';
+        else if (matchedDemo.role === 'Manager') userRole = 'manager';
+        else if (matchedDemo.role === 'Owner') userRole = 'owner';
+
+        const demoUser: User = {
+          id: `usr-${matchedDemo.role.toLowerCase()}`,
+          name: matchedDemo.role === 'Admin' ? 'Kittisak Prasertkul (Admin)' : matchedDemo.role === 'Owner' ? 'Acme Demo Owner' : `${matchedDemo.role} User`,
+          email: matchedDemo.email,
+          role: userRole as any,
+          tenantId: tenant.id,
+          tenantName: tenant.name,
         };
-        onLoginSuccess(mockUser);
+
+        localStorage.setItem('matchstock_tenant_id', tenant.id);
+        localStorage.setItem('matchstock_user', JSON.stringify(demoUser));
+        onLoginSuccess(demoUser);
         return;
       }
 
