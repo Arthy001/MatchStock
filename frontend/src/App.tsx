@@ -5,6 +5,8 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { MasterDataManagement } from './components/MasterDataManagement';
 import { StockTransactions } from './components/StockTransactions';
+import { MobileBarcodeScanner } from './components/MobileBarcodeScanner';
+import { CycleCountManagement } from './components/CycleCountManagement';
 import { getTranslation } from './i18n';
 import { LayoutDashboard, Boxes, ShoppingCart, ShoppingBag, BarChart3, Settings } from 'lucide-react';
 
@@ -34,7 +36,7 @@ export function App() {
   const [selectedTenantId, setSelectedTenantId] = useState<string>('f97fe2dc-486e-4054-931c-aadf92823e69');
   const [activeTab, setActiveTab] = useState<string>('masterData');
   const [activeMasterSubTab, setActiveMasterSubTab] = useState<'rbac' | 'products' | 'units' | 'barcodes' | 'warehouses' | 'suppliers'>('products');
-  const [activeInventorySubTab, setActiveInventorySubTab] = useState<'all' | 'receive' | 'issue' | 'transfer' | 'adjustment'>('all');
+  const [activeInventorySubTab, setActiveInventorySubTab] = useState<'all' | 'receive' | 'issue' | 'transfer' | 'adjustment' | 'scanner' | 'cycleCount'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
@@ -178,15 +180,42 @@ export function App() {
               />
             )}
 
-            {activeTab === 'inventory' && (
-              <StockTransactions
+            {activeTab === 'inventory' && activeInventorySubTab === 'scanner' && (
+              <MobileBarcodeScanner
                 lang={lang}
                 theme={theme}
                 searchQuery={searchQuery}
-                activeSubTab={activeInventorySubTab}
-                onSubTabChange={(sub) => setActiveInventorySubTab(sub)}
+                onSelectAction={(actionType, product) => {
+                  if (actionType === 'RECEIVE') setActiveInventorySubTab('receive');
+                  else if (actionType === 'ISSUE') setActiveInventorySubTab('issue');
+                  else if (actionType === 'TRANSFER') setActiveInventorySubTab('transfer');
+                  else if (actionType === 'ADJUSTMENT') setActiveInventorySubTab('adjustment');
+                }}
               />
             )}
+
+            {activeTab === 'inventory' && activeInventorySubTab === 'cycleCount' && (
+              <CycleCountManagement
+                lang={lang}
+                theme={theme}
+                searchQuery={searchQuery}
+                onNavigateToAdjustment={() => {
+                  setActiveInventorySubTab('adjustment');
+                }}
+              />
+            )}
+
+            {activeTab === 'inventory' &&
+              activeInventorySubTab !== 'scanner' &&
+              activeInventorySubTab !== 'cycleCount' && (
+                <StockTransactions
+                  lang={lang}
+                  theme={theme}
+                  searchQuery={searchQuery}
+                  activeSubTab={activeInventorySubTab as any}
+                  onSubTabChange={(sub) => setActiveInventorySubTab(sub as any)}
+                />
+              )}
 
             {activeTab !== 'masterData' && activeTab !== 'inventory' && (
               <div

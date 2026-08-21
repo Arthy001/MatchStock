@@ -159,3 +159,61 @@ export interface StockTransactionItem {
   variance?: number;
 }
 
+// --- Section 3: Mobile Barcode Scanner Types ---
+export interface ScanHistoryItem {
+  id: string;
+  barcode: string;
+  timestamp: string;
+  product?: ProductItem;
+  bin?: WarehouseBin;
+  scanType: 'BARCODE' | 'QR_CODE' | 'MANUAL';
+  status: 'FOUND' | 'NOT_FOUND';
+}
+
+// --- Section 4: Cycle Count & Stock Variance Reconciliation Types ---
+export type CycleCountStatus = 'DRAFT' | 'IN_PROGRESS' | 'COUNTED' | 'RECONCILED' | 'CANCELLED';
+
+export interface CycleCountItem {
+  id: string;
+  productId: string;
+  productCode: string;
+  productName: string;
+  sku: string;
+  barcode: string;
+  uom: string;
+  category: string;
+  warehouseId: string;
+  warehouseName: string;
+  binCode: string;
+  unitPrice: number;
+  systemQty: number;
+  countedQty: number | null;
+  variance: number; // countedQty - systemQty
+  varianceValue: number; // variance * unitPrice
+  notes?: string;
+  status: 'MATCH' | 'SHORTAGE' | 'SURPLUS' | 'UNCOUNTED';
+}
+
+export interface CycleCountPlan {
+  id: string;
+  planNo: string;
+  title: string;
+  warehouseId: string;
+  warehouseName: string;
+  zone?: string;
+  categoryFilter?: string;
+  cutoffDate: string;
+  assignedTo: string;
+  assignedStaffName: string;
+  status: CycleCountStatus;
+  createdAt: string;
+  reconciledAt?: string;
+  reconciledBy?: string;
+  totalSkus: number;
+  countedSkus: number;
+  accuracyRate: number; // percentage
+  totalVarianceQty: number;
+  totalVarianceValue: number;
+  items: CycleCountItem[];
+}
+

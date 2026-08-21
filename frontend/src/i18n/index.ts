@@ -51,10 +51,16 @@ export const translations = {
     tabGoodsIssue: '2. เบิก/จ่ายสินค้าออกจากคลัง (Goods Issue - GI)',
     tabStockTransfer: '3. โอนย้ายสินค้าระหว่างคลัง/Bin (Stock Transfer)',
     tabStockAdjustment: '4. ปรับยอดสต็อกสินค้า (Stock Adjustment)',
+    tabMobileScanner: '5. สแกนเนอร์บาร์โค้ด & มือถือ (Barcode Scanner)',
+    tabCycleCount: '6. ตรวจนับสต็อก & กระทบยอด (Cycle Count)',
 
     // Stock Transactions Titles & Descriptions
     transTitle: 'ระบบรับ-จ่าย และโอนย้ายสต็อก (Core Stock Transactions)',
     transSubtitle: 'บันทึกการเคลื่อนไหวสต็อกสินค้าแบบ Real-time รองรับ Lot/Batch, วันหมดอายุ และตัดสต็อกตาม Bin',
+    scannerTitle: 'ระบบสแกนเนอร์บาร์โค้ด & เทอร์มินัลพกพา (Handheld Scanner Terminal)',
+    scannerSubtitle: 'สแกน Barcode/QR Code ผ่านกล้องเพื่อตรวจสอบสต็อก ค้นหาตำแหน่งจัดเก็บ และส่งต่อไปยังขั้นตอนรับ/จ่าย/โอนย้าย',
+    cycleCountTitle: 'ระบบตรวจนับสต็อกประจำงวด & กระทบยอดผลต่าง (Cycle Count & Reconciliation)',
+    cycleCountSubtitle: 'วางแผนตรวจนับสต็อกแบบ Periodic/Cycle Count ตรวจสอบยอดจริงเทียบกับระบบ และกระทบยอดปรับสต็อกอัตโนมัติ',
     grTitle: 'บันทึกการรับสินค้าเข้าคลัง (Goods Receive - GR)',
     grSubtitle: 'รับสินค้าเข้าคลัง ระบุหมายเลข Lot/Batch, วันผลิต (MFG) และวันหมดอายุ (EXP) พร้อมเลือกคลังและตำแหน่ง Bin ปลายทาง',
     giTitle: 'บันทึกการเบิก/จ่ายสินค้าออกจากคลัง (Goods Issue / Dispatch - GI)',
@@ -237,10 +243,16 @@ export const translations = {
     tabGoodsIssue: '2. Goods Issue / Dispatch (GI)',
     tabStockTransfer: '3. Stock Transfer (Inter-WH / Bin)',
     tabStockAdjustment: '4. Stock Adjustment',
+    tabMobileScanner: '5. Mobile Barcode Scanner',
+    tabCycleCount: '6. Cycle Count & Audit',
 
     // Stock Transactions Titles & Descriptions
     transTitle: 'Core Stock Transactions',
     transSubtitle: 'Real-time stock movement tracking with Lot/Batch, Expiration dates, and Bin-level deduction',
+    scannerTitle: 'Mobile Barcode Scanner & Handheld Terminal',
+    scannerSubtitle: 'Scan Barcode/QR Code via camera to look up live stock, locate bins, and send to transactions',
+    cycleCountTitle: 'Cycle Count & Stock Variance Reconciliation',
+    cycleCountSubtitle: 'Periodic inventory audit plan, live variance calculation, and automated stock adjustment reconciliation',
     grTitle: 'Goods Receive (GR)',
     grSubtitle: 'Record inbound goods with Lot/Batch numbers, MFG/EXP dates, and assign destination warehouse bins',
     giTitle: 'Goods Issue / Dispatch (GI)',

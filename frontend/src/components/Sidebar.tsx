@@ -242,6 +242,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         { key: 'issue', label: t.tabGoodsIssue },
                         { key: 'transfer', label: t.tabStockTransfer },
                         { key: 'adjustment', label: t.tabStockAdjustment },
+                        { key: 'scanner', label: t.tabMobileScanner },
+                        { key: 'cycleCount', label: t.tabCycleCount },
                       ].map((item) => {
                         const isSubActive = activeTab === 'inventory' && activeSubTab === item.key;
                         return (
