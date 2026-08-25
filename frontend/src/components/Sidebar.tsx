@@ -174,7 +174,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   {!isCollapsed && isMasterDataOpen && (
                     <div className="ml-7 mt-1.5 space-y-1 border-l border-slate-800 pl-3">
                       {[
-                        { key: 'companies', label: lang === 'en' ? 'Companies (Holding)' : 'บริษัทในเครือ (Companies)' },
+                        { key: 'companies', label: t.tabCompanies },
                         { key: 'products', label: t.tabProducts },
                         { key: 'units', label: t.tabUnits },
                         { key: 'warehouses', label: t.tabWarehouses },
