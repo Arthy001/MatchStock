@@ -43,14 +43,19 @@ export const SupplierManagementTab: React.FC<SupplierManagementTabProps> = ({
         </p>
       </div>
 
-      <div className="space-y-4">
-        {safeSuppliers.map((sup) => (
-          <div
-            key={sup.id}
-            className={`p-5 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm ${
-              theme === 'dark' ? 'border-slate-800' : 'border-slate-200'
-            }`}
-          >
+      {safeSuppliers.length === 0 ? (
+        <div className="py-12 text-center text-zinc-400">
+          <p className="font-medium text-xs">ยังไม่มีข้อมูลผู้จัดจำหน่ายในระบบ</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {safeSuppliers.map((sup) => (
+            <div
+              key={sup.id}
+              className={`p-5 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm ${
+                theme === 'dark' ? 'border-slate-800' : 'border-slate-200'
+              }`}
+            >
             <div>
               <div className="flex items-center gap-2">
                 <span
@@ -106,22 +111,23 @@ export const SupplierManagementTab: React.FC<SupplierManagementTabProps> = ({
               </span>
               <button
                 onClick={() => onOpenEditSupplier(sup)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                title="แก้ไขข้อมูลผู้จัดจำหน่าย (Full Edit)"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => onDeleteSupplier(sup)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                title="ลบผู้จัดจำหน่าย"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                  title="แก้ไขข้อมูลผู้จัดจำหน่าย (Full Edit)"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => onDeleteSupplier(sup)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                  title="ลบผู้จัดจำหน่าย"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

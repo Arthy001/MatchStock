@@ -80,7 +80,14 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
             <tbody
               className="divide-y divide-slate-100 dark:divide-slate-800"
             >
-              {safeUnits.map((unit) => (
+              {safeUnits.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-zinc-400 text-xs font-medium">
+                    ยังไม่มีข้อมูลหน่วยนับสินค้าในระบบ
+                  </td>
+                </tr>
+              ) : (
+                safeUnits.map((unit) => (
                 <tr
                   key={unit.id}
                   className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition"
@@ -137,7 +144,7 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
                     </button>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>
