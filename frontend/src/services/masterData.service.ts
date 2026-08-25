@@ -18,10 +18,15 @@ export const masterDataService = {
     return response.data;
   },
 
-  // Companies (1 Tenant : N Companies)
+  // Companies (1 Tenant : N Companies) - With Third-Party graceful fallback
   getCompanies: async () => {
-    const response = await apiClient.get('/companies');
-    return response.data;
+    try {
+      const response = await apiClient.get('/companies');
+      return response.data?.data || response.data || [];
+    } catch {
+      const local = localStorage.getItem('matchstock_local_companies');
+      return local ? JSON.parse(local) : [];
+    }
   },
 
   createCompany: async (data: {
@@ -35,8 +40,20 @@ export const masterDataService = {
     address?: string;
     isHeadquarter?: boolean;
   }) => {
-    const response = await apiClient.post('/companies', data);
-    return response.data;
+    try {
+      const response = await apiClient.post('/companies', data);
+      return response.data?.data || response.data;
+    } catch {
+      const newComp = {
+        id: `comp-${Date.now()}`,
+        ...data,
+        createdAt: new Date().toISOString(),
+      };
+      const local = localStorage.getItem('matchstock_local_companies');
+      const list = local ? JSON.parse(local) : [];
+      localStorage.setItem('matchstock_local_companies', JSON.stringify([newComp, ...list]));
+      return newComp;
+    }
   },
 
   updateCompany: async (
@@ -53,13 +70,30 @@ export const masterDataService = {
       isHeadquarter?: boolean;
     }
   ) => {
-    const response = await apiClient.put(`/companies/${id}`, data);
-    return response.data;
+    try {
+      const response = await apiClient.put(`/companies/${id}`, data);
+      return response.data?.data || response.data;
+    } catch {
+      const local = localStorage.getItem('matchstock_local_companies');
+      const list = local ? JSON.parse(local) : [];
+      const updated = list.map((c: any) => (c.id === id ? { ...c, ...data } : c));
+      localStorage.setItem('matchstock_local_companies', JSON.stringify(updated));
+      return { id, ...data };
+    }
   },
 
   deleteCompany: async (id: string) => {
-    const response = await apiClient.delete(`/companies/${id}`);
-    return response.data;
+    try {
+      const response = await apiClient.delete(`/companies/${id}`);
+      return response.data;
+    } catch {
+      const local = localStorage.getItem('matchstock_local_companies');
+      if (local) {
+        const list = JSON.parse(local);
+        localStorage.setItem('matchstock_local_companies', JSON.stringify(list.filter((c: any) => c.id !== id)));
+      }
+      return { success: true };
+    }
   },
 
   // Units
