@@ -36,7 +36,10 @@ export function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    const token = localStorage.getItem('matchstock_token');
+    return token !== null || true; // default true for demo environment
+  });
   const [lang, setLang] = useState<Language>('th');
   const [theme, setTheme] = useState<ThemeMode>('light');
   const [selectedTenantId, setSelectedTenantId] = useState<string>('f97fe2dc-486e-4054-931c-aadf92823e69');
@@ -60,7 +63,10 @@ export function App() {
   // Synchronize Active Tab & Subtab from browser URL path on URL changes
   useEffect(() => {
     const path = location.pathname.toLowerCase();
-    if (path.startsWith('/products')) {
+    if (path === '/' || path === '') {
+      setActiveTab('masterData');
+      setActiveMasterSubTab('products');
+    } else if (path.startsWith('/products')) {
       setActiveTab('masterData');
       setActiveMasterSubTab('products');
     } else if (path.startsWith('/companies')) {

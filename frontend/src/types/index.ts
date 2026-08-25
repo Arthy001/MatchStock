@@ -30,15 +30,17 @@ export interface Tenant {
   features: SubscriptionFeatures;
 }
 
+export type MasterDataSubTab = 'products' | 'rbac' | 'companies' | 'units' | 'barcodes' | 'warehouses' | 'suppliers';
+
 export interface ProductItem {
   id: string;
   code: string;
   sku: string;
-  slug: string;
+  slug?: string;
   name: string;
-  category: string;
-  brand: string;
-  manufacturer: string;
+  category?: string;
+  brand?: string;
+  manufacturer?: string;
   uom: string;
   weightKg: number;
   widthCm: number;
@@ -47,12 +49,15 @@ export interface ProductItem {
   price: number;
   stockOnHand: number;
   reorderLevel: number;
-  maxLevel: number;
-  barcodeType: 'CODE128' | 'EAN13' | 'QR_CODE';
-  barcodeValue: string;
-  status: 'active' | 'inactive' | 'low_stock' | 'out_of_stock';
-  imageUrl: string;
-  createdAt: string;
+  minReorderQty?: number;
+  isLotControl?: boolean;
+  description?: string;
+  maxLevel?: number;
+  barcodeType?: 'CODE128' | 'EAN13' | 'QR_CODE';
+  barcodeValue?: string;
+  status?: 'active' | 'inactive' | 'low_stock' | 'out_of_stock';
+  imageUrl?: string;
+  createdAt?: string;
 }
 
 export interface WarehouseBin {

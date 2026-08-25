@@ -7,6 +7,12 @@ export const warehouseService = {
     return response.data;
   },
 
+  // ดึงรายการ Bins ทั้งหมด
+  getBins: async () => {
+    const response = await apiClient.get('/warehouses');
+    return response.data?.bins || response.data || [];
+  },
+
   // ดึงรายการ Bins ในคลัง
   getBinsByWarehouse: async (warehouseId: string) => {
     const response = await apiClient.get(`/warehouses/${warehouseId}/bins`);

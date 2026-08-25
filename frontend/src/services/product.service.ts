@@ -12,17 +12,22 @@ export interface CreateProductDTO {
   code: string;
   sku: string;
   barcode?: string;
+  barcodeValue?: string;
   name: string;
   description?: string;
   baseUnitId?: string;
   categoryId?: string;
   brandId?: string;
+  brand?: string;
+  uom?: string;
+  stockOnHand?: number;
   price: number;
   weightKg?: number;
   widthCm?: number;
   lengthCm?: number;
   heightCm?: number;
   reorderPoint?: number;
+  reorderLevel?: number;
   minReorderQty?: number;
   isLotControl?: boolean;
 }
@@ -34,6 +39,12 @@ export const productService = {
     return response.data;
   },
 
+  // ดึงรายการสินค้าทั้งหมด
+  getAllProducts: async () => {
+    const response = await apiClient.get('/products');
+    return response.data?.data || response.data || [];
+  },
+
   // ดึงข้อมูลสินค้าตาม ID
   getProductById: async (id: string) => {
     const response = await apiClient.get(`/products/${id}`);
@@ -43,13 +54,13 @@ export const productService = {
   // สร้างสินค้าใหม่
   createProduct: async (data: CreateProductDTO) => {
     const response = await apiClient.post('/products', data);
-    return response.data;
+    return response.data?.data || response.data;
   },
 
   // อัปเดตสินค้า
   updateProduct: async (id: string, data: Partial<CreateProductDTO>) => {
     const response = await apiClient.put(`/products/${id}`, data);
-    return response.data;
+    return response.data?.data || response.data;
   },
 
   // ลบสินค้า
