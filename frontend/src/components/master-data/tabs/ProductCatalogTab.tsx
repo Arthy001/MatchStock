@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Filter,
   QrCode,
   Edit2,
   Trash2,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
+  SlidersHorizontal,
+  ChevronDown,
+  ArrowUpDown,
+  ExternalLink,
+  Layers,
+  Package,
 } from 'lucide-react';
 import { ThemeMode, ProductItem } from '../../../types';
 
@@ -27,253 +30,414 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
   onSelectBarcode,
   onDeleteProduct,
 }) => {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'LOW' | 'OUT'>('ALL');
+
+  const isDark = theme === 'dark';
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === products.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(products.map((p) => p.id));
+    }
+  };
+
+  const toggleSelectOne = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const filtered = products.filter((p) => {
+    const stock = Number(p.stockOnHand || 0);
+    const rop = Number(p.reorderLevel || 10);
+    if (statusFilter === 'OUT') return stock === 0;
+    if (statusFilter === 'LOW') return stock > 0 && stock <= rop;
+    if (statusFilter === 'ACTIVE') return stock > rop;
+    return true;
+  });
+
   return (
     <div
-      className={`rounded-2xl border shadow-sm transition-colors overflow-hidden ${
-        theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+      className={`rounded-lg border transition-colors overflow-hidden ${
+        isDark
+          ? 'bg-zinc-900/90 border-zinc-800 text-zinc-100 shadow-sm'
+          : 'bg-white border-zinc-200 text-zinc-900 shadow-xs'
       }`}
     >
-      {/* Table Control Bar */}
+      {/* Precision Enterprise Toolbar */}
       <div
-        className={`p-3.5 border-b flex items-center justify-between ${
-          theme === 'dark' ? 'border-slate-800' : 'border-slate-200'
+        className={`px-4 py-2.5 border-b flex flex-wrap items-center justify-between gap-3 ${
+          isDark ? 'border-zinc-800 bg-zinc-900/50' : 'border-zinc-200/90 bg-zinc-50/50'
         }`}
       >
-        <div className="flex items-center gap-2">
-          <h3 className={`font-semibold text-sm ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'}`}>
-            Active Items Catalog
-          </h3>
-          <span
-            className={`px-2 py-0.5 rounded-full text-xs font-medium border ${
-              theme === 'dark'
-                ? 'bg-slate-800 text-slate-300 border-slate-700'
-                : 'bg-slate-100 text-slate-600 border-slate-300'
+        {/* Status Segment Tabs */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setStatusFilter('ALL')}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition cursor-pointer ${
+              statusFilter === 'ALL'
+                ? isDark
+                  ? 'bg-zinc-800 text-white font-semibold shadow-xs'
+                  : 'bg-white text-zinc-900 border border-zinc-300 shadow-xs font-semibold'
+                : isDark
+                ? 'text-zinc-400 hover:text-zinc-200'
+                : 'text-zinc-600 hover:text-zinc-900'
             }`}
           >
-            {products.length} items
-          </span>
+            All Items ({products.length})
+          </button>
+          <button
+            onClick={() => setStatusFilter('ACTIVE')}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition flex items-center gap-1.5 cursor-pointer ${
+              statusFilter === 'ACTIVE'
+                ? isDark
+                  ? 'bg-zinc-800 text-emerald-400 font-semibold shadow-xs'
+                  : 'bg-white text-emerald-700 border border-zinc-300 shadow-xs font-semibold'
+                : isDark
+                ? 'text-zinc-400 hover:text-emerald-400'
+                : 'text-zinc-600 hover:text-emerald-600'
+            }`}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            In Stock
+          </button>
+          <button
+            onClick={() => setStatusFilter('LOW')}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition flex items-center gap-1.5 cursor-pointer ${
+              statusFilter === 'LOW'
+                ? isDark
+                  ? 'bg-zinc-800 text-amber-400 font-semibold shadow-xs'
+                  : 'bg-white text-amber-700 border border-zinc-300 shadow-xs font-semibold'
+                : isDark
+                ? 'text-zinc-400 hover:text-amber-400'
+                : 'text-zinc-600 hover:text-amber-600'
+            }`}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+            Low Stock
+          </button>
+          <button
+            onClick={() => setStatusFilter('OUT')}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition flex items-center gap-1.5 cursor-pointer ${
+              statusFilter === 'OUT'
+                ? isDark
+                  ? 'bg-zinc-800 text-rose-400 font-semibold shadow-xs'
+                  : 'bg-white text-rose-700 border border-zinc-300 shadow-xs font-semibold'
+                : isDark
+                ? 'text-zinc-400 hover:text-rose-400'
+                : 'text-zinc-600 hover:text-rose-600'
+            }`}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+            Out of Stock
+          </button>
         </div>
 
-        <button
-          className={`px-3 py-1.5 rounded-xl border text-xs font-medium flex items-center gap-1.5 ${
-            theme === 'dark'
-              ? 'border-slate-700 text-slate-300 bg-slate-800'
-              : 'border-slate-300 text-slate-700 bg-slate-50 hover:bg-slate-100'
-          }`}
-        >
-          <Filter className="w-3.5 h-3.5 text-blue-600" />
-          <span>Filter</span>
-        </button>
+        {/* View Controls & Selection Info */}
+        <div className="flex items-center gap-2">
+          {selectedIds.length > 0 && (
+            <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+              {selectedIds.length} selected
+            </span>
+          )}
+
+          <button
+            className={`px-2.5 py-1 rounded text-xs font-medium border flex items-center gap-1.5 transition ${
+              isDark
+                ? 'border-zinc-700 text-zinc-300 bg-zinc-800/80 hover:bg-zinc-700'
+                : 'border-zinc-300 text-zinc-700 bg-white hover:bg-zinc-50 shadow-xs'
+            }`}
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5 text-zinc-500" />
+            <span>Customize Columns</span>
+          </button>
+        </div>
       </div>
 
-      {/* Unified Harmonious Table Typography */}
-      <div className="overflow-x-auto max-h-[650px]">
+      {/* High-Density Data Grid */}
+      <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
-          <thead className="sticky top-0 z-10">
+          <thead>
             <tr
-              className={`text-xs font-semibold uppercase tracking-wider border-b ${
-                theme === 'dark'
-                  ? 'bg-slate-800 text-slate-300 border-slate-700'
-                  : 'bg-slate-100 text-slate-600 border-slate-200'
+              className={`text-[11px] font-semibold tracking-wider uppercase border-b select-none ${
+                isDark
+                  ? 'bg-zinc-900/90 text-zinc-400 border-zinc-800'
+                  : 'bg-zinc-100/70 text-zinc-500 border-zinc-200'
               }`}
             >
-              <th className="p-3.5 w-10">
-                <input type="checkbox" className="rounded text-blue-600" />
+              <th className="py-2.5 px-3 w-9 text-center">
+                <input
+                  type="checkbox"
+                  checked={products.length > 0 && selectedIds.length === products.length}
+                  onChange={toggleSelectAll}
+                  className="rounded border-zinc-300 dark:border-zinc-700 text-blue-600 focus:ring-0 cursor-pointer"
+                />
               </th>
-              <th className="p-3.5">{t.productName}</th>
-              <th className="p-3.5">{t.sku}</th>
-              <th className="p-3.5">{t.brand}</th>
-              <th className="p-3.5">{t.stockOnHand}</th>
-              <th className="p-3.5">{t.reorderLevel}</th>
-              <th className="p-3.5">{t.price}</th>
-              <th className="p-3.5 text-right">{t.actions}</th>
+              <th className="py-2.5 px-3 min-w-[280px]">Item / Description</th>
+              <th className="py-2.5 px-3 min-w-[140px]">SKU & Barcode</th>
+              <th className="py-2.5 px-3 min-w-[110px]">Brand</th>
+              <th className="py-2.5 px-3 min-w-[130px] text-right">Physical Dim</th>
+              <th className="py-2.5 px-3 min-w-[140px] text-right">Inventory / ROP</th>
+              <th className="py-2.5 px-3 min-w-[110px] text-right">Unit Price</th>
+              <th className="py-2.5 px-3 w-24 text-right pr-4">Actions</th>
             </tr>
           </thead>
 
           <tbody
             className={`divide-y text-xs ${
-              theme === 'dark' ? 'divide-slate-800' : 'divide-slate-200'
+              isDark ? 'divide-zinc-800/80' : 'divide-zinc-200/80'
             }`}
           >
-            {products.map((prod) => (
-              <tr
-                key={prod.id}
-                className={`transition cursor-pointer ${
-                  theme === 'dark' ? 'hover:bg-slate-800/60' : 'hover:bg-blue-50/40'
-                }`}
-                onClick={() => onOpenDrawer(prod)}
-              >
-                <td className="p-3.5" onClick={(e) => e.stopPropagation()}>
-                  <input type="checkbox" className="rounded text-blue-600" />
-                </td>
-
-                {/* Product Name */}
-                <td className="p-3.5">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={
-                        prod.imageUrl ||
-                        'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&auto=format&fit=crop&q=60'
-                      }
-                      alt={prod.name}
-                      className={`w-9 h-9 rounded-xl object-cover border shrink-0 ${
-                        theme === 'dark' ? 'border-slate-700' : 'border-slate-200'
-                      }`}
-                    />
-                    <div>
-                      <p
-                        className={`font-semibold text-sm ${
-                          theme === 'dark' ? 'text-slate-100' : 'text-slate-900'
-                        }`}
-                      >
-                        {prod.name}
-                      </p>
-                      <p
-                        className={`text-xs font-normal mt-0.5 ${
-                          theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
-                        }`}
-                      >
-                        Code: {prod.code} • {prod.category || 'General'}
-                      </p>
-                    </div>
-                  </div>
-                </td>
-
-                {/* SKU Badge */}
-                <td className="p-3.5">
-                  <span
-                    className={`px-2 py-0.5 rounded text-xs font-mono font-medium border ${
-                      theme === 'dark'
-                        ? 'bg-slate-800 text-slate-300 border-slate-700'
-                        : 'bg-slate-100 text-slate-600 border-slate-300'
-                    }`}
-                  >
-                    {prod.sku || prod.code || '-'}
-                  </span>
-                </td>
-
-                {/* Brand Column */}
-                <td
-                  className={`p-3.5 font-medium ${
-                    theme === 'dark' ? 'text-slate-200' : 'text-slate-700'
-                  }`}
-                >
-                  {prod.brand || 'General'}
-                </td>
-
-                {/* Status Badge */}
-                <td className="p-3.5">
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${
-                      (prod.stockOnHand || 0) === 0
-                        ? theme === 'dark'
-                          ? 'bg-rose-950 text-rose-300 border border-rose-800'
-                          : 'bg-rose-100 text-rose-800 border border-rose-300'
-                        : (prod.stockOnHand || 0) <= (prod.reorderLevel || 10)
-                        ? theme === 'dark'
-                          ? 'bg-amber-950 text-amber-300 border border-amber-800'
-                          : 'bg-amber-100 text-amber-800 border border-amber-300'
-                        : theme === 'dark'
-                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
-                        : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                    }`}
-                  >
-                    {(prod.stockOnHand || 0) === 0 ? (
-                      <XCircle className="w-3.5 h-3.5" />
-                    ) : (prod.stockOnHand || 0) <= (prod.reorderLevel || 10) ? (
-                      <AlertTriangle className="w-3.5 h-3.5" />
-                    ) : (
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                    )}
-                    <span>
-                      {prod.stockOnHand || 0} {prod.uom || 'PCS'}
-                    </span>
-                  </span>
-                </td>
-
-                {/* Reorder Level Gauge */}
-                <td className="p-3.5">
-                  <div
-                    className={`flex items-center gap-1.5 text-xs font-medium ${
-                      theme === 'dark' ? 'text-slate-300' : 'text-slate-600'
-                    }`}
-                  >
-                    <span>
-                      {prod.stockOnHand || 0}/{prod.reorderLevel || 10}
-                    </span>
-                    <div
-                      className={`w-12 h-1.5 rounded-full overflow-hidden ${
-                        theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'
-                      }`}
-                    >
-                      <div
-                        className={`h-full rounded-full ${
-                          (prod.stockOnHand || 0) <= (prod.reorderLevel || 10)
-                            ? 'bg-amber-500'
-                            : 'bg-blue-600'
-                        }`}
-                        style={{
-                          width: `${Math.min(
-                            100,
-                            ((prod.stockOnHand || 0) / ((prod.reorderLevel || 10) * 3)) * 100
-                          )}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </td>
-
-                {/* Price Column */}
-                <td
-                  className={`p-3.5 font-semibold text-sm ${
-                    theme === 'dark' ? 'text-blue-400' : 'text-blue-700'
-                  }`}
-                >
-                  ${Number(prod.price || 0).toFixed(2)}
-                </td>
-
-                {/* Action Icons */}
-                <td className="p-3.5 text-right" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex items-center justify-end gap-1">
-                    <button
-                      onClick={() => onSelectBarcode(prod)}
-                      className={`p-1.5 rounded-lg transition cursor-pointer ${
-                        theme === 'dark'
-                          ? 'text-slate-400 hover:text-blue-400 hover:bg-slate-800'
-                          : 'text-slate-500 hover:text-blue-600 hover:bg-slate-100'
-                      }`}
-                      title={t.previewBarcode}
-                    >
-                      <QrCode className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => onOpenDrawer(prod)}
-                      className={`p-1.5 rounded-lg transition cursor-pointer ${
-                        theme === 'dark'
-                          ? 'text-slate-400 hover:text-blue-400 hover:bg-slate-800'
-                          : 'text-slate-500 hover:text-blue-600 hover:bg-slate-100'
-                      }`}
-                      title="Edit"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => onDeleteProduct(prod)}
-                      className={`p-1.5 rounded-lg transition cursor-pointer ${
-                        theme === 'dark'
-                          ? 'text-slate-400 hover:text-rose-400 hover:bg-slate-800'
-                          : 'text-slate-500 hover:text-rose-600 hover:bg-slate-100'
-                      }`}
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="py-12 text-center text-zinc-400">
+                  <Package className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                  <p className="font-medium text-xs">No matching products found</p>
                 </td>
               </tr>
-            ))}
+            ) : (
+              filtered.map((prod) => {
+                const stock = Number(prod.stockOnHand || 0);
+                const rop = Number(prod.reorderLevel || 10);
+                const isSelected = selectedIds.includes(prod.id);
+                const priceNum = Number(prod.price || 0);
+                const weightNum = Number(prod.weightKg || 0);
+
+                return (
+                  <tr
+                    key={prod.id}
+                    onClick={() => onOpenDrawer(prod)}
+                    className={`group transition-colors cursor-pointer ${
+                      isSelected
+                        ? isDark
+                          ? 'bg-blue-950/30 hover:bg-blue-950/40'
+                          : 'bg-blue-50/70 hover:bg-blue-50'
+                        : isDark
+                        ? 'hover:bg-zinc-800/50'
+                        : 'hover:bg-zinc-50/80'
+                    }`}
+                  >
+                    {/* Checkbox */}
+                    <td
+                      className="py-2.5 px-3 text-center"
+                      onClick={(e) => toggleSelectOne(prod.id, e)}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => {}}
+                        className="rounded border-zinc-300 dark:border-zinc-700 text-blue-600 focus:ring-0 cursor-pointer"
+                      />
+                    </td>
+
+                    {/* Item Name & Details */}
+                    <td className="py-2.5 px-3">
+                      <div className="flex items-center gap-2.5">
+                        <img
+                          src={
+                            prod.imageUrl ||
+                            'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&auto=format&fit=crop&q=60'
+                          }
+                          alt=""
+                          className={`w-8 h-8 rounded-md object-cover border shrink-0 ${
+                            isDark ? 'border-zinc-700 bg-zinc-800' : 'border-zinc-200 bg-zinc-100'
+                          }`}
+                        />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`font-semibold text-xs truncate ${
+                                isDark ? 'text-zinc-100' : 'text-zinc-900'
+                              }`}
+                            >
+                              {prod.name}
+                            </span>
+                            {prod.isLotControl && (
+                              <span className="shrink-0 px-1 py-0.2 rounded text-[10px] font-mono font-medium bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                                LOT
+                              </span>
+                            )}
+                          </div>
+                          <p
+                            className={`text-[11px] font-normal truncate mt-0.5 ${
+                              isDark ? 'text-zinc-400' : 'text-zinc-500'
+                            }`}
+                          >
+                            <span className="font-mono text-zinc-400">{prod.code}</span> •{' '}
+                            {prod.category || 'General'}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* SKU & Barcode */}
+                    <td className="py-2.5 px-3">
+                      <div className="font-mono text-xs">
+                        <span
+                          className={`inline-block px-1.5 py-0.5 rounded font-medium border ${
+                            isDark
+                              ? 'bg-zinc-800 text-zinc-200 border-zinc-700'
+                              : 'bg-zinc-100 text-zinc-800 border-zinc-200'
+                          }`}
+                        >
+                          {prod.sku || prod.code || '-'}
+                        </span>
+                        {prod.barcodeValue && (
+                          <p
+                            className={`text-[10px] font-normal mt-0.5 truncate ${
+                              isDark ? 'text-zinc-500' : 'text-zinc-400'
+                            }`}
+                          >
+                            {prod.barcodeValue}
+                          </p>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Brand */}
+                    <td className="py-2.5 px-3">
+                      <span
+                        className={`text-xs font-medium ${
+                          isDark ? 'text-zinc-300' : 'text-zinc-700'
+                        }`}
+                      >
+                        {prod.brand || 'General'}
+                      </span>
+                    </td>
+
+                    {/* Physical Dimension */}
+                    <td className="py-2.5 px-3 text-right">
+                      <div className="text-xs">
+                        <span
+                          className={`font-mono tabular-nums ${
+                            isDark ? 'text-zinc-300' : 'text-zinc-700'
+                          }`}
+                        >
+                          {weightNum > 0 ? `${weightNum.toFixed(2)} kg` : '-'}
+                        </span>
+                        {prod.widthCm && prod.lengthCm && prod.heightCm ? (
+                          <p
+                            className={`text-[10px] font-mono tabular-nums ${
+                              isDark ? 'text-zinc-500' : 'text-zinc-400'
+                            }`}
+                          >
+                            {prod.widthCm}×{prod.lengthCm}×{prod.heightCm} cm
+                          </p>
+                        ) : null}
+                      </div>
+                    </td>
+
+                    {/* Inventory Status with Precision Dot */}
+                    <td className="py-2.5 px-3 text-right">
+                      <div className="inline-flex flex-col items-end">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`w-2 h-2 rounded-full shrink-0 ${
+                              stock === 0
+                                ? 'bg-rose-500'
+                                : stock <= rop
+                                ? 'bg-amber-500'
+                                : 'bg-emerald-500'
+                            }`}
+                          />
+                          <span
+                            className={`font-mono font-semibold tabular-nums ${
+                              stock === 0
+                                ? 'text-rose-600 dark:text-rose-400'
+                                : stock <= rop
+                                ? 'text-amber-600 dark:text-amber-400'
+                                : isDark
+                                ? 'text-zinc-100'
+                                : 'text-zinc-900'
+                            }`}
+                          >
+                            {stock} {prod.uom || 'PCS'}
+                          </span>
+                        </div>
+                        <p
+                          className={`text-[10px] font-mono tabular-nums mt-0.5 ${
+                            isDark ? 'text-zinc-500' : 'text-zinc-400'
+                          }`}
+                        >
+                          ROP: {rop} {stock <= rop && stock > 0 ? '⚠️ Reorder' : ''}
+                        </p>
+                      </div>
+                    </td>
+
+                    {/* Unit Price */}
+                    <td className="py-2.5 px-3 text-right">
+                      <span
+                        className={`font-mono font-semibold tabular-nums text-xs ${
+                          isDark ? 'text-zinc-100' : 'text-zinc-900'
+                        }`}
+                      >
+                        ${priceNum.toFixed(2)}
+                      </span>
+                    </td>
+
+                    {/* Actions Toolbar */}
+                    <td
+                      className="py-2.5 px-3 text-right pr-4"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => onSelectBarcode(prod)}
+                          className={`p-1 rounded transition cursor-pointer ${
+                            isDark
+                              ? 'text-zinc-400 hover:text-blue-400 hover:bg-zinc-800'
+                              : 'text-zinc-500 hover:text-blue-600 hover:bg-zinc-200/60'
+                          }`}
+                          title="Preview & Print Barcode"
+                        >
+                          <QrCode className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => onOpenDrawer(prod)}
+                          className={`p-1 rounded transition cursor-pointer ${
+                            isDark
+                              ? 'text-zinc-400 hover:text-blue-400 hover:bg-zinc-800'
+                              : 'text-zinc-500 hover:text-blue-600 hover:bg-zinc-200/60'
+                          }`}
+                          title="Quick Edit"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => onDeleteProduct(prod)}
+                          className={`p-1 rounded transition cursor-pointer ${
+                            isDark
+                              ? 'text-zinc-400 hover:text-rose-400 hover:bg-zinc-800'
+                              : 'text-zinc-500 hover:text-rose-600 hover:bg-zinc-200/60'
+                          }`}
+                          title="Delete"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
+      </div>
+
+      {/* Grid Footer Bar */}
+      <div
+        className={`px-4 py-2 border-t flex items-center justify-between text-[11px] ${
+          isDark ? 'border-zinc-800 bg-zinc-900/60 text-zinc-400' : 'border-zinc-200 bg-zinc-50 text-zinc-500'
+        }`}
+      >
+        <span>
+          Showing <strong className="font-mono text-zinc-700 dark:text-zinc-300">{filtered.length}</strong> of{' '}
+          <strong className="font-mono text-zinc-700 dark:text-zinc-300">{products.length}</strong> products
+        </span>
+        <span className="font-mono text-[10px] opacity-70">Press ⌘K or / to search catalog</span>
       </div>
     </div>
   );

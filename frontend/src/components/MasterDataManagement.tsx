@@ -893,19 +893,19 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700 animate-in slide-in-from-bottom duration-300">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 dark:text-emerald-600" />
-          <span className="font-semibold text-xs">{toastMessage}</span>
+        <div className="fixed bottom-6 right-6 z-50 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2.5 border border-zinc-700 animate-in slide-in-from-bottom duration-200">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 dark:text-emerald-600 shrink-0" />
+          <span className="font-medium text-xs">{toastMessage}</span>
         </div>
       )}
 
-      {/* Dynamic Sub-tab Title & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Enterprise Title & Actions Toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-zinc-200/60 dark:border-zinc-800/60">
         <div>
-          <h2 className={`text-xl font-bold ${theme === 'dark' ? 'text-slate-50' : 'text-slate-900'}`}>
+          <h2 className={`text-lg font-bold tracking-tight ${theme === 'dark' ? 'text-zinc-100' : 'text-zinc-900'}`}>
             {getHeaderInfo().title}
           </h2>
-          <p className={`text-xs font-normal mt-0.5 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+          <p className={`text-xs font-normal mt-0.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>
             {getHeaderInfo().subtitle}
           </p>
         </div>
@@ -914,40 +914,43 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
           {getAddButtonLabel() && (
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-semibold shadow-md shadow-blue-600/30 transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 text-xs font-medium transition cursor-pointer shadow-xs active:scale-[0.99]"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
               <span>{getAddButtonLabel()}</span>
             </button>
           )}
           <button
-            className={`p-2 rounded-xl border text-xs font-medium flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-md border text-xs font-medium flex items-center gap-1.5 transition ${
               theme === 'dark'
-                ? 'border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800'
-                : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 shadow-xs'
+                ? 'border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700'
+                : 'border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 shadow-xs'
             }`}
             title="Export CSV"
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-3.5 h-3.5 text-zinc-500" />
             <span className="hidden sm:inline">Export</span>
           </button>
         </div>
       </div>
 
-      {/* Global Search Bar */}
+      {/* Enterprise Fast Search & Filter Toolbar */}
       <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={t.searchPlaceholder}
-          className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-xs font-normal transition outline-hidden ${
+          className={`w-full pl-9 pr-14 py-2 rounded-md border text-xs font-normal transition outline-hidden ${
             theme === 'dark'
-              ? 'bg-slate-900 border-slate-800 text-slate-100 placeholder-slate-500 focus:border-blue-500'
-              : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 shadow-xs'
+              ? 'bg-zinc-900 border-zinc-800 text-zinc-100 placeholder-zinc-500 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500'
+              : 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 shadow-xs'
           }`}
         />
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] text-zinc-400 border border-zinc-200 dark:border-zinc-700 px-1.5 py-0.5 rounded">
+          ⌘K
+        </span>
       </div>
 
       {/* TAB CONTENT ROUTING */}
