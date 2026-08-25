@@ -14,7 +14,7 @@ export interface CreateProductDTO {
   barcode?: string;
   name: string;
   description?: string;
-  baseUnitId: string;
+  baseUnitId?: string;
   categoryId?: string;
   brandId?: string;
   price: number;

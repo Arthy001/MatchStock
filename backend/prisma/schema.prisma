@@ -30,6 +30,7 @@ model Tenant {
   // Relations
   subscriptions        Subscription[]
   subscriptionInvoices SubscriptionInvoice[]
+  companies            Company[]
   users                User[]
   units                Unit[]
   categories           Category[]
@@ -249,14 +250,38 @@ model TaxType {
   @@map("tax_types")
 }
 
+model Company {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  code          String    @db.VarChar(50)
+  name          String    @db.VarChar(255)
+  taxId         String?   @map("tax_id") @db.VarChar(50)
+  branchCode    String    @default("00000") @map("branch_code") @db.VarChar(20)
+  branchName    String?   @map("branch_name") @db.VarChar(100)
+  phone         String?   @db.VarChar(50)
+  email         String?   @db.VarChar(100)
+  address       String?   @db.Text
+  isHeadquarter Boolean   @default(false) @map("is_headquarter")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  warehouses    Warehouse[]
+
+  @@unique([tenantId, code])
+  @@map("companies")
+}
+
 model Warehouse {
   id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   tenantId  String    @map("tenant_id") @db.Uuid
+  companyId String?   @map("company_id") @db.Uuid
   code      String    @db.VarChar(50)
   name      String    @db.VarChar(255)
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
 
   tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  company   Company?  @relation(fields: [companyId], references: [id], onDelete: SetNull)
   binLocations BinLocation[]
   inventoryBalances InventoryBalance[]
   fromTransactions StockTransactionItem[] @relation("FromWarehouse")

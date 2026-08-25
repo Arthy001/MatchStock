@@ -230,6 +230,124 @@ paths:
                     $ref: '#/components/schemas/Product'
 
   # ========================================================
+  # 2.5 MASTER DATA: COMPANIES (1 TENANT : N COMPANIES)
+  # ========================================================
+  /companies:
+    get:
+      tags:
+        - Companies
+      summary: List Companies
+      description: Retrieve all companies/subsidiaries belonging to the active tenant.
+      responses:
+        '200':
+          description: List of companies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Company'
+    post:
+      tags:
+        - Companies
+      summary: Create Company
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCompanyInput'
+      responses:
+        '201':
+          description: Company created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Company'
+
+  /companies/{id}:
+    get:
+      tags:
+        - Companies
+      summary: Get Company Details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Company details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Company'
+    put:
+      tags:
+        - Companies
+      summary: Update Company
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCompanyInput'
+      responses:
+        '200':
+          description: Company updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Company'
+    delete:
+      tags:
+        - Companies
+      summary: Delete Company
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Company deleted successfully
+
+  # ========================================================
   # 3. MASTER DATA: WAREHOUSES & BINS
   # ========================================================
   /warehouses:
@@ -444,6 +562,104 @@ components:
           type: string
         status:
           type: string
+
+    Company:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        code:
+          type: string
+          example: COMP-001
+        name:
+          type: string
+          example: MatchStock Retail Co., Ltd.
+        taxId:
+          type: string
+          example: '0105559012345'
+        branchCode:
+          type: string
+          example: '00000'
+        branchName:
+          type: string
+          example: Headquarters (สำนักงานใหญ่)
+        phone:
+          type: string
+          example: '+66 2 555 0100'
+        email:
+          type: string
+          example: contact@matchstock.com
+        address:
+          type: string
+          example: 88/1 Sukhumvit Rd, Bangkok 10110
+        isHeadquarter:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateCompanyInput:
+      type: object
+      required:
+        - name
+      properties:
+        code:
+          type: string
+          example: COMP-001
+        name:
+          type: string
+          example: MatchStock Retail Co., Ltd.
+        taxId:
+          type: string
+          example: '0105559012345'
+        branchCode:
+          type: string
+          example: '00000'
+        branchName:
+          type: string
+          example: Headquarters
+        phone:
+          type: string
+          example: '+66 2 555 0100'
+        email:
+          type: string
+          example: contact@matchstock.com
+        address:
+          type: string
+          example: 88/1 Sukhumvit Rd, Bangkok
+        isHeadquarter:
+          type: boolean
+          example: true
+
+    UpdateCompanyInput:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        taxId:
+          type: string
+        branchCode:
+          type: string
+        branchName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        address:
+          type: string
+        isHeadquarter:
+          type: boolean
 
     SubscriptionDetail:
       type: object

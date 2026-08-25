@@ -82,6 +82,23 @@ export interface Supplier {
   status: 'active' | 'inactive';
 }
 
+export interface Company {
+  id: string;
+  tenantId?: string;
+  code: string;
+  name: string;
+  taxId?: string;
+  branchCode: string;
+  branchName?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  isHeadquarter: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  warehouses?: any[];
+}
+
 export interface UserPermissionItem {
   id: string;
   name: string;

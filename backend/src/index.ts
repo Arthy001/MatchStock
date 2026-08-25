@@ -52,6 +52,15 @@ app.get('/health', async (_req: Request, res: Response) => {
   }
 });
 
+import productRoutes from './routes/product.routes';
+import masterDataRoutes from './routes/masterData.routes';
+import transactionRoutes from './routes/transaction.routes';
+
+// API Routes (v1)
+app.use('/api/v1/products', productRoutes);
+app.use('/api/v1/inventory', transactionRoutes);
+app.use('/api/v1', masterDataRoutes);
+
 // Root Endpoint
 app.get('/', (_req: Request, res: Response) => {
   res.json({

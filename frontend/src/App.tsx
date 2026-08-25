@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Language, ThemeMode, Tenant, User } from './types';
 import { LoginView } from './components/LoginView';
 import { Sidebar } from './components/Sidebar';
@@ -32,12 +33,15 @@ const LIVE_TENANTS: Tenant[] = [
 ];
 
 export function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [lang, setLang] = useState<Language>('th');
   const [theme, setTheme] = useState<ThemeMode>('light');
   const [selectedTenantId, setSelectedTenantId] = useState<string>('f97fe2dc-486e-4054-931c-aadf92823e69');
   const [activeTab, setActiveTab] = useState<string>('masterData');
-  const [activeMasterSubTab, setActiveMasterSubTab] = useState<'rbac' | 'products' | 'units' | 'barcodes' | 'warehouses' | 'suppliers'>('products');
+  const [activeMasterSubTab, setActiveMasterSubTab] = useState<'rbac' | 'products' | 'companies' | 'units' | 'barcodes' | 'warehouses' | 'suppliers'>('products');
   const [activeInventorySubTab, setActiveInventorySubTab] = useState<'all' | 'receive' | 'issue' | 'transfer' | 'adjustment' | 'scanner' | 'cycleCount'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
@@ -52,6 +56,89 @@ export function App() {
   });
 
   const t = getTranslation(lang);
+
+  // Synchronize Active Tab & Subtab from browser URL path on URL changes
+  useEffect(() => {
+    const path = location.pathname.toLowerCase();
+    if (path.startsWith('/products')) {
+      setActiveTab('masterData');
+      setActiveMasterSubTab('products');
+    } else if (path.startsWith('/companies')) {
+      setActiveTab('masterData');
+      setActiveMasterSubTab('companies');
+    } else if (path.startsWith('/units')) {
+      setActiveTab('masterData');
+      setActiveMasterSubTab('units');
+    } else if (path.startsWith('/warehouses')) {
+      setActiveTab('masterData');
+      setActiveMasterSubTab('warehouses');
+    } else if (path.startsWith('/suppliers')) {
+      setActiveTab('masterData');
+      setActiveMasterSubTab('suppliers');
+    } else if (path.startsWith('/rbac') || path.startsWith('/users')) {
+      setActiveTab('masterData');
+      setActiveMasterSubTab('rbac');
+    } else if (path.startsWith('/barcodes')) {
+      setActiveTab('masterData');
+      setActiveMasterSubTab('barcodes');
+    } else if (path.startsWith('/master-data')) {
+      setActiveTab('masterData');
+      if (path.includes('/products')) setActiveMasterSubTab('products');
+      else if (path.includes('/companies')) setActiveMasterSubTab('companies');
+      else if (path.includes('/units')) setActiveMasterSubTab('units');
+      else if (path.includes('/warehouses')) setActiveMasterSubTab('warehouses');
+      else if (path.includes('/suppliers')) setActiveMasterSubTab('suppliers');
+      else if (path.includes('/rbac')) setActiveMasterSubTab('rbac');
+      else if (path.includes('/barcodes')) setActiveMasterSubTab('barcodes');
+      else setActiveMasterSubTab('products');
+    } else if (path.startsWith('/inventory')) {
+      setActiveTab('inventory');
+      if (path.includes('/receive')) setActiveInventorySubTab('receive');
+      else if (path.includes('/issue')) setActiveInventorySubTab('issue');
+      else if (path.includes('/transfer')) setActiveInventorySubTab('transfer');
+      else if (path.includes('/adjustment')) setActiveInventorySubTab('adjustment');
+      else if (path.includes('/scanner')) setActiveInventorySubTab('scanner');
+      else if (path.includes('/cycle-count')) setActiveInventorySubTab('cycleCount');
+      else setActiveInventorySubTab('all');
+    } else if (path.startsWith('/orders') || path.startsWith('/sales')) {
+      setActiveTab('sales');
+    } else if (path.startsWith('/purchases')) {
+      setActiveTab('purchases');
+    } else if (path.startsWith('/reports')) {
+      setActiveTab('reports');
+    } else if (path.startsWith('/settings')) {
+      setActiveTab('settings');
+    } else if (path.startsWith('/dashboard')) {
+      setActiveTab('dashboard');
+    }
+  }, [location.pathname]);
+
+  // Navigate when Tab changes
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === 'masterData') navigate(`/${activeMasterSubTab}`);
+    else if (tab === 'inventory') {
+      const invPath = activeInventorySubTab === 'all' ? '' : `/${activeInventorySubTab === 'cycleCount' ? 'cycle-count' : activeInventorySubTab}`;
+      navigate(`/inventory${invPath}`);
+    } else if (tab === 'sales') navigate('/orders');
+    else if (tab === 'purchases') navigate('/purchases');
+    else if (tab === 'reports') navigate('/reports');
+    else if (tab === 'settings') navigate('/settings');
+    else if (tab === 'dashboard') navigate('/dashboard');
+  };
+
+  // Navigate when Master Data Subtab changes
+  const handleMasterSubTabChange = (subTab: 'rbac' | 'products' | 'companies' | 'units' | 'barcodes' | 'warehouses' | 'suppliers') => {
+    setActiveMasterSubTab(subTab);
+    navigate(`/${subTab}`);
+  };
+
+  // Navigate when Inventory Subtab changes
+  const handleInventorySubTabChange = (subTab: 'all' | 'receive' | 'issue' | 'transfer' | 'adjustment' | 'scanner' | 'cycleCount') => {
+    setActiveInventorySubTab(subTab);
+    const subPath = subTab === 'all' ? '' : `/${subTab === 'cycleCount' ? 'cycle-count' : subTab}`;
+    navigate(`/inventory${subPath}`);
+  };
 
   // Restore live session from localStorage on initial load
   useEffect(() => {
@@ -94,11 +181,13 @@ export function App() {
     setUser(loggedInUser);
     setSelectedTenantId(loggedInUser.tenantId);
     setIsLoggedIn(true);
+    navigate('/products');
   };
 
   const handleLogout = () => {
     authService.logout();
     setIsLoggedIn(false);
+    navigate('/');
   };
 
   const handleThemeToggle = () => {
@@ -141,12 +230,12 @@ export function App() {
           features={LIVE_TENANTS.find((t) => t.id === selectedTenantId)?.features}
           activeTab={activeTab}
           activeSubTab={activeTab === 'inventory' ? activeInventorySubTab : activeMasterSubTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
           onSubTabChange={(sub) => {
             if (activeTab === 'inventory') {
-              setActiveInventorySubTab(sub as any);
+              handleInventorySubTabChange(sub as any);
             } else {
-              setActiveMasterSubTab(sub as any);
+              handleMasterSubTabChange(sub as any);
             }
           }}
           onLogout={handleLogout}
@@ -178,7 +267,7 @@ export function App() {
                 theme={theme}
                 searchQuery={searchQuery}
                 activeSubTab={activeMasterSubTab}
-                onSubTabChange={(sub) => setActiveMasterSubTab(sub)}
+                onSubTabChange={handleMasterSubTabChange}
               />
             )}
 
@@ -202,7 +291,7 @@ export function App() {
                 theme={theme}
                 searchQuery={searchQuery}
                 onNavigateToAdjustment={() => {
-                  setActiveInventorySubTab('adjustment');
+                  handleInventorySubTabChange('adjustment');
                 }}
               />
             )}
@@ -215,7 +304,7 @@ export function App() {
                   theme={theme}
                   searchQuery={searchQuery}
                   activeSubTab={activeInventorySubTab as any}
-                  onSubTabChange={(sub) => setActiveInventorySubTab(sub as any)}
+                  onSubTabChange={(sub) => handleInventorySubTabChange(sub as any)}
                 />
               )}
 

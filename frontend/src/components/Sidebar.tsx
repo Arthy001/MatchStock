@@ -176,6 +176,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       {[
                         { key: 'rbac', label: t.tabUserAccess },
                         { key: 'products', label: t.tabProducts },
+                        { key: 'companies', label: lang === 'en' ? 'Companies (Holding)' : 'บริษัทในเครือ (Companies)' },
                         { key: 'units', label: t.tabUnits },
                         { key: 'barcodes', label: t.tabBarcodes },
                         { key: 'warehouses', label: t.tabWarehouses },
