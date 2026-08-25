@@ -18,16 +18,19 @@ interface CompanyManagementTabProps {
 
 export const CompanyManagementTab: React.FC<CompanyManagementTabProps> = ({
   theme,
-  searchQuery,
-  companies,
+  searchQuery = '',
+  companies = [],
   onOpenEdit,
   onDelete,
 }) => {
-  const filtered = companies.filter(
+  const safeCompanies = Array.isArray(companies) ? companies : [];
+  const q = (searchQuery || '').toLowerCase();
+  const filtered = safeCompanies.filter(
     (c) =>
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (c.taxId && c.taxId.includes(searchQuery))
+      c &&
+      ((c.name || '').toLowerCase().includes(q) ||
+        (c.code || '').toLowerCase().includes(q) ||
+        (c.taxId && c.taxId.includes(searchQuery)))
   );
 
   return (

@@ -20,11 +20,12 @@ interface UnitManagementTabProps {
 export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
   theme,
   t,
-  unitsList,
+  unitsList = [],
   onOpenAddModal,
   onOpenEditUnit,
   onDeleteUnit,
 }) => {
+  const safeUnits = Array.isArray(unitsList) ? unitsList : [];
   return (
     <div className="space-y-6">
       <div
@@ -77,11 +78,9 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
               </tr>
             </thead>
             <tbody
-              className={`divide-y ${
-                theme === 'dark' ? 'divide-slate-800' : 'divide-slate-200'
-              }`}
+              className="divide-y divide-slate-100 dark:divide-slate-800"
             >
-              {unitsList.map((unit) => (
+              {safeUnits.map((unit) => (
                 <tr
                   key={unit.id}
                   className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition"

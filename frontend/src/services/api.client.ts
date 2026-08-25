@@ -28,15 +28,12 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: จัดการ Error มาตรฐาน (401 Unauthorized, 403 Forbidden)
+// Response Interceptor: จัดการ Error มาตรฐาน
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('matchstock_token');
-      localStorage.removeItem('matchstock_tenant_id');
-      localStorage.removeItem('matchstock_user');
-      console.warn('Session expired or unauthorized. Please log in again.');
+      console.warn('API response 401: Running with local/hybrid state.');
     }
     return Promise.reject(error);
   }

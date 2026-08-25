@@ -22,10 +22,18 @@ interface ProductCatalogTabProps {
   onDeleteProduct: (prod: ProductItem) => void;
 }
 
+const renderText = (val: any): string => {
+  if (val == null) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'number') return String(val);
+  if (typeof val === 'object') return val.name || val.title || val.code || val.label || '';
+  return String(val);
+};
+
 export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
   theme,
   t,
-  products,
+  products = [],
   onOpenDrawer,
   onSelectBarcode,
   onDeleteProduct,
@@ -34,12 +42,13 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'LOW' | 'OUT'>('ALL');
 
   const isDark = theme === 'dark';
+  const safeProducts = Array.isArray(products) ? products : [];
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === products.length) {
+    if (selectedIds.length === safeProducts.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(products.map((p) => p.id));
+      setSelectedIds(safeProducts.map((p) => p?.id).filter(Boolean));
     }
   };
 
@@ -50,7 +59,8 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
     );
   };
 
-  const filtered = products.filter((p) => {
+  const filtered = safeProducts.filter((p) => {
+    if (!p) return false;
     const stock = Number(p.stockOnHand || 0);
     const rop = Number(p.reorderLevel || 10);
     if (statusFilter === 'OUT') return stock === 0;
@@ -87,7 +97,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                 : 'text-zinc-600 hover:text-zinc-900'
             }`}
           >
-            All Items ({products.length})
+            All Items ({safeProducts.length})
           </button>
           <button
             onClick={() => setStatusFilter('ACTIVE')}
@@ -171,7 +181,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
               <th className="py-2.5 px-3 w-9 text-center">
                 <input
                   type="checkbox"
-                  checked={products.length > 0 && selectedIds.length === products.length}
+                  checked={safeProducts.length > 0 && selectedIds.length === safeProducts.length}
                   onChange={toggleSelectAll}
                   className="rounded border-zinc-300 dark:border-zinc-700 text-blue-600 focus:ring-0 cursor-pointer"
                 />
@@ -205,6 +215,13 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                 const isSelected = selectedIds.includes(prod.id);
                 const priceNum = Number(prod.price || 0);
                 const weightNum = Number(prod.weightKg || 0);
+                const prodName = renderText(prod.name);
+                const prodCode = renderText(prod.code);
+                const prodCategory = renderText(prod.category) || 'General';
+                const prodSku = renderText(prod.sku) || prodCode || '-';
+                const prodBarcode = renderText(prod.barcodeValue);
+                const prodBrand = renderText(prod.brand) || 'General';
+                const prodUom = renderText(prod.uom) || 'PCS';
 
                 return (
                   <tr
@@ -253,7 +270,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                                 isDark ? 'text-zinc-100' : 'text-zinc-900'
                               }`}
                             >
-                              {prod.name}
+                              {prodName}
                             </span>
                             {prod.isLotControl && (
                               <span className="shrink-0 px-1 py-0.2 rounded text-[10px] font-mono font-medium bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
@@ -266,8 +283,8 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                               isDark ? 'text-zinc-400' : 'text-zinc-500'
                             }`}
                           >
-                            <span className="font-mono text-zinc-400">{prod.code}</span> •{' '}
-                            {prod.category || 'General'}
+                            <span className="font-mono text-zinc-400">{prodCode}</span> •{' '}
+                            {prodCategory}
                           </p>
                         </div>
                       </div>
@@ -283,15 +300,15 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                               : 'bg-zinc-100 text-zinc-800 border-zinc-200'
                           }`}
                         >
-                          {prod.sku || prod.code || '-'}
+                          {prodSku}
                         </span>
-                        {prod.barcodeValue && (
+                        {prodBarcode && (
                           <p
                             className={`text-[10px] font-normal mt-0.5 truncate ${
                               isDark ? 'text-zinc-500' : 'text-zinc-400'
                             }`}
                           >
-                            {prod.barcodeValue}
+                            {prodBarcode}
                           </p>
                         )}
                       </div>
@@ -304,7 +321,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                           isDark ? 'text-zinc-300' : 'text-zinc-700'
                         }`}
                       >
-                        {prod.brand || 'General'}
+                        {prodBrand}
                       </span>
                     </td>
 
@@ -354,7 +371,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                                 : 'text-zinc-900'
                             }`}
                           >
-                            {stock} {prod.uom || 'PCS'}
+                            {stock} {prodUom}
                           </span>
                         </div>
                         <p

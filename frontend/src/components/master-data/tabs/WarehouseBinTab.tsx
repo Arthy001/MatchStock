@@ -19,10 +19,11 @@ interface WarehouseBinTabProps {
 export const WarehouseBinTab: React.FC<WarehouseBinTabProps> = ({
   theme,
   t,
-  binsList,
+  binsList = [],
   onOpenEditBin,
   onDeleteBin,
 }) => {
+  const safeBins = Array.isArray(binsList) ? binsList : [];
   return (
     <div
       className={`p-6 rounded-2xl border transition-colors ${
@@ -49,7 +50,7 @@ export const WarehouseBinTab: React.FC<WarehouseBinTabProps> = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {binsList.map((bin) => (
+        {safeBins.map((bin) => (
           <div
             key={bin.id}
             className={`p-5 rounded-2xl border space-y-4 shadow-sm ${

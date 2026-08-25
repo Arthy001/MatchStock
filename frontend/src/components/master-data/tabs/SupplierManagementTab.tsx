@@ -13,10 +13,11 @@ interface SupplierManagementTabProps {
 export const SupplierManagementTab: React.FC<SupplierManagementTabProps> = ({
   theme,
   t,
-  suppliersList,
+  suppliersList = [],
   onOpenEditSupplier,
   onDeleteSupplier,
 }) => {
+  const safeSuppliers = Array.isArray(suppliersList) ? suppliersList : [];
   return (
     <div
       className={`p-6 rounded-2xl border transition-colors ${
@@ -43,7 +44,7 @@ export const SupplierManagementTab: React.FC<SupplierManagementTabProps> = ({
       </div>
 
       <div className="space-y-4">
-        {suppliersList.map((sup) => (
+        {safeSuppliers.map((sup) => (
           <div
             key={sup.id}
             className={`p-5 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm ${

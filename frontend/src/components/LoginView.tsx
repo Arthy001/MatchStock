@@ -141,6 +141,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
         localStorage.setItem('matchstock_tenant_id', tenant.id);
         localStorage.setItem('matchstock_user', JSON.stringify(demoUser));
+        localStorage.setItem('matchstock_token', 'demo-enterprise-jwt-token');
         onLoginSuccess(demoUser);
         return;
       }

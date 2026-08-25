@@ -38,7 +38,8 @@ export function App() {
 
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     const token = localStorage.getItem('matchstock_token');
-    return token !== null || true; // default true for demo environment
+    const user = localStorage.getItem('matchstock_user');
+    return Boolean(token || user);
   });
   const [lang, setLang] = useState<Language>('th');
   const [theme, setTheme] = useState<ThemeMode>('light');
@@ -117,6 +118,7 @@ export function App() {
     } else if (path.startsWith('/dashboard')) {
       setActiveTab('dashboard');
     }
+    // /login path is handled by the isLoggedIn guard — no tab change needed
   }, [location.pathname]);
 
   // Navigate when Tab changes
@@ -193,7 +195,7 @@ export function App() {
   const handleLogout = () => {
     authService.logout();
     setIsLoggedIn(false);
-    navigate('/');
+    navigate('/login');
   };
 
   const handleThemeToggle = () => {

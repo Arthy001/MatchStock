@@ -442,23 +442,45 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         masterDataService.getUnits().catch(() => []),
         masterDataService.getCompanies().catch(() => []),
       ]);
-      if (Array.isArray(prods) && prods.length > 0) {
+
+      const rawProds = Array.isArray(prods)
+        ? prods
+        : Array.isArray((prods as any)?.data)
+        ? (prods as any).data
+        : Array.isArray((prods as any)?.items)
+        ? (prods as any).items
+        : [];
+
+      if (rawProds.length > 0) {
         setProductsList(
-          prods.map((p: any) => ({
+          rawProds.map((p: any) => ({
             ...p,
+            id: p.id || `prod-${Math.random().toString(36).substring(2, 9)}`,
+            code: p.code || 'PRD-000',
+            name: p.name || 'Unnamed Product',
             sku: p.sku || p.code || 'SKU-GEN',
+            category: typeof p.category === 'object' ? (p.category?.name || 'General') : (p.category || 'General'),
+            brand: typeof p.brand === 'object' ? (p.brand?.name || 'General') : (p.brand || 'General'),
             barcodeValue: p.barcodeValue || p.barcode || '8851234567890',
             price: Number(p.price || 0),
             stockOnHand: Number(p.stockOnHand || 0),
             reorderLevel: Number(p.reorderLevel || p.reorderPoint || 10),
-            uom: p.uom || p.unit || 'PCS',
+            uom: typeof p.uom === 'object' ? (p.uom?.name || 'PCS') : typeof p.unit === 'object' ? (p.unit?.name || 'PCS') : (p.uom || p.unit || 'PCS'),
           }))
         );
       }
-      if (Array.isArray(bins) && bins.length > 0) setBinsList(bins);
-      if (Array.isArray(sups) && sups.length > 0) setSuppliersList(sups);
-      if (Array.isArray(units) && units.length > 0) setUnitsList(units);
-      if (Array.isArray(comps) && comps.length > 0) setCompaniesList(comps);
+
+      const rawBins = Array.isArray(bins) ? bins : Array.isArray((bins as any)?.data) ? (bins as any).data : [];
+      if (rawBins.length > 0) setBinsList(rawBins);
+
+      const rawSups = Array.isArray(sups) ? sups : Array.isArray((sups as any)?.data) ? (sups as any).data : [];
+      if (rawSups.length > 0) setSuppliersList(rawSups);
+
+      const rawUnits = Array.isArray(units) ? units : Array.isArray((units as any)?.data) ? (units as any).data : [];
+      if (rawUnits.length > 0) setUnitsList(rawUnits);
+
+      const rawComps = Array.isArray(comps) ? comps : Array.isArray((comps as any)?.data) ? (comps as any).data : [];
+      if (rawComps.length > 0) setCompaniesList(rawComps);
     } catch (err) {
       console.error('Error loading master data:', err);
     } finally {
