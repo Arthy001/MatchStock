@@ -69,184 +69,6 @@ interface UnitItem {
   name: string;
 }
 
-const DEFAULT_PRODUCTS: ProductItem[] = [
-  {
-    id: 'prod-001',
-    code: 'PRD-1001',
-    sku: 'SKU-NIKE-AIR-MAX',
-    name: 'Nike Air Max 2026 Pro Running Shoes',
-    category: 'Footwear',
-    brand: 'Nike',
-    manufacturer: 'Nike Inc.',
-    uom: 'PAIR',
-    weightKg: 0.85,
-    widthCm: 25,
-    lengthCm: 35,
-    heightCm: 15,
-    price: 159.99,
-    stockOnHand: 120,
-    reorderLevel: 25,
-    minReorderQty: 10,
-    isLotControl: true,
-    description: 'รองเท้าวิ่งประสิทธิภาพสูง น้ำหนักเบา ระบายอากาศดีเยี่ยม',
-    barcodeType: 'CODE128',
-    barcodeValue: '8851234567890',
-    status: 'active',
-    imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&auto=format&fit=crop&q=60',
-  },
-  {
-    id: 'prod-002',
-    code: 'PRD-1002',
-    sku: 'SKU-SOUNDPULSE-EARBUDS',
-    name: 'SoundPulse Pro ANC Wireless Earbuds',
-    category: 'Electronics',
-    brand: 'SoundPulse',
-    manufacturer: 'AudioTech Ltd.',
-    uom: 'PCS',
-    weightKg: 0.25,
-    widthCm: 10,
-    lengthCm: 10,
-    heightCm: 5,
-    price: 89.50,
-    stockOnHand: 15,
-    reorderLevel: 20,
-    minReorderQty: 15,
-    isLotControl: false,
-    description: 'หูฟังไร้สายพร้อมระบบตัดเสียงรบกวน Active Noise Cancelling',
-    barcodeType: 'EAN13',
-    barcodeValue: '8859876543210',
-    status: 'low_stock',
-    imageUrl: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=100&auto=format&fit=crop&q=60',
-  },
-  {
-    id: 'prod-003',
-    code: 'PRD-1003',
-    sku: 'SKU-URBAN-OVERSIZED-TEE',
-    name: 'Urban Tech Oversized Heavyweight Tee',
-    category: 'Apparel',
-    brand: 'UrbanStyle',
-    manufacturer: 'Textile Pro',
-    uom: 'PCS',
-    weightKg: 0.35,
-    widthCm: 30,
-    lengthCm: 40,
-    heightCm: 2,
-    price: 34.00,
-    stockOnHand: 0,
-    reorderLevel: 15,
-    minReorderQty: 20,
-    isLotControl: false,
-    description: 'เสื้อยืดทรงโอเวอร์ไซส์ ผ้าคอตตอน 100% เกรดพรีเมียม',
-    barcodeType: 'QR_CODE',
-    barcodeValue: 'QR-URBAN-TEE-003',
-    status: 'out_of_stock',
-    imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=100&auto=format&fit=crop&q=60',
-  },
-];
-
-const DEFAULT_COMPANIES: Company[] = [
-  {
-    id: 'comp-001',
-    code: 'COMP-HQ',
-    name: 'MatchStock Logistics Holding Co., Ltd.',
-    taxId: '0105559012345',
-    branchCode: '00000',
-    branchName: 'สำนักงานใหญ่ (Headquarters)',
-    phone: '+66 2 555 0100',
-    email: 'contact@matchstock.com',
-    address: '888 อาคารแมตช์สต็อก ทาวเวอร์ ชั้น 25 ถนนสุขุมวิท คลองเตย กรุงเทพมหานคร 10110',
-    isHeadquarter: true,
-  },
-  {
-    id: 'comp-002',
-    code: 'COMP-RETAIL',
-    name: 'MatchStock Retail & Distribution Co., Ltd.',
-    taxId: '0105559012346',
-    branchCode: '00001',
-    branchName: 'สาขาศูนย์กระจายสินค้ารังสิต',
-    phone: '+66 2 555 0200',
-    email: 'retail@matchstock.com',
-    address: '99/1 หมู่ 4 ถนนพหลโยธิน ตำบลคลองหนึ่ง อำเภอคลองหลวง จังหวัดปทุมธานี 12120',
-    isHeadquarter: false,
-  },
-];
-
-const DEFAULT_UNITS: UnitItem[] = [
-  { id: 'u1', code: 'PCS', name: 'ชิ้น (Pieces)' },
-  { id: 'u2', code: 'PAIR', name: 'คู่ (Pairs)' },
-  { id: 'u3', code: 'BOX', name: 'กล่อง (Boxes)' },
-  { id: 'u4', code: 'PACK', name: 'แพ็ค (Packs)' },
-  { id: 'u5', code: 'SET', name: 'ชุด (Sets)' },
-];
-
-const DEFAULT_BINS: WarehouseBin[] = [
-  {
-    id: 'b1',
-    warehouseId: 'wh-01',
-    warehouseName: 'WH-Bangkok Main Logistics',
-    zone: 'Zone-A',
-    rack: 'R-01',
-    shelf: 'S-01',
-    binCode: 'BIN-A-01-01',
-    capacityKg: 500,
-    currentItemsCount: 420,
-    status: 'available',
-  },
-  {
-    id: 'b2',
-    warehouseId: 'wh-01',
-    warehouseName: 'WH-Bangkok Main Logistics',
-    zone: 'Zone-B',
-    rack: 'R-02',
-    shelf: 'S-03',
-    binCode: 'BIN-B-02-03',
-    capacityKg: 300,
-    currentItemsCount: 300,
-    status: 'full',
-  },
-  {
-    id: 'b3',
-    warehouseId: 'wh-02',
-    warehouseName: 'WH-Rangsit Distribution Hub',
-    zone: 'Zone-C',
-    rack: 'R-01',
-    shelf: 'S-02',
-    binCode: 'BIN-C-01-02',
-    capacityKg: 600,
-    currentItemsCount: 150,
-    status: 'available',
-  },
-];
-
-const DEFAULT_SUPPLIERS: Supplier[] = [
-  {
-    id: 'sup-001',
-    code: 'SUP-001',
-    name: 'Siam Logistics & Global Supply Co., Ltd.',
-    contactPerson: 'คุณวิชัย วงศ์สวัสดิ์',
-    phone: '+66 2 123 4567',
-    email: 'contact@siamlogistics.co.th',
-    taxId: '0105562099887',
-    taxType: 'VAT7',
-    discountTerms: 'Net 30 Days',
-    address: '123/45 ถนนพระราม 3 แขวงบางโพงพาง เขตยานนาวา กรุงเทพฯ 10120',
-    status: 'active',
-  },
-  {
-    id: 'sup-002',
-    code: 'SUP-002',
-    name: 'Bangkok Tech & Electronic Parts Co., Ltd.',
-    contactPerson: 'คุณสมศักดิ์ การค้า',
-    phone: '+66 2 987 6543',
-    email: 'sales@bkktech.com',
-    taxId: '0105561088776',
-    taxType: 'VAT7',
-    discountTerms: '2/10 Net 60',
-    address: '456 ถนนพหลโยธิน แขวงลาดยาว เขตจตุจักร กรุงเทพฯ 10900',
-    status: 'active',
-  },
-];
-
 export const MasterDataManagement: React.FC<MasterDataProps> = ({
   theme,
   lang,
@@ -259,18 +81,13 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Entities state with robust initial mock data
-  const [productsList, setProductsList] = useState<ProductItem[]>(DEFAULT_PRODUCTS);
-  const [companiesList, setCompaniesList] = useState<Company[]>(DEFAULT_COMPANIES);
-  const [suppliersList, setSuppliersList] = useState<Supplier[]>(DEFAULT_SUPPLIERS);
-  const [unitsList, setUnitsList] = useState<UnitItem[]>(DEFAULT_UNITS);
-  const [binsList, setBinsList] = useState<WarehouseBin[]>(DEFAULT_BINS);
-  const [usersList, setUsersList] = useState<RbacUser[]>([
-    { id: '1', name: 'Arthy Admin', email: 'admin@matchstock.com', department: 'Executive', role: 'admin', status: 'Active' },
-    { id: '2', name: 'John Inventory', email: 'warehouse@matchstock.com', department: 'Logistics', role: 'warehouse_staff', status: 'Active' },
-    { id: '3', name: 'Sarah Procurement', email: 'purchasing@matchstock.com', department: 'Purchasing', role: 'purchasing_staff', status: 'Active' },
-    { id: '4', name: 'Michael Boss', email: 'manager@matchstock.com', department: 'Operations', role: 'manager', status: 'Active' },
-  ]);
+  // Pure Live Entities state (Zero Mockups)
+  const [productsList, setProductsList] = useState<ProductItem[]>([]);
+  const [companiesList, setCompaniesList] = useState<Company[]>([]);
+  const [suppliersList, setSuppliersList] = useState<Supplier[]>([]);
+  const [unitsList, setUnitsList] = useState<UnitItem[]>([]);
+  const [binsList, setBinsList] = useState<WarehouseBin[]>([]);
+  const [usersList, setUsersList] = useState<RbacUser[]>([]);
 
   // Selected item modals / drawer state
   const [drawerProduct, setDrawerProduct] = useState<ProductItem | null>(null);
@@ -435,12 +252,13 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
   const loadAllMasterData = async () => {
     setIsLoading(true);
     try {
-      const [prods, bins, sups, units, comps] = await Promise.all([
+      const [prods, bins, sups, units, comps, usrs] = await Promise.all([
         productService.getAllProducts().catch(() => []),
         warehouseService.getBins().catch(() => []),
         masterDataService.getSuppliers().catch(() => []),
         masterDataService.getUnits().catch(() => []),
         masterDataService.getCompanies().catch(() => []),
+        masterDataService.getUsers().catch(() => []),
       ]);
 
       const rawProds = Array.isArray(prods)
@@ -451,36 +269,37 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         ? (prods as any).items
         : [];
 
-      if (rawProds.length > 0) {
-        setProductsList(
-          rawProds.map((p: any) => ({
-            ...p,
-            id: p.id || `prod-${Math.random().toString(36).substring(2, 9)}`,
-            code: p.code || 'PRD-000',
-            name: p.name || 'Unnamed Product',
-            sku: p.sku || p.code || 'SKU-GEN',
-            category: typeof p.category === 'object' ? (p.category?.name || 'General') : (p.category || 'General'),
-            brand: typeof p.brand === 'object' ? (p.brand?.name || 'General') : (p.brand || 'General'),
-            barcodeValue: p.barcodeValue || p.barcode || '8851234567890',
-            price: Number(p.price || 0),
-            stockOnHand: Number(p.stockOnHand || 0),
-            reorderLevel: Number(p.reorderLevel || p.reorderPoint || 10),
-            uom: typeof p.uom === 'object' ? (p.uom?.name || 'PCS') : typeof p.unit === 'object' ? (p.unit?.name || 'PCS') : (p.uom || p.unit || 'PCS'),
-          }))
-        );
-      }
+      setProductsList(
+        rawProds.map((p: any) => ({
+          ...p,
+          id: p.id || `prod-${Math.random().toString(36).substring(2, 9)}`,
+          code: p.code || 'PRD-000',
+          name: p.name || 'Unnamed Product',
+          sku: p.sku || p.code || 'SKU-GEN',
+          category: typeof p.category === 'object' ? (p.category?.name || 'General') : (p.category || 'General'),
+          brand: typeof p.brand === 'object' ? (p.brand?.name || 'General') : (p.brand || 'General'),
+          barcodeValue: p.barcodeValue || p.barcode || '',
+          price: Number(p.price || 0),
+          stockOnHand: Number(p.stockOnHand || 0),
+          reorderLevel: Number(p.reorderLevel || p.reorderPoint || 10),
+          uom: typeof p.uom === 'object' ? (p.uom?.name || 'PCS') : typeof p.unit === 'object' ? (p.unit?.name || 'PCS') : (p.uom || p.unit || 'PCS'),
+        }))
+      );
 
       const rawBins = Array.isArray(bins) ? bins : Array.isArray((bins as any)?.data) ? (bins as any).data : [];
-      if (rawBins.length > 0) setBinsList(rawBins);
+      setBinsList(rawBins);
 
       const rawSups = Array.isArray(sups) ? sups : Array.isArray((sups as any)?.data) ? (sups as any).data : [];
-      if (rawSups.length > 0) setSuppliersList(rawSups);
+      setSuppliersList(rawSups);
 
       const rawUnits = Array.isArray(units) ? units : Array.isArray((units as any)?.data) ? (units as any).data : [];
-      if (rawUnits.length > 0) setUnitsList(rawUnits);
+      setUnitsList(rawUnits);
 
       const rawComps = Array.isArray(comps) ? comps : Array.isArray((comps as any)?.data) ? (comps as any).data : [];
-      if (rawComps.length > 0) setCompaniesList(rawComps);
+      setCompaniesList(rawComps);
+
+      const rawUsers = Array.isArray(usrs) ? usrs : Array.isArray((usrs as any)?.data) ? (usrs as any).data : [];
+      setUsersList(rawUsers);
     } catch (err) {
       console.error('Error loading master data:', err);
     } finally {
