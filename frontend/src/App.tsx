@@ -10,6 +10,8 @@ import { MobileBarcodeScanner } from './components/MobileBarcodeScanner';
 import { CycleCountManagement } from './components/CycleCountManagement';
 import { OrdersManagement } from './components/OrdersManagement';
 import { ReportsAnalytics } from './components/ReportsAnalytics';
+import { DashboardOverview } from './components/DashboardOverview';
+import { SettingsView } from './components/SettingsView';
 import { getTranslation } from './i18n';
 import { LayoutDashboard, Boxes, ShoppingCart, ShoppingBag, BarChart3, Settings } from 'lucide-react';
 
@@ -342,7 +344,22 @@ export function App() {
               />
             )}
 
-            {(activeTab === 'reports' || activeTab === 'dashboard') && (
+            {activeTab === 'dashboard' && (
+              <DashboardOverview
+                lang={lang}
+                theme={theme}
+                searchQuery={searchQuery}
+                onNavigateTab={(tab, sub) => {
+                  setActiveTab(tab);
+                  if (sub) {
+                    if (tab === 'masterData') setActiveMasterSubTab(sub as any);
+                    else if (tab === 'inventory') setActiveInventorySubTab(sub as any);
+                  }
+                }}
+              />
+            )}
+
+            {activeTab === 'reports' && (
               <ReportsAnalytics
                 lang={lang}
                 theme={theme}
@@ -353,12 +370,21 @@ export function App() {
               />
             )}
 
+            {activeTab === 'settings' && (
+              <SettingsView
+                lang={lang}
+                theme={theme}
+                searchQuery={searchQuery}
+              />
+            )}
+
             {activeTab !== 'masterData' &&
               activeTab !== 'inventory' &&
               activeTab !== 'sales' &&
               activeTab !== 'purchases' &&
               activeTab !== 'reports' &&
-              activeTab !== 'dashboard' && (
+              activeTab !== 'dashboard' &&
+              activeTab !== 'settings' && (
                 <div
                   className={`p-12 text-center rounded-2xl border ${
                     theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'

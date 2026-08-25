@@ -280,3 +280,22 @@ export interface Order {
   createdAt: string;
 }
 
+// --- Section 6: Settings & Organization Profile Types ---
+export interface TenantSettings {
+  companyName: string;
+  taxId: string;
+  phone: string;
+  email: string;
+  address: string;
+  currency: 'THB' | 'USD' | 'EUR' | 'JPY';
+  defaultVatRate: number; // e.g. 7
+  defaultStockMethod: 'FIFO' | 'LIFO' | 'FEFO' | 'MANUAL';
+  defaultUom: string;
+  defaultBarcodeSymbology: 'CODE128' | 'EAN13' | 'QR_CODE';
+  alertExpiryDays: number; // e.g. 60
+  enableRopAlerts: boolean;
+  enableSoundFeedback: boolean;
+  autoPrintBarcodeOnReceive: boolean;
+  apiWebhookUrl?: string;
+}
+

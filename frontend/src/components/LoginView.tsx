@@ -90,63 +90,59 @@ export const LoginView: React.FC<LoginViewProps> = ({
     setErrorMsg('');
 
     try {
-      // 1. ยิง Login ไปยัง Live API (https://match-stock.ddns.net/api/v1/auth/login)
+      // 1. ยิง Login ไปยัง Live Backend API (Strict Mode)
       const res = await authService.login({
         tenantSlug: tenantSlug.trim(),
         email: email.trim(),
         password: password,
       });
 
-      if (res.success && res.data) {
-        const backendUser = res.data.user;
-        const loggedUser: User = {
-          id: backendUser.id,
-          name: backendUser.fullName || backendUser.email.split('@')[0],
-          email: backendUser.email,
-          role: (backendUser.role as any) || 'admin',
-          tenantId: backendUser.tenantId,
-          tenantName: tenantSlug === 'acme-demo' ? 'Acme Industrial Supplies' : 'WH-Bangkok Center (Enterprise)',
-        };
-        onLoginSuccess(loggedUser);
-        return;
+      if (res && res.success) {
+        const userObj = res.user || res.data?.user;
+        const tenantObj = res.tenant || res.data?.tenant;
+
+        if (userObj) {
+          const loggedUser: User = {
+            id: userObj.id,
+            name: userObj.fullName || userObj.email.split('@')[0],
+            email: userObj.email,
+            role: (userObj.role as any) || 'admin',
+            tenantId: userObj.tenantId || tenantObj?.id || 'f97fe2dc-486e-4054-931c-aadf92823e69',
+            tenantName: tenantObj?.name || (tenantSlug === 'acme-demo' ? 'Acme Industrial Supplies' : 'WH-Bangkok Center (Enterprise)'),
+          };
+          onLoginSuccess(loggedUser);
+          return;
+        }
       }
+      setErrorMsg(res?.message || (lang === 'en' ? 'Authentication failed. Please check credentials.' : 'เข้าสู่ระบบไม่สำเร็จ ข้อมูลไม่ถูกต้อง'));
     } catch (err: any) {
-      console.warn('Live API Login failed or CORS preflight blocked, checking demo accounts...', err);
-      const apiErrMsg = err.response?.data?.message || err.response?.data?.errors?.[0];
-      
-      // Graceful authentication for demo accounts if live backend DDNS is temporarily unreachable / CORS blocked
-      const matchedDemo = DEMO_ACCOUNTS.find(
-        (a) => a.email.toLowerCase() === email.trim().toLowerCase() &&
-               a.tenantSlug.toLowerCase() === tenantSlug.trim().toLowerCase()
-      );
+      console.error('Strict Login Error from Backend API:', err.response?.data || err.message);
+      const status = err.response?.status;
+      const apiErrMsg = err.response?.data?.message || err.response?.data?.error || err.response?.data?.errors?.[0];
 
-      if (matchedDemo && password === 'Passw0rd!') {
-        const targetTenantId = tenantSlug === 'acme-demo' ? '35213af2-d412-4be7-bcc0-a972ed233e73' : 'f97fe2dc-486e-4054-931c-aadf92823e69';
-        const tenant = tenants.find((t) => t.id === targetTenantId) || tenants[0];
-        
-        let userRole = 'admin';
-        if (matchedDemo.role === 'Warehouse Staff') userRole = 'warehouse_staff';
-        else if (matchedDemo.role === 'Purchasing Staff') userRole = 'purchasing_staff';
-        else if (matchedDemo.role === 'Manager') userRole = 'manager';
-        else if (matchedDemo.role === 'Owner') userRole = 'owner';
-
-        const demoUser: User = {
-          id: `usr-${matchedDemo.role.toLowerCase()}`,
-          name: matchedDemo.role === 'Admin' ? 'Kittisak Prasertkul (Admin)' : matchedDemo.role === 'Owner' ? 'Acme Demo Owner' : `${matchedDemo.role} User`,
-          email: matchedDemo.email,
-          role: userRole as any,
-          tenantId: tenant.id,
-          tenantName: tenant.name,
-        };
-
-        localStorage.setItem('matchstock_tenant_id', tenant.id);
-        localStorage.setItem('matchstock_user', JSON.stringify(demoUser));
-        localStorage.setItem('matchstock_token', 'demo-enterprise-jwt-token');
-        onLoginSuccess(demoUser);
-        return;
+      if (status === 400) {
+        setErrorMsg(apiErrMsg || (lang === 'en'
+          ? 'Invalid request (400): Missing required fields or invalid format.'
+          : 'ข้อมูลคำขอไม่ถูกต้อง (400 Bad Request): กรุณาตรวจสอบข้อมูลที่กรอก'));
+      } else if (status === 500) {
+        setErrorMsg(lang === 'en' 
+          ? 'Backend Server Error (500): Database connection or internal server failure.' 
+          : 'เซิร์ฟเวอร์หลังบ้านขัดข้อง (500 Internal Server Error): ฐานข้อมูลหรือระบบ Backend มีปัญหา');
+      } else if (status === 401 || status === 403) {
+        setErrorMsg(lang === 'en'
+          ? 'Invalid email or password (401 Unauthorized).'
+          : 'อีเมลหรือรหัสผ่านไม่ถูกต้อง (401 Unauthorized)');
+      } else if (status === 404) {
+        setErrorMsg(lang === 'en'
+          ? 'Tenant or User not found (404).'
+          : 'ไม่พบบัญชีผู้ใช้หรือ Tenant นี้ในระบบ (404)');
+      } else if (err.code === 'ERR_NETWORK' || !err.response) {
+        setErrorMsg(lang === 'en'
+          ? 'Network Error: Cannot connect to Backend Server (match-stock.ddns.net).'
+          : 'ข้อผิดพลาดเครือข่าย: ไม่สามารถเชื่อมต่อไปยังเซิร์ฟเวอร์หลังบ้านได้ (Server ออฟไลน์)');
+      } else {
+        setErrorMsg(apiErrMsg || (lang === 'en' ? 'Authentication failed.' : 'เข้าสู่ระบบไม่สำเร็จ'));
       }
-
-      setErrorMsg(apiErrMsg || (lang === 'en' ? 'Authentication failed. Please check your credentials.' : 'เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจสอบ Tenant หรือรหัสผ่าน'));
     } finally {
       setIsLoading(false);
     }

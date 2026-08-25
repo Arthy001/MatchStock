@@ -1,9 +1,9 @@
 import { apiClient } from './api.client';
 
 export interface LoginPayload {
-  tenantSlug: string;
   email: string;
   password: string;
+  tenantSlug?: string;
 }
 
 export interface BackendUser {
@@ -17,33 +17,43 @@ export interface BackendUser {
 export interface BackendSubscription {
   planCode: string;
   status: string;
-  features: string[];
+  features?: string[];
 }
 
 export interface AuthResponse {
   success: boolean;
   message?: string;
+  token?: string;
+  user?: BackendUser;
+  tenant?: { id: string; name?: string; companyName?: string; status?: string };
+  subscription?: BackendSubscription;
   data?: {
-    accessToken: string;
+    accessToken?: string;
     refreshToken?: string;
-    user: BackendUser;
+    user?: BackendUser;
+    tenant?: { id: string; name?: string };
     subscription?: BackendSubscription;
   };
-  token?: string; // For backward compatibility
-  user?: BackendUser;
-  tenant?: { id: string; companyName: string; status: string };
 }
 
 export const authService = {
-  // 1. เข้าสู่ระบบผ่าน API จริง
+  // 1. เข้าสู่ระบบผ่าน API ตาม OpenAPI Spec (/api/v1/auth/login)
   login: async (credentials: LoginPayload): Promise<AuthResponse> => {
     try {
-      const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
+      const payload: Record<string, any> = {
+        email: credentials.email,
+        password: credentials.password,
+      };
+      if (credentials.tenantSlug && credentials.tenantSlug.trim()) {
+        payload.tenantSlug = credentials.tenantSlug.trim();
+      }
+
+      const response = await apiClient.post<AuthResponse>('/auth/login', payload);
       const resData = response.data;
       
-      const token = resData.data?.accessToken || resData.token;
-      const tenantId = resData.data?.user?.tenantId || resData.tenant?.id;
-      const user = resData.data?.user || resData.user;
+      const token = resData.token || resData.data?.accessToken;
+      const user = resData.user || resData.data?.user;
+      const tenantId = user?.tenantId || resData.tenant?.id || resData.data?.tenant?.id;
 
       if (token) {
         localStorage.setItem('matchstock_token', token);
@@ -55,8 +65,8 @@ export const authService = {
         localStorage.setItem('matchstock_user', JSON.stringify(user));
       }
       return resData;
-    } catch (error) {
-      console.error('API Login failed, returning error or check fallback', error);
+    } catch (error: any) {
+      console.error('API Login failed with response data:', error.response?.data || error.message);
       throw error;
     }
   },

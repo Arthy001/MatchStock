@@ -57,7 +57,7 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>+ เพิ่มหน่วยนับ (Add UOM)</span>
+            <span>เพิ่มหน่วยนับ (Add UOM)</span>
           </button>
         </div>
 

@@ -57,15 +57,35 @@ export const productService = {
     return response.data?.data || response.data;
   },
 
-  // อัปเดตสินค้า
+  // อัปเดตสินค้า (Swagger Spec: PATCH /api/v1/products/{id})
   updateProduct: async (id: string, data: Partial<CreateProductDTO>) => {
-    const response = await apiClient.put(`/products/${id}`, data);
+    const response = await apiClient.patch(`/products/${id}`, data);
     return response.data?.data || response.data;
   },
 
-  // ลบสินค้า
+  // ลบสินค้า (Deactivate - Soft delete: isActive=false)
   deleteProduct: async (id: string) => {
     const response = await apiClient.delete(`/products/${id}`);
+    return response.data;
+  },
+
+  // อัปโหลดรูปภาพสินค้า (POST /products/{id}/images)
+  uploadImages: async (id: string, formData: FormData) => {
+    const response = await apiClient.post(`/products/${id}/images`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // ลบรูปภาพสินค้า (DELETE /products/{id}/images/{imageId})
+  deleteImage: async (id: string, imageId: string) => {
+    const response = await apiClient.delete(`/products/${id}/images/${imageId}`);
+    return response.data;
+  },
+
+  // จัดลำดับรูปภาพ (PATCH /products/{id}/images/reorder)
+  reorderImages: async (id: string, imageIds: string[]) => {
+    const response = await apiClient.patch(`/products/${id}/images/reorder`, { imageIds });
     return response.data;
   },
 };

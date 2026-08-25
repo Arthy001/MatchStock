@@ -218,7 +218,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
     tabWarehouses: lang === 'en' ? 'Warehouses & Bins' : 'คลังและตำแหน่ง Bin',
     tabSuppliers: lang === 'en' ? 'Suppliers' : 'ผู้จัดจำหน่าย',
     searchPlaceholder: lang === 'en' ? 'Search master data by name, SKU, code, or tag...' : 'ค้นหาข้อมูลหลักด้วยชื่อ, SKU, รหัส, หรือแท็ก...',
-    addNewBtn: lang === 'en' ? 'Add New Item' : '+ เพิ่มรายการใหม่',
+    addNewBtn: lang === 'en' ? 'Add Product' : 'เพิ่มสินค้าใหม่',
     actions: lang === 'en' ? 'Actions' : 'จัดการ',
     productName: lang === 'en' ? 'Product Name' : 'ชื่อสินค้า',
     sku: lang === 'en' ? 'SKU Code' : 'รหัส SKU',
@@ -812,7 +812,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
       case 'products':
         return t.addNewBtn;
       case 'companies':
-        return lang === 'en' ? 'Add Subsidiary Company' : '+ เพิ่มบริษัทในเครือ';
+        return lang === 'en' ? 'Add Subsidiary Company' : 'เพิ่มบริษัทในเครือ';
       case 'rbac':
         return lang === 'en' ? 'Add New User' : 'เพิ่มผู้ใช้งานใหม่';
       case 'warehouses':
@@ -820,7 +820,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
       case 'suppliers':
         return lang === 'en' ? 'Add Supplier' : 'เพิ่มผู้จัดจำหน่าย';
       case 'units':
-        return lang === 'en' ? 'Add Unit (UOM)' : '+ เพิ่มหน่วยนับ';
+        return lang === 'en' ? 'Add Unit (UOM)' : 'เพิ่มหน่วยนับ';
       case 'barcodes':
       default:
         return null;
@@ -860,7 +860,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
           {getAddButtonLabel() && (
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 text-xs font-medium transition cursor-pointer shadow-xs active:scale-[0.99]"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-semibold shadow-md shadow-blue-600/30 transition cursor-pointer active:scale-[0.99]"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{getAddButtonLabel()}</span>

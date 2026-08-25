@@ -180,7 +180,48 @@ export const translations = {
     full: 'พื้นที่เต็ม',
     maintenance: 'ปิดซ่อมบำรุง',
 
-    // Modal
+    // Actions & CRUD
+    edit: 'แก้ไข',
+    delete: 'ลบรายการ',
+    confirmDelete: 'ยืนยันการลบ',
+    confirmDeleteMsg: 'คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การกระทำนี้ไม่สามารถยกเลิกได้',
+    deactivate: 'ระงับการใช้งาน',
+    activate: 'เปิดใช้งาน',
+    addUser: 'เพิ่มผู้ใช้งานใหม่',
+    editUserRole: 'แก้ไขสิทธิ์ผู้ใช้งาน',
+    editProduct: 'แก้ไขข้อมูลสินค้า',
+    editWarehouse: 'แก้ไขข้อมูลคลังสินค้า',
+    editSupplier: 'แก้ไขข้อมูลผู้จัดจำหน่าย',
+    printBarcode: 'พิมพ์บาร์โค้ด',
+    printSlip: 'พิมพ์เอกสาร',
+    exportCsv: 'ส่งออกไฟล์ CSV',
+    exportBackup: 'ดาวน์โหลดข้อมูลสำรอง',
+
+    // Dashboard Overview
+    dashTotalValue: 'มูลค่าสต็อกรวมทั้งหมด',
+    dashTotalSkus: 'จำนวน SKU ทั้งหมด',
+    dashRopAlerts: 'สินค้าเตือนจุดสั่งซื้อ (ROP)',
+    dashPendingTasks: 'งานรอดำเนินการ',
+    dashQuickActions: 'เมนูลัดทำรายการด่วน',
+    dashRecentTransactions: 'ประวัติความเคลื่อนไหวสต็อกล่าสุด',
+    dashWarehouseUtilization: 'อัตราการใช้พื้นที่คลังสินค้า',
+    dashFastMoving: 'สินค้าหมุนเวียนเร็ว (Top Movers)',
+
+    // Settings
+    settingsTitle: 'การตั้งค่าระบบและองค์กร (Tenant & System Settings)',
+    settingsSubtitle: 'จัดการข้อมูลบริษัท, นโยบายคลังสินค้า, อัตราภาษี, การแจ้งเตือน และความปลอดภัย',
+    tabOrgProfile: 'ข้อมูลองค์กร & ภาษี',
+    tabInventoryDefaults: 'นโยบายสต็อก & UOM',
+    tabAlertRules: 'กฎการแจ้งเตือน',
+    tabSecurityBackup: 'ความปลอดภัย & สำรองข้อมูล',
+    companyName: 'ชื่อบริษัท / องค์กร',
+    currency: 'สกุลเงินหลัก',
+    defaultVat: 'อัตราภาษีมูลค่าเพิ่มเริ่มต้น (VAT %)',
+    stockPolicy: 'นโยบายการตัดสต็อกสินค้า',
+    expiryAlertDays: 'ระยะเวลาเตือนสินค้าใกล้หมดอายุ (วัน)',
+    saveSettingsSuccess: 'บันทึกการตั้งค่าระบบเรียบร้อยแล้ว',
+
+    // Modal & Drawer
     modalAddTitle: 'เพิ่มรายการ Master Data ใหม่',
     modalEditTitle: 'แก้ไขข้อมูล Master Data',
     modalNewTransaction: 'สร้างรายการบันทึกสต็อก (Stock Transaction)',
@@ -192,7 +233,6 @@ export const translations = {
 
     // Footer
     copyright: 'MatchStock WMS System © 2026. พัฒนาด้วย React (Firebase Hosting) & Node.js Prisma (Cloud Run)'
-
   },
   en: {
     // Brand & General
@@ -373,7 +413,48 @@ export const translations = {
     full: 'Full',
     maintenance: 'Maintenance',
 
-    // Modal
+    // Actions & CRUD
+    edit: 'Edit',
+    delete: 'Delete',
+    confirmDelete: 'Confirm Deletion',
+    confirmDeleteMsg: 'Are you sure you want to delete this record? This action cannot be undone.',
+    deactivate: 'Suspend',
+    activate: 'Activate',
+    addUser: 'Add New User',
+    editUserRole: 'Edit User Role & Permissions',
+    editProduct: 'Edit Product Details',
+    editWarehouse: 'Edit Warehouse & Bin',
+    editSupplier: 'Edit Supplier Information',
+    printBarcode: 'Print Barcode Label',
+    printSlip: 'Print Document Slip',
+    exportCsv: 'Export CSV',
+    exportBackup: 'Download Backup',
+
+    // Dashboard Overview
+    dashTotalValue: 'Total Inventory Valuation',
+    dashTotalSkus: 'Total Active SKUs',
+    dashRopAlerts: 'Reorder Point (ROP) Alerts',
+    dashPendingTasks: 'Pending Operations',
+    dashQuickActions: 'Quick Launch Actions',
+    dashRecentTransactions: 'Recent Stock Movement Feed',
+    dashWarehouseUtilization: 'Warehouse Space Utilization',
+    dashFastMoving: 'Top Fast Moving Items',
+
+    // Settings
+    settingsTitle: 'Tenant & System Settings',
+    settingsSubtitle: 'Configure company profile, inventory policies, tax rules, alerts, and security.',
+    tabOrgProfile: 'Organization & Tax',
+    tabInventoryDefaults: 'Inventory Defaults & UOM',
+    tabAlertRules: 'Alert & Expiry Rules',
+    tabSecurityBackup: 'Security & Backup',
+    companyName: 'Company / Organization Name',
+    currency: 'Primary Currency',
+    defaultVat: 'Default VAT Rate (%)',
+    stockPolicy: 'Stock Dispatch Policy',
+    expiryAlertDays: 'Expiry Warning Threshold (Days)',
+    saveSettingsSuccess: 'System settings saved successfully.',
+
+    // Modal & Drawer
     modalAddTitle: 'Add New Master Data Record',
     modalEditTitle: 'Edit Master Data Record',
     modalNewTransaction: 'Create Stock Transaction',

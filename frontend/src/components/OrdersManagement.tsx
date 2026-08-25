@@ -821,7 +821,37 @@ export const OrdersManagement: React.FC<OrdersManagementProps> = ({
             </div>
 
             {/* Drawer Footer Actions */}
-            <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2">
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedOrder.status}
+                  onChange={(e) => {
+                    const newStatus = e.target.value as OrderStatus;
+                    setOrders((prev) =>
+                      prev.map((o) => (o.id === selectedOrder.id ? { ...o, status: newStatus } : o))
+                    );
+                    setSelectedOrder({ ...selectedOrder, status: newStatus });
+                  }}
+                  className={`w-1/2 py-2 px-3 rounded-xl border text-xs font-semibold ${
+                    theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-100 border-slate-300 text-slate-900'
+                  }`}
+                >
+                  <option value="DRAFT">สถานะ: ฉบับร่าง (Draft)</option>
+                  <option value="CONFIRMED">สถานะ: ยืนยันแล้ว (Confirmed)</option>
+                  <option value="PROCESSING">สถานะ: กำลังดำเนินงาน (Processing)</option>
+                  <option value="COMPLETED">สถานะ: เสร็จสมบูรณ์ (Completed)</option>
+                  <option value="CANCELLED">สถานะ: ยกเลิก (Cancelled)</option>
+                </select>
+
+                <button
+                  onClick={() => window.print()}
+                  className="w-1/2 py-2 rounded-xl border border-slate-300 dark:border-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>พิมพ์เอกสาร (Print)</span>
+                </button>
+              </div>
+
               <button
                 onClick={() => {
                   setIsDrawerOpen(false);
@@ -829,7 +859,7 @@ export const OrdersManagement: React.FC<OrdersManagementProps> = ({
                     onNavigateToStockAction(isSales ? 'ISSUE' : 'RECEIVE', selectedOrder);
                   }
                 }}
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/20 transition"
+                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/20 transition"
               >
                 <Truck className="w-4 h-4" />
                 <span>{isSales ? 'ส่งไปทำรายการเบิกจ่าย (GI)' : 'ส่งไปทำรายการรับเข้า (GR)'}</span>
