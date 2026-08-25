@@ -174,13 +174,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   {!isCollapsed && isMasterDataOpen && (
                     <div className="ml-7 mt-1.5 space-y-1 border-l border-slate-800 pl-3">
                       {[
-                        { key: 'rbac', label: t.tabUserAccess },
-                        { key: 'products', label: t.tabProducts },
                         { key: 'companies', label: lang === 'en' ? 'Companies (Holding)' : 'บริษัทในเครือ (Companies)' },
+                        { key: 'products', label: t.tabProducts },
                         { key: 'units', label: t.tabUnits },
-                        { key: 'barcodes', label: t.tabBarcodes },
                         { key: 'warehouses', label: t.tabWarehouses },
                         { key: 'suppliers', label: t.tabSuppliers },
+                        { key: 'barcodes', label: t.tabBarcodes },
+                        { key: 'rbac', label: t.tabUserAccess },
                       ].map((item) => {
                         const isSubActive = activeTab === 'masterData' && activeSubTab === item.key;
                         return (

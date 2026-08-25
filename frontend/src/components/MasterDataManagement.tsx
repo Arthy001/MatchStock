@@ -1061,6 +1061,53 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         </div>
       </div>
 
+      {/* 7 Enterprise Master Data Subtabs Segment */}
+      <div className="flex items-center gap-1 overflow-x-auto pb-1 no-scrollbar border-b border-zinc-200/80 dark:border-zinc-800/80">
+        {[
+          { key: 'companies', label: lang === 'en' ? 'Companies' : 'บริษัทในเครือ', count: companiesList.length },
+          { key: 'products', label: lang === 'en' ? 'Products & SKUs' : 'สินค้าและ SKU', count: productsList.length },
+          { key: 'units', label: lang === 'en' ? 'Units (UOM)' : 'หน่วยนับ', count: unitsList.length },
+          { key: 'warehouses', label: lang === 'en' ? 'Warehouses & Bins' : 'คลังและตำแหน่งจัดเก็บ', count: binsList.length },
+          { key: 'suppliers', label: lang === 'en' ? 'Suppliers' : 'ผู้จัดจำหน่าย', count: suppliersList.length },
+          { key: 'barcodes', label: lang === 'en' ? 'Barcodes' : 'บาร์โค้ด' },
+          { key: 'rbac', label: lang === 'en' ? 'User Access' : 'สิทธิ์ผู้ใช้งาน', count: usersList.length },
+        ].map((tab) => {
+          const isActive = activeSubTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => onSubTabChange && onSubTabChange(tab.key as any)}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition cursor-pointer flex items-center gap-1.5 shrink-0 select-none ${
+                isActive
+                  ? theme === 'dark'
+                    ? 'bg-zinc-800 text-white font-semibold shadow-xs'
+                    : 'bg-white text-zinc-900 border border-zinc-300 font-semibold shadow-xs'
+                  : theme === 'dark'
+                  ? 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
+                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/60'
+              }`}
+            >
+              <span>{tab.label}</span>
+              {tab.count !== undefined && (
+                <span
+                  className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${
+                    isActive
+                      ? theme === 'dark'
+                        ? 'bg-zinc-700 text-zinc-200'
+                        : 'bg-zinc-100 text-zinc-800 border border-zinc-200'
+                      : theme === 'dark'
+                      ? 'bg-zinc-800 text-zinc-500'
+                      : 'bg-zinc-100 text-zinc-500'
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Enterprise Fast Search & Filter Toolbar */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
