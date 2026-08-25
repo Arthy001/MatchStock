@@ -2,6 +2,16 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-08-25 — User.email เปลี่ยนเป็น unique ทั้งระบบ (แก้ endpoint login)
+
+แก้ตาม AC ของ endpoint `POST /api/v1/auth/login`: ต้อง login ด้วย `email` + `password` เท่านั้น ไม่ต้องส่ง `tenantSlug` แล้ว
+
+**model User**: `@@unique([tenantId, email])` → `@@unique([email])` — อีเมลตอนนี้ unique ทั้งระบบ ไม่ใช่แค่ในแต่ละ tenant เหมือนเดิม (index `@@index([tenantId])` ยังอยู่)
+
+**ผลกระทบ**: คนคนเดียวใช้อีเมลเดียวกันเป็นสมาชิกได้แค่บริษัทเดียวเท่านั้น (จากเดิมที่เป็นสมาชิกหลายบริษัทด้วยอีเมลเดียวกันได้) — เช็คแล้วทั้ง local และ production ไม่มีอีเมลซ้ำข้าม tenant อยู่ก่อนแล้ว ไม่กระทบข้อมูลเดิม, migration `20260825171458_user_email_globally_unique` รันผ่านทั้งสองฝั่งแล้ว
+
+โค้ดที่แก้ไปด้วย (นอก schema): `auth.service.ts`, `auth.controller.ts`, `login.schema.ts` (เอา `tenantSlug` ออก), `users.service.ts` และ `companies.service.ts` (เช็ค email ซ้ำแบบ global แทนที่จะเช็คแค่ในเทแนนต์เดียว), หน้า login ของ `monitoring`/`reader-config` dashboard
+
 ## 2026-08-25 — Sync schema เต็มรูปแบบกับโค้ดจริง
 
 `schema.prisma` ในไฟล์นี้เก่ามาก ไม่ตรงกับ schema ที่ backend ใช้งานจริง (ทั้ง dev และ prod) เลย

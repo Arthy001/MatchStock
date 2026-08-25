@@ -232,7 +232,7 @@ model User {
   // user referencing it follows automatically rather than being orphaned.
   roleRef       Role           @relation(fields: [role], references: [code], onDelete: Restrict, onUpdate: Cascade)
 
-  @@unique([tenantId, email])
+  @@unique([email])
   @@index([tenantId])
   @@index([role])
   @@map("users")
