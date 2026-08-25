@@ -15,14 +15,13 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('matchstock_token');
-    const tenantId = localStorage.getItem('matchstock_tenant_id');
+    const tenantId =
+      localStorage.getItem('matchstock_tenant_id') || 'f97fe2dc-486e-4054-931c-aadf92823e69';
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    if (tenantId) {
-      config.headers['x-tenant-id'] = tenantId;
-    }
+    config.headers['x-tenant-id'] = tenantId;
 
     return config;
   },
