@@ -59,7 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside
       className={`shrink-0 border-r flex flex-col justify-between transition-all duration-300 ${
-        isCollapsed ? 'w-20' : 'w-64'
+        isCollapsed ? 'w-16' : 'w-64'
       } ${
         theme === 'dark'
           ? 'bg-slate-900 border-slate-800 text-slate-200'
@@ -69,24 +69,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Brand & Collapse Toggle Header */}
       <div>
         <div
-          className={`h-16 border-b border-slate-800 flex items-center px-4 ${
-            isCollapsed ? 'justify-center' : 'justify-between'
+          className={`h-14 border-b border-slate-800 flex items-center ${
+            isCollapsed ? 'justify-center px-1' : 'justify-between px-4'
           }`}
         >
           {isCollapsed ? (
             /* When Collapsed: Clean Centered Toggle Button */
             <button
               onClick={onToggleCollapse}
-              className="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white flex items-center justify-center transition shadow-xs border border-blue-500/30"
+              className="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white flex items-center justify-center transition shadow-xs border border-blue-500/30"
               title="Expand Sidebar"
             >
-              <PanelLeftOpen className="w-5 h-5" />
+              <PanelLeftOpen className="w-4 h-4" />
             </button>
           ) : (
             /* When Expanded: Full Brand Logo + Text + Collapse Icon */
             <>
               <div className="flex items-center gap-3 overflow-hidden">
-                <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-600/30 shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-600/30 shrink-0">
                   <Package className="w-5 h-5" />
                 </div>
                 <div className="truncate">
@@ -114,14 +114,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Navigation Section */}
-        <div className="p-3 space-y-6">
+        <div className={`space-y-6 ${isCollapsed ? 'p-1.5' : 'p-3'}`}>
           <div>
             {!isCollapsed ? (
               <p className="text-[11px] font-bold text-slate-500 tracking-wider uppercase mb-3 px-3">
                 {t.menuMain}
               </p>
             ) : (
-              <div className="h-4 border-b border-slate-800 mb-3" />
+              <div className="h-2 border-b border-slate-800 mb-2" />
             )}
 
             <nav className="space-y-1">
@@ -129,8 +129,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 onClick={() => onTabChange('dashboard')}
                 title={t.dashboard}
-                className={`w-full flex items-center ${
-                  isCollapsed ? 'justify-center px-0 py-2' : 'gap-3 px-3 py-1.5'
+                className={`flex items-center ${
+                  isCollapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full gap-3 px-3 py-1.5'
                 } rounded-xl text-sm font-medium transition ${
                   activeTab === 'dashboard'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
@@ -150,8 +150,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       if (!isCollapsed) setIsMasterDataOpen(!isMasterDataOpen);
                     }}
                     title={t.masterData}
-                    className={`w-full flex items-center ${
-                      isCollapsed ? 'justify-center px-0 py-2' : 'justify-between px-3 py-1.5'
+                    className={`flex items-center ${
+                      isCollapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full justify-between px-3 py-1.5'
                     } rounded-xl text-sm font-medium transition ${
                       activeTab === 'masterData'
                         ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
@@ -214,8 +214,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       if (!isCollapsed) setIsInventoryOpen(!isInventoryOpen);
                     }}
                     title={t.inventory}
-                    className={`w-full flex items-center ${
-                      isCollapsed ? 'justify-center px-0 py-2' : 'justify-between px-3 py-1.5'
+                    className={`flex items-center ${
+                      isCollapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full justify-between px-3 py-1.5'
                     } rounded-xl text-sm font-medium transition ${
                       activeTab === 'inventory'
                         ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
@@ -274,8 +274,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   onClick={() => onTabChange('sales')}
                   title={t.sales}
-                  className={`w-full flex items-center ${
-                    isCollapsed ? 'justify-center px-0 py-2' : 'gap-3 px-3 py-1.5'
+                  className={`flex items-center ${
+                    isCollapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full gap-3 px-3 py-1.5'
                   } rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition`}
                 >
                   <ShoppingCart className="w-5 h-5 shrink-0" />
@@ -288,8 +288,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   onClick={() => onTabChange('purchases')}
                   title={t.purchases}
-                  className={`w-full flex items-center ${
-                    isCollapsed ? 'justify-center px-0 py-2' : 'gap-3 px-3 py-1.5'
+                  className={`flex items-center ${
+                    isCollapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full gap-3 px-3 py-1.5'
                   } rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition`}
                 >
                   <ShoppingBag className="w-5 h-5 shrink-0" />
@@ -302,8 +302,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   onClick={() => onTabChange('reports')}
                   title={t.reports}
-                  className={`w-full flex items-center ${
-                    isCollapsed ? 'justify-center px-0 py-2' : 'gap-3 px-3 py-1.5'
+                  className={`flex items-center ${
+                    isCollapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full gap-3 px-3 py-1.5'
                   } rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition`}
                 >
                   <BarChart3 className="w-5 h-5 shrink-0" />
@@ -316,8 +316,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   onClick={() => onTabChange('settings')}
                   title={t.settings}
-                  className={`w-full flex items-center ${
-                    isCollapsed ? 'justify-center px-0 py-2' : 'gap-3 px-3 py-1.5'
+                  className={`flex items-center ${
+                    isCollapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full gap-3 px-3 py-1.5'
                   } rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition`}
                 >
                   <Settings className="w-5 h-5 shrink-0" />
@@ -330,10 +330,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* User Profile Footer */}
-      <div className="p-3 border-t border-slate-800">
+      <div className={`border-t border-slate-800 ${isCollapsed ? 'p-1.5' : 'p-3'}`}>
         <div
-          className={`p-2.5 rounded-xl bg-slate-800/60 flex items-center ${
-            isCollapsed ? 'justify-center' : 'justify-between'
+          className={`rounded-xl bg-slate-800/60 flex items-center ${
+            isCollapsed ? 'p-1.5 justify-center' : 'p-2.5 justify-between'
           }`}
         >
           <div className="flex items-center gap-3 overflow-hidden">
