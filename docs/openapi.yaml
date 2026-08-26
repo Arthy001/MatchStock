@@ -691,6 +691,9 @@ components:
 
     Product:
       type: object
+      description: >
+        Field names/types here match the real backend response exactly
+        (verified directly against the live API, 2026-08-26) - not aspirational.
       properties:
         id:
           type: string
@@ -701,58 +704,96 @@ components:
         sku:
           type: string
           example: LOGI-MX3S-GRY
-        barcode:
+        barcodeValue:
           type: string
-          example: 8851234567890
+          nullable: true
+          example: '8851234567890'
         name:
           type: string
           example: Logitech MX Master 3S
-        price:
+        sellingPriceMinor:
+          type: integer
+          nullable: true
+          description: Selling price in minor currency units (satang) - integer, never a float, to avoid rounding errors. Divide by 100 for THB.
+          example: 389000
+        weightValue:
           type: number
-          format: float
-          example: 3890.00
-        weightKg:
-          type: number
+          nullable: true
+          description: Weight in whatever unit weightUnit resolves to (per-tenant configurable, not fixed to kg).
           example: 0.141
-        widthCm:
+        widthValue:
           type: number
+          nullable: true
+          description: Dimension in whatever unit dimensionUnit resolves to (per-tenant configurable, not fixed to cm).
           example: 8.43
-        lengthCm:
+        lengthValue:
           type: number
+          nullable: true
           example: 12.49
-        heightCm:
+        heightValue:
           type: number
+          nullable: true
           example: 5.10
         reorderPoint:
-          type: number
+          type: integer
+          nullable: true
           example: 10
-        minReorderQty:
-          type: number
+        minReorderQuantity:
+          type: integer
+          nullable: true
           example: 20
-        isLotControl:
+        lotControlled:
           type: boolean
           example: true
-        baseUnit:
+        unit:
           type: object
+          nullable: true
+          description: Resolved from unitId - null if unitId is unset.
           properties:
             id:
               type: string
               format: uuid
-            code:
-              type: string
-              example: PCS
             name:
               type: string
               example: ชิ้น
+            type:
+              type: string
+              example: quantity
+        dimensionUnit:
+          type: object
+          nullable: true
+          description: Resolved from dimensionUnitId - the unit widthValue/lengthValue/heightValue are measured in.
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            type:
+              type: string
+        weightUnit:
+          type: object
+          nullable: true
+          description: Resolved from weightUnitId - the unit weightValue is measured in.
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            type:
+              type: string
 
     CreateProductInput:
       type: object
+      description: >
+        Also used as the request body for PUT /products/{id} - the backend
+        reuses the same schema for create and update. Field names match the
+        real backend exactly (verified against the live API, 2026-08-26).
       required:
         - code
         - sku
         - name
-        - baseUnitId
-        - price
       properties:
         code:
           type: string
@@ -760,47 +801,78 @@ components:
         sku:
           type: string
           example: KBD-MEC-RGB
-        barcode:
+        barcodeValue:
           type: string
-          example: 8859990001112
+          example: '8859990001112'
+        barcodeSymbologyId:
+          type: string
+          format: uuid
         name:
           type: string
           example: Mechanical RGB Keyboard
         description:
           type: string
-        baseUnitId:
+        unitId:
           type: string
           format: uuid
+          description: References the Unit catalog entry used for stock-keeping quantity - resolved back as `unit` in the Product response.
         categoryId:
           type: string
           format: uuid
         brandId:
           type: string
           format: uuid
-        price:
-          type: number
-          example: 2490.00
-        weightKg:
+        manufacturerId:
+          type: string
+          format: uuid
+        supplierId:
+          type: string
+          format: uuid
+        costPriceMinor:
+          type: integer
+          example: 180000
+        sellingPriceMinor:
+          type: integer
+          description: Selling price in minor currency units (satang) - integer, divide by 100 for THB.
+          example: 249000
+        currency:
+          type: string
+          example: THB
+        weightValue:
           type: number
           example: 0.850
-        widthCm:
+        widthValue:
           type: number
           example: 14.5
-        lengthCm:
+        lengthValue:
           type: number
           example: 44.0
-        heightCm:
+        heightValue:
           type: number
           example: 3.8
+        dimensionUnitId:
+          type: string
+          format: uuid
+          description: Unit widthValue/lengthValue/heightValue are measured in.
+        weightUnitId:
+          type: string
+          format: uuid
+          description: Unit weightValue is measured in.
         reorderPoint:
-          type: number
+          type: integer
           example: 5
-        minReorderQty:
-          type: number
+        minReorderQuantity:
+          type: integer
           example: 15
-        isLotControl:
+        lotControlled:
           type: boolean
           example: false
+        taxTypeId:
+          type: string
+          format: uuid
+        warrantyPeriodDays:
+          type: integer
+          example: 365
 
     Warehouse:
       type: object
