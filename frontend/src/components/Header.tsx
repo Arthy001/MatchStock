@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Bell, Sun, Moon, Building2, Command } from 'lucide-react';
+import { Search, Bell, Sun, Moon, Building2, Command, Menu } from 'lucide-react';
 import { Language, ThemeMode, Tenant, User } from '../types';
 import { getTranslation } from '../i18n';
 
@@ -14,6 +14,7 @@ interface HeaderProps {
   onTenantSelect: (tenantId: string) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  onMobileMenuToggle?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -27,25 +28,39 @@ export const Header: React.FC<HeaderProps> = ({
   onTenantSelect,
   searchQuery,
   onSearchChange,
+  onMobileMenuToggle,
 }) => {
   const t = getTranslation(lang);
 
   return (
     <header
-      className={`h-14 px-6 border-b flex items-center justify-between sticky top-0 z-30 transition-colors duration-300 ${
+      className={`h-14 px-4 md:px-6 border-b flex items-center justify-between sticky top-0 z-30 transition-colors duration-300 ${
         theme === 'dark'
           ? 'bg-slate-900 border-slate-800 text-slate-50'
           : 'bg-white border-slate-200 text-slate-900 shadow-sm'
       }`}
     >
-      {/* 1. Explicit text-slate-900 in Light mode */}
-      <div>
+      {/* 1. Mobile Hamburger & User Greeting */}
+      <div className="flex items-center gap-2.5">
+        {onMobileMenuToggle && (
+          <button
+            onClick={onMobileMenuToggle}
+            className={`p-1.5 rounded-lg border md:hidden transition ${
+              theme === 'dark'
+                ? 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700'
+                : 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200'
+            }`}
+            title="Open Mobile Navigation Menu"
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+        )}
         <h1
-          className={`text-base font-extrabold tracking-tight ${
+          className={`text-sm md:text-base font-extrabold tracking-tight truncate max-w-[140px] sm:max-w-[220px] md:max-w-none ${
             theme === 'dark' ? 'text-slate-50' : 'text-slate-900'
           }`}
         >
-          {lang === 'th' ? `สวัสดี, ${user.name}!` : `Hello, ${user.name}!`}
+          {lang === 'th' ? `สวัสดี, ${user.name.split(' ')[0]}!` : `Hello, ${user.name.split(' ')[0]}!`}
         </h1>
       </div>
 

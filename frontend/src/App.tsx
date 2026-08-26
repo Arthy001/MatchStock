@@ -13,7 +13,7 @@ import { ReportsAnalytics } from './components/ReportsAnalytics';
 import { DashboardOverview } from './components/DashboardOverview';
 import { SettingsView } from './components/SettingsView';
 import { getTranslation } from './i18n';
-import { LayoutDashboard, Boxes, ShoppingCart, ShoppingBag, BarChart3, Settings } from 'lucide-react';
+import { LayoutDashboard, Boxes, ShoppingCart, ShoppingBag, BarChart3, Settings, Database, Menu, QrCode } from 'lucide-react';
 
 import { authService } from './services/auth.service';
 
@@ -51,6 +51,7 @@ export function App() {
   const [activeInventorySubTab, setActiveInventorySubTab] = useState<'all' | 'receive' | 'issue' | 'transfer' | 'adjustment' | 'scanner' | 'cycleCount'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
   const [user, setUser] = useState<User>({
     id: '836da6be-afef-410b-9d2f-36d58e4c4109',
@@ -251,6 +252,8 @@ export function App() {
           onLogout={handleLogout}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={handleToggleSidebarCollapse}
+          isMobileOpen={isMobileSidebarOpen}
+          onMobileClose={() => setIsMobileSidebarOpen(false)}
         />
 
         {/* Main Content Area */}
@@ -267,10 +270,11 @@ export function App() {
             onTenantSelect={setSelectedTenantId}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            onMobileMenuToggle={() => setIsMobileSidebarOpen(true)}
           />
 
           {/* Content Body Container */}
-          <main className="flex-1 p-6 md:p-8 max-w-[1600px] w-full mx-auto space-y-6">
+          <main className="flex-1 p-3.5 sm:p-5 md:p-8 max-w-[1600px] w-full mx-auto space-y-4 sm:space-y-6 pb-24 md:pb-8">
             {activeTab === 'masterData' && (
               <MasterDataManagement
                 lang={lang}
@@ -401,6 +405,75 @@ export function App() {
               )}
           </main>
         </div>
+
+        {/* 📱 Mobile Bottom Navigation Bar (App Bar) */}
+        <nav
+          className={`md:hidden fixed bottom-0 left-0 right-0 z-40 border-t backdrop-blur-md flex items-center justify-around py-1.5 px-2 transition-colors duration-300 ${
+            theme === 'dark'
+              ? 'bg-slate-900/95 border-slate-800 text-slate-400'
+              : 'bg-white/95 border-slate-200 text-slate-500 shadow-lg shadow-slate-900/10'
+          }`}
+        >
+          {/* 1. Dashboard */}
+          <button
+            onClick={() => handleTabChange('dashboard')}
+            className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-lg transition ${
+              activeTab === 'dashboard'
+                ? 'text-blue-600 dark:text-blue-400 font-bold scale-105'
+                : 'hover:text-slate-900 dark:hover:text-slate-200'
+            }`}
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            <span className="text-[10px]">{lang === 'th' ? 'แดชบอร์ด' : 'Home'}</span>
+          </button>
+
+          {/* 2. Master Data */}
+          <button
+            onClick={() => handleTabChange('masterData')}
+            className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-lg transition ${
+              activeTab === 'masterData'
+                ? 'text-blue-600 dark:text-blue-400 font-bold scale-105'
+                : 'hover:text-slate-900 dark:hover:text-slate-200'
+            }`}
+          >
+            <Database className="w-4 h-4" />
+            <span className="text-[10px]">{lang === 'th' ? 'ข้อมูลหลัก' : 'Master'}</span>
+          </button>
+
+          {/* 3. Central Barcode Quick Scanner */}
+          <button
+            onClick={() => {
+              setActiveTab('inventory');
+              setActiveInventorySubTab('scanner');
+            }}
+            title="Scan Barcode"
+            className="flex flex-col items-center justify-center -mt-6 bg-gradient-to-tr from-blue-600 to-sky-500 text-white w-12 h-12 rounded-full shadow-lg shadow-blue-600/40 border-2 border-white dark:border-slate-900 active:scale-95 transition"
+          >
+            <QrCode className="w-5 h-5" />
+          </button>
+
+          {/* 4. Inventory / Stock */}
+          <button
+            onClick={() => handleTabChange('inventory')}
+            className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-lg transition ${
+              activeTab === 'inventory' && activeInventorySubTab !== 'scanner'
+                ? 'text-blue-600 dark:text-blue-400 font-bold scale-105'
+                : 'hover:text-slate-900 dark:hover:text-slate-200'
+            }`}
+          >
+            <Boxes className="w-4 h-4" />
+            <span className="text-[10px]">{lang === 'th' ? 'สต็อก' : 'Stock'}</span>
+          </button>
+
+          {/* 5. Mobile Drawer Menu Toggle */}
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="flex flex-col items-center gap-0.5 py-1 px-2 rounded-lg transition hover:text-slate-900 dark:hover:text-slate-200"
+          >
+            <Menu className="w-4 h-4" />
+            <span className="text-[10px]">{lang === 'th' ? 'เมนู' : 'Menu'}</span>
+          </button>
+        </nav>
       </div>
     </div>
   );
