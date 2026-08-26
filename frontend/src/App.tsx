@@ -186,6 +186,18 @@ export function App() {
     }
   }, []);
 
+  // Auto-redirect to login screen on 401 Unauthorized (Expired / Invalid Token)
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      authService.logout();
+      setIsLoggedIn(false);
+      navigate('/login');
+    };
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+  }, [navigate]);
+
   // Sync theme class with document root
   useEffect(() => {
     const root = document.documentElement;

@@ -28,12 +28,17 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: จัดการ Error มาตรฐาน
+// Response Interceptor: จัดการ Error มาตรฐาน และ Auto-Logout เมื่อ Session หมดอายุ (401)
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.warn('API response 401: Running with local/hybrid state.');
+      const isLoginRequest = error.config?.url?.includes('/auth/login');
+      if (!isLoginRequest && typeof window !== 'undefined') {
+        localStorage.removeItem('matchstock_token');
+        localStorage.removeItem('matchstock_user');
+        window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+      }
     }
     return Promise.reject(error);
   }
