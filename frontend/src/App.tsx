@@ -34,6 +34,65 @@ const LIVE_TENANTS: Tenant[] = [
   },
 ];
 
+const getInitialNavState = (pathname: string) => {
+  const path = pathname.toLowerCase();
+  let tab = 'masterData';
+  let masterSub: 'rbac' | 'products' | 'companies' | 'units' | 'barcodes' | 'warehouses' | 'suppliers' = 'products';
+  let inventorySub: 'all' | 'receive' | 'issue' | 'transfer' | 'adjustment' | 'scanner' | 'cycleCount' = 'all';
+
+  if (path.startsWith('/companies')) {
+    tab = 'masterData';
+    masterSub = 'companies';
+  } else if (path.startsWith('/units')) {
+    tab = 'masterData';
+    masterSub = 'units';
+  } else if (path.startsWith('/warehouses')) {
+    tab = 'masterData';
+    masterSub = 'warehouses';
+  } else if (path.startsWith('/suppliers')) {
+    tab = 'masterData';
+    masterSub = 'suppliers';
+  } else if (path.startsWith('/rbac') || path.startsWith('/users')) {
+    tab = 'masterData';
+    masterSub = 'rbac';
+  } else if (path.startsWith('/barcodes')) {
+    tab = 'masterData';
+    masterSub = 'barcodes';
+  } else if (path.startsWith('/products')) {
+    tab = 'masterData';
+    masterSub = 'products';
+  } else if (path.startsWith('/master-data')) {
+    tab = 'masterData';
+    if (path.includes('/companies')) masterSub = 'companies';
+    else if (path.includes('/units')) masterSub = 'units';
+    else if (path.includes('/warehouses')) masterSub = 'warehouses';
+    else if (path.includes('/suppliers')) masterSub = 'suppliers';
+    else if (path.includes('/rbac')) masterSub = 'rbac';
+    else if (path.includes('/barcodes')) masterSub = 'barcodes';
+    else masterSub = 'products';
+  } else if (path.startsWith('/inventory')) {
+    tab = 'inventory';
+    if (path.includes('/receive')) inventorySub = 'receive';
+    else if (path.includes('/issue')) inventorySub = 'issue';
+    else if (path.includes('/transfer')) inventorySub = 'transfer';
+    else if (path.includes('/adjustment')) inventorySub = 'adjustment';
+    else if (path.includes('/scanner')) inventorySub = 'scanner';
+    else if (path.includes('/cycle-count')) inventorySub = 'cycleCount';
+  } else if (path.startsWith('/orders') || path.startsWith('/sales')) {
+    tab = 'sales';
+  } else if (path.startsWith('/purchases')) {
+    tab = 'purchases';
+  } else if (path.startsWith('/reports')) {
+    tab = 'reports';
+  } else if (path.startsWith('/settings')) {
+    tab = 'settings';
+  } else if (path.startsWith('/dashboard')) {
+    tab = 'dashboard';
+  }
+
+  return { tab, masterSub, inventorySub };
+};
+
 export function App() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,9 +105,10 @@ export function App() {
   const [lang, setLang] = useState<Language>('th');
   const [theme, setTheme] = useState<ThemeMode>('light');
   const [selectedTenantId, setSelectedTenantId] = useState<string>('f97fe2dc-486e-4054-931c-aadf92823e69');
-  const [activeTab, setActiveTab] = useState<string>('masterData');
-  const [activeMasterSubTab, setActiveMasterSubTab] = useState<'rbac' | 'products' | 'companies' | 'units' | 'barcodes' | 'warehouses' | 'suppliers'>('products');
-  const [activeInventorySubTab, setActiveInventorySubTab] = useState<'all' | 'receive' | 'issue' | 'transfer' | 'adjustment' | 'scanner' | 'cycleCount'>('all');
+
+  const [activeTab, setActiveTab] = useState<string>(() => getInitialNavState(location.pathname).tab);
+  const [activeMasterSubTab, setActiveMasterSubTab] = useState<'rbac' | 'products' | 'companies' | 'units' | 'barcodes' | 'warehouses' | 'suppliers'>(() => getInitialNavState(location.pathname).masterSub);
+  const [activeInventorySubTab, setActiveInventorySubTab] = useState<'all' | 'receive' | 'issue' | 'transfer' | 'adjustment' | 'scanner' | 'cycleCount'>(() => getInitialNavState(location.pathname).inventorySub);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
@@ -66,62 +126,10 @@ export function App() {
 
   // Synchronize Active Tab & Subtab from browser URL path on URL changes
   useEffect(() => {
-    const path = location.pathname.toLowerCase();
-    if (path === '/' || path === '') {
-      setActiveTab('masterData');
-      setActiveMasterSubTab('products');
-    } else if (path.startsWith('/products')) {
-      setActiveTab('masterData');
-      setActiveMasterSubTab('products');
-    } else if (path.startsWith('/companies')) {
-      setActiveTab('masterData');
-      setActiveMasterSubTab('companies');
-    } else if (path.startsWith('/units')) {
-      setActiveTab('masterData');
-      setActiveMasterSubTab('units');
-    } else if (path.startsWith('/warehouses')) {
-      setActiveTab('masterData');
-      setActiveMasterSubTab('warehouses');
-    } else if (path.startsWith('/suppliers')) {
-      setActiveTab('masterData');
-      setActiveMasterSubTab('suppliers');
-    } else if (path.startsWith('/rbac') || path.startsWith('/users')) {
-      setActiveTab('masterData');
-      setActiveMasterSubTab('rbac');
-    } else if (path.startsWith('/barcodes')) {
-      setActiveTab('masterData');
-      setActiveMasterSubTab('barcodes');
-    } else if (path.startsWith('/master-data')) {
-      setActiveTab('masterData');
-      if (path.includes('/products')) setActiveMasterSubTab('products');
-      else if (path.includes('/companies')) setActiveMasterSubTab('companies');
-      else if (path.includes('/units')) setActiveMasterSubTab('units');
-      else if (path.includes('/warehouses')) setActiveMasterSubTab('warehouses');
-      else if (path.includes('/suppliers')) setActiveMasterSubTab('suppliers');
-      else if (path.includes('/rbac')) setActiveMasterSubTab('rbac');
-      else if (path.includes('/barcodes')) setActiveMasterSubTab('barcodes');
-      else setActiveMasterSubTab('products');
-    } else if (path.startsWith('/inventory')) {
-      setActiveTab('inventory');
-      if (path.includes('/receive')) setActiveInventorySubTab('receive');
-      else if (path.includes('/issue')) setActiveInventorySubTab('issue');
-      else if (path.includes('/transfer')) setActiveInventorySubTab('transfer');
-      else if (path.includes('/adjustment')) setActiveInventorySubTab('adjustment');
-      else if (path.includes('/scanner')) setActiveInventorySubTab('scanner');
-      else if (path.includes('/cycle-count')) setActiveInventorySubTab('cycleCount');
-      else setActiveInventorySubTab('all');
-    } else if (path.startsWith('/orders') || path.startsWith('/sales')) {
-      setActiveTab('sales');
-    } else if (path.startsWith('/purchases')) {
-      setActiveTab('purchases');
-    } else if (path.startsWith('/reports')) {
-      setActiveTab('reports');
-    } else if (path.startsWith('/settings')) {
-      setActiveTab('settings');
-    } else if (path.startsWith('/dashboard')) {
-      setActiveTab('dashboard');
-    }
-    // /login path is handled by the isLoggedIn guard — no tab change needed
+    const nav = getInitialNavState(location.pathname);
+    setActiveTab(nav.tab);
+    setActiveMasterSubTab(nav.masterSub);
+    setActiveInventorySubTab(nav.inventorySub);
   }, [location.pathname]);
 
   // Navigate when Tab changes
