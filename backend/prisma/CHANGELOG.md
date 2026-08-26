@@ -6,7 +6,7 @@
 
 **สาเหตุ**: entry ด้านล่าง "Sync schema เต็มรูปแบบกับโค้ดจริง" เป็นการตัดสินใจผิด — repo นี้กับ backend จริง (`d:\Inventory-saas\backend`) ไม่ใช่ระบบเดียวกันคนละเวอร์ชัน แต่เป็นคนละระบบที่ใช้ field naming convention ต่างกันจริงๆ (เช่น `Tenant.companyName/taxId` vs `name/slug`) และทีมนี้มี OpenAPI spec, SQL DDL, โค้ด frontend ที่วางแผนไว้ตาม naming เดิมของตัวเองอยู่แล้ว การเอา schema จาก backend จริงไปทับทั้งไฟล์เมื่อวานเลยลบงานที่ทีมกำลังพัฒนาอยู่ทิ้งไปด้วยโดยไม่ได้ตั้งใจ (เช่น model `Company`/multi-company-branch ที่เพื่อนร่วมทีมต้องเพิ่มกลับเข้ามาเองวันนี้ใน commit `24b8018` เพื่อให้ตรงกับ openapi spec)
 
-**การแก้ไข**: revert `schema.prisma` กลับไปเป็นเวอร์ชันก่อนการ sync (commit `7974ea4`) ตรงๆ — เวอร์ชันนี้มี model `Company`/branch ของทีมอยู่แล้ว (commit `24b8018` วันนี้แค่กู้สิ่งที่ผมลบไปกลับมา ไม่มีอะไรใหม่เพิ่มเติมนอกจากนี้) เพราะฉะนั้น revert ตรงๆ ก็ครบทั้งของเดิมทีมและงานล่าสุดแล้ว
+**การแก้ไข**: revert `schema.prisma` กลับไปเป็นเวอร์ชันก่อนการ sync (commit `7974ea4`) แล้วแทนที่ model `Company` ด้วยเวอร์ชันล่าสุดจาก commit `24b8018` โดยตรง (ไม่ใช่เวอร์ชันเก่าใน `7974ea4`) ตามที่ทีมอัพเดตไว้ล่าสุดเพื่อให้ตรงกับ openapi spec — เพิ่มบรรทัด `warehouses Warehouse[]` กลับเข้าไปใน model นี้ด้วย (ไม่มีใน `24b8018` เพราะตอนนั้น `Warehouse` เป็นเวอร์ชันของผมที่ไม่มี relation ไปหา Company แล้ว แต่พอ revert `Warehouse` กลับเป็นของทีมที่ยังมี `companyId`/`company` relation อยู่ ก็ต้องมี back-relation นี้คู่กัน ไม่งั้น schema จะ validate ไม่ผ่าน) ตรวจแล้วด้วย `prisma validate` ผ่านปกติ
 
 **บทเรียน**: repo `Arthy001/MatchStock` (`backend/prisma/`) กับ backend จริงเป็นคนละระบบ ห้าม sync แบบ replace-ทั้งไฟล์อีก ถ้าจะเอาการเปลี่ยนแปลงจาก backend จริงเข้ามาในอนาคต ต้องทำเป็น field-by-field mapping ที่ตัดสินใจร่วมกับทีมก่อน ไม่ใช่ overwrite ทั้งไฟล์
 

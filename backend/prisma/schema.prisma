@@ -251,24 +251,34 @@ model TaxType {
 }
 
 model Company {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenantId      String    @map("tenant_id") @db.Uuid
-  code          String    @db.VarChar(50)
-  name          String    @db.VarChar(255)
-  taxId         String?   @map("tax_id") @db.VarChar(50)
-  branchCode    String    @default("00000") @map("branch_code") @db.VarChar(20)
-  branchName    String?   @map("branch_name") @db.VarChar(100)
-  phone         String?   @db.VarChar(50)
-  email         String?   @db.VarChar(100)
-  address       String?   @db.Text
-  isHeadquarter Boolean   @default(false) @map("is_headquarter")
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+  id            String  @id @default(uuid()) @db.Uuid
+  tenantId      String  @map("tenant_id") @db.Uuid
+  code          String? @db.VarChar(50)
+  name          String  @db.VarChar(255)
+  taxId         String? @map("tax_id") @db.VarChar(20)
+  branchCode    String? @default("00000") @map("branch_code") @db.VarChar(10)
+  branchName    String? @map("branch_name") @db.VarChar(255)
+  phone         String? @db.VarChar(50)
+  email         String? @db.VarChar(255)
+  address       String? @db.Text
+  isHeadquarter Boolean @default(false) @map("is_headquarter")
 
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  warehouses    Warehouse[]
+  createdByType String?   @map("created_by_type") @db.VarChar(20)
+  createdById   String?   @map("created_by_id") @db.Uuid
+  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
+  updatedById   String?   @map("updated_by_id") @db.Uuid
+  deletedAt     DateTime? @map("deleted_at")
+  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
+  deletedById   String?   @map("deleted_by_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  warehouses Warehouse[]
 
   @@unique([tenantId, code])
+  @@index([tenantId])
   @@map("companies")
 }
 
