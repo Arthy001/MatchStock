@@ -189,6 +189,7 @@ model Tenant {
   brands               Brand[]
   manufacturers        Manufacturer[]
   suppliers            Supplier[]
+  companies            Company[]
   categories           Category[]
   barcodeSymbologies   BarcodeSymbology[]
 
@@ -238,26 +239,24 @@ model User {
   @@map("users")
 }
 
-/**
- * Global, platform-admin-managed role catalog (2026-08-18) - replaces the
- * old UserRole enum. Shared across every tenant (not per-tenant) by
- * explicit product decision: a fixed enum baked into the app was already
- * shared across every tenant, so this preserves that shape while making the
- * set of roles editable without a code deploy. No `isSystem`/protected flag
- * on the original 7 seeded codes (owner/admin/operator/viewer/manager/
- * warehouse_staff/purchasing_staff) - by explicit product decision, a
- * platform admin can edit or delete any role, built-in or custom, the same
- * way. Deleting a role in use by any user is blocked (users.role's FK,
- * enforced at both the service layer and the DB) - that's ordinary
- * referential-integrity protection, not special-casing.
- * `code` (not `id`) is what every `@Roles()` decorator throughout the app
- * compares against and what's carried in the JWT `role` claim - renaming a
- * role's code silently changes which users satisfy which `@Roles()` checks
- * everywhere in the app, immediately, with no code deploy. RolesService/the
- * admin DTOs deliberately keep `code` immutable after creation (same
- * precedent as SubscriptionPlan.code/ReaderModel.code elsewhere in this
- * schema) to avoid that footgun - `name`/`description` remain freely editable.
- */
+// Global, platform-admin-managed role catalog (2026-08-18) - replaces the
+// old UserRole enum. Shared across every tenant (not per-tenant) by
+// explicit product decision: a fixed enum baked into the app was already
+// shared across every tenant, so this preserves that shape while making the
+// set of roles editable without a code deploy. No `isSystem`/protected flag
+// on the original 7 seeded codes (owner/admin/operator/viewer/manager/
+// warehouse_staff/purchasing_staff) - by explicit product decision, a
+// platform admin can edit or delete any role, built-in or custom, the same
+// way. Deleting a role in use by any user is blocked (users.role's FK,
+// enforced at both the service layer and the DB) - that's ordinary
+// referential-integrity protection, not special-casing.
+// `code` (not `id`) is what every `@Roles()` decorator throughout the app
+// compares against and what's carried in the JWT `role` claim - renaming a
+// role's code silently changes which users satisfy which `@Roles()` checks
+// everywhere in the app, immediately, with no code deploy. RolesService/the
+// admin DTOs deliberately keep `code` immutable after creation (same
+// precedent as SubscriptionPlan.code/ReaderModel.code elsewhere in this
+// schema) to avoid that footgun - `name`/`description` remain freely editable.
 model Role {
   id          String  @id @default(uuid()) @db.Uuid
   code        String  @unique @db.VarChar(50)
@@ -643,18 +642,16 @@ model ProductImage {
   @@map("product_images")
 }
 
-/**
- * Master data (2026-08-18) - replaces ProductAttributeOption. Strictly
- * per-tenant, by explicit product decision - no shared/master tier (a
- * regression from ProductAttributeOption's old master-vs-tenant-tier
- * design, deliberately accepted: every tenant now defines its own units
- * from scratch, matching the reference schema this was modeled on exactly).
- * One table for all three of Product's unit-of-measure slots (unitId,
- * dimensionUnitId, weightUnitId) - `type` is what the app validates against
- * at write time (e.g. dimensionUnitId must reference a `type: dimension`
- * row), replacing ProductAttributeOptionCategory's dimension_unit/
- * weight_unit split.
- */
+// Master data (2026-08-18) - replaces ProductAttributeOption. Strictly
+// per-tenant, by explicit product decision - no shared/master tier (a
+// regression from ProductAttributeOption's old master-vs-tenant-tier
+// design, deliberately accepted: every tenant now defines its own units
+// from scratch, matching the reference schema this was modeled on exactly).
+// One table for all three of Product's unit-of-measure slots (unitId,
+// dimensionUnitId, weightUnitId) - `type` is what the app validates against
+// at write time (e.g. dimensionUnitId must reference a `type: dimension`
+// row), replacing ProductAttributeOptionCategory's dimension_unit/
+// weight_unit split.
 model Unit {
   id       String   @id @default(uuid()) @db.Uuid
   tenantId String   @map("tenant_id") @db.Uuid
@@ -759,6 +756,37 @@ model Supplier {
   @@map("suppliers")
 }
 
+model Company {
+  id            String  @id @default(uuid()) @db.Uuid
+  tenantId      String  @map("tenant_id") @db.Uuid
+  code          String? @db.VarChar(50)
+  name          String  @db.VarChar(255)
+  taxId         String? @map("tax_id") @db.VarChar(20)
+  branchCode    String? @default("00000") @map("branch_code") @db.VarChar(10)
+  branchName    String? @map("branch_name") @db.VarChar(255)
+  phone         String? @db.VarChar(50)
+  email         String? @db.VarChar(255)
+  address       String? @db.Text
+  isHeadquarter Boolean @default(false) @map("is_headquarter")
+
+  createdByType String?   @map("created_by_type") @db.VarChar(20)
+  createdById   String?   @map("created_by_id") @db.Uuid
+  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
+  updatedById   String?   @map("updated_by_id") @db.Uuid
+  deletedAt     DateTime? @map("deleted_at")
+  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
+  deletedById   String?   @map("deleted_by_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("companies")
+}
+
 model Category {
   id          String  @id @default(uuid()) @db.Uuid
   tenantId    String  @map("tenant_id") @db.Uuid
@@ -784,13 +812,11 @@ model Category {
   @@map("categories")
 }
 
-/**
- * Tenant-scoped, admin-managed barcode symbology catalog (2026-08-19) -
- * replaces the old fixed `BarcodeType` enum, matching the same
- * enum-to-table conversion already applied to Role/Unit/Brand/Category
- * elsewhere in this schema. `Product.barcodeSymbologyId` points here
- * instead of holding a compile-time enum value.
- */
+// Tenant-scoped, admin-managed barcode symbology catalog (2026-08-19) -
+// replaces the old fixed `BarcodeType` enum, matching the same
+// enum-to-table conversion already applied to Role/Unit/Brand/Category
+// elsewhere in this schema. `Product.barcodeSymbologyId` points here
+// instead of holding a compile-time enum value.
 model BarcodeSymbology {
   id          String  @id @default(uuid()) @db.Uuid
   tenantId    String  @map("tenant_id") @db.Uuid
@@ -1260,12 +1286,12 @@ model DeviceCredential {
 /// Auth is checked via mosquitto-go-auth's HTTP backend mode calling out to
 /// MqttPluginAuthController, not by the plugin querying this table directly.
 model DeviceMqttCredential {
-  id           String                 @id @default(uuid()) @db.Uuid
-  deviceId     String                 @unique @map("device_id") @db.Uuid
-  tenantId     String                 @map("tenant_id") @db.Uuid
-  mqttUsername String                 @unique @map("mqtt_username") @db.VarChar(64)
-  passwordHash String                 @map("password_hash") @db.VarChar(255)
-  status       DeviceCredentialStatus @default(active)
+  id                String                 @id @default(uuid()) @db.Uuid
+  deviceId          String                 @unique @map("device_id") @db.Uuid
+  tenantId          String                 @map("tenant_id") @db.Uuid
+  mqttUsername      String                 @unique @map("mqtt_username") @db.VarChar(64)
+  passwordHash      String                 @map("password_hash") @db.VarChar(255)
+  status            DeviceCredentialStatus @default(active)
   // True only while this device is still using the fixed, non-secret
   // MQTT_DEFAULT_DEVICE_PASSWORD every self-provisioned device starts with
   // (see ReaderOpsFleetService.registerDevice()/restoreDevice()) - flipped
@@ -1273,10 +1299,10 @@ model DeviceMqttCredential {
   // to a real random password after the device's first confirmed online
   // status. A device stuck true here for a long time signals it never
   // actually connected with its real credential.
-  isDefaultPassword Boolean           @default(false) @map("is_default_password")
-  lastUsedAt   DateTime?              @map("last_used_at")
-  createdAt    DateTime               @default(now()) @map("created_at")
-  revokedAt    DateTime?              @map("revoked_at")
+  isDefaultPassword Boolean                @default(false) @map("is_default_password")
+  lastUsedAt        DateTime?              @map("last_used_at")
+  createdAt         DateTime               @default(now()) @map("created_at")
+  revokedAt         DateTime?              @map("revoked_at")
 
   device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
 
