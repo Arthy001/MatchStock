@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Search,
   Plus,
@@ -251,9 +251,12 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
 
   // In-Memory Loaded Subtabs Tracker (Cache Flag)
   const [loadedTabs, setLoadedTabs] = useState<Set<MasterDataSubTab>>(new Set());
+  const fetchingRef = useRef<Record<string, boolean>>({});
 
-  // Individual On-Demand Data Loaders
+  // Individual On-Demand Data Loaders with In-Flight Deduplication
   const loadProducts = useCallback(async () => {
+    if (fetchingRef.current['products']) return;
+    fetchingRef.current['products'] = true;
     setIsLoading(true);
     try {
       const prods = await productService.getAllProducts().catch(() => []);
@@ -285,11 +288,14 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
     } catch (err) {
       console.error('Error loading products:', err);
     } finally {
+      fetchingRef.current['products'] = false;
       setIsLoading(false);
     }
   }, []);
 
   const loadCompanies = useCallback(async () => {
+    if (fetchingRef.current['companies']) return;
+    fetchingRef.current['companies'] = true;
     setIsLoading(true);
     try {
       const comps = await masterDataService.getCompanies().catch(() => []);
@@ -299,11 +305,14 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
     } catch (err) {
       console.error('Error loading companies:', err);
     } finally {
+      fetchingRef.current['companies'] = false;
       setIsLoading(false);
     }
   }, []);
 
   const loadUnits = useCallback(async () => {
+    if (fetchingRef.current['units']) return;
+    fetchingRef.current['units'] = true;
     setIsLoading(true);
     try {
       const units = await masterDataService.getUnits().catch(() => []);
@@ -313,11 +322,14 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
     } catch (err) {
       console.error('Error loading units:', err);
     } finally {
+      fetchingRef.current['units'] = false;
       setIsLoading(false);
     }
   }, []);
 
   const loadBins = useCallback(async () => {
+    if (fetchingRef.current['warehouses']) return;
+    fetchingRef.current['warehouses'] = true;
     setIsLoading(true);
     try {
       const bins = await warehouseService.getBins().catch(() => []);
@@ -327,11 +339,14 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
     } catch (err) {
       console.error('Error loading bins:', err);
     } finally {
+      fetchingRef.current['warehouses'] = false;
       setIsLoading(false);
     }
   }, []);
 
   const loadSuppliers = useCallback(async () => {
+    if (fetchingRef.current['suppliers']) return;
+    fetchingRef.current['suppliers'] = true;
     setIsLoading(true);
     try {
       const sups = await masterDataService.getSuppliers().catch(() => []);
@@ -341,11 +356,14 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
     } catch (err) {
       console.error('Error loading suppliers:', err);
     } finally {
+      fetchingRef.current['suppliers'] = false;
       setIsLoading(false);
     }
   }, []);
 
   const loadUsers = useCallback(async () => {
+    if (fetchingRef.current['rbac']) return;
+    fetchingRef.current['rbac'] = true;
     setIsLoading(true);
     try {
       const usrs = await masterDataService.getUsers().catch(() => []);
@@ -355,6 +373,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
     } catch (err) {
       console.error('Error loading users:', err);
     } finally {
+      fetchingRef.current['rbac'] = false;
       setIsLoading(false);
     }
   }, []);
