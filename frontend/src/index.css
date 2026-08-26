@@ -1,7 +1,8 @@
 /* 1. English & Numeric Font: Prompt (Strict Latin & Number Unicode Range) */
 @font-face {
   font-family: 'Prompt-Latin';
-  src: url('https://fonts.gstatic.com/s/prompt/v11/-W__XJnvUDTD-xNWmmGCSbbt.woff2') format('woff2');
+  src: local('Prompt'),
+       url('/fonts/Prompt-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -10,7 +11,8 @@
 
 @font-face {
   font-family: 'Prompt-Latin';
-  src: url('https://fonts.gstatic.com/s/prompt/v11/-W_0XJnvUDTD-xNWmmGSUb7V7dE.woff2') format('woff2');
+  src: local('Prompt SemiBold'),
+       url('/fonts/Prompt-SemiBold.ttf') format('truetype');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
@@ -19,7 +21,8 @@
 
 @font-face {
   font-family: 'Prompt-Latin';
-  src: url('https://fonts.gstatic.com/s/prompt/v11/-W_0XJnvUDTD-xNWmmGSSb3V7dE.woff2') format('woff2');
+  src: local('Prompt Bold'),
+       url('/fonts/Prompt-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
