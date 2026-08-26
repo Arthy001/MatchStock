@@ -3,7 +3,6 @@ import { apiClient } from './api.client';
 export interface LoginPayload {
   email: string;
   password: string;
-  tenantSlug?: string;
 }
 
 export interface BackendUser {
@@ -44,9 +43,6 @@ export const authService = {
         email: credentials.email,
         password: credentials.password,
       };
-      if (credentials.tenantSlug && credentials.tenantSlug.trim()) {
-        payload.tenantSlug = credentials.tenantSlug.trim();
-      }
 
       const response = await apiClient.post<AuthResponse>('/auth/login', payload);
       const resData = response.data;

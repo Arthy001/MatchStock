@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Package, ShieldCheck, Lock, Eye, EyeOff, Mail, Building2, Sun, Moon, AlertCircle, ArrowRight, Loader2, Sparkles, Check } from 'lucide-react';
+import { Package, ShieldCheck, Lock, Eye, EyeOff, Mail, Sun, Moon, AlertCircle, ArrowRight, Loader2, Sparkles, Check } from 'lucide-react';
 import { Language, ThemeMode, Tenant, User } from '../types';
 import { getTranslation } from '../i18n';
 import { authService } from '../services/auth.service';
@@ -14,7 +14,6 @@ interface LoginViewProps {
 }
 
 interface DemoAccount {
-  tenantSlug: string;
   tenantName: string;
   email: string;
   role: string;
@@ -23,35 +22,30 @@ interface DemoAccount {
 
 const DEMO_ACCOUNTS: DemoAccount[] = [
   {
-    tenantSlug: 'matchstock-demo',
     tenantName: 'MatchStock Demo (Enterprise)',
     email: 'admin@matchstock.com',
     role: 'Admin',
     badge: 'Enterprise',
   },
   {
-    tenantSlug: 'matchstock-demo',
     tenantName: 'MatchStock Demo (Enterprise)',
     email: 'manager@matchstock.com',
     role: 'Manager',
     badge: 'Operations',
   },
   {
-    tenantSlug: 'matchstock-demo',
     tenantName: 'MatchStock Demo (Enterprise)',
     email: 'whstaff@matchstock.com',
     role: 'Warehouse Staff',
     badge: 'Inventory',
   },
   {
-    tenantSlug: 'matchstock-demo',
     tenantName: 'MatchStock Demo (Enterprise)',
     email: 'purchasing@matchstock.com',
     role: 'Purchasing Staff',
     badge: 'Procurement',
   },
   {
-    tenantSlug: 'acme-demo',
     tenantName: 'Acme Demo (Growth)',
     email: 'owner@acme-demo.test',
     role: 'Owner',
@@ -68,7 +62,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
   onLoginSuccess,
 }) => {
   const t = getTranslation(lang);
-  const [tenantSlug, setTenantSlug] = useState('matchstock-demo');
   const [email, setEmail] = useState('admin@matchstock.com');
   const [password, setPassword] = useState('Passw0rd!');
   const [showPassword, setShowPassword] = useState(false);
@@ -78,7 +71,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
   const handleSelectDemo = (account: DemoAccount, index: number) => {
     setSelectedDemoIndex(index);
-    setTenantSlug(account.tenantSlug);
     setEmail(account.email);
     setPassword('Passw0rd!');
     setErrorMsg('');
@@ -92,7 +84,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
     try {
       // 1. ยิง Login ไปยัง Live Backend API (Strict Mode)
       const res = await authService.login({
-        tenantSlug: tenantSlug.trim(),
         email: email.trim(),
         password: password,
       });
@@ -108,7 +99,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             email: userObj.email,
             role: (userObj.role as any) || 'admin',
             tenantId: userObj.tenantId || tenantObj?.id || 'f97fe2dc-486e-4054-931c-aadf92823e69',
-            tenantName: tenantObj?.name || (tenantSlug === 'acme-demo' ? 'Acme Industrial Supplies' : 'WH-Bangkok Center (Enterprise)'),
+            tenantName: tenantObj?.name || (userObj.email.includes('acme') ? 'Acme Industrial Supplies' : 'WH-Bangkok Center (Enterprise)'),
           };
           onLoginSuccess(loggedUser);
           return;
@@ -278,28 +269,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
-            {/* Tenant Slug Input */}
-            <div>
-              <label className="block text-xs font-semibold mb-1 text-slate-600 dark:text-slate-400">
-                {lang === 'en' ? 'Tenant Slug' : 'รหัส Tenant (Tenant Slug)'}
-              </label>
-              <div className="relative">
-                <Building2 className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
-                <input
-                  type="text"
-                  value={tenantSlug}
-                  onChange={(e) => setTenantSlug(e.target.value)}
-                  placeholder="matchstock-demo"
-                  required
-                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm focus:ring-2 focus:ring-sky-500/50 focus:outline-none transition ${
-                    theme === 'dark'
-                      ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500'
-                      : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'
-                  }`}
-                />
-              </div>
-            </div>
-
             {/* Email Input */}
             <div>
               <label className="block text-xs font-semibold mb-1 text-slate-600 dark:text-slate-400">
