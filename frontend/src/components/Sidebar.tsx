@@ -124,13 +124,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div className="h-4 border-b border-slate-800 mb-3" />
             )}
 
-            <nav className="space-y-1.5">
+            <nav className="space-y-1">
               {/* Dashboard */}
               <button
                 onClick={() => onTabChange('dashboard')}
                 title={t.dashboard}
                 className={`w-full flex items-center ${
-                  isCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3 py-2.5'
+                  isCollapsed ? 'justify-center px-0 py-2' : 'gap-3 px-3 py-1.5'
                 } rounded-xl text-sm font-medium transition ${
                   activeTab === 'dashboard'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
@@ -151,7 +151,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     }}
                     title={t.masterData}
                     className={`w-full flex items-center ${
-                      isCollapsed ? 'justify-center px-0 py-3' : 'justify-between px-3 py-2.5'
+                      isCollapsed ? 'justify-center px-0 py-2' : 'justify-between px-3 py-1.5'
                     } rounded-xl text-sm font-medium transition ${
                       activeTab === 'masterData'
                         ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
@@ -172,7 +172,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                   {/* Expanded Sub-items */}
                   {!isCollapsed && isMasterDataOpen && (
-                    <div className="ml-7 mt-1.5 space-y-1 border-l border-slate-800 pl-3">
+                    <div className="ml-7 mt-1 space-y-0.5 border-l border-slate-800 pl-3">
                       {[
                         { key: 'companies', label: t.tabCompanies },
                         { key: 'products', label: t.tabProducts },
@@ -190,7 +190,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               onTabChange('masterData');
                               if (onSubTabChange) onSubTabChange(item.key);
                             }}
-                            className={`w-full text-left text-xs py-1.5 px-2.5 rounded-lg transition truncate block ${
+                            className={`w-full text-left text-xs py-1 px-2.5 rounded-lg transition truncate block ${
                               isSubActive
                                 ? 'text-blue-400 font-bold bg-blue-500/10'
                                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
@@ -215,7 +215,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     }}
                     title={t.inventory}
                     className={`w-full flex items-center ${
-                      isCollapsed ? 'justify-center px-0 py-3' : 'justify-between px-3 py-2.5'
+                      isCollapsed ? 'justify-center px-0 py-2' : 'justify-between px-3 py-1.5'
                     } rounded-xl text-sm font-medium transition ${
                       activeTab === 'inventory'
                         ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
@@ -236,7 +236,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                   {/* Expanded Sub-items */}
                   {!isCollapsed && isInventoryOpen && (
-                    <div className="ml-7 mt-1.5 space-y-1 border-l border-slate-800 pl-3">
+                    <div className="ml-7 mt-1 space-y-0.5 border-l border-slate-800 pl-3">
                       {[
                         { key: 'all', label: t.tabAllTransactions },
                         { key: 'receive', label: t.tabGoodsReceive },
@@ -254,7 +254,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               onTabChange('inventory');
                               if (onSubTabChange) onSubTabChange(item.key);
                             }}
-                            className={`w-full text-left text-xs py-1.5 px-2.5 rounded-lg transition truncate block ${
+                            className={`w-full text-left text-xs py-1 px-2.5 rounded-lg transition truncate block ${
                               isSubActive
                                 ? 'text-blue-400 font-bold bg-blue-500/10'
                                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
@@ -275,7 +275,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => onTabChange('sales')}
                   title={t.sales}
                   className={`w-full flex items-center ${
-                    isCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3 py-2.5'
+                    isCollapsed ? 'justify-center px-0 py-2' : 'gap-3 px-3 py-1.5'
                   } rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition`}
                 >
                   <ShoppingCart className="w-5 h-5 shrink-0" />
@@ -289,7 +289,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => onTabChange('purchases')}
                   title={t.purchases}
                   className={`w-full flex items-center ${
-                    isCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3 py-2.5'
+                    isCollapsed ? 'justify-center px-0 py-2' : 'gap-3 px-3 py-1.5'
                   } rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition`}
                 >
                   <ShoppingBag className="w-5 h-5 shrink-0" />
@@ -303,7 +303,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => onTabChange('reports')}
                   title={t.reports}
                   className={`w-full flex items-center ${
-                    isCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3 py-2.5'
+                    isCollapsed ? 'justify-center px-0 py-2' : 'gap-3 px-3 py-1.5'
                   } rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition`}
                 >
                   <BarChart3 className="w-5 h-5 shrink-0" />
@@ -317,7 +317,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => onTabChange('settings')}
                   title={t.settings}
                   className={`w-full flex items-center ${
-                    isCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3 py-2.5'
+                    isCollapsed ? 'justify-center px-0 py-2' : 'gap-3 px-3 py-1.5'
                   } rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition`}
                 >
                   <Settings className="w-5 h-5 shrink-0" />

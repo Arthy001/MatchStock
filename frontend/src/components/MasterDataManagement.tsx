@@ -860,14 +860,14 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
           {getAddButtonLabel() && (
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-semibold shadow-md shadow-blue-600/30 transition cursor-pointer active:scale-[0.99]"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-semibold shadow-xs shadow-blue-600/30 transition cursor-pointer active:scale-[0.99]"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{getAddButtonLabel()}</span>
             </button>
           )}
           <button
-            className={`px-2.5 py-1.5 rounded-md border text-xs font-medium flex items-center gap-1.5 transition ${
+            className={`px-2.5 py-1 rounded-md border text-xs font-medium flex items-center gap-1.5 transition ${
               theme === 'dark'
                 ? 'border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700'
                 : 'border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 shadow-xs'
@@ -896,7 +896,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
             <button
               key={tab.key}
               onClick={() => onSubTabChange && onSubTabChange(tab.key as any)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition cursor-pointer flex items-center gap-1.5 shrink-0 select-none ${
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer flex items-center gap-1.5 shrink-0 select-none ${
                 isActive
                   ? theme === 'dark'
                     ? 'bg-zinc-800 text-white font-semibold shadow-xs'
