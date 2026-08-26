@@ -8,14 +8,14 @@ export default {
   theme: {
     extend: {
       fontSize: {
-        '2xs': ['16px', { lineHeight: '22px' }],
-        'xs': ['18px', { lineHeight: '26px' }],
-        'sm': ['20px', { lineHeight: '28px' }],
-        'base': ['24px', { lineHeight: '34px' }],   // ขนาดมาตรฐาน 24px ตามสั่ง
-        'lg': ['26px', { lineHeight: '36px' }],
-        'xl': ['28px', { lineHeight: '38px' }],
-        '2xl': ['32px', { lineHeight: '42px' }],
-        '3xl': ['38px', { lineHeight: '48px' }],
+        '2xs': ['11px', { lineHeight: '16px' }],
+        'xs': ['12px', { lineHeight: '18px' }],
+        'sm': ['14px', { lineHeight: '20px' }],
+        'base': ['15px', { lineHeight: '22px' }],
+        'lg': ['18px', { lineHeight: '26px' }],
+        'xl': ['20px', { lineHeight: '28px' }],
+        '2xl': ['24px', { lineHeight: '32px' }],
+        '3xl': ['30px', { lineHeight: '38px' }],
       },
       fontFamily: {
         sans: ['Prompt-Latin', 'TH Sarabun New', 'Sarabun', 'system-ui', 'sans-serif'],

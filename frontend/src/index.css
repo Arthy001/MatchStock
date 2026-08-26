@@ -81,65 +81,23 @@
 
 :root {
   font-family: 'Prompt-Latin', 'TH Sarabun New', 'Sarabun', sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.5;
 }
 
 /* Global Font Family Enforcement */
 *, *::before, *::after {
-  font-family: 'Prompt-Latin', 'TH Sarabun New', 'Sarabun', sans-serif !important;
+  font-family: 'Prompt-Latin', 'TH Sarabun New', 'Sarabun', sans-serif;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  font-family: 'Prompt-Latin', 'TH Sarabun New', 'Sarabun', sans-serif !important;
-  font-size: 20px;
+  font-family: 'Prompt-Latin', 'TH Sarabun New', 'Sarabun', sans-serif;
+  font-size: 15px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* 🎯 Direct Typography Scaling for TH Sarabun New (ตัวหนังสือใหญ่ขึ้นชัดเจน การ์ดไม่บวม) */
-p, span, a, label, button, input, select, textarea, td, th, li {
-  font-size: 19px;
-  line-height: 1.5;
-}
-
-/* หัวข้อต่างๆ ให้เด่นชัด */
-h1 { font-size: 32px !important; }
-h2 { font-size: 28px !important; }
-h3 { font-size: 24px !important; }
-h4 { font-size: 22px !important; }
-h5, h6 { font-size: 20px !important; }
-
-/* ยกเลิกขนาดตัวหนังสือจิ๋ว (text-[10px], text-[11px], text-xs) ให้ขยายเป็น 18px-20px ทันที */
-.text-\[10px\], .text-\[11px\], .text-\[12px\], .text-2xs {
-  font-size: 17px !important;
-}
-
-.text-xs {
-  font-size: 18px !important;
-}
-
-.text-sm {
-  font-size: 20px !important;
-}
-
-.text-base {
-  font-size: 22px !important;
-}
-
-.text-lg {
-  font-size: 24px !important;
-}
-
-.text-xl {
-  font-size: 26px !important;
-}
-
-.text-2xl {
-  font-size: 30px !important;
 }
 
 /* Print Specific Font Formatting */
