@@ -2,7 +2,17 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-08-26 — Revert schema.prisma กลับเป็นเวอร์ชันทีม (ยกเลิกการ sync วันที่ 2026-08-25)
+
+**สาเหตุ**: entry ด้านล่าง "Sync schema เต็มรูปแบบกับโค้ดจริง" เป็นการตัดสินใจผิด — repo นี้กับ backend จริง (`d:\Inventory-saas\backend`) ไม่ใช่ระบบเดียวกันคนละเวอร์ชัน แต่เป็นคนละระบบที่ใช้ field naming convention ต่างกันจริงๆ (เช่น `Tenant.companyName/taxId` vs `name/slug`) และทีมนี้มี OpenAPI spec, SQL DDL, โค้ด frontend ที่วางแผนไว้ตาม naming เดิมของตัวเองอยู่แล้ว การเอา schema จาก backend จริงไปทับทั้งไฟล์เมื่อวานเลยลบงานที่ทีมกำลังพัฒนาอยู่ทิ้งไปด้วยโดยไม่ได้ตั้งใจ (เช่น model `Company`/multi-company-branch ที่เพื่อนร่วมทีมต้องเพิ่มกลับเข้ามาเองวันนี้ใน commit `24b8018` เพื่อให้ตรงกับ openapi spec)
+
+**การแก้ไข**: revert `schema.prisma` กลับไปเป็นเวอร์ชันก่อนการ sync (commit `7974ea4`) ตรงๆ — เวอร์ชันนี้มี model `Company`/branch ของทีมอยู่แล้ว (commit `24b8018` วันนี้แค่กู้สิ่งที่ผมลบไปกลับมา ไม่มีอะไรใหม่เพิ่มเติมนอกจากนี้) เพราะฉะนั้น revert ตรงๆ ก็ครบทั้งของเดิมทีมและงานล่าสุดแล้ว
+
+**บทเรียน**: repo `Arthy001/MatchStock` (`backend/prisma/`) กับ backend จริงเป็นคนละระบบ ห้าม sync แบบ replace-ทั้งไฟล์อีก ถ้าจะเอาการเปลี่ยนแปลงจาก backend จริงเข้ามาในอนาคต ต้องทำเป็น field-by-field mapping ที่ตัดสินใจร่วมกับทีมก่อน ไม่ใช่ overwrite ทั้งไฟล์
+
 ## 2026-08-25 — User.email เปลี่ยนเป็น unique ทั้งระบบ (แก้ endpoint login)
+
+> **หมายเหตุ**: entry นี้และ entry ด้านล่าง (sync วันที่ 2026-08-25) ถูก revert ไปแล้วตาม entry ด้านบน — เก็บไว้เป็นบันทึกประวัติเท่านั้น
 
 แก้ตาม AC ของ endpoint `POST /api/v1/auth/login`: ต้อง login ด้วย `email` + `password` เท่านั้น ไม่ต้องส่ง `tenantSlug` แล้ว
 

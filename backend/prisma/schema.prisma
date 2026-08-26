@@ -1,1701 +1,551 @@
+// ========================================================
+// PRISMA SCHEMA: MATCHSTOCK (MULTI-TENANT WMS & ERP)
+// PostgreSQL (Supabase Dev -> Google Cloud SQL Prod)
+// ========================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
-// =============================================================================
-// Enums - only for fields where the full value set is confirmed with certainty
-// from the original TypeORM entities/services built this session. Fields with
-// an uncertain/open-ended value set stay String, matching the original Oracle
-// schema (which never enforced these as DB-level enums either).
-// =============================================================================
-
-enum TenantStatus {
-  active
-  suspended
-}
-
-enum DeviceStatus {
-  active
-  inactive
-  decommissioned
-}
-
-enum DeviceCredentialStatus {
-  active
-  revoked
-}
-
-enum TagStatus {
-  unbound
-  bound
-  retired
-}
-
-enum TagCurrentStatus {
-  unknown
-  in_stock
-  exited
-  missing
-}
-
-enum TagEventType {
-  first_seen
-  zone_change
-  missing
-  reappeared
-  exited
-  bound
-  unbound
-  transferred
-  adjusted
-  received
-}
-
-enum TagEventReferenceType {
-  goods_receipt
-  goods_issue
-  stock_transfer
-  stock_adjustment
-  cycle_count
-}
-
-enum UnitType {
-  quantity
-  dimension
-  weight
-}
-
-enum DiscountType {
-  percentage
-  fixed
-}
-
-enum StockTransferStatus {
-  pending
-  completed
-  cancelled
-}
-
-enum CycleCountStatus {
-  open
-  closed
-  approved
-}
-
-enum StockAdjustmentReason {
-  damaged
-  lost
-  found
-  recount
-  other
-}
-
-enum SubscriptionPlanType {
-  web
-  hardware
-}
-
-enum BillingCycle {
-  monthly
-  yearly
-}
-
-enum RentalUnitCondition {
-  new
-  good
-  fair
-  damaged
-  unusable
-}
-
-enum PlatformAdminRole {
-  super_admin
-  billing
-  support
-}
-
-enum PaymentProvider {
-  omise
-  mock
-  manual
-}
-
-enum WebhookEventType {
-  low_stock_triggered      @map("low_stock.triggered")
-  tag_missing              @map("tag.missing")
-  goods_receipt_received   @map("goods_receipt.received")
-  goods_issue_dispatched   @map("goods_issue.dispatched")
-  stock_adjustment_closed  @map("stock_adjustment.closed")
-  stock_transfer_completed @map("stock_transfer.completed")
-  cycle_count_closed       @map("cycle_count.closed")
-}
-
-enum WebhookSubscriptionStatus {
-  active
-  disabled
-}
-
-enum WebhookDeliveryStatus {
-  pending
-  delivered
-  failed
-}
-
-enum AuditActorType {
-  user
-  device
-  system
-  platform_admin
-  reader_ops_operator
-}
-
-// =============================================================================
-// Identity / Platform
-// =============================================================================
+// ========================================================
+// 1. SUBSCRIPTION & TENANT MANAGEMENT
+// ========================================================
 
 model Tenant {
-  id           String       @id @default(uuid()) @db.Uuid
-  name         String       @db.VarChar(255)
-  slug         String       @unique @db.VarChar(100)
-  contactEmail String?      @map("contact_email") @db.VarChar(255)
-  status       TenantStatus @default(active)
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyName   String   @map("company_name") @db.VarChar(255)
+  taxId         String?  @map("tax_id") @db.VarChar(50)
+  contactEmail  String   @map("contact_email") @db.VarChar(255)
+  contactPhone  String?  @map("contact_phone") @db.VarChar(50)
+  status        String   @default("active") @db.VarChar(50) // 'active', 'suspended', 'cancelled'
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
+  // Relations
+  subscriptions        Subscription[]
+  subscriptionInvoices SubscriptionInvoice[]
+  companies            Company[]
   users                User[]
-  webhookSubscriptions WebhookSubscription[]
-  warehouses           Warehouse[]
-  taxTypes             TaxType[]
-  products             Product[]
-  tags                 Tag[]
-  devices              Device[]
-  tenantMenuItems      TenantMenuItem[]
   units                Unit[]
+  categories           Category[]
   brands               Brand[]
   manufacturers        Manufacturer[]
+  taxTypes             TaxType[]
+  warehouses           Warehouse[]
+  binLocations         BinLocation[]
   suppliers            Supplier[]
-  companies            Company[]
-  categories           Category[]
-  barcodeSymbologies   BarcodeSymbology[]
+  products             Product[]
+  productImages        ProductImage[]
+  productLots          ProductLot[]
+  inventoryBalances    InventoryBalance[]
+  stockTransactions    StockTransaction[]
+  stockTransactionItems StockTransactionItem[]
+  stockCounts          StockCount[]
+  stockCountItems      StockCountItem[]
 
   @@map("tenants")
 }
 
-model User {
-  id                  String    @id @default(uuid()) @db.Uuid
-  tenantId            String    @map("tenant_id") @db.Uuid
-  email               String    @db.VarChar(255)
-  passwordHash        String    @map("password_hash") @db.VarChar(255)
-  fullName            String    @map("full_name") @db.VarChar(255)
-  // Plain varchar FK'd to roles.code (see Role model), not a DB enum - the
-  // set of valid roles is now admin-managed, runtime data, not a compile-time
-  // type. Field name/shape (a bare string) is unchanged from before, so
-  // every existing `user.role`/JWT `role` claim/`@Roles()` string-compare
-  // call site keeps working without modification.
-  role                String    @default("operator") @db.VarChar(50)
-  isActive            Boolean   @default(true) @map("is_active")
-  lastLoginAt         DateTime? @map("last_login_at")
-  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
-  lockedUntil         DateTime? @map("locked_until")
-
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  refreshTokens RefreshToken[]
-  // onDelete: Restrict (Postgres default, spelled out here) - a role that's
-  // still assigned to at least one user can't be deleted at the DB level
-  // even if the service-layer check (RolesService.remove()) is ever
-  // bypassed. onUpdate: Cascade - if a role's `code` is ever changed, every
-  // user referencing it follows automatically rather than being orphaned.
-  roleRef       Role           @relation(fields: [role], references: [code], onDelete: Restrict, onUpdate: Cascade)
-
-  @@unique([email])
-  @@index([tenantId])
-  @@index([role])
-  @@map("users")
-}
-
-// Global, platform-admin-managed role catalog (2026-08-18) - replaces the
-// old UserRole enum. Shared across every tenant (not per-tenant) by
-// explicit product decision: a fixed enum baked into the app was already
-// shared across every tenant, so this preserves that shape while making the
-// set of roles editable without a code deploy. No `isSystem`/protected flag
-// on the original 7 seeded codes (owner/admin/operator/viewer/manager/
-// warehouse_staff/purchasing_staff) - by explicit product decision, a
-// platform admin can edit or delete any role, built-in or custom, the same
-// way. Deleting a role in use by any user is blocked (users.role's FK,
-// enforced at both the service layer and the DB) - that's ordinary
-// referential-integrity protection, not special-casing.
-// `code` (not `id`) is what every `@Roles()` decorator throughout the app
-// compares against and what's carried in the JWT `role` claim - renaming a
-// role's code silently changes which users satisfy which `@Roles()` checks
-// everywhere in the app, immediately, with no code deploy. RolesService/the
-// admin DTOs deliberately keep `code` immutable after creation (same
-// precedent as SubscriptionPlan.code/ReaderModel.code elsewhere in this
-// schema) to avoid that footgun - `name`/`description` remain freely editable.
-model Role {
-  id          String  @id @default(uuid()) @db.Uuid
-  code        String  @unique @db.VarChar(50)
-  name        String  @db.VarChar(150)
-  description String? @db.VarChar(1000)
-  isActive    Boolean @default(true) @map("is_active")
-
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  users User[]
-
-  @@map("roles")
-}
-
-model RefreshToken {
-  id        String    @id @default(uuid()) @db.Uuid
-  userId    String    @map("user_id") @db.Uuid
-  tokenHash String    @unique @map("token_hash") @db.VarChar(255)
-  expiresAt DateTime  @map("expires_at")
-  revokedAt DateTime? @map("revoked_at")
-  createdAt DateTime  @default(now()) @map("created_at")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@map("refresh_tokens")
-}
-
-model PlatformAdmin {
-  id                  String            @id @default(uuid()) @db.Uuid
-  email               String            @unique @db.VarChar(255)
-  passwordHash        String            @map("password_hash") @db.VarChar(255)
-  fullName            String?           @map("full_name") @db.VarChar(255)
-  role                PlatformAdminRole @default(support)
-  isActive            Boolean           @default(true) @map("is_active")
-  lastLoginAt         DateTime?         @map("last_login_at")
-  failedLoginAttempts Int               @default(0) @map("failed_login_attempts")
-  lockedUntil         DateTime?         @map("locked_until")
-  mfaSecret           String?           @map("mfa_secret") @db.VarChar(255)
-  mfaEnabled          Boolean           @default(false) @map("mfa_enabled")
-  mfaRecoveryCodes    String[]          @map("mfa_recovery_codes")
-
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  refreshTokens PlatformRefreshToken[]
-
-  @@map("platform_admins")
-}
-
-model PlatformRefreshToken {
-  id        String    @id @default(uuid()) @db.Uuid
-  adminId   String    @map("admin_id") @db.Uuid
-  tokenHash String    @map("token_hash") @db.VarChar(255)
-  expiresAt DateTime  @map("expires_at")
-  revokedAt DateTime? @map("revoked_at")
-  createdAt DateTime  @default(now()) @map("created_at")
-
-  admin PlatformAdmin @relation(fields: [adminId], references: [id], onDelete: Cascade)
-
-  @@index([adminId])
-  @@map("platform_refresh_tokens")
-}
-
-// =============================================================================
-// Billing
-// =============================================================================
-
 model SubscriptionPlan {
-  id           String               @id @default(uuid()) @db.Uuid
-  code         String               @unique @db.VarChar(50)
-  name         String               @db.VarChar(255)
-  type         SubscriptionPlanType
-  billingCycle BillingCycle         @map("billing_cycle")
-  priceMinor   BigInt               @map("price_minor")
-  currency     String               @default("THB") @db.VarChar(3)
-  trialDays    Int                  @default(0) @map("trial_days")
-  description  String?              @db.VarChar(1000)
-  features     Json?
-  maxUsers     Int?                 @map("max_users")
-  maxDevices   Int?                 @map("max_devices")
-  maxTags      Int?                 @map("max_tags")
-  isActive     Boolean              @default(true) @map("is_active")
-  sortOrder    Int                  @default(0) @map("sort_order")
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                String   @unique @db.VarChar(50) // 'BASIC_MONTHLY', 'PRO_YEARLY', 'ENTERPRISE'
+  name                String   @db.VarChar(100)
+  description         String?  @db.Text
+  price               Decimal  @default(0.00) @db.Decimal(10, 2)
+  billingCycle        String   @map("billing_cycle") @db.VarChar(20) // 'MONTHLY', 'YEARLY', 'LIFETIME'
 
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
+  // Quantitative Quotas
+  maxWarehouses       Int      @default(1) @map("max_warehouses")
+  maxUsers            Int      @default(3) @map("max_users")
+  maxProducts         Int      @default(1000) @map("max_products")
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  // Feature Flags & UI Menu Permissions
+  hasLotTracking      Boolean  @default(false) @map("has_lot_tracking")
+  hasBarcodeScanner   Boolean  @default(false) @map("has_barcode_scanner")
+  hasCycleCount       Boolean  @default(false) @map("has_cycle_count")
+  hasAnalyticsReports Boolean  @default(false) @map("has_analytics_reports")
+  hasImportExport     Boolean  @default(false) @map("has_import_export")
+  hasApiAccess        Boolean  @default(false) @map("has_api_access")
+
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  subscriptions       Subscription[]
 
   @@map("subscription_plans")
 }
 
 model Subscription {
-  id                 String               @id @default(uuid()) @db.Uuid
-  tenantId           String               @map("tenant_id") @db.Uuid
-  planCode           String               @map("plan_code") @db.VarChar(50)
-  type               SubscriptionPlanType
-  status             String               @db.VarChar(25)
-  billingCycle       BillingCycle         @map("billing_cycle")
-  unitPriceMinor     BigInt               @map("unit_price_minor")
-  quantity           Int                  @default(1)
-  currency           String               @default("THB") @db.VarChar(3)
-  startsAt           DateTime             @map("starts_at")
-  currentPeriodStart DateTime?            @map("current_period_start")
-  currentPeriodEnd   DateTime?            @map("current_period_end")
-  trialEndsAt        DateTime?            @map("trial_ends_at")
-  graceEndsAt        DateTime?            @map("grace_ends_at")
-  cancelAtPeriodEnd  Boolean              @default(false) @map("cancel_at_period_end")
-  cancelledAt        DateTime?            @map("cancelled_at")
-  endedAt            DateTime?            @map("ended_at")
-  gatewayCustomerId  String?              @map("gateway_customer_id") @db.VarChar(255)
-  gatewayCardId      String?              @map("gateway_card_id") @db.VarChar(255)
-  notes              String?              @db.VarChar(1000)
+  id                   String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId             String            @map("tenant_id") @db.Uuid
+  planId               String            @map("plan_id") @db.Uuid
+  status               String            @default("trialing") @db.VarChar(50) // 'trialing', 'active', 'past_due', 'canceled', 'expired'
+  trialEndsAt          DateTime?         @map("trial_ends_at") @db.Timestamptz()
+  currentPeriodStartsAt DateTime         @map("current_period_starts_at") @db.Timestamptz()
+  currentPeriodEndsAt   DateTime         @map("current_period_ends_at") @db.Timestamptz()
+  canceledAt           DateTime?         @map("canceled_at") @db.Timestamptz()
+  createdAt            DateTime          @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt            DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
+  tenant               Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  plan                 SubscriptionPlan  @relation(fields: [planId], references: [id])
+  invoices             SubscriptionInvoice[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@index([tenantId])
+  @@index([tenantId, status], name: "idx_subscriptions_tenant")
+  @@index([status, currentPeriodEndsAt], name: "idx_subscriptions_expiry")
   @@map("subscriptions")
 }
 
-model Invoice {
-  id                 String    @id @default(uuid()) @db.Uuid
-  invoiceNumber      String    @unique @map("invoice_number") @db.VarChar(30)
-  tenantId           String    @map("tenant_id") @db.Uuid
-  subscriptionId     String?   @map("subscription_id") @db.Uuid
-  rentalAssignmentId String?   @map("rental_assignment_id") @db.Uuid
-  kind               String    @db.VarChar(20)
-  status             String    @db.VarChar(20)
-  subtotalMinor      BigInt    @map("subtotal_minor")
-  taxMinor           BigInt    @default(0) @map("tax_minor")
-  totalMinor         BigInt    @map("total_minor")
-  amountPaidMinor    BigInt    @default(0) @map("amount_paid_minor")
-  taxPercent         Float     @default(7) @map("tax_percent")
-  currency           String    @default("THB") @db.VarChar(3)
-  periodStart        DateTime? @map("period_start")
-  periodEnd          DateTime? @map("period_end")
-  issuedAt           DateTime  @map("issued_at")
-  dueAt              DateTime? @map("due_at")
-  paidAt             DateTime? @map("paid_at")
-  voidedAt           DateTime? @map("voided_at")
-  description        String?   @db.VarChar(500)
-  metadata           Json?
+model SubscriptionInvoice {
+  id                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId          String       @map("tenant_id") @db.Uuid
+  subscriptionId    String       @map("subscription_id") @db.Uuid
+  invoiceNumber     String       @map("invoice_number") @db.VarChar(100)
+  amount            Decimal      @db.Decimal(10, 2)
+  status            String       @default("PENDING") @db.VarChar(50) // 'PENDING', 'PAID', 'FAILED', 'REFUNDED'
+  paymentMethod     String?      @map("payment_method") @db.VarChar(50)
+  paymentGatewayRef String?      @map("payment_gateway_ref") @db.VarChar(255)
+  paidAt            DateTime?    @map("paid_at") @db.Timestamptz()
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz()
 
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
+  tenant            Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  subscription      Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  lines InvoiceLine[]
-
-  @@index([tenantId])
-  @@map("invoices")
+  @@unique([tenantId, invoiceNumber])
+  @@index([tenantId, status], name: "idx_invoices_tenant")
+  @@map("subscription_invoices")
 }
 
-model InvoiceLine {
-  id              String  @id @default(uuid()) @db.Uuid
-  invoiceId       String  @map("invoice_id") @db.Uuid
-  lineType        String  @map("line_type") @db.VarChar(20)
-  description     String  @db.VarChar(500)
-  quantity        Int     @default(1)
-  unitAmountMinor BigInt  @map("unit_amount_minor")
-  amountMinor     BigInt  @map("amount_minor")
-  refType         String? @map("ref_type") @db.VarChar(30)
-  refId           String? @map("ref_id") @db.Uuid
-  sortOrder       Int     @default(0) @map("sort_order")
+// ========================================================
+// 2. USER MANAGEMENT
+// ========================================================
 
-  createdAt DateTime @default(now()) @map("created_at")
+model User {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String    @map("tenant_id") @db.Uuid
+  email        String    @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  fullName     String    @map("full_name") @db.VarChar(255)
+  role         String    @default("staff") @db.VarChar(50) // 'admin', 'manager', 'warehouse_staff', 'purchasing_staff'
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
-  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdTransactions StockTransaction[] @relation("CreatedByUser")
+  createdStockCounts  StockCount[]       @relation("CountCreatedByUser")
+  approvedStockCounts StockCount[]       @relation("CountApprovedByUser")
+  countedItems        StockCountItem[]   @relation("CountedByUser")
 
-  @@index([invoiceId])
-  @@map("invoice_lines")
+  @@unique([tenantId, email])
+  @@index([tenantId], name: "idx_users_tenant")
+  @@map("users")
 }
 
-model Payment {
-  id               String          @id @default(uuid()) @db.Uuid
-  tenantId         String          @map("tenant_id") @db.Uuid
-  invoiceId        String?         @map("invoice_id") @db.Uuid
-  provider         PaymentProvider
-  providerChargeId String?         @unique @map("provider_charge_id") @db.VarChar(255)
-  providerSourceId String?         @map("provider_source_id") @db.VarChar(255)
-  method           String          @db.VarChar(20)
-  status           String          @db.VarChar(20)
-  amountMinor      BigInt          @map("amount_minor")
-  refundedMinor    BigInt          @default(0) @map("refunded_minor")
-  feeMinor         BigInt?         @map("fee_minor")
-  netMinor         BigInt?         @map("net_minor")
-  currency         String          @default("THB") @db.VarChar(3)
-  idempotencyKey   String          @unique @map("idempotency_key") @db.VarChar(64)
-  authorizeUri     String?         @map("authorize_uri") @db.VarChar(1000)
-  failureCode      String?         @map("failure_code") @db.VarChar(50)
-  failureMessage   String?         @map("failure_message") @db.VarChar(500)
-  paidAt           DateTime?       @map("paid_at")
-  expiresAt        DateTime?       @map("expires_at")
-  rawPayload       Json?           @map("raw_payload")
+// ========================================================
+// 3. MASTER DATA
+// ========================================================
 
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
+model BarcodeSymbology {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String    @unique @db.VarChar(50) // 'CODE128', 'EAN13', 'QR_CODE'
+  name        String    @db.VarChar(100)
+  description String?   @db.Text
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  products    Product[]
 
-  @@index([tenantId])
-  @@map("payments")
+  @@map("barcode_symbologies")
 }
 
-model Refund {
-  id                 String    @id @default(uuid()) @db.Uuid
-  paymentId          String    @map("payment_id") @db.Uuid
-  tenantId           String    @map("tenant_id") @db.Uuid
-  providerRefundId   String?   @unique @map("provider_refund_id") @db.VarChar(255)
-  amountMinor        BigInt    @map("amount_minor")
-  reason             String    @db.VarChar(30)
-  status             String    @db.VarChar(20)
-  note               String?   @db.VarChar(500)
-  initiatedByAdminId String?   @map("initiated_by_admin_id") @db.Uuid
-  processedAt        DateTime? @map("processed_at")
+model DiscountType {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String    @unique @db.VarChar(50) // 'PERCENTAGE', 'FIXED_AMOUNT'
+  name        String    @db.VarChar(100)
+  description String?   @db.Text
 
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
+  transactionItems StockTransactionItem[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@index([tenantId])
-  @@map("refunds")
+  @@map("discount_types")
 }
 
-model PaymentWebhookEvent {
-  id              String    @id @default(uuid()) @db.Uuid
-  provider        String    @db.VarChar(30)
-  eventId         String    @unique @map("event_id") @db.VarChar(255)
-  eventType       String    @map("event_type") @db.VarChar(60)
-  payload         Json
-  status          String    @db.VarChar(20)
-  processingError String?   @map("processing_error") @db.VarChar(1000)
-  receivedAt      DateTime  @map("received_at")
-  processedAt     DateTime? @map("processed_at")
-
-  @@map("payment_webhook_events")
-}
-
-// =============================================================================
-// Products / Warehousing / Tax
-// =============================================================================
-
-model Product {
-  id                 String        @id @default(uuid()) @db.Uuid
-  tenantId           String        @map("tenant_id") @db.Uuid
-  sku                String        @db.VarChar(100)
-  code               String        @db.VarChar(50)
-  slug               String?       @db.VarChar(150)
-  name               String        @db.VarChar(255)
-  description        String?       @db.VarChar(1000)
-  categoryId         String?       @map("category_id") @db.Uuid
-  unitOfMeasure      String?       @map("unit_of_measure") @db.VarChar(20)
-  isActive           Boolean       @default(true) @map("is_active")
-  isReturnable       Boolean       @default(false) @map("is_returnable")
-  unitId             String?       @map("unit_id") @db.Uuid
-  brandId            String?       @map("brand_id") @db.Uuid
-  manufacturerId     String?       @map("manufacturer_id") @db.Uuid
-  widthValue         Float?        @map("width_value")
-  lengthValue        Float?        @map("length_value")
-  heightValue        Float?        @map("height_value")
-  dimensionUnitId    String?       @map("dimension_unit_id") @db.Uuid
-  weightValue        Float?        @map("weight_value")
-  weightUnitId       String?       @map("weight_unit_id") @db.Uuid
-  supplierId         String?       @map("supplier_id") @db.Uuid
-  costPriceMinor     BigInt?       @map("cost_price_minor")
-  sellingPriceMinor  BigInt?       @map("selling_price_minor")
-  currency           String        @default("THB") @db.VarChar(3)
-  reorderPoint       Int?          @map("reorder_point")
-  minReorderQuantity Int?          @map("min_reorder_quantity")
-  barcodeValue       String?       @map("barcode_value") @db.VarChar(64)
-  barcodeSymbologyId String?       @map("barcode_symbology_id") @db.Uuid
-  taxTypeId          String?       @map("tax_type_id") @db.Uuid
-  discountType       DiscountType? @map("discount_type")
-  discountValue      Float?        @map("discount_value")
-  lowStockNotifiedAt DateTime?     @map("low_stock_notified_at")
-  /// AC#3 "Lot Control flag" - whether this product's tags are expected to
-  /// carry lot/batch tracking (Tag.lotNumber/productionDate/expiryDate).
-  /// A per-product declaration, not enforced at the DB level yet.
-  lotControlled      Boolean       @default(false) @map("lot_controlled")
-  warrantyPeriodDays Int?          @default(0) @map("warranty_period_days")
-
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  tenant Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  images ProductImage[]
-  tags   Tag[]
-
-  @@unique([tenantId, sku])
-  @@unique([tenantId, code])
-  @@unique([tenantId, slug])
-  @@index([tenantId])
-  @@index([tenantId, barcodeValue])
-  @@index([tenantId, reorderPoint])
-  @@index([tenantId, brandId])
-  @@map("products")
-}
-
-model ProductImage {
-  id        String  @id @default(uuid()) @db.Uuid
-  productId String  @map("product_id") @db.Uuid
-  tenantId  String  @map("tenant_id") @db.Uuid
-  url       String  @db.VarChar(500)
-  sortOrder Int     @default(0) @map("sort_order")
-  isPrimary Boolean @default(false) @map("is_primary")
-
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@index([tenantId])
-  @@index([productId])
-  @@map("product_images")
-}
-
-// Master data (2026-08-18) - replaces ProductAttributeOption. Strictly
-// per-tenant, by explicit product decision - no shared/master tier (a
-// regression from ProductAttributeOption's old master-vs-tenant-tier
-// design, deliberately accepted: every tenant now defines its own units
-// from scratch, matching the reference schema this was modeled on exactly).
-// One table for all three of Product's unit-of-measure slots (unitId,
-// dimensionUnitId, weightUnitId) - `type` is what the app validates against
-// at write time (e.g. dimensionUnitId must reference a `type: dimension`
-// row), replacing ProductAttributeOptionCategory's dimension_unit/
-// weight_unit split.
 model Unit {
-  id       String   @id @default(uuid()) @db.Uuid
-  tenantId String   @map("tenant_id") @db.Uuid
-  code     String   @db.VarChar(50)
-  name     String   @db.VarChar(100)
-  type     UnitType @default(quantity)
-  isActive Boolean  @default(true) @map("is_active")
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  code      String    @db.VarChar(50)
+  name      String    @db.VarChar(100)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
 
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products  Product[]
 
   @@unique([tenantId, code])
-  @@index([tenantId, type])
   @@map("units")
 }
 
+model Category {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  code      String    @db.VarChar(50)
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products  Product[]
+
+  @@unique([tenantId, code])
+  @@map("categories")
+}
+
 model Brand {
-  id          String  @id @default(uuid()) @db.Uuid
-  tenantId    String  @map("tenant_id") @db.Uuid
-  code        String  @db.VarChar(50)
-  name        String  @db.VarChar(100)
-  description String? @db.VarChar(1000)
-  isActive    Boolean @default(true) @map("is_active")
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  code        String    @db.VarChar(50)
+  name        String    @db.VarChar(100)
+  description String?   @db.Text
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
 
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products    Product[]
 
   @@unique([tenantId, code])
   @@map("brands")
 }
 
 model Manufacturer {
-  id            String  @id @default(uuid()) @db.Uuid
-  tenantId      String  @map("tenant_id") @db.Uuid
-  code          String  @db.VarChar(50)
-  name          String  @db.VarChar(255)
-  contactPerson String? @map("contact_person") @db.VarChar(100)
-  phone         String? @db.VarChar(50)
-  email         String? @db.VarChar(100)
-  isActive      Boolean @default(true) @map("is_active")
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  code          String    @db.VarChar(50)
+  name          String    @db.VarChar(255)
+  contactPerson String?   @map("contact_person") @db.VarChar(100)
+  phone         String?   @db.VarChar(50)
+  email         String?   @db.VarChar(100)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
 
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products      Product[]
 
   @@unique([tenantId, code])
   @@map("manufacturers")
 }
 
+model TaxType {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  code        String    @db.VarChar(50)
+  name        String    @db.VarChar(100)
+  rate        Decimal   @default(0.00) @db.Decimal(5, 2)
+  isInclusive Boolean   @default(false) @map("is_inclusive")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products    Product[]
+
+  @@unique([tenantId, code])
+  @@map("tax_types")
+}
+
+model Company {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  code          String    @db.VarChar(50)
+  name          String    @db.VarChar(255)
+  taxId         String?   @map("tax_id") @db.VarChar(50)
+  branchCode    String    @default("00000") @map("branch_code") @db.VarChar(20)
+  branchName    String?   @map("branch_name") @db.VarChar(100)
+  phone         String?   @db.VarChar(50)
+  email         String?   @db.VarChar(100)
+  address       String?   @db.Text
+  isHeadquarter Boolean   @default(false) @map("is_headquarter")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  warehouses    Warehouse[]
+
+  @@unique([tenantId, code])
+  @@map("companies")
+}
+
+model Warehouse {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  companyId String?   @map("company_id") @db.Uuid
+  code      String    @db.VarChar(50)
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  company   Company?  @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  binLocations BinLocation[]
+  inventoryBalances InventoryBalance[]
+  fromTransactions StockTransactionItem[] @relation("FromWarehouse")
+  toTransactions   StockTransactionItem[] @relation("ToWarehouse")
+  stockCounts      StockCount[]
+
+  @@unique([tenantId, code])
+  @@map("warehouses")
+}
+
+model BinLocation {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  warehouseId String    @map("warehouse_id") @db.Uuid
+  code        String    @db.VarChar(50)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  inventoryBalances InventoryBalance[]
+  fromBinTransactions StockTransactionItem[] @relation("FromBinLocation")
+  toBinTransactions   StockTransactionItem[] @relation("ToBinLocation")
+  stockCountItems     StockCountItem[]
+
+  @@unique([warehouseId, code])
+  @@index([warehouseId], name: "idx_bins_warehouse")
+  @@map("bin_locations")
+}
+
 model Supplier {
-  id            String  @id @default(uuid()) @db.Uuid
-  tenantId      String  @map("tenant_id") @db.Uuid
-  code          String  @db.VarChar(50)
-  name          String  @db.VarChar(255)
-  contactPerson String? @map("contact_person") @db.VarChar(100)
-  phone         String? @db.VarChar(50)
-  isActive      Boolean @default(true) @map("is_active")
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  code          String    @db.VarChar(50)
+  name          String    @db.VarChar(255)
+  contactPerson String?   @map("contact_person") @db.VarChar(100)
+  phone         String?   @db.VarChar(50)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
 
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  stockTransactions StockTransaction[]
 
   @@unique([tenantId, code])
   @@map("suppliers")
 }
 
-model Company {
-  id            String  @id @default(uuid()) @db.Uuid
-  tenantId      String  @map("tenant_id") @db.Uuid
-  code          String? @db.VarChar(50)
-  name          String  @db.VarChar(255)
-  taxId         String? @map("tax_id") @db.VarChar(20)
-  branchCode    String? @default("00000") @map("branch_code") @db.VarChar(10)
-  branchName    String? @map("branch_name") @db.VarChar(255)
-  phone         String? @db.VarChar(50)
-  email         String? @db.VarChar(255)
-  address       String? @db.Text
-  isHeadquarter Boolean @default(false) @map("is_headquarter")
+// ========================================================
+// 4. PRODUCTS & INVENTORY
+// ========================================================
 
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
+model Product {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId            String    @map("tenant_id") @db.Uuid
+  baseUnitId          String    @map("base_unit_id") @db.Uuid
+  categoryId          String?   @map("category_id") @db.Uuid
+  brandId             String?   @map("brand_id") @db.Uuid
+  manufacturerId      String?   @map("manufacturer_id") @db.Uuid
+  barcodeSymbologyId  String?   @map("barcode_symbology_id") @db.Uuid
+  taxTypeId           String?   @map("tax_type_id") @db.Uuid
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  code                String    @db.VarChar(100)
+  sku                 String    @db.VarChar(100)
+  barcode             String?   @db.VarChar(100)
+  slug                String?   @db.VarChar(255)
+  name                String    @db.VarChar(255)
+  description         String?   @db.Text
+  warrantyPeriodDays  Int?      @default(0) @map("warranty_period_days")
+  price               Decimal   @default(0.00) @db.Decimal(12, 2)
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  weightKg            Decimal?  @default(0.000) @map("weight_kg") @db.Decimal(8, 3)
+  widthCm             Decimal?  @default(0.00) @map("width_cm") @db.Decimal(8, 2)
+  lengthCm            Decimal?  @default(0.00) @map("length_cm") @db.Decimal(8, 2)
+  heightCm            Decimal?  @default(0.00) @map("height_cm") @db.Decimal(8, 2)
 
-  @@unique([tenantId, code])
-  @@index([tenantId])
-  @@map("companies")
-}
+  reorderPoint        Decimal?  @default(0.0000) @map("reorder_point") @db.Decimal(12, 4)
+  minReorderQty       Decimal?  @default(0.0000) @map("min_reorder_qty") @db.Decimal(12, 4)
+  isLotControl        Boolean   @default(false) @map("is_lot_control")
 
-model Category {
-  id          String  @id @default(uuid()) @db.Uuid
-  tenantId    String  @map("tenant_id") @db.Uuid
-  code        String  @db.VarChar(50)
-  name        String  @db.VarChar(255)
-  description String? @db.VarChar(1000)
-  isActive    Boolean @default(true) @map("is_active")
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  baseUnit            Unit      @relation(fields: [baseUnitId], references: [id], onDelete: Restrict)
+  category            Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  brand               Brand?    @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  manufacturer        Manufacturer? @relation(fields: [manufacturerId], references: [id], onDelete: SetNull)
+  barcodeSymbology    BarcodeSymbology? @relation(fields: [barcodeSymbologyId], references: [id], onDelete: SetNull)
+  taxType             TaxType?  @relation(fields: [taxTypeId], references: [id], onDelete: SetNull)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  images              ProductImage[]
+  lots                ProductLot[]
+  inventoryBalances   InventoryBalance[]
+  transactionItems    StockTransactionItem[]
+  stockCountItems     StockCountItem[]
 
   @@unique([tenantId, code])
-  @@map("categories")
+  @@unique([tenantId, sku])
+  @@unique([tenantId, slug])
+  @@index([tenantId, code], name: "idx_products_tenant_code")
+  @@index([tenantId, sku], name: "idx_products_tenant_sku")
+  @@index([tenantId, barcode], name: "idx_products_barcode")
+  @@index([tenantId, reorderPoint], name: "idx_products_reorder")
+  @@index([tenantId, brandId], name: "idx_products_brand")
+  @@map("products")
 }
 
-// Tenant-scoped, admin-managed barcode symbology catalog (2026-08-19) -
-// replaces the old fixed `BarcodeType` enum, matching the same
-// enum-to-table conversion already applied to Role/Unit/Brand/Category
-// elsewhere in this schema. `Product.barcodeSymbologyId` points here
-// instead of holding a compile-time enum value.
-model BarcodeSymbology {
-  id          String  @id @default(uuid()) @db.Uuid
-  tenantId    String  @map("tenant_id") @db.Uuid
-  code        String  @db.VarChar(50)
-  name        String  @db.VarChar(100)
-  description String? @db.VarChar(1000)
-  isActive    Boolean @default(true) @map("is_active")
+model ProductImage {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  productId    String   @map("product_id") @db.Uuid
+  imageUrl     String   @map("image_url") @db.Text
+  isCover      Boolean  @default(false) @map("is_cover")
+  displayOrder Int?     @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  @@unique([tenantId, code])
-  @@map("barcode_symbologies")
+  @@index([tenantId, productId], name: "idx_product_images_product")
+  @@map("product_images")
 }
 
-model Warehouse {
-  id          String  @id @default(uuid()) @db.Uuid
-  tenantId    String  @map("tenant_id") @db.Uuid
-  name        String  @db.VarChar(255)
-  code        String  @db.VarChar(50)
-  address     String? @db.VarChar(500)
-  isActive    Boolean @default(true) @map("is_active")
-  maxCapacity Int?    @map("max_capacity")
+model ProductLot {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String    @map("tenant_id") @db.Uuid
+  productId        String    @map("product_id") @db.Uuid
+  lotNumber        String    @map("lot_number") @db.VarChar(100)
+  manufacturedDate DateTime? @map("manufactured_date") @db.Date
+  expirationDate   DateTime? @map("expiration_date") @db.Date
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz()
 
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
+  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product          Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  inventoryBalances InventoryBalance[]
+  transactionItems  StockTransactionItem[]
+  stockCountItems   StockCountItem[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  tenant Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  bins   BinLocation[]
-
-  @@unique([tenantId, code])
-  @@index([tenantId])
-  @@map("warehouses")
+  @@unique([tenantId, productId, lotNumber])
+  @@index([tenantId, productId, expirationDate], name: "idx_lots_product")
+  @@map("product_lots")
 }
 
-model BinLocation {
-  id          String  @id @default(uuid()) @db.Uuid
-  tenantId    String  @map("tenant_id") @db.Uuid
-  warehouseId String  @map("warehouse_id") @db.Uuid
-  code        String  @db.VarChar(50)
-  isActive    Boolean @default(true) @map("is_active")
-  maxCapacity Int?    @map("max_capacity")
+model InventoryBalance {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String       @map("tenant_id") @db.Uuid
+  productId        String       @map("product_id") @db.Uuid
+  warehouseId      String       @map("warehouse_id") @db.Uuid
+  binLocationId    String?      @map("bin_location_id") @db.Uuid
+  lotId            String?      @map("lot_id") @db.Uuid
+  quantityOnHand   Decimal      @default(0.0000) @map("quantity_on_hand") @db.Decimal(12, 4)
+  quantityReserved Decimal      @default(0.0000) @map("quantity_reserved") @db.Decimal(12, 4)
+  updatedAt        DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
+  tenant           Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product          Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse        Warehouse    @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  binLocation      BinLocation? @relation(fields: [binLocationId], references: [id], onDelete: SetNull)
+  lot              ProductLot?  @relation(fields: [lotId], references: [id], onDelete: SetNull)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
-
-  @@unique([warehouseId, code])
-  @@index([tenantId])
-  @@index([warehouseId])
-  @@map("bin_locations")
+  @@unique([tenantId, productId, warehouseId, binLocationId, lotId], name: "unique_inventory_balance")
+  @@index([tenantId, productId, warehouseId, binLocationId, lotId], name: "idx_balances_lookup")
+  @@map("inventory_balances")
 }
 
-model TaxType {
-  id          String  @id @default(uuid()) @db.Uuid
-  tenantId    String  @map("tenant_id") @db.Uuid
-  name        String  @db.VarChar(100)
-  ratePercent Float   @map("rate_percent")
-  isActive    Boolean @default(true) @map("is_active")
+// ========================================================
+// 5. TRANSACTIONS & CYCLE COUNTS
+// ========================================================
 
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
+model StockTransaction {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  supplierId      String?  @map("supplier_id") @db.Uuid
+  transactionType String   @map("transaction_type") @db.VarChar(50) // 'RECEIVE', 'ISSUE', 'TRANSFER', 'ADJUSTMENT'
+  documentNo      String   @map("document_no") @db.VarChar(100)
+  status          String   @default("COMPLETED") @db.VarChar(50)
+  createdBy       String?  @map("created_by") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  supplier        Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  creator         User?    @relation("CreatedByUser", fields: [createdBy], references: [id], onDelete: SetNull)
+  items           StockTransactionItem[]
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  @@unique([tenantId, name])
-  @@index([tenantId])
-  @@map("tax_types")
+  @@unique([tenantId, documentNo])
+  @@index([tenantId, transactionType], name: "idx_transactions_tenant")
+  @@map("stock_transactions")
 }
 
-// =============================================================================
-// Tags / Ingestion
-// =============================================================================
+model StockTransactionItem {
+  id                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId          String       @map("tenant_id") @db.Uuid
+  transactionId     String       @map("transaction_id") @db.Uuid
+  productId         String       @map("product_id") @db.Uuid
+  lotId             String?      @map("lot_id") @db.Uuid
+  fromWarehouseId   String?      @map("from_warehouse_id") @db.Uuid
+  fromBinLocationId String?      @map("from_bin_location_id") @db.Uuid
+  toWarehouseId     String?      @map("to_warehouse_id") @db.Uuid
+  toBinLocationId   String?      @map("to_bin_location_id") @db.Uuid
 
-model Tag {
-  id             String    @id @default(uuid()) @db.Uuid
-  tagId          String    @unique @map("tag_id") @db.VarChar(64)
-  tenantId       String    @map("tenant_id") @db.Uuid
-  productId      String?   @map("product_id") @db.Uuid
-  status         TagStatus @default(unbound)
-  boundAt        DateTime? @map("bound_at")
-  receivedAt     DateTime? @map("received_at")
-  lotNumber      String?   @map("lot_number") @db.VarChar(100)
-  productionDate DateTime? @map("production_date")
-  expiryDate     DateTime? @map("expiry_date")
-  unitCostMinor  BigInt?   @map("unit_cost_minor")
+  quantity          Decimal      @db.Decimal(12, 4)
+  unitPrice         Decimal?     @default(0.00) @map("unit_price") @db.Decimal(12, 2)
+  discountTypeId    String?      @map("discount_type_id") @db.Uuid
+  discountValue     Decimal?     @default(0.00) @map("discount_value") @db.Decimal(12, 2)
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz()
 
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
+  tenant            Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  transaction       StockTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  product           Product      @relation(fields: [productId], references: [id])
+  lot               ProductLot?  @relation(fields: [lotId], references: [id], onDelete: SetNull)
+  fromWarehouse     Warehouse?   @relation("FromWarehouse", fields: [fromWarehouseId], references: [id], onDelete: SetNull)
+  fromBinLocation   BinLocation? @relation("FromBinLocation", fields: [fromBinLocationId], references: [id], onDelete: SetNull)
+  toWarehouse       Warehouse?   @relation("ToWarehouse", fields: [toWarehouseId], references: [id], onDelete: SetNull)
+  toBinLocation     BinLocation? @relation("ToBinLocation", fields: [toBinLocationId], references: [id], onDelete: SetNull)
+  discountType      DiscountType? @relation(fields: [discountTypeId], references: [id], onDelete: SetNull)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
-
-  @@index([tenantId])
-  @@index([productId])
-  @@map("tags")
+  @@index([transactionId], name: "idx_tx_items_transaction")
+  @@map("stock_transaction_items")
 }
 
-model TagCurrentState {
-  tagId                  String           @id @map("tag_id") @db.VarChar(64)
-  tenantId               String           @map("tenant_id") @db.Uuid
-  productId              String?          @map("product_id") @db.Uuid
-  lastDeviceId           String?          @map("last_device_id") @db.Uuid
-  lastReaderId           String?          @map("last_reader_id") @db.VarChar(64)
-  lastZone               String?          @map("last_zone") @db.VarChar(255)
-  lastBinLocationId      String?          @map("last_bin_location_id") @db.Uuid
-  lastWarehouseId        String?          @map("last_warehouse_id") @db.Uuid
-  reservedByGoodsIssueId String?          @map("reserved_by_goods_issue_id") @db.Uuid
-  lastRssi               Float?           @map("last_rssi")
-  lastAnt                Int?             @map("last_ant")
-  firstSeenAt            DateTime         @map("first_seen_at")
-  lastSeenAt             DateTime         @map("last_seen_at")
-  status                 TagCurrentStatus @default(unknown)
-  updatedAt              DateTime         @map("updated_at")
+model StockCount {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  countNo     String    @map("count_no") @db.VarChar(100) // e.g. 'SC-202608-001'
+  countType   String    @default("CYCLE_COUNT") @map("count_type") @db.VarChar(50)
+  warehouseId String    @map("warehouse_id") @db.Uuid
+  status      String    @default("DRAFT") @db.VarChar(50) // 'DRAFT', 'IN_PROGRESS', 'COMPLETED', 'APPROVED'
+  notes       String?   @db.Text
+  createdBy   String?   @map("created_by") @db.Uuid
+  approvedBy  String?   @map("approved_by") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
-  @@index([tenantId])
-  @@index([tenantId, status])
-  @@index([lastSeenAt])
-  @@map("tag_current_state")
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+  creator     User?     @relation("CountCreatedByUser", fields: [createdBy], references: [id], onDelete: SetNull)
+  approver    User?     @relation("CountApprovedByUser", fields: [approvedBy], references: [id], onDelete: SetNull)
+  items       StockCountItem[]
+
+  @@unique([tenantId, countNo])
+  @@map("stock_counts")
 }
 
-model TagEvent {
-  id              String                 @id @default(uuid()) @db.Uuid
-  tenantId        String                 @map("tenant_id") @db.Uuid
-  tagId           String                 @map("tag_id") @db.VarChar(64)
-  productId       String?                @map("product_id") @db.Uuid
-  deviceId        String?                @map("device_id") @db.Uuid
-  eventType       TagEventType           @map("event_type")
-  fromZone        String?                @map("from_zone") @db.VarChar(255)
-  toZone          String?                @map("to_zone") @db.VarChar(255)
-  rssi            Float?
-  ant             Int?
-  referenceType   TagEventReferenceType? @map("reference_type")
-  referenceId     String?                @map("reference_id") @db.Uuid
-  resultingStatus TagCurrentStatus?      @map("resulting_status")
-  occurredAt      DateTime               @map("occurred_at")
-  createdAt       DateTime               @default(now()) @map("created_at")
-
-  @@index([tenantId, tagId, occurredAt])
-  @@index([tenantId, occurredAt])
-  @@map("tag_events")
-}
-
-model DeviceIngestionStat {
-  id                String   @id @default(uuid()) @db.Uuid
-  deviceId          String   @map("device_id") @db.Uuid
-  tenantId          String   @map("tenant_id") @db.Uuid
-  windowStart       DateTime @map("window_start")
-  windowEnd         DateTime @map("window_end")
-  readsReceived     Int      @map("reads_received")
-  uniqueTagsSeen    Int      @map("unique_tags_seen")
-  avgBatchLatencyMs Float?   @map("avg_batch_latency_ms")
-  createdAt         DateTime @default(now()) @map("created_at")
-
-  @@index([deviceId, windowStart])
-  @@index([tenantId, windowStart])
-  @@map("device_ingestion_stats")
-}
-
-// =============================================================================
-// Stock Transactions
-// =============================================================================
-
-model GoodsReceipt {
-  id            String   @id @default(uuid()) @db.Uuid
-  tenantId      String   @map("tenant_id") @db.Uuid
-  receiptNumber String   @map("receipt_number") @db.VarChar(100)
-  warehouseId   String   @map("warehouse_id") @db.Uuid
-  binLocationId String?  @map("bin_location_id") @db.Uuid
-  receivedAt    DateTime @map("received_at")
-  notes         String?  @db.VarChar(1000)
-
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@unique([tenantId, receiptNumber])
-  @@index([tenantId])
-  @@map("goods_receipts")
-}
-
-model GoodsIssue {
-  id            String   @id @default(uuid()) @db.Uuid
-  tenantId      String   @map("tenant_id") @db.Uuid
-  issueNumber   String   @map("issue_number") @db.VarChar(100)
-  warehouseId   String   @map("warehouse_id") @db.Uuid
-  binLocationId String?  @map("bin_location_id") @db.Uuid
-  reference     String?  @db.VarChar(255)
-  issuedAt      DateTime @map("issued_at")
-  notes         String?  @db.VarChar(1000)
-
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@unique([tenantId, issueNumber])
-  @@index([tenantId])
-  @@map("goods_issues")
-}
-
-model StockTransfer {
-  id                String              @id @default(uuid()) @db.Uuid
-  tenantId          String              @map("tenant_id") @db.Uuid
-  transferNumber    String              @map("transfer_number") @db.VarChar(100)
-  fromWarehouseId   String              @map("from_warehouse_id") @db.Uuid
-  fromBinLocationId String?             @map("from_bin_location_id") @db.Uuid
-  toWarehouseId     String              @map("to_warehouse_id") @db.Uuid
-  toBinLocationId   String?             @map("to_bin_location_id") @db.Uuid
-  status            StockTransferStatus @default(pending)
-  notes             String?             @db.VarChar(1000)
-  completedAt       DateTime?           @map("completed_at")
-
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  tags StockTransferTag[]
-
-  @@unique([tenantId, transferNumber])
-  @@index([tenantId])
-  @@map("stock_transfers")
-}
-
-/// Replaces the old CLOB tagIdsJson column - the codebase's own comments
-/// flagged this list as relational (query by tag), not a flat blob.
-model StockTransferTag {
-  id              String @id @default(uuid()) @db.Uuid
-  stockTransferId String @map("stock_transfer_id") @db.Uuid
-  tagId           String @map("tag_id") @db.VarChar(64)
-
-  stockTransfer StockTransfer @relation(fields: [stockTransferId], references: [id], onDelete: Cascade)
-
-  @@unique([stockTransferId, tagId])
-  @@index([tagId])
-  @@map("stock_transfer_tags")
-}
-
-model StockAdjustment {
-  id               String                @id @default(uuid()) @db.Uuid
-  tenantId         String                @map("tenant_id") @db.Uuid
-  adjustmentNumber String                @map("adjustment_number") @db.VarChar(100)
-  warehouseId      String?               @map("warehouse_id") @db.Uuid
-  binLocationId    String?               @map("bin_location_id") @db.Uuid
-  reason           StockAdjustmentReason
-  notes            String?               @db.VarChar(1000)
-  adjustedAt       DateTime              @map("adjusted_at")
-
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@unique([tenantId, adjustmentNumber])
-  @@index([tenantId])
-  @@map("stock_adjustments")
-}
-
-model CycleCount {
-  id               String           @id @default(uuid()) @db.Uuid
-  tenantId         String           @map("tenant_id") @db.Uuid
-  countNumber      String           @map("count_number") @db.VarChar(100)
-  warehouseId      String           @map("warehouse_id") @db.Uuid
-  binLocationId    String?          @map("bin_location_id") @db.Uuid
-  status           CycleCountStatus @default(open)
-  missingCount     Int?             @map("missing_count")
-  foundCount       Int?             @map("found_count")
-  netVarianceCount Int?             @map("net_variance_count")
-  notes            String?          @db.VarChar(1000)
-  openedAt         DateTime         @map("opened_at")
-  /// Distinct from countedTags.length > 0 - a genuinely all-missing count
-  /// (submitted with zero found tags) is otherwise indistinguishable from
-  /// "never submitted", which used to block close() entirely. Set once,
-  /// the first (or any re-)submitCount() call, regardless of how many
-  /// tags were actually counted.
-  submittedAt      DateTime?        @map("submitted_at")
-  closedAt         DateTime?        @map("closed_at")
-  /// Approval is a separate step from closing (2026-08-19), matching a
-  /// reference schema's DRAFT/IN_PROGRESS/COMPLETED/APPROVED lifecycle -
-  /// close() only computes+previews the variance, approve() is what
-  /// actually applies it to tag state. Same actorType/actorId pair
-  /// convention as createdBy/updatedBy elsewhere in this schema, not a
-  /// plain User FK, so a device/system actor could approve too if ever
-  /// needed (not just a human User row).
-  approvedByType   String?          @map("approved_by_type") @db.VarChar(20)
-  approvedById     String?          @map("approved_by_id") @db.Uuid
-  approvedAt       DateTime?        @map("approved_at")
-
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  expectedTags CycleCountExpectedTag[]
-  countedTags  CycleCountCountedTag[]
-
-  @@unique([tenantId, countNumber])
-  @@index([tenantId])
-  @@map("cycle_counts")
-}
-
-/// Replaces the old CLOB expectedTagIdsJson column.
-model CycleCountExpectedTag {
-  id           String @id @default(uuid()) @db.Uuid
-  cycleCountId String @map("cycle_count_id") @db.Uuid
-  tagId        String @map("tag_id") @db.VarChar(64)
-
-  cycleCount CycleCount @relation(fields: [cycleCountId], references: [id], onDelete: Cascade)
-
-  @@unique([cycleCountId, tagId])
-  @@map("cycle_count_expected_tags")
-}
-
-/// Replaces the old CLOB countedTagIdsJson column.
-model CycleCountCountedTag {
-  id           String @id @default(uuid()) @db.Uuid
-  cycleCountId String @map("cycle_count_id") @db.Uuid
-  tagId        String @map("tag_id") @db.VarChar(64)
-
-  cycleCount CycleCount @relation(fields: [cycleCountId], references: [id], onDelete: Cascade)
-
-  @@unique([cycleCountId, tagId])
-  @@map("cycle_count_counted_tags")
-}
-
-// =============================================================================
-// Devices / Reader Config / Reader Models
-// =============================================================================
-
-model Device {
-  id              String       @id @default(uuid()) @db.Uuid
-  tenantId        String       @map("tenant_id") @db.Uuid
-  readerId        String       @map("reader_id") @db.VarChar(64)
-  label           String?      @db.VarChar(255)
-  locationZone    String?      @map("location_zone") @db.VarChar(255)
-  model           String?      @db.VarChar(100)
-  firmwareVersion String?      @map("firmware_version") @db.VarChar(50)
-  status          DeviceStatus @default(active)
-  lastSeenAt      DateTime?    @map("last_seen_at")
-  lastIp          String?      @map("last_ip") @db.VarChar(64)
-  rentalUnitId    String?      @map("rental_unit_id") @db.Uuid
-  readerModelId   String?      @map("reader_model_id") @db.Uuid
-  binLocationId   String?      @map("bin_location_id") @db.Uuid
-  warehouseId     String?      @map("warehouse_id") @db.Uuid
-
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  tenant         Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  credentials    DeviceCredential[]
-  readerConfig   DeviceReaderConfig?
-  antennaConfigs DeviceAntennaConfig[]
-  mqttCredential DeviceMqttCredential?
-  gpioState      DeviceGpioState?
-
-  @@unique([tenantId, readerId])
-  @@index([tenantId])
-  @@index([rentalUnitId])
-  @@index([readerModelId])
-  @@index([binLocationId])
-  @@index([warehouseId])
-  @@map("devices")
-}
-
-model DeviceCredential {
-  id              String                 @id @default(uuid()) @db.Uuid
-  deviceId        String                 @map("device_id") @db.Uuid
-  keyPrefix       String                 @unique @map("key_prefix") @db.VarChar(16)
-  encryptedSecret String                 @map("encrypted_secret") @db.VarChar(255)
-  status          DeviceCredentialStatus @default(active)
-  expiresAt       DateTime?              @map("expires_at")
-  lastUsedAt      DateTime?              @map("last_used_at")
-  createdAt       DateTime               @default(now()) @map("created_at")
-  revokedAt       DateTime?              @map("revoked_at")
-
-  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-
-  @@index([deviceId])
-  @@map("device_credentials")
-}
-
-/// MQTT broker credential, separate from DeviceCredential (the HMAC key used
-/// for HTTP ingestion) - a device gets one of each once MQTT is wired up.
-/// Auth is checked via mosquitto-go-auth's HTTP backend mode calling out to
-/// MqttPluginAuthController, not by the plugin querying this table directly.
-model DeviceMqttCredential {
-  id                String                 @id @default(uuid()) @db.Uuid
-  deviceId          String                 @unique @map("device_id") @db.Uuid
-  tenantId          String                 @map("tenant_id") @db.Uuid
-  mqttUsername      String                 @unique @map("mqtt_username") @db.VarChar(64)
-  passwordHash      String                 @map("password_hash") @db.VarChar(255)
-  status            DeviceCredentialStatus @default(active)
-  // True only while this device is still using the fixed, non-secret
-  // MQTT_DEFAULT_DEVICE_PASSWORD every self-provisioned device starts with
-  // (see ReaderOpsFleetService.registerDevice()/restoreDevice()) - flipped
-  // to false the moment MqttDeviceTelemetrySubscriberService auto-rotates it
-  // to a real random password after the device's first confirmed online
-  // status. A device stuck true here for a long time signals it never
-  // actually connected with its real credential.
-  isDefaultPassword Boolean                @default(false) @map("is_default_password")
-  lastUsedAt        DateTime?              @map("last_used_at")
-  createdAt         DateTime               @default(now()) @map("created_at")
-  revokedAt         DateTime?              @map("revoked_at")
-
-  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-
-  @@index([deviceId])
-  @@index([tenantId])
-  @@map("device_mqtt_credentials")
-}
-
-/// Latest known GPI port states, updated by MqttGpioSubscriberService on
-/// every transition the reader publishes to devices/<tenantId>/<deviceId>/gpi.
-/// One row per device (upserted, not history) - the running audit trail of
-/// every transition lives in AuditLog instead (action:
-/// 'device.gpi_changed'), this table is only "what's true right now".
-model DeviceGpioState {
-  id        String   @id @default(uuid()) @db.Uuid
-  deviceId  String   @unique @map("device_id") @db.Uuid
-  gpiStates Json     @map("gpi_states") // {"<port>": true|false, ...}
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-
-  @@map("device_gpio_states")
-}
-
-model DeviceReaderConfig {
-  id                    String    @id @default(uuid()) @db.Uuid
-  deviceId              String    @unique @map("device_id") @db.Uuid
-  ipMode                String    @default("dhcp") @map("ip_mode") @db.VarChar(10)
-  staticIp              String?   @map("static_ip") @db.VarChar(64)
-  staticSubnetMask      String?   @map("static_subnet_mask") @db.VarChar(64)
-  staticGateway         String?   @map("static_gateway") @db.VarChar(64)
-  staticDnsPrimary      String?   @map("static_dns_primary") @db.VarChar(64)
-  staticDnsSecondary    String?   @map("static_dns_secondary") @db.VarChar(64)
-  hostname              String?   @db.VarChar(100)
-  managementIp          String?   @map("management_ip") @db.VarChar(64)
-  managementPort        Int?      @map("management_port")
-  reportingTransport    String    @default("https_post") @map("reporting_transport") @db.VarChar(20)
-  reportingEndpointUrl  String?   @map("reporting_endpoint_url") @db.VarChar(500)
-  reportingIntervalSec  Int?      @map("reporting_interval_sec")
-  tcpSocketPort         Int?      @map("tcp_socket_port")
-  serialBaudRate        Int?      @map("serial_baud_rate")
-  mqttBridgeEnabled     Boolean   @default(false) @map("mqtt_bridge_enabled")
-  mqttBrokerUrl         String?   @map("mqtt_broker_url") @db.VarChar(500)
-  mqttTopic             String?   @map("mqtt_topic") @db.VarChar(255)
-  syncStatus            String    @default("pending") @map("sync_status") @db.VarChar(20)
-  lastExportedAt        DateTime? @map("last_exported_at")
-  lastConfirmedAt       DateTime? @map("last_confirmed_at")
-  syncNote              String?   @map("sync_note") @db.VarChar(500)
-  // Optimistic/best-effort - set by ReaderOperationService on a successful
-  // start/stop LLRP call, not a live poll of the physical reader. Same
-  // tolerance-for-drift as syncStatus above.
-  isReading             Boolean   @default(false) @map("is_reading")
-  readingStateUpdatedAt DateTime? @map("reading_state_updated_at")
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-
-  @@map("device_reader_configs")
-}
-
-model DeviceAntennaConfig {
-  id                 String    @id @default(uuid()) @db.Uuid
-  deviceId           String    @map("device_id") @db.Uuid
-  antennaPort        Int       @map("antenna_port")
-  enabled            Boolean   @default(true)
-  txPowerDbm         Float?    @map("tx_power_dbm")
-  rxSensitivityDbm   Float?    @map("rx_sensitivity_dbm")
-  txPowerIndex       Int?      @map("tx_power_index")
-  rxSensitivityIndex Int?      @map("rx_sensitivity_index")
-  syncStatus         String    @default("pending") @map("sync_status") @db.VarChar(20)
-  lastSyncedAt       DateTime? @map("last_synced_at")
-  lastSyncError      String?   @map("last_sync_error") @db.VarChar(1000)
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-
-  @@unique([deviceId, antennaPort])
-  @@index([deviceId])
-  @@map("device_antenna_configs")
-}
-
-/// Standalone operator login for the Reader Ops fleet-control tool -
-/// deliberately separate from both tenant users and PlatformAdmin (which
-/// carries its own TOTP/MFA + tenant-management scope this tool doesn't
-/// need). No public signup endpoint; seeded via a one-off script.
-model ReaderOpsOperator {
-  id               String   @id @default(uuid()) @db.Uuid
-  email            String   @unique @db.VarChar(255)
-  passwordHash     String   @map("password_hash") @db.VarChar(255)
-  // Same TOTP + recovery-code shape as PlatformAdmin's MFA (see
-  // mfa.util.ts - shared, generic, reused here) but with its OWN encryption
-  // key (READER_OPS_MFA_ENCRYPTION_KEY) so a leak of one operator realm's
-  // key never exposes the other's secrets.
-  mfaSecret        String?  @map("mfa_secret") @db.VarChar(255)
-  mfaEnabled       Boolean  @default(false) @map("mfa_enabled")
-  mfaRecoveryCodes String[] @map("mfa_recovery_codes")
-  createdAt        DateTime @default(now()) @map("created_at")
-
-  @@map("reader_ops_operators")
-}
-
-model ReaderModel {
-  id                      String  @id @default(uuid()) @db.Uuid
-  code                    String  @unique @db.VarChar(50)
-  name                    String  @db.VarChar(150)
-  manufacturer            String? @db.VarChar(100)
-  hardwareType            String  @map("hardware_type") @db.VarChar(30)
-  description             String? @db.VarChar(1000)
-  specSheetUrl            String? @map("spec_sheet_url") @db.VarChar(500)
-  defaultDepositMinor     BigInt? @map("default_deposit_minor")
-  defaultMonthlyRateMinor BigInt? @map("default_monthly_rate_minor")
-  currency                String  @default("THB") @db.VarChar(3)
-  isActive                Boolean @default(true) @map("is_active")
-  sortOrder               Int     @default(0) @map("sort_order")
-
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@index([hardwareType])
-  @@map("reader_models")
-}
-
-// =============================================================================
-// Rentals
-// =============================================================================
-
-model RentalUnit {
-  id                      String              @id @default(uuid()) @db.Uuid
-  serialNumber            String              @unique @map("serial_number") @db.VarChar(100)
-  assetTag                String?             @unique @map("asset_tag") @db.VarChar(50)
-  hardwareType            String              @map("hardware_type") @db.VarChar(30)
-  readerModelId           String?             @map("reader_model_id") @db.Uuid
-  manufacturer            String?             @db.VarChar(100)
-  model                   String?             @db.VarChar(100)
-  macAddress              String?             @map("mac_address") @db.VarChar(32)
-  firmwareVersion         String?             @map("firmware_version") @db.VarChar(50)
-  status                  String              @db.VarChar(20)
-  condition               RentalUnitCondition
-  purchaseDate            DateTime?           @map("purchase_date")
-  purchaseCostMinor       BigInt?             @map("purchase_cost_minor")
-  warrantyExpiresAt       DateTime?           @map("warranty_expires_at")
-  defaultDepositMinor     BigInt?             @map("default_deposit_minor")
-  defaultMonthlyRateMinor BigInt?             @map("default_monthly_rate_minor")
-  warehouseLocation       String?             @map("warehouse_location") @db.VarChar(100)
-  currentAssignmentId     String?             @map("current_assignment_id") @db.Uuid
-  notes                   String?             @db.VarChar(1000)
-
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@index([readerModelId])
-  @@map("rental_units")
-}
-
-model RentalAssignment {
-  id                           String    @id @default(uuid()) @db.Uuid
-  rentalUnitId                 String    @map("rental_unit_id") @db.Uuid
-  tenantId                     String    @map("tenant_id") @db.Uuid
-  subscriptionId               String?   @map("subscription_id") @db.Uuid
-  deviceId                     String?   @map("device_id") @db.Uuid
-  status                       String    @db.VarChar(25)
-  rentalStartAt                DateTime  @map("rental_start_at")
-  rentalEndAt                  DateTime? @map("rental_end_at")
-  activatedAt                  DateTime? @map("activated_at")
-  actualReturnAt               DateTime? @map("actual_return_at")
-  closedAt                     DateTime? @map("closed_at")
-  monthlyRateMinor             BigInt    @map("monthly_rate_minor")
-  currency                     String    @default("THB") @db.VarChar(3)
-  depositAmountMinor           BigInt    @default(0) @map("deposit_amount_minor")
-  depositStatus                String    @map("deposit_status") @db.VarChar(20)
-  depositPaymentId             String?   @map("deposit_payment_id") @db.Uuid
-  depositRefundId              String?   @map("deposit_refund_id") @db.Uuid
-  depositRefundedMinor         BigInt    @default(0) @map("deposit_refunded_minor")
-  depositForfeitedMinor        BigInt    @default(0) @map("deposit_forfeited_minor")
-  depositForfeitReason         String?   @map("deposit_forfeit_reason") @db.VarChar(500)
-  conditionOut                 String?   @map("condition_out") @db.VarChar(20)
-  conditionOutNote             String?   @map("condition_out_note") @db.VarChar(1000)
-  conditionOutPhotos           String[]  @map("condition_out_photos")
-  conditionOutCheckedByAdminId String?   @map("condition_out_checked_by_admin_id") @db.Uuid
-  conditionOutAt               DateTime? @map("condition_out_at")
-  conditionIn                  String?   @map("condition_in") @db.VarChar(20)
-  conditionInNote              String?   @map("condition_in_note") @db.VarChar(1000)
-  conditionInPhotos            String[]  @map("condition_in_photos")
-  conditionInCheckedByAdminId  String?   @map("condition_in_checked_by_admin_id") @db.Uuid
-  conditionInAt                DateTime? @map("condition_in_at")
-  damageAssessedAt             DateTime? @map("damage_assessed_at")
-  damageAssessedByAdminId      String?   @map("damage_assessed_by_admin_id") @db.Uuid
-  damageChargeMinor            BigInt    @default(0) @map("damage_charge_minor")
-  damageNote                   String?   @map("damage_note") @db.VarChar(1000)
-  damageInvoiceId              String?   @map("damage_invoice_id") @db.Uuid
-  createdByAdminId             String?   @map("created_by_admin_id") @db.Uuid
-  notes                        String?   @db.VarChar(1000)
-
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  shipments RentalShipment[]
-
-  @@index([rentalUnitId])
-  @@index([tenantId])
-  @@map("rental_assignments")
-}
-
-model RentalShipment {
-  id                       String    @id @default(uuid()) @db.Uuid
-  rentalAssignmentId       String    @map("rental_assignment_id") @db.Uuid
-  direction                String    @db.VarChar(10)
-  carrier                  String?   @db.VarChar(50)
-  trackingNumber           String?   @map("tracking_number") @db.VarChar(100)
-  trackingUrl              String?   @map("tracking_url") @db.VarChar(500)
-  status                   String    @db.VarChar(25)
-  shippedAt                DateTime? @map("shipped_at")
-  estimatedDeliveryAt      DateTime? @map("estimated_delivery_at")
-  deliveredAt              DateTime? @map("delivered_at")
-  recipientName            String?   @map("recipient_name") @db.VarChar(255)
-  deliveryConfirmationNote String?   @map("delivery_confirmation_note") @db.VarChar(1000)
-  shippingCostMinor        BigInt?   @map("shipping_cost_minor")
-  addressSnapshot          Json?     @map("address_snapshot")
-  notes                    String?   @db.VarChar(1000)
-
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  rentalAssignment RentalAssignment @relation(fields: [rentalAssignmentId], references: [id], onDelete: Cascade)
-
-  @@index([rentalAssignmentId])
-  @@map("rental_shipments")
-}
-
-// =============================================================================
-// Menu
-// =============================================================================
-
-model MenuItem {
-  id           String  @id @default(uuid()) @db.Uuid
-  parentId     String? @map("parent_id") @db.Uuid
-  label        String  @db.VarChar(150)
-  icon         String? @db.VarChar(50)
-  link         String? @db.VarChar(255)
-  allowedRoles String? @map("allowed_roles") @db.VarChar(100)
-  sortOrder    Int     @default(0) @map("sort_order")
-  isActive     Boolean @default(true) @map("is_active")
-
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  parent   MenuItem?        @relation("MenuItemTree", fields: [parentId], references: [id], onDelete: Cascade)
-  children MenuItem[]       @relation("MenuItemTree")
-  grants   TenantMenuItem[]
-
-  @@index([parentId])
-  @@map("menu_items")
-}
-
-model TenantMenuItem {
-  id         String @id @default(uuid()) @db.Uuid
-  tenantId   String @map("tenant_id") @db.Uuid
-  menuItemId String @map("menu_item_id") @db.Uuid
-
-  createdByType String?   @map("created_by_type") @db.VarChar(20)
-  createdById   String?   @map("created_by_id") @db.Uuid
-  updatedByType String?   @map("updated_by_type") @db.VarChar(20)
-  updatedById   String?   @map("updated_by_id") @db.Uuid
-  deletedAt     DateTime? @map("deleted_at")
-  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
-  deletedById   String?   @map("deleted_by_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
-
-  // Intentional improvement over the original TypeORM schema (which had no
-  // composite unique here, an acknowledged anomaly) - a grant should never
-  // be duplicated at the DB level.
-  @@unique([tenantId, menuItemId])
-  @@index([tenantId])
-  @@index([menuItemId])
-  @@map("tenant_menu_items")
-}
-
-// =============================================================================
-// Webhooks / Audit / Security
-// =============================================================================
-
-model WebhookSubscription {
-  id                 String                    @id @default(uuid()) @db.Uuid
-  tenantId           String                    @map("tenant_id") @db.Uuid
-  url                String                    @db.VarChar(2000)
-  eventTypes         String                    @map("event_types") @db.VarChar(500)
-  keyPrefix          String                    @unique @map("key_prefix") @db.VarChar(16)
-  encryptedSecret    String                    @map("encrypted_secret") @db.VarChar(255)
-  status             WebhookSubscriptionStatus @default(active)
-  lastDeliveryAt     DateTime?                 @map("last_delivery_at")
-  lastDeliveryStatus WebhookDeliveryStatus?    @map("last_delivery_status")
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  @@index([tenantId])
-  @@map("webhook_subscriptions")
-}
-
-model WebhookDeliveryLog {
-  id             String                @id @default(uuid()) @db.Uuid
-  tenantId       String                @map("tenant_id") @db.Uuid
-  subscriptionId String                @map("subscription_id") @db.Uuid
-  eventType      String                @map("event_type") @db.VarChar(50)
-  payload        Json
-  status         WebhookDeliveryStatus @default(pending)
-  attemptCount   Int                   @default(0) @map("attempt_count")
-  responseStatus Int?                  @map("response_status")
-  lastError      String?               @map("last_error") @db.VarChar(1000)
-  nextRetryAt    DateTime?             @map("next_retry_at")
-  createdAt      DateTime              @map("created_at")
-  deliveredAt    DateTime?             @map("delivered_at")
-
-  @@index([tenantId])
-  @@index([status, nextRetryAt])
-  @@map("webhook_delivery_logs")
-}
-
-model AuditLog {
-  id         String         @id @default(uuid()) @db.Uuid
-  tenantId   String?        @map("tenant_id") @db.Uuid
-  actorType  AuditActorType @map("actor_type")
-  actorId    String?        @map("actor_id") @db.Uuid
-  action     String         @db.VarChar(100)
-  targetType String?        @map("target_type") @db.VarChar(50)
-  targetId   String?        @map("target_id") @db.VarChar(64)
-  ipAddress  String?        @map("ip_address") @db.VarChar(64)
-  metadata   Json?
-  createdAt  DateTime       @default(now()) @map("created_at")
-
-  @@index([tenantId, createdAt])
-  @@map("audit_logs")
-}
-
-model SecurityEvent {
-  id         String   @id @default(uuid()) @db.Uuid
-  ip         String   @db.VarChar(64)
-  eventType  String   @map("event_type") @db.VarChar(30)
-  detail     String?  @db.VarChar(500)
-  occurredAt DateTime @default(now()) @map("occurred_at")
-
-  @@index([ip, occurredAt])
-  @@index([occurredAt])
-  @@map("security_events")
+model StockCountItem {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String       @map("tenant_id") @db.Uuid
+  stockCountId     String       @map("stock_count_id") @db.Uuid
+  productId        String       @map("product_id") @db.Uuid
+  binLocationId    String?      @map("bin_location_id") @db.Uuid
+  lotId            String?      @map("lot_id") @db.Uuid
+
+  systemQuantity   Decimal      @default(0.0000) @map("system_quantity") @db.Decimal(12, 4)
+  countedQuantity  Decimal?     @map("counted_quantity") @db.Decimal(12, 4)
+  varianceQuantity Decimal?     @map("variance_quantity") @db.Decimal(12, 4)
+
+  countedBy        String?      @map("counted_by") @db.Uuid
+  countedAt        DateTime?    @map("counted_at") @db.Timestamptz()
+  updatedAt        DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  tenant           Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  stockCount       StockCount   @relation(fields: [stockCountId], references: [id], onDelete: Cascade)
+  product          Product      @relation(fields: [productId], references: [id])
+  binLocation      BinLocation? @relation(fields: [binLocationId], references: [id], onDelete: SetNull)
+  lot              ProductLot?  @relation(fields: [lotId], references: [id], onDelete: SetNull)
+  counter          User?        @relation("CountedByUser", fields: [countedBy], references: [id], onDelete: SetNull)
+
+  @@index([stockCountId], name: "idx_count_items_count_id")
+  @@map("stock_count_items")
 }
