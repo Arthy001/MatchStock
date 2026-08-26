@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Search,
   Plus,
@@ -13,6 +13,7 @@ import {
   QrCode,
   Truck,
   CheckCircle2,
+  RefreshCw,
 } from 'lucide-react';
 import {
   ThemeMode,
@@ -248,19 +249,14 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
     close: lang === 'en' ? 'Close' : 'ปิดหน้าต่าง',
   };
 
-  // Load Data
-  const loadAllMasterData = async () => {
+  // In-Memory Loaded Subtabs Tracker (Cache Flag)
+  const [loadedTabs, setLoadedTabs] = useState<Set<MasterDataSubTab>>(new Set());
+
+  // Individual On-Demand Data Loaders
+  const loadProducts = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [prods, bins, sups, units, comps, usrs] = await Promise.all([
-        productService.getAllProducts().catch(() => []),
-        warehouseService.getBins().catch(() => []),
-        masterDataService.getSuppliers().catch(() => []),
-        masterDataService.getUnits().catch(() => []),
-        masterDataService.getCompanies().catch(() => []),
-        masterDataService.getUsers().catch(() => []),
-      ]);
-
+      const prods = await productService.getAllProducts().catch(() => []);
       const rawProds = Array.isArray(prods)
         ? prods
         : Array.isArray((prods as any)?.data)
@@ -285,31 +281,117 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
           uom: typeof p.uom === 'object' ? (p.uom?.name || 'PCS') : typeof p.unit === 'object' ? (p.unit?.name || 'PCS') : (p.uom || p.unit || 'PCS'),
         }))
       );
-
-      const rawBins = Array.isArray(bins) ? bins : Array.isArray((bins as any)?.data) ? (bins as any).data : [];
-      setBinsList(rawBins);
-
-      const rawSups = Array.isArray(sups) ? sups : Array.isArray((sups as any)?.data) ? (sups as any).data : [];
-      setSuppliersList(rawSups);
-
-      const rawUnits = Array.isArray(units) ? units : Array.isArray((units as any)?.data) ? (units as any).data : [];
-      setUnitsList(rawUnits);
-
-      const rawComps = Array.isArray(comps) ? comps : Array.isArray((comps as any)?.data) ? (comps as any).data : [];
-      setCompaniesList(rawComps);
-
-      const rawUsers = Array.isArray(usrs) ? usrs : Array.isArray((usrs as any)?.data) ? (usrs as any).data : [];
-      setUsersList(rawUsers);
+      setLoadedTabs((prev) => new Set(prev).add('products').add('barcodes'));
     } catch (err) {
-      console.error('Error loading master data:', err);
+      console.error('Error loading products:', err);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadAllMasterData();
   }, []);
+
+  const loadCompanies = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const comps = await masterDataService.getCompanies().catch(() => []);
+      const rawComps = Array.isArray(comps) ? comps : Array.isArray((comps as any)?.data) ? (comps as any).data : [];
+      setCompaniesList(rawComps);
+      setLoadedTabs((prev) => new Set(prev).add('companies'));
+    } catch (err) {
+      console.error('Error loading companies:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const loadUnits = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const units = await masterDataService.getUnits().catch(() => []);
+      const rawUnits = Array.isArray(units) ? units : Array.isArray((units as any)?.data) ? (units as any).data : [];
+      setUnitsList(rawUnits);
+      setLoadedTabs((prev) => new Set(prev).add('units'));
+    } catch (err) {
+      console.error('Error loading units:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const loadBins = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const bins = await warehouseService.getBins().catch(() => []);
+      const rawBins = Array.isArray(bins) ? bins : Array.isArray((bins as any)?.data) ? (bins as any).data : [];
+      setBinsList(rawBins);
+      setLoadedTabs((prev) => new Set(prev).add('warehouses'));
+    } catch (err) {
+      console.error('Error loading bins:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const loadSuppliers = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const sups = await masterDataService.getSuppliers().catch(() => []);
+      const rawSups = Array.isArray(sups) ? sups : Array.isArray((sups as any)?.data) ? (sups as any).data : [];
+      setSuppliersList(rawSups);
+      setLoadedTabs((prev) => new Set(prev).add('suppliers'));
+    } catch (err) {
+      console.error('Error loading suppliers:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const loadUsers = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const usrs = await masterDataService.getUsers().catch(() => []);
+      const rawUsers = Array.isArray(usrs) ? usrs : Array.isArray((usrs as any)?.data) ? (usrs as any).data : [];
+      setUsersList(rawUsers);
+      setLoadedTabs((prev) => new Set(prev).add('rbac'));
+    } catch (err) {
+      console.error('Error loading users:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Central On-Demand Dispatcher with In-Memory Cache Check
+  const loadTabData = useCallback((tab: MasterDataSubTab, forceRefresh = false) => {
+    if (!forceRefresh && loadedTabs.has(tab)) {
+      return; // Data is already cached in In-Memory State!
+    }
+
+    switch (tab) {
+      case 'products':
+      case 'barcodes':
+        loadProducts();
+        break;
+      case 'companies':
+        loadCompanies();
+        break;
+      case 'units':
+        loadUnits();
+        break;
+      case 'warehouses':
+        loadBins();
+        break;
+      case 'suppliers':
+        loadSuppliers();
+        break;
+      case 'rbac':
+        loadUsers();
+        break;
+    }
+  }, [loadedTabs, loadProducts, loadCompanies, loadUnits, loadBins, loadSuppliers, loadUsers]);
+
+  // Load only active subtab on mount or tab change (On-Demand)
+  useEffect(() => {
+    loadTabData(activeSubTab);
+  }, [activeSubTab, loadTabData]);
 
   // Handlers for Product Drawer
   const openDrawerForProduct = (prod: ProductItem) => {
@@ -866,6 +948,22 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
               <span>{getAddButtonLabel()}</span>
             </button>
           )}
+
+          {/* Quick Refresh Active Tab Button */}
+          <button
+            onClick={() => loadTabData(activeSubTab, true)}
+            disabled={isLoading}
+            className={`px-2.5 py-1 rounded-md border text-xs font-medium flex items-center gap-1.5 transition cursor-pointer ${
+              theme === 'dark'
+                ? 'border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700 disabled:opacity-50'
+                : 'border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 shadow-xs disabled:opacity-50'
+            }`}
+            title={lang === 'en' ? 'Refresh current tab data from server' : 'รีเฟรชข้อมูลแท็บนี้จากเซิร์ฟเวอร์'}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-zinc-500 ${isLoading ? 'animate-spin text-blue-500' : ''}`} />
+            <span className="hidden sm:inline">{lang === 'en' ? 'Refresh' : 'รีเฟรช'}</span>
+          </button>
+
           <button
             className={`px-2.5 py-1 rounded-md border text-xs font-medium flex items-center gap-1.5 transition ${
               theme === 'dark'
@@ -883,19 +981,19 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
       {/* 7 Enterprise Master Data Subtabs Segment */}
       <div className="flex items-center gap-1 overflow-x-auto pb-1 no-scrollbar border-b border-zinc-200/80 dark:border-zinc-800/80">
         {[
-          { key: 'companies', label: lang === 'en' ? 'Companies' : 'บริษัทในเครือ', count: companiesList.length },
-          { key: 'products', label: lang === 'en' ? 'Products & SKUs' : 'สินค้าและ SKU', count: productsList.length },
-          { key: 'units', label: lang === 'en' ? 'Units (UOM)' : 'หน่วยนับ', count: unitsList.length },
-          { key: 'warehouses', label: lang === 'en' ? 'Warehouses & Bins' : 'คลังและตำแหน่งจัดเก็บ', count: binsList.length },
-          { key: 'suppliers', label: lang === 'en' ? 'Suppliers' : 'ผู้จัดจำหน่าย', count: suppliersList.length },
-          { key: 'barcodes', label: lang === 'en' ? 'Barcodes' : 'บาร์โค้ด' },
-          { key: 'rbac', label: lang === 'en' ? 'User Access' : 'สิทธิ์ผู้ใช้งาน', count: usersList.length },
+          { key: 'companies' as MasterDataSubTab, label: lang === 'en' ? 'Companies' : 'บริษัทในเครือ', count: loadedTabs.has('companies') ? companiesList.length : undefined },
+          { key: 'products' as MasterDataSubTab, label: lang === 'en' ? 'Products & SKUs' : 'สินค้าและ SKU', count: loadedTabs.has('products') ? productsList.length : undefined },
+          { key: 'units' as MasterDataSubTab, label: lang === 'en' ? 'Units (UOM)' : 'หน่วยนับ', count: loadedTabs.has('units') ? unitsList.length : undefined },
+          { key: 'warehouses' as MasterDataSubTab, label: lang === 'en' ? 'Warehouses & Bins' : 'คลังและตำแหน่งจัดเก็บ', count: loadedTabs.has('warehouses') ? binsList.length : undefined },
+          { key: 'suppliers' as MasterDataSubTab, label: lang === 'en' ? 'Suppliers' : 'ผู้จัดจำหน่าย', count: loadedTabs.has('suppliers') ? suppliersList.length : undefined },
+          { key: 'barcodes' as MasterDataSubTab, label: lang === 'en' ? 'Barcodes' : 'บาร์โค้ด' },
+          { key: 'rbac' as MasterDataSubTab, label: lang === 'en' ? 'User Access' : 'สิทธิ์ผู้ใช้งาน', count: loadedTabs.has('rbac') ? usersList.length : undefined },
         ].map((tab) => {
           const isActive = activeSubTab === tab.key;
           return (
             <button
               key={tab.key}
-              onClick={() => onSubTabChange && onSubTabChange(tab.key as any)}
+              onClick={() => onSubTabChange && onSubTabChange(tab.key)}
               className={`px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer flex items-center gap-1.5 shrink-0 select-none ${
                 isActive
                   ? theme === 'dark'
@@ -907,7 +1005,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
               }`}
             >
               <span>{tab.label}</span>
-              {tab.count !== undefined && (
+              {tab.count !== undefined ? (
                 <span
                   className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${
                     isActive
@@ -916,12 +1014,12 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
                         : 'bg-zinc-100 text-zinc-800 border border-zinc-200'
                       : theme === 'dark'
                       ? 'bg-zinc-800 text-zinc-500'
-                      : 'bg-zinc-100 text-zinc-500'
+                      : 'bg-zinc-100 text-zinc-600'
                   }`}
                 >
                   {tab.count}
                 </span>
-              )}
+              ) : null}
             </button>
           );
         })}
