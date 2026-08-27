@@ -8,10 +8,10 @@ export default {
   theme: {
     extend: {
       fontSize: {
-        '2xs': ['11px', { lineHeight: '16px' }],
-        'xs': ['12px', { lineHeight: '18px' }],
-        'sm': ['14px', { lineHeight: '20px' }],
-        'base': ['15px', { lineHeight: '22px' }],
+        '2xs': ['12px', { lineHeight: '16px' }],
+        'xs': ['13px', { lineHeight: '18px' }],
+        'sm': ['15px', { lineHeight: '22px' }],
+        'base': ['16px', { lineHeight: '24px' }],
         'lg': ['18px', { lineHeight: '26px' }],
         'xl': ['20px', { lineHeight: '28px' }],
         '2xl': ['24px', { lineHeight: '32px' }],

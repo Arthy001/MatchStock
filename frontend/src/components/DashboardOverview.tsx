@@ -195,7 +195,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             <span className="text-xs text-slate-400">Live PostgreSQL Engine</span>
           </div>
           <h2
-            className={`text-xl md:text-2xl font-bold mt-1 ${
+            className={`text-lg md:text-xl font-bold mt-1 ${
               isDark ? 'text-slate-50' : 'text-slate-900'
             }`}
           >

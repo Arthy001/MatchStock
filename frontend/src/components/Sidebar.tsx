@@ -203,10 +203,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               if (onSubTabChange) onSubTabChange(item.key);
                               if (onMobileClose) onMobileClose();
                             }}
-                            className={`w-full text-left text-xs py-1 px-2.5 rounded-lg transition truncate block ${
+                            className={`w-full text-left text-sm py-1.5 px-3 rounded-lg transition truncate block font-medium ${
                               isSubActive
-                                ? 'text-blue-400 font-bold bg-blue-500/10'
-                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                                ? 'text-blue-400 font-bold bg-blue-500/15'
+                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                             }`}
                           >
                             {item.label}
@@ -268,10 +268,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               if (onSubTabChange) onSubTabChange(item.key);
                               if (onMobileClose) onMobileClose();
                             }}
-                            className={`w-full text-left text-xs py-1 px-2.5 rounded-lg transition truncate block ${
+                            className={`w-full text-left text-sm py-1.5 px-3 rounded-lg transition truncate block font-medium ${
                               isSubActive
-                                ? 'text-blue-400 font-bold bg-blue-500/10'
-                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                                ? 'text-blue-400 font-bold bg-blue-500/15'
+                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                             }`}
                           >
                             {item.label}
