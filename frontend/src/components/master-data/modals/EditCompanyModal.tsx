@@ -85,11 +85,11 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
 
         <form
           onSubmit={onSave}
-          className="p-5 space-y-3.5 text-xs max-h-[80vh] overflow-y-auto"
+          className="p-5 space-y-3.5 text-sm max-h-[80vh] overflow-y-auto"
         >
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-400 font-medium mb-1">
+              <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                 รหัสบริษัท (Company Code)
               </label>
               <input
@@ -99,12 +99,12 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
                 className={`w-full px-3 py-2 rounded-xl border font-mono font-medium outline-hidden ${
                   theme === 'dark'
                     ? 'bg-slate-800 border-slate-700 text-white'
-                    : 'bg-slate-50 border-slate-300 text-slate-900'
+                    : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                 }`}
               />
             </div>
             <div>
-              <label className="block text-slate-400 font-medium mb-1">
+              <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                 ชื่อบริษัท / นิติบุคคล *
               </label>
               <input
@@ -115,7 +115,7 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
                 className={`w-full px-3 py-2 rounded-xl border font-semibold outline-hidden ${
                   theme === 'dark'
                     ? 'bg-slate-800 border-slate-700 text-white'
-                    : 'bg-slate-50 border-slate-300 text-slate-900'
+                    : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                 }`}
               />
             </div>
@@ -123,7 +123,7 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-400 font-medium mb-1">
+              <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                 เลขประจำตัวผู้เสียภาษี (Tax ID)
               </label>
               <input
@@ -133,12 +133,12 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
                 className={`w-full px-3 py-2 rounded-xl border font-mono font-medium outline-hidden ${
                   theme === 'dark'
                     ? 'bg-slate-800 border-slate-700 text-white'
-                    : 'bg-slate-50 border-slate-300 text-slate-900'
+                    : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                 }`}
               />
             </div>
             <div>
-              <label className="block text-slate-400 font-medium mb-1">
+              <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                 รหัสสาขา (Branch Code) *
               </label>
               <input
@@ -149,7 +149,7 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
                 className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
                   theme === 'dark'
                     ? 'bg-slate-800 border-slate-700 text-white'
-                    : 'bg-slate-50 border-slate-300 text-slate-900'
+                    : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                 }`}
               />
             </div>
@@ -157,7 +157,7 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-400 font-medium mb-1">
+              <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                 ชื่อสาขา (Branch Name)
               </label>
               <input
@@ -167,12 +167,12 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
                 className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
                   theme === 'dark'
                     ? 'bg-slate-800 border-slate-700 text-white'
-                    : 'bg-slate-50 border-slate-300 text-slate-900'
+                    : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                 }`}
               />
             </div>
             <div>
-              <label className="block text-slate-400 font-medium mb-1">
+              <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                 เบอร์โทรศัพท์ (Phone)
               </label>
               <input
@@ -182,14 +182,14 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
                 className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
                   theme === 'dark'
                     ? 'bg-slate-800 border-slate-700 text-white'
-                    : 'bg-slate-50 border-slate-300 text-slate-900'
+                    : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                 }`}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-slate-400 font-medium mb-1">
+            <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
               อีเมลติดต่อ (Email)
             </label>
             <input
@@ -199,13 +199,13 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
               className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
                 theme === 'dark'
                   ? 'bg-slate-800 border-slate-700 text-white'
-                  : 'bg-slate-50 border-slate-300 text-slate-900'
+                  : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
               }`}
             />
           </div>
 
           <div>
-            <label className="block text-slate-400 font-medium mb-1">
+            <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
               ที่อยู่สถานประกอบการ (Legal Address)
             </label>
             <textarea
@@ -215,7 +215,7 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
               className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
                 theme === 'dark'
                   ? 'bg-slate-800 border-slate-700 text-white'
-                  : 'bg-slate-50 border-slate-300 text-slate-900'
+                  : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
               }`}
             />
           </div>

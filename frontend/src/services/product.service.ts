@@ -9,27 +9,46 @@ export interface ProductFilterParams {
 }
 
 export interface CreateProductDTO {
-  code: string;
-  sku: string;
-  barcode?: string;
-  barcodeValue?: string;
+  code?: string;
+  sku?: string;
+  slug?: string;
   name: string;
   description?: string;
-  baseUnitId?: string;
   categoryId?: string;
   brandId?: string;
-  brand?: string;
+  manufacturerId?: string;
+  supplierId?: string;
+  unitId?: string;
+  unitOfMeasure?: string;
   uom?: string;
+  brand?: string;
+  price?: number;
   stockOnHand?: number;
-  price: number;
+  sellingPriceMinor?: number;
+  costPriceMinor?: number;
+  currency?: string;
+  weightValue?: number;
   weightKg?: number;
+  widthValue?: number;
   widthCm?: number;
+  lengthValue?: number;
   lengthCm?: number;
+  heightValue?: number;
   heightCm?: number;
+  dimensionUnitId?: string;
+  weightUnitId?: string;
   reorderPoint?: number;
   reorderLevel?: number;
+  minReorderQuantity?: number;
   minReorderQty?: number;
+  barcodeValue?: string;
+  barcodeSymbologyId?: string;
+  barcode?: string;
+  lotControlled?: boolean;
   isLotControl?: boolean;
+  isReturnable?: boolean;
+  warrantyPeriodDays?: number;
+  isActive?: boolean;
 }
 
 export const productService = {
@@ -48,25 +67,70 @@ export const productService = {
   // ดึงข้อมูลสินค้าตาม ID
   getProductById: async (id: string) => {
     const response = await apiClient.get(`/products/${id}`);
-    return response.data;
+    return response.data?.data || response.data;
   },
 
-  // สร้างสินค้าใหม่
+  // สร้างสินค้าใหม่ (POST /products)
   createProduct: async (data: CreateProductDTO) => {
-    const response = await apiClient.post('/products', data);
+    const payload: Record<string, any> = {
+      name: data.name,
+      code: data.code || data.sku,
+      sku: data.sku || data.code,
+      slug: data.slug || (data.name ? data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : undefined),
+      description: data.description,
+      categoryId: data.categoryId,
+      brandId: data.brandId,
+      manufacturerId: data.manufacturerId,
+      supplierId: data.supplierId,
+      unitId: data.unitId,
+      unitOfMeasure: data.unitOfMeasure || data.uom,
+      sellingPriceMinor: data.sellingPriceMinor ?? (data.price !== undefined ? Math.round(data.price * 100) : undefined),
+      costPriceMinor: data.costPriceMinor,
+      currency: data.currency || 'THB',
+      widthValue: data.widthValue ?? data.widthCm,
+      lengthValue: data.lengthValue ?? data.lengthCm,
+      heightValue: data.heightValue ?? data.heightCm,
+      weightValue: data.weightValue ?? data.weightKg,
+      reorderPoint: data.reorderPoint ?? data.reorderLevel,
+      minReorderQuantity: data.minReorderQuantity ?? data.minReorderQty,
+      barcodeValue: data.barcodeValue || data.barcode,
+      barcodeSymbologyId: data.barcodeSymbologyId,
+      lotControlled: data.lotControlled ?? data.isLotControl,
+      isReturnable: data.isReturnable,
+      warrantyPeriodDays: data.warrantyPeriodDays,
+      isActive: data.isActive ?? true,
+    };
+    const response = await apiClient.post('/products', payload);
     return response.data?.data || response.data;
   },
 
-  // อัปเดตสินค้า (Swagger Spec: PATCH /api/v1/products/{id})
+  // อัปเดตสินค้า (PATCH /products/{id})
   updateProduct: async (id: string, data: Partial<CreateProductDTO>) => {
-    const response = await apiClient.patch(`/products/${id}`, data);
+    const payload: Record<string, any> = {
+      ...data,
+      sellingPriceMinor: data.sellingPriceMinor ?? (data.price !== undefined ? Math.round(data.price * 100) : undefined),
+      widthValue: data.widthValue ?? data.widthCm,
+      lengthValue: data.lengthValue ?? data.lengthCm,
+      heightValue: data.heightValue ?? data.heightCm,
+      weightValue: data.weightValue ?? data.weightKg,
+      reorderPoint: data.reorderPoint ?? data.reorderLevel,
+      minReorderQuantity: data.minReorderQuantity ?? data.minReorderQty,
+      barcodeValue: data.barcodeValue || data.barcode,
+      lotControlled: data.lotControlled ?? data.isLotControl,
+    };
+    const response = await apiClient.patch(`/products/${id}`, payload);
     return response.data?.data || response.data;
   },
 
-  // ลบสินค้า (Deactivate - Soft delete: isActive=false)
+  // ปิดการใช้งาน/ลบสินค้า (POST /products/{id}/deactivate หรือ DELETE /products/{id})
   deleteProduct: async (id: string) => {
-    const response = await apiClient.delete(`/products/${id}`);
-    return response.data;
+    try {
+      const response = await apiClient.post(`/products/${id}/deactivate`);
+      return response.data;
+    } catch {
+      const response = await apiClient.delete(`/products/${id}`);
+      return response.data;
+    }
   },
 
   // อัปโหลดรูปภาพสินค้า (POST /products/{id}/images)

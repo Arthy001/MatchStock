@@ -61,9 +61,9 @@ export const EditUnitModal: React.FC<EditUnitModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={onSave} className="p-5 space-y-4 text-xs">
+        <form onSubmit={onSave} className="p-5 space-y-4 text-sm">
           <div>
-            <label className="block text-slate-400 font-medium mb-1">
+            <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
               รหัสหน่วยนับ (UOM Code) *
             </label>
             <input
@@ -74,13 +74,13 @@ export const EditUnitModal: React.FC<EditUnitModalProps> = ({
               className={`w-full px-3 py-2 rounded-xl border font-mono font-bold outline-hidden ${
                 theme === 'dark'
                   ? 'bg-slate-800 border-slate-700 text-white'
-                  : 'bg-slate-50 border-slate-300 text-slate-900'
+                  : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
               }`}
             />
           </div>
 
           <div>
-            <label className="block text-slate-400 font-medium mb-1">
+            <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
               ชื่อหน่วยนับ (Unit Name) *
             </label>
             <input
@@ -91,7 +91,7 @@ export const EditUnitModal: React.FC<EditUnitModalProps> = ({
               className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
                 theme === 'dark'
                   ? 'bg-slate-800 border-slate-700 text-white'
-                  : 'bg-slate-50 border-slate-300 text-slate-900'
+                  : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
               }`}
             />
           </div>

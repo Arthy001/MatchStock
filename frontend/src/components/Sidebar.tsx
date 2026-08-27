@@ -128,12 +128,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Navigation Section */}
         <div className={`space-y-6 ${collapsed ? 'p-1.5' : 'p-3'}`}>
           <div>
-            {!collapsed ? (
-              <p className="text-[11px] font-bold text-slate-500 tracking-wider uppercase mb-3 px-3">
-                {t.menuMain}
-              </p>
-            ) : (
-              <div className="h-2 border-b border-slate-800 mb-2" />
+            {!collapsed && (
+              <div className="flex items-center gap-2 mb-3 px-3">
+                <p className="text-[11px] font-bold text-slate-500 tracking-wider uppercase whitespace-nowrap">
+                  {t.menuMain}
+                </p>
+                <div className="h-px flex-1 bg-slate-800" />
+              </div>
             )}
 
             <nav className="space-y-1">
@@ -142,8 +143,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => handleMenuItemClick('dashboard')}
                 title={t.dashboard}
                 className={`flex items-center ${
-                  collapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full gap-3 px-3 py-1.5'
-                } rounded-xl text-sm font-medium transition ${
+                  collapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full gap-3 px-3 py-2'
+                } rounded-xl text-[16px] font-medium transition ${
                   activeTab === 'dashboard'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
@@ -163,14 +164,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     }}
                     title={t.masterData}
                     className={`flex items-center ${
-                      collapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full justify-between px-3 py-1.5'
-                    } rounded-xl text-sm font-medium transition ${
+                      collapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full justify-between px-3 py-2'
+                    } rounded-xl text-[16px] font-medium transition ${
                       activeTab === 'masterData'
                         ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
                         : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
                     }`}
                   >
-                    <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+                    <div className={`flex items-center ${collapsed ? 'justify-center' : 'flex-1 min-w-0 gap-3 mr-1'}`}>
                       <Database className="w-5 h-5 shrink-0" />
                       {!collapsed && <span className="truncate">{t.masterData}</span>}
                     </div>
@@ -198,12 +199,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         return (
                           <button
                             key={item.key}
+                            title={item.label}
                             onClick={() => {
                               onTabChange('masterData');
                               if (onSubTabChange) onSubTabChange(item.key);
                               if (onMobileClose) onMobileClose();
                             }}
-                            className={`w-full text-left text-sm py-1.5 px-3 rounded-lg transition truncate block font-medium ${
+                            className={`w-full text-left text-[13px] py-1 px-2.5 rounded-lg transition truncate block font-medium ${
                               isSubActive
                                 ? 'text-blue-400 font-bold bg-blue-500/15'
                                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
@@ -228,14 +230,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     }}
                     title={t.inventory}
                     className={`flex items-center ${
-                      collapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full justify-between px-3 py-1.5'
-                    } rounded-xl text-sm font-medium transition ${
+                      collapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full justify-between px-3 py-2'
+                    } rounded-xl text-[16px] font-medium transition ${
                       activeTab === 'inventory'
                         ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
                         : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
                     }`}
                   >
-                    <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+                    <div className={`flex items-center ${collapsed ? 'justify-center' : 'flex-1 min-w-0 gap-3 mr-1'}`}>
                       <Boxes className="w-5 h-5 shrink-0" />
                       {!collapsed && <span className="truncate">{t.inventory}</span>}
                     </div>
@@ -263,12 +265,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         return (
                           <button
                             key={item.key}
+                            title={item.label}
                             onClick={() => {
                               onTabChange('inventory');
                               if (onSubTabChange) onSubTabChange(item.key);
                               if (onMobileClose) onMobileClose();
                             }}
-                            className={`w-full text-left text-sm py-1.5 px-3 rounded-lg transition truncate block font-medium ${
+                            className={`w-full text-left text-[13px] py-1 px-2.5 rounded-lg transition truncate block font-medium ${
                               isSubActive
                                 ? 'text-blue-400 font-bold bg-blue-500/15'
                                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
@@ -289,8 +292,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleMenuItemClick('sales')}
                   title={t.sales}
                   className={`flex items-center ${
-                    collapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full gap-3 px-3 py-1.5'
-                  } rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition`}
+                    collapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full gap-3 px-3 py-2'
+                  } rounded-xl text-[16px] font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition`}
                 >
                   <ShoppingCart className="w-5 h-5 shrink-0" />
                   {!collapsed && <span className="truncate">{t.sales}</span>}
@@ -303,8 +306,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleMenuItemClick('purchases')}
                   title={t.purchases}
                   className={`flex items-center ${
-                    collapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full gap-3 px-3 py-1.5'
-                  } rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition`}
+                    collapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full gap-3 px-3 py-2'
+                  } rounded-xl text-[16px] font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition`}
                 >
                   <ShoppingBag className="w-5 h-5 shrink-0" />
                   {!collapsed && <span className="truncate">{t.purchases}</span>}
@@ -317,8 +320,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleMenuItemClick('reports')}
                   title={t.reports}
                   className={`flex items-center ${
-                    collapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full gap-3 px-3 py-1.5'
-                  } rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition`}
+                    collapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full gap-3 px-3 py-2'
+                  } rounded-xl text-[16px] font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition`}
                 >
                   <BarChart3 className="w-5 h-5 shrink-0" />
                   {!collapsed && <span className="truncate">{t.reports}</span>}
@@ -331,8 +334,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleMenuItemClick('settings')}
                   title={t.settings}
                   className={`flex items-center ${
-                    collapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full gap-3 px-3 py-1.5'
-                  } rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition`}
+                    collapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full gap-3 px-3 py-2'
+                  } rounded-xl text-[16px] font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition`}
                 >
                   <Settings className="w-5 h-5 shrink-0" />
                   {!collapsed && <span className="truncate">{t.settings}</span>}

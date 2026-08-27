@@ -67,9 +67,9 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={onSave} className="p-5 space-y-3.5 text-xs">
+        <form onSubmit={onSave} className="p-5 space-y-3.5 text-sm">
           <div>
-            <label className="block text-slate-400 font-medium mb-1">
+            <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
               ชื่อคลังสินค้า (Warehouse Name) *
             </label>
             <input
@@ -80,14 +80,14 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
               className={`w-full px-3 py-2 rounded-xl border font-semibold outline-hidden ${
                 theme === 'dark'
                   ? 'bg-slate-800 border-slate-700 text-white'
-                  : 'bg-slate-50 border-slate-300 text-slate-900'
+                  : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
               }`}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-400 font-medium mb-1">
+              <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                 รหัสตำแหน่ง (Bin Code) *
               </label>
               <input
@@ -98,12 +98,12 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
                 className={`w-full px-3 py-2 rounded-xl border font-mono font-medium outline-hidden ${
                   theme === 'dark'
                     ? 'bg-slate-800 border-slate-700 text-white'
-                    : 'bg-slate-50 border-slate-300 text-slate-900'
+                    : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                 }`}
               />
             </div>
             <div>
-              <label className="block text-slate-400 font-medium mb-1">
+              <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                 โซน (Zone)
               </label>
               <input
@@ -113,7 +113,7 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
                 className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
                   theme === 'dark'
                     ? 'bg-slate-800 border-slate-700 text-white'
-                    : 'bg-slate-50 border-slate-300 text-slate-900'
+                    : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                 }`}
               />
             </div>
@@ -121,7 +121,7 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-400 font-medium mb-1">
+              <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                 แร็คจัดเก็บ (Rack)
               </label>
               <input
@@ -131,12 +131,12 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
                 className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
                   theme === 'dark'
                     ? 'bg-slate-800 border-slate-700 text-white'
-                    : 'bg-slate-50 border-slate-300 text-slate-900'
+                    : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                 }`}
               />
             </div>
             <div>
-              <label className="block text-slate-400 font-medium mb-1">
+              <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                 ความจุสูงสุด (Capacity kg)
               </label>
               <input
@@ -146,7 +146,7 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
                 className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
                   theme === 'dark'
                     ? 'bg-slate-800 border-slate-700 text-white'
-                    : 'bg-slate-50 border-slate-300 text-slate-900'
+                    : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                 }`}
               />
             </div>

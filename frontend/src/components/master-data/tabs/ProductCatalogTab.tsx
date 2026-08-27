@@ -84,10 +84,10 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
         }`}
       >
         {/* Status Segment Tabs */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => setStatusFilter('ALL')}
-            className={`px-2.5 py-1 rounded text-xs font-medium transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded text-[14px] font-medium transition cursor-pointer ${
               statusFilter === 'ALL'
                 ? isDark
                   ? 'bg-zinc-800 text-white font-semibold shadow-xs'
@@ -101,7 +101,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
           </button>
           <button
             onClick={() => setStatusFilter('ACTIVE')}
-            className={`px-2.5 py-1 rounded text-xs font-medium transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded text-[14px] font-medium transition flex items-center gap-1.5 cursor-pointer ${
               statusFilter === 'ACTIVE'
                 ? isDark
                   ? 'bg-zinc-800 text-emerald-400 font-semibold shadow-xs'
@@ -111,12 +111,12 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                 : 'text-zinc-600 hover:text-emerald-600'
             }`}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
             In Stock
           </button>
           <button
             onClick={() => setStatusFilter('LOW')}
-            className={`px-2.5 py-1 rounded text-xs font-medium transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded text-[14px] font-medium transition flex items-center gap-1.5 cursor-pointer ${
               statusFilter === 'LOW'
                 ? isDark
                   ? 'bg-zinc-800 text-amber-400 font-semibold shadow-xs'
@@ -126,12 +126,12 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                 : 'text-zinc-600 hover:text-amber-600'
             }`}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
             Low Stock
           </button>
           <button
             onClick={() => setStatusFilter('OUT')}
-            className={`px-2.5 py-1 rounded text-xs font-medium transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded text-[14px] font-medium transition flex items-center gap-1.5 cursor-pointer ${
               statusFilter === 'OUT'
                 ? isDark
                   ? 'bg-zinc-800 text-rose-400 font-semibold shadow-xs'
@@ -141,7 +141,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                 : 'text-zinc-600 hover:text-rose-600'
             }`}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
             Out of Stock
           </button>
         </div>
@@ -149,19 +149,19 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
         {/* View Controls & Selection Info */}
         <div className="flex items-center gap-2">
           {selectedIds.length > 0 && (
-            <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+            <span className="text-[13px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-0.5 rounded border border-blue-200 dark:border-blue-800">
               {selectedIds.length} selected
             </span>
           )}
 
           <button
-            className={`px-2.5 py-1 rounded text-xs font-medium border flex items-center gap-1.5 transition ${
+            className={`px-3 py-1.5 rounded text-[14px] font-medium border flex items-center gap-1.5 transition ${
               isDark
                 ? 'border-zinc-700 text-zinc-300 bg-zinc-800/80 hover:bg-zinc-700'
                 : 'border-zinc-300 text-zinc-700 bg-white hover:bg-zinc-50 shadow-xs'
             }`}
           >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-zinc-500" />
+            <SlidersHorizontal className="w-4 h-4 text-zinc-500" />
             <span>Customize Columns</span>
           </button>
         </div>
@@ -172,7 +172,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
         <table className="w-full text-left border-collapse">
           <thead>
             <tr
-              className={`text-[11px] font-semibold tracking-wider uppercase border-b select-none ${
+              className={`text-[13px] font-semibold tracking-wider uppercase border-b select-none ${
                 isDark
                   ? 'bg-zinc-900/90 text-zinc-400 border-zinc-800'
                   : 'bg-zinc-100/70 text-zinc-500 border-zinc-200'

@@ -891,7 +891,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         return { title: t.rbacTitle, subtitle: t.rbacSubtitle };
       case 'companies':
         return {
-          title: lang === 'en' ? 'Subsidiary Companies (Holding Group)' : 'บริษัทในเครือ (Companies)',
+          title: lang === 'en' ? 'Subsidiary Companies' : 'บริษัทในเครือ',
           subtitle: lang === 'en' ? 'Manage multi-company entities, Tax IDs, branches, and legal addresses' : 'จัดการรายชื่อบริษัทในเครือ, สาขา, เลขประจำตัวผู้เสียภาษี และที่อยู่สถานประกอบการ',
         };
       case 'units':
@@ -949,10 +949,10 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
       {/* Enterprise Title & Actions Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-zinc-200/60 dark:border-zinc-800/60">
         <div>
-          <h2 className={`text-lg font-bold tracking-tight ${theme === 'dark' ? 'text-zinc-100' : 'text-zinc-900'}`}>
+          <h2 className={`text-xl font-bold tracking-tight ${theme === 'dark' ? 'text-zinc-100' : 'text-zinc-900'}`}>
             {getHeaderInfo().title}
           </h2>
-          <p className={`text-xs font-normal mt-0.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>
+          <p className={`text-[15px] font-normal mt-0.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>
             {getHeaderInfo().subtitle}
           </p>
         </div>
@@ -961,9 +961,9 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
           {getAddButtonLabel() && (
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-semibold shadow-xs shadow-blue-600/30 transition cursor-pointer active:scale-[0.99]"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-[14px] font-semibold shadow-xs shadow-blue-600/30 transition cursor-pointer active:scale-[0.99]"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-4 h-4" />
               <span>{getAddButtonLabel()}</span>
             </button>
           )}
@@ -972,33 +972,33 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
           <button
             onClick={() => loadTabData(activeSubTab, true)}
             disabled={isLoading}
-            className={`px-2.5 py-1 rounded-md border text-xs font-medium flex items-center gap-1.5 transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-md border text-[14px] font-medium flex items-center gap-1.5 transition cursor-pointer ${
               theme === 'dark'
                 ? 'border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700 disabled:opacity-50'
                 : 'border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 shadow-xs disabled:opacity-50'
             }`}
             title={lang === 'en' ? 'Refresh current tab data from server' : 'รีเฟรชข้อมูลแท็บนี้จากเซิร์ฟเวอร์'}
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-zinc-500 ${isLoading ? 'animate-spin text-blue-500' : ''}`} />
+            <RefreshCw className={`w-4 h-4 text-zinc-500 ${isLoading ? 'animate-spin text-blue-500' : ''}`} />
             <span className="hidden sm:inline">{lang === 'en' ? 'Refresh' : 'รีเฟรช'}</span>
           </button>
 
           <button
-            className={`px-2.5 py-1 rounded-md border text-xs font-medium flex items-center gap-1.5 transition ${
+            className={`px-3 py-1.5 rounded-md border text-[14px] font-medium flex items-center gap-1.5 transition ${
               theme === 'dark'
                 ? 'border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700'
                 : 'border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 shadow-xs'
             }`}
             title="Export CSV"
           >
-            <Download className="w-3.5 h-3.5 text-zinc-500" />
+            <Download className="w-4 h-4 text-zinc-500" />
             <span className="hidden sm:inline">Export</span>
           </button>
         </div>
       </div>
 
       {/* 7 Enterprise Master Data Subtabs Segment */}
-      <div className="flex items-center gap-1 overflow-x-auto pb-1 no-scrollbar border-b border-zinc-200/80 dark:border-zinc-800/80">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar border-b border-zinc-200/80 dark:border-zinc-800/80">
         {[
           { key: 'companies' as MasterDataSubTab, label: lang === 'en' ? 'Companies' : 'บริษัทในเครือ', count: loadedTabs.has('companies') ? companiesList.length : undefined },
           { key: 'products' as MasterDataSubTab, label: lang === 'en' ? 'Products & SKUs' : 'สินค้าและ SKU', count: loadedTabs.has('products') ? productsList.length : undefined },
@@ -1013,7 +1013,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
             <button
               key={tab.key}
               onClick={() => onSubTabChange && onSubTabChange(tab.key)}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer flex items-center gap-1.5 shrink-0 select-none ${
+              className={`px-3 py-1.5 rounded-md text-[15px] font-medium transition cursor-pointer flex items-center gap-2 shrink-0 select-none ${
                 isActive
                   ? theme === 'dark'
                     ? 'bg-zinc-800 text-white font-semibold shadow-xs'
@@ -1026,7 +1026,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
               <span>{tab.label}</span>
               {tab.count !== undefined ? (
                 <span
-                  className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${
+                  className={`text-[12px] font-mono px-1.5 py-0.5 rounded ${
                     isActive
                       ? theme === 'dark'
                         ? 'bg-zinc-700 text-zinc-200'
@@ -1046,19 +1046,19 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
 
       {/* Enterprise Fast Search & Filter Toolbar */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={t.searchPlaceholder}
-          className={`w-full pl-9 pr-14 py-2 rounded-md border text-xs font-normal transition outline-hidden ${
+          className={`w-full pl-10 pr-14 py-2.5 rounded-md border text-[15px] font-normal transition outline-hidden ${
             theme === 'dark'
               ? 'bg-zinc-900 border-zinc-800 text-zinc-100 placeholder-zinc-500 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500'
               : 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 shadow-xs'
           }`}
         />
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] text-zinc-400 border border-zinc-200 dark:border-zinc-700 px-1.5 py-0.5 rounded">
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[11px] text-zinc-400 border border-zinc-200 dark:border-zinc-700 px-1.5 py-0.5 rounded">
           ⌘K
         </span>
       </div>

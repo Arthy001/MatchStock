@@ -45,12 +45,12 @@ export const CompanyManagementTab: React.FC<CompanyManagementTabProps> = ({
           }`}
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center font-bold">
+            <div className="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center font-bold">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-slate-400 font-medium">บริษัทในเครือทั้งหมด</p>
-              <h4 className="text-xl font-bold">{companies.length} บริษัท</h4>
+              <p className="text-[14px] text-slate-400 font-medium">บริษัทในเครือทั้งหมด</p>
+              <h4 className="text-[22px] font-bold mt-0.5">{companies.length} บริษัท</h4>
             </div>
           </div>
         </div>
@@ -63,14 +63,14 @@ export const CompanyManagementTab: React.FC<CompanyManagementTabProps> = ({
           }`}
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
+            <div className="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
               <Landmark className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-slate-400 font-medium">
+              <p className="text-[14px] text-slate-400 font-medium">
                 สำนักงานใหญ่ (Headquarters)
               </p>
-              <h4 className="text-xl font-bold">
+              <h4 className="text-[22px] font-bold mt-0.5">
                 {companies.filter((c) => c.isHeadquarter).length} แห่ง
               </h4>
             </div>
@@ -85,12 +85,12 @@ export const CompanyManagementTab: React.FC<CompanyManagementTabProps> = ({
           }`}
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold">
+            <div className="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold">
               <Building className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-slate-400 font-medium">สาขาย่อย (Branches)</p>
-              <h4 className="text-xl font-bold">
+              <p className="text-[14px] text-slate-400 font-medium">สาขาย่อย (Branches)</p>
+              <h4 className="text-[22px] font-bold mt-0.5">
                 {companies.filter((c) => !c.isHeadquarter).length} สาขา
               </h4>
             </div>

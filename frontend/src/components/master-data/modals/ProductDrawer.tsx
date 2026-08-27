@@ -123,7 +123,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
           </div>
 
           {/* Drawer Content Body */}
-          <div className="mt-6 space-y-4 text-xs">
+          <div className="mt-6 space-y-4 text-sm">
             <div className="flex items-center gap-4">
               <img
                 src={product.imageUrl}
@@ -133,7 +133,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                 }`}
               />
               <div className="flex-1">
-                <label className="block text-slate-400 font-medium mb-1">
+                <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                   {t.productName} *
                 </label>
                 <input
@@ -143,7 +143,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                   className={`w-full px-3 py-1.5 rounded-xl border font-semibold text-sm outline-hidden ${
                     theme === 'dark'
                       ? 'bg-slate-800 border-slate-700 text-white'
-                      : 'bg-slate-50 border-slate-300 text-slate-900'
+                      : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                   }`}
                 />
               </div>
@@ -151,7 +151,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-400 font-medium mb-1">
+                <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                   {t.code}
                 </label>
                 <input
@@ -161,12 +161,12 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                   className={`w-full px-3 py-1.5 rounded-xl border font-mono font-medium outline-hidden ${
                     theme === 'dark'
                       ? 'bg-slate-800 border-slate-700 text-white'
-                      : 'bg-slate-50 border-slate-300 text-slate-900'
+                      : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                   }`}
                 />
               </div>
               <div>
-                <label className="block text-slate-400 font-medium mb-1">
+                <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                   {t.sku}
                 </label>
                 <input
@@ -176,7 +176,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                   className={`w-full px-3 py-1.5 rounded-xl border font-mono font-medium outline-hidden ${
                     theme === 'dark'
                       ? 'bg-slate-800 border-slate-700 text-white'
-                      : 'bg-slate-50 border-slate-300 text-slate-900'
+                      : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                   }`}
                 />
               </div>
@@ -184,7 +184,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-400 font-medium mb-1">
+                <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                   {t.brand}
                 </label>
                 <input
@@ -194,12 +194,12 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                   className={`w-full px-3 py-1.5 rounded-xl border font-medium outline-hidden ${
                     theme === 'dark'
                       ? 'bg-slate-800 border-slate-700 text-white'
-                      : 'bg-slate-50 border-slate-300 text-slate-900'
+                      : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                   }`}
                 />
               </div>
               <div>
-                <label className="block text-slate-400 font-medium mb-1">
+                <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                   รหัสบาร์โค้ด (Barcode)
                 </label>
                 <input
@@ -210,7 +210,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                   className={`w-full px-3 py-1.5 rounded-xl border font-mono font-medium outline-hidden ${
                     theme === 'dark'
                       ? 'bg-slate-800 border-slate-700 text-white'
-                      : 'bg-slate-50 border-slate-300 text-slate-900'
+                      : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                   }`}
                 />
               </div>
@@ -218,7 +218,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-400 font-medium mb-1">
+                <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                   {t.price} ($ / ฿)
                 </label>
                 <input
@@ -234,7 +234,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-slate-400 font-medium mb-1">
+                <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                   Weight (kg)
                 </label>
                 <input
@@ -245,7 +245,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                   className={`w-full px-3 py-1.5 rounded-xl border font-medium outline-hidden ${
                     theme === 'dark'
                       ? 'bg-slate-800 border-slate-700 text-white'
-                      : 'bg-slate-50 border-slate-300 text-slate-900'
+                      : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                   }`}
                 />
               </div>
@@ -253,7 +253,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
 
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-slate-400 font-medium mb-1">
+                <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                   กว้าง (cm)
                 </label>
                 <input
@@ -264,12 +264,12 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                   className={`w-full px-3 py-1.5 rounded-xl border font-medium outline-hidden ${
                     theme === 'dark'
                       ? 'bg-slate-800 border-slate-700 text-white'
-                      : 'bg-slate-50 border-slate-300 text-slate-900'
+                      : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                   }`}
                 />
               </div>
               <div>
-                <label className="block text-slate-400 font-medium mb-1">
+                <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                   ยาว (cm)
                 </label>
                 <input
@@ -280,12 +280,12 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                   className={`w-full px-3 py-1.5 rounded-xl border font-medium outline-hidden ${
                     theme === 'dark'
                       ? 'bg-slate-800 border-slate-700 text-white'
-                      : 'bg-slate-50 border-slate-300 text-slate-900'
+                      : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                   }`}
                 />
               </div>
               <div>
-                <label className="block text-slate-400 font-medium mb-1">
+                <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                   สูง (cm)
                 </label>
                 <input
@@ -296,7 +296,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                   className={`w-full px-3 py-1.5 rounded-xl border font-medium outline-hidden ${
                     theme === 'dark'
                       ? 'bg-slate-800 border-slate-700 text-white'
-                      : 'bg-slate-50 border-slate-300 text-slate-900'
+                      : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                   }`}
                 />
               </div>
@@ -304,7 +304,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-400 font-medium mb-1">
+                <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                   Reorder Point (ROP)
                 </label>
                 <input
@@ -319,7 +319,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-slate-400 font-medium mb-1">
+                <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                   Min Reorder Qty
                 </label>
                 <input
@@ -329,7 +329,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                   className={`w-full px-3 py-1.5 rounded-xl border font-medium outline-hidden ${
                     theme === 'dark'
                       ? 'bg-slate-800 border-slate-700 text-white'
-                      : 'bg-slate-50 border-slate-300 text-slate-900'
+                      : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                   }`}
                 />
               </div>
@@ -352,7 +352,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
             </div>
 
             <div>
-              <label className="block text-slate-400 font-medium mb-1">
+              <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
                 รายละเอียดสินค้า (Description)
               </label>
               <textarea
@@ -363,7 +363,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                 className={`w-full px-3 py-1.5 rounded-xl border font-medium outline-hidden ${
                   theme === 'dark'
                     ? 'bg-slate-800 border-slate-700 text-white'
-                    : 'bg-slate-50 border-slate-300 text-slate-900'
+                    : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
                 }`}
               />
             </div>
