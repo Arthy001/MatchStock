@@ -55,6 +55,10 @@ export interface CreateProductDTO {
   imageUrl?: string;
 }
 
+const isLocalDev =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
 export const resolveImageUrl = (url?: string | null): string => {
   if (!url || typeof url !== 'string') return '';
   const trimmed = url.trim();
@@ -67,17 +71,25 @@ export const resolveImageUrl = (url?: string | null): string => {
     return trimmed;
   }
 
-  // หากเป็น URL จาก Server match-stock.ddns.net ให้แปลงเป็น Relative Path
-  // เพื่อให้วิ่งผ่าน Vite Proxy บน Localhost และหลีกเลี่ยง Helmet (ERR_BLOCKED_BY_RESPONSE.NotSameOrigin)
-  if (trimmed.includes('match-stock.ddns.net/uploads/')) {
-    return trimmed.substring(trimmed.indexOf('/uploads/'));
-  }
-
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+  // หากเป็น external URL อื่นๆ
+  if (
+    (trimmed.startsWith('http://') || trimmed.startsWith('https://')) &&
+    !trimmed.includes('match-stock.ddns.net/uploads/')
+  ) {
     return trimmed;
   }
 
-  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  const cleanPath = trimmed.includes('/uploads/')
+    ? trimmed.substring(trimmed.indexOf('/uploads/'))
+    : (trimmed.startsWith('/') ? trimmed : `/${trimmed}`);
+
+  // บน Localhost ให้ใช้ Relative Path เพื่อวิ่งผ่าน Vite Proxy
+  if (isLocalDev) {
+    return cleanPath;
+  }
+
+  // บน Production ให้ชี้ตรงไปยัง Backend Server
+  return `https://match-stock.ddns.net${cleanPath}`;
 };
 
 const isUUID = (val: any): boolean => {

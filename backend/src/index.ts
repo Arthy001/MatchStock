@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import path from 'path';
 import { prisma } from './config/prisma';
 
 dotenv.config();
@@ -11,10 +12,17 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // Security & Parsing Middlewares
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+
+// Static uploads serving
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // CORS Setup
 const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173').split(',');
