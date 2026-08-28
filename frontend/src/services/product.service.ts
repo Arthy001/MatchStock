@@ -197,63 +197,71 @@ export const productService = {
     return response.data?.data || response.data;
   },
 
-  // อัปเดตสินค้า (PATCH /products/{id} หรือ PUT /products/{id})
+  // อัปเดตสินค้า (PATCH /products/{id})
   updateProduct: async (id: string, data: Partial<CreateProductDTO>) => {
     const price = data.price !== undefined ? data.price : (data.sellingPriceMinor !== undefined ? data.sellingPriceMinor / 100 : undefined);
     const sellingPriceMinor = data.sellingPriceMinor ?? (price !== undefined ? Math.round(price * 100) : undefined);
-    const barcode = data.barcode?.trim() || data.barcodeValue?.trim();
+    const costPriceMinor = data.costPriceMinor ?? (data.costPrice !== undefined ? Math.round(data.costPrice * 100) : undefined);
+    const barcodeValue = data.barcodeValue?.trim() || data.barcode?.trim();
 
     const categoryId = isUUID(data.categoryId) ? data.categoryId : undefined;
     const brandId = isUUID(data.brandId) ? data.brandId : undefined;
     const manufacturerId = isUUID(data.manufacturerId) ? data.manufacturerId : undefined;
     const supplierId = isUUID(data.supplierId) ? data.supplierId : undefined;
-    const baseUnitId = isUUID(data.baseUnitId) ? data.baseUnitId : (isUUID(data.unitId) ? data.unitId : undefined);
     const unitId = isUUID(data.unitId) ? data.unitId : (isUUID(data.baseUnitId) ? data.baseUnitId : undefined);
     const barcodeSymbologyId = isUUID(data.barcodeSymbologyId) ? data.barcodeSymbologyId : undefined;
     const taxTypeId = isUUID(data.taxTypeId) ? data.taxTypeId : undefined;
+    const dimensionUnitId = isUUID(data.dimensionUnitId) ? data.dimensionUnitId : undefined;
+    const weightUnitId = isUUID(data.weightUnitId) ? data.weightUnitId : undefined;
 
+    const widthValue = typeof data.widthValue === 'number' && data.widthValue > 0 ? data.widthValue : (typeof data.widthCm === 'number' && data.widthCm > 0 ? data.widthCm : undefined);
+    const lengthValue = typeof data.lengthValue === 'number' && data.lengthValue > 0 ? data.lengthValue : (typeof data.lengthCm === 'number' && data.lengthCm > 0 ? data.lengthCm : undefined);
+    const heightValue = typeof data.heightValue === 'number' && data.heightValue > 0 ? data.heightValue : (typeof data.heightCm === 'number' && data.heightCm > 0 ? data.heightCm : undefined);
+    const weightValue = typeof data.weightValue === 'number' && data.weightValue > 0 ? data.weightValue : (typeof data.weightKg === 'number' && data.weightKg > 0 ? data.weightKg : undefined);
+    const reorderPoint = typeof data.reorderPoint === 'number' && data.reorderPoint >= 0 ? Math.round(data.reorderPoint) : (typeof data.reorderLevel === 'number' && data.reorderLevel >= 0 ? Math.round(data.reorderLevel) : undefined);
+    const minReorderQuantity = typeof data.minReorderQuantity === 'number' && data.minReorderQuantity >= 0 ? Math.round(data.minReorderQuantity) : (typeof data.minReorderQty === 'number' && data.minReorderQty >= 0 ? Math.round(data.minReorderQty) : undefined);
+    const lotControlled = data.lotControlled !== undefined ? data.lotControlled : data.isLotControl;
+
+    // Strict UpdateProductDto payload (ONLY valid OpenAPI properties)
     const payload: Record<string, any> = {
-      ...data,
-      ...(data.name && { name: data.name.trim() }),
-      ...(data.code && { code: data.code.trim() }),
-      ...(data.sku && { sku: data.sku.trim() }),
-      ...(price !== undefined && price > 0 && { price }),
-      ...(sellingPriceMinor !== undefined && sellingPriceMinor > 0 && { sellingPriceMinor }),
-      ...(barcode !== undefined && { barcode, barcodeValue: barcode }),
-      ...(categoryId && { categoryId }),
-      ...(brandId && { brandId }),
-      ...(manufacturerId && { manufacturerId }),
-      ...(supplierId && { supplierId }),
-      ...(baseUnitId && { baseUnitId }),
-      ...(unitId && { unitId }),
-      ...(barcodeSymbologyId && { barcodeSymbologyId }),
-      ...(taxTypeId && { taxTypeId }),
-      ...(data.widthCm !== undefined && data.widthCm > 0 && { widthCm: data.widthCm, widthValue: data.widthCm }),
-      ...(data.lengthCm !== undefined && data.lengthCm > 0 && { lengthCm: data.lengthCm, lengthValue: data.lengthCm }),
-      ...(data.heightCm !== undefined && data.heightCm > 0 && { heightCm: data.heightCm, heightValue: data.heightCm }),
-      ...(data.weightKg !== undefined && data.weightKg > 0 && { weightKg: data.weightKg, weightValue: data.weightKg }),
-      ...(data.reorderLevel !== undefined && data.reorderLevel > 0 && { reorderPoint: data.reorderLevel, reorderLevel: data.reorderLevel }),
-      ...(data.minReorderQty !== undefined && data.minReorderQty > 0 && { minReorderQty: data.minReorderQty, minReorderQuantity: data.minReorderQty }),
-      ...(data.isLotControl !== undefined && { isLotControl: data.isLotControl, lotControlled: data.isLotControl }),
+      name: data.name?.trim(),
+      code: data.code?.trim(),
+      slug: data.slug,
+      description: data.description !== undefined ? data.description?.trim() : undefined,
+      categoryId,
+      brandId,
+      manufacturerId,
+      supplierId,
+      unitId,
+      dimensionUnitId,
+      weightUnitId,
+      unitOfMeasure: data.unitOfMeasure || data.uom,
+      sellingPriceMinor,
+      costPriceMinor,
+      currency: data.currency,
+      reorderPoint,
+      minReorderQuantity,
+      barcodeValue,
+      barcodeSymbologyId,
+      taxTypeId,
+      lotControlled,
+      isReturnable: data.isReturnable,
+      isActive: data.isActive,
+      widthValue,
+      lengthValue,
+      heightValue,
+      weightValue,
+      warrantyPeriodDays: typeof data.warrantyPeriodDays === 'number' && data.warrantyPeriodDays >= 0 ? Math.round(data.warrantyPeriodDays) : undefined,
     };
 
     Object.keys(payload).forEach((key) => {
-      if (payload[key] === undefined || payload[key] === null || payload[key] === '' || payload[key] === 0) {
-        // preserve boolean false, but remove 0 for dimensions/null/undefined
-        if (payload[key] === 0 && key !== 'price' && key !== 'sellingPriceMinor') {
-          delete payload[key];
-        }
+      if (payload[key] === undefined || payload[key] === null || payload[key] === '') {
+        delete payload[key];
       }
     });
 
-    try {
-      const response = await apiClient.patch(`/products/${id}`, payload);
-      return response.data?.data || response.data;
-    } catch {
-      // Fallback to PUT if backend only has PUT route
-      const response = await apiClient.put(`/products/${id}`, payload);
-      return response.data?.data || response.data;
-    }
+    const response = await apiClient.patch(`/products/${id}`, payload);
+    return response.data?.data || response.data;
   },
 
   // ปิดการใช้งาน/ลบสินค้า (POST /products/{id}/deactivate หรือ DELETE /products/{id})

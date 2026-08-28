@@ -412,16 +412,16 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
               </div>
               <div>
                 <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-                  {t.sku} <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+                  {t.sku} <span className="text-slate-400 font-normal text-xs">(รหัสถาวร)</span>
                 </label>
                 <input
                   type="text"
+                  disabled
                   value={editSku}
-                  onChange={(e) => setEditSku(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-xl border font-mono font-medium outline-hidden transition ${
+                  className={`w-full px-3 py-2 rounded-xl border font-mono font-medium outline-hidden transition cursor-not-allowed ${
                     theme === 'dark'
-                      ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
-                      : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
+                      ? 'bg-slate-800/60 border-slate-700 text-slate-400'
+                      : 'bg-slate-100 border-slate-200 text-slate-500'
                   }`}
                 />
               </div>

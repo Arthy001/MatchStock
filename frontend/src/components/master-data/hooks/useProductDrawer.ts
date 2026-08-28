@@ -133,8 +133,19 @@ export const useProductDrawer = ({
         await productService.updateProduct(drawerProduct.id, updateData);
       } catch (apiErr: any) {
         console.error('Backend API update failed:', apiErr.response?.data || apiErr.message);
-        const rawErr = apiErr.response?.data?.message || apiErr.response?.data?.error || apiErr.message || 'Update failed';
-        const msg = Array.isArray(rawErr) ? rawErr.join(', ') : rawErr;
+        const errData = apiErr.response?.data;
+        let msg = 'Update failed';
+        if (errData?.errors && Array.isArray(errData.errors)) {
+          msg = errData.errors
+            .map((e: any) => (typeof e === 'string' ? e : (e.message || e.error || `${e.path?.join('.') || e.field || 'field'}: invalid`)))
+            .join(', ');
+        } else if (errData?.message) {
+          msg = Array.isArray(errData.message) ? errData.message.join(', ') : errData.message;
+        } else if (errData?.error) {
+          msg = String(errData.error);
+        } else if (apiErr.message) {
+          msg = apiErr.message;
+        }
         showToast(`แก้ไขข้อมูลสินค้าไม่สำเร็จ: ${msg}`);
         return;
       }
