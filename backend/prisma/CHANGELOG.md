@@ -2,6 +2,18 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-08-28 — แก้ Cross-Origin-Resource-Policy ทำให้ frontend คนละ origin โหลดรูปสินค้าไม่ได้
+
+frontend ที่ host คนละ origin โหลด `<img src="https://match-stock.ddns.net/uploads/products/xxx.jpg">` แล้วโดนเบราว์เซอร์บล็อกด้วย `net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin` (response เป็น 200 OK จริง แต่ browser ไม่ยอมส่ง byte ต่อให้หน้าเว็บ)
+
+**สาเหตุ**: `helmet()` ใน `src/main.ts` ตั้ง `Cross-Origin-Resource-Policy: same-origin` ให้ทุก response รวมถึง byte ของรูปจาก `ProductImagesController` — ไม่ใช่ปัญหา CORS: `Access-Control-Allow-Origin` แก้ไม่ได้เพราะการโหลด `<img>` เป็น request แบบ no-cors
+
+**การแก้ไข**: set `Cross-Origin-Resource-Policy: cross-origin` เฉพาะ route `GET /uploads/products/:filename` ใน `src/modules/products/product-images.controller.ts` (รูปสินค้าเป็น public, ชื่อไฟล์เป็น UUID ที่ generate ใหม่ทุกครั้ง เดาไม่ได้ — ปลอดภัยที่จะให้ embed ข้าม origin) ไม่ได้ลด CORP ทั้งแอป — scoped เฉพาะ route นี้ pattern เดียวกับ CSP override เฉพาะ `/api-docs` ใน `main.ts`
+
+Deploy ขึ้น production (`match-stock.ddns.net`) แล้ว ยืนยัน header ของ response รูปเปลี่ยนเป็น `Cross-Origin-Resource-Policy: cross-origin` และ `/health` = 200
+
+_หมายเหตุ: entry นี้ไม่ใช่การ sync `schema.prisma`/`docs/openapi.yaml` แต่บันทึกไว้เป็น log การแก้ไข backend ของวันนี้_
+
 ## 2026-08-26 — Regenerate docs/openapi.yaml จาก live Swagger spec จริง (PR #13)
 
 เอกสารเดิมมีแค่ 10 endpoint จากที่ backend จริงมี 86 endpoint แถม section "Core Stock Operations & Balances (Preview)" อ้างถึง path ที่ไม่มีอยู่จริงเลย (`/inventory/balances`, `/inventory/transactions/receive` — ของจริงคือ `/warehouses/{id}/stock` และ `/goods-receipts`)
