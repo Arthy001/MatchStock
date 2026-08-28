@@ -1,4 +1,5 @@
-import { apiClient } from './api.client';
+import { apiClient, API_BASE_URL } from './api.client';
+import axios from 'axios';
 
 export interface LoginPayload {
   email: string;
@@ -20,8 +21,10 @@ export interface BackendSubscription {
 }
 
 export interface AuthResponse {
-  success: boolean;
+  success?: boolean;
   message?: string;
+  accessToken?: string;
+  refreshToken?: string;
   token?: string;
   user?: BackendUser;
   tenant?: { id: string; name?: string; companyName?: string; status?: string };
@@ -47,12 +50,16 @@ export const authService = {
       const response = await apiClient.post<AuthResponse>('/auth/login', payload);
       const resData = response.data;
       
-      const token = resData.token || resData.data?.accessToken;
+      const token = resData.accessToken || resData.token || resData.data?.accessToken;
+      const refreshToken = resData.refreshToken || resData.data?.refreshToken;
       const user = resData.user || resData.data?.user;
       const tenantId = user?.tenantId || resData.tenant?.id || resData.data?.tenant?.id;
 
       if (token) {
         localStorage.setItem('matchstock_token', token);
+      }
+      if (refreshToken) {
+        localStorage.setItem('matchstock_refresh_token', refreshToken);
       }
       if (tenantId) {
         localStorage.setItem('matchstock_tenant_id', tenantId);
@@ -60,6 +67,12 @@ export const authService = {
       if (user) {
         localStorage.setItem('matchstock_user', JSON.stringify(user));
       }
+
+      // Mark success flag if not present
+      if (resData.success === undefined) {
+        resData.success = true;
+      }
+
       return resData;
     } catch (error: any) {
       console.error('API Login failed with response data:', error.response?.data || error.message);
@@ -67,15 +80,56 @@ export const authService = {
     }
   },
 
-  // 2. ดึงข้อมูล User Profile และ Feature Flags ปัจจุบัน
+  // 2. ต่ออายุ Access Token ผ่าน Refresh Token (/api/v1/auth/refresh)
+  refreshToken: async (): Promise<{ accessToken: string; refreshToken?: string }> => {
+    const currentRefreshToken = localStorage.getItem('matchstock_refresh_token');
+    if (!currentRefreshToken) {
+      throw new Error('No refresh token available in storage');
+    }
+
+    const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+      refreshToken: currentRefreshToken,
+    });
+
+    const resData = response.data;
+    const newAccessToken = resData.accessToken || resData.token || resData.data?.accessToken;
+    const newRefreshToken = resData.refreshToken || resData.data?.refreshToken;
+
+    if (!newAccessToken) {
+      throw new Error('Failed to obtain new access token from refresh endpoint');
+    }
+
+    localStorage.setItem('matchstock_token', newAccessToken);
+    if (newRefreshToken) {
+      localStorage.setItem('matchstock_refresh_token', newRefreshToken);
+    }
+
+    return {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    };
+  },
+
+  // 3. ดึงข้อมูล User Profile และ Feature Flags ปัจจุบัน
   getCurrentUser: async () => {
     const response = await apiClient.get('/auth/me');
     return response.data;
   },
 
-  // 3. ออกจากระบบ
-  logout: () => {
+  // 4. ออกจากระบบ (แจ้ง Server เพื่อ Revoke Refresh Token และล้าง Storage)
+  logout: async () => {
+    const currentRefreshToken = localStorage.getItem('matchstock_refresh_token');
+    if (currentRefreshToken) {
+      try {
+        await apiClient.post('/auth/logout', { refreshToken: currentRefreshToken });
+      } catch (err) {
+        // Silently catch in case offline or already expired
+        console.warn('Backend logout notification skipped or failed:', err);
+      }
+    }
+
     localStorage.removeItem('matchstock_token');
+    localStorage.removeItem('matchstock_refresh_token');
     localStorage.removeItem('matchstock_tenant_id');
     localStorage.removeItem('matchstock_user');
   },

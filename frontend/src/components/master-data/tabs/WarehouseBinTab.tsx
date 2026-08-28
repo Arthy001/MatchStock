@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Package,
+  Eye,
 } from 'lucide-react';
 import { ThemeMode, WarehouseBin } from '../../../types';
 
@@ -13,7 +14,7 @@ interface WarehouseBinTabProps {
   theme: ThemeMode;
   t: any;
   binsList: WarehouseBin[];
-  onOpenEditBin: (bin: WarehouseBin) => void;
+  onOpenEditBin: (bin: WarehouseBin, isViewOnly?: boolean) => void;
   onDeleteBin: (bin: WarehouseBin) => void;
 }
 
@@ -102,7 +103,14 @@ export const WarehouseBinTab: React.FC<WarehouseBinTabProps> = ({
                       <span>{status.toUpperCase()}</span>
                     </span>
                     <button
-                      onClick={() => onOpenEditBin(bin)}
+                      onClick={() => onOpenEditBin(bin, true)}
+                      className="p-1 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                      title="ดูรายละเอียดคลัง / Bin (View Detail)"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => onOpenEditBin(bin, false)}
                       className="p-1 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
                       title="แก้ไขข้อมูลคลัง / Bin (Edit Warehouse/Bin)"
                     >

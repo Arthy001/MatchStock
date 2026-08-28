@@ -7,7 +7,7 @@ export const masterDataService = {
     return response.data;
   },
 
-  createCategory: async (data: { name: string; code?: string }) => {
+  createCategory: async (data: { name: string; code?: string; description?: string }) => {
     const response = await apiClient.post('/categories', data);
     return response.data;
   },
@@ -187,8 +187,32 @@ export const masterDataService = {
 
   // Barcode Symbologies
   getBarcodeSymbologies: async () => {
-    const response = await apiClient.get('/barcode-symbologies');
-    return response.data?.data || response.data || [];
+    try {
+      const response = await apiClient.get('/barcode-symbologies');
+      return response.data?.data || response.data || [];
+    } catch {
+      return [];
+    }
+  },
+
+  // Tax Types
+  getTaxTypes: async () => {
+    try {
+      const response = await apiClient.get('/tax-types');
+      return response.data?.data || response.data || [];
+    } catch {
+      return [];
+    }
+  },
+
+  // Manufacturers
+  getManufacturers: async () => {
+    try {
+      const response = await apiClient.get('/manufacturers');
+      return response.data?.data || response.data || [];
+    } catch {
+      return [];
+    }
   },
 
   // Users & RBAC

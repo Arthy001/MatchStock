@@ -19,6 +19,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/uploads': {
+        target: 'https://match-stock.ddns.net',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 });

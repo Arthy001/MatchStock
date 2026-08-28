@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Edit2, Trash2, CheckCircle2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle2, Eye } from 'lucide-react';
 import { ThemeMode } from '../../../types';
 
 interface UnitItem {
@@ -13,7 +13,7 @@ interface UnitManagementTabProps {
   t: any;
   unitsList: UnitItem[];
   onOpenAddModal: () => void;
-  onOpenEditUnit: (unit: UnitItem) => void;
+  onOpenEditUnit: (unit: UnitItem, isViewOnly?: boolean) => void;
   onDeleteUnit: (unit: UnitItem) => void;
 }
 
@@ -121,7 +121,18 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
                   </td>
                   <td className="p-3 text-right space-x-1">
                     <button
-                      onClick={() => onOpenEditUnit(unit)}
+                      onClick={() => onOpenEditUnit(unit, true)}
+                      className={`p-1.5 rounded-lg transition cursor-pointer ${
+                        theme === 'dark'
+                          ? 'text-slate-400 hover:text-blue-400 hover:bg-slate-800'
+                          : 'text-slate-500 hover:text-blue-600 hover:bg-slate-100'
+                      }`}
+                      title="ดูรายละเอียดหน่วยนับ (View Detail)"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => onOpenEditUnit(unit, false)}
                       className={`p-1.5 rounded-lg transition cursor-pointer ${
                         theme === 'dark'
                           ? 'text-slate-400 hover:text-blue-400 hover:bg-slate-800'

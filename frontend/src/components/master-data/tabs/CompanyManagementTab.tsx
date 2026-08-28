@@ -5,6 +5,7 @@ import {
   Building,
   Edit2,
   Trash2,
+  Eye,
 } from 'lucide-react';
 import { ThemeMode, Company } from '../../../types';
 
@@ -12,7 +13,7 @@ interface CompanyManagementTabProps {
   theme: ThemeMode;
   searchQuery: string;
   companies: Company[];
-  onOpenEdit: (company: Company) => void;
+  onOpenEdit: (company: Company, isViewOnly?: boolean) => void;
   onDelete: (company: Company) => void;
 }
 
@@ -151,7 +152,14 @@ export const CompanyManagementTab: React.FC<CompanyManagementTabProps> = ({
 
               <div className="flex items-center gap-1 shrink-0">
                 <button
-                  onClick={() => onOpenEdit(company)}
+                  onClick={() => onOpenEdit(company, true)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                  title="ดูรายละเอียดบริษัท (View Detail)"
+                >
+                  <Eye className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => onOpenEdit(company, false)}
                   className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
                   title="แก้ไขข้อมูลบริษัท (Edit Company)"
                 >

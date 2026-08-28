@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Language, ThemeMode, Tenant, User } from './types';
+import { Language, ThemeMode, Tenant, User, MasterDataSubTab } from './types';
 import { LoginView } from './components/LoginView';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
@@ -37,7 +37,7 @@ const LIVE_TENANTS: Tenant[] = [
 const getInitialNavState = (pathname: string) => {
   const path = pathname.toLowerCase();
   let tab = 'masterData';
-  let masterSub: 'rbac' | 'products' | 'companies' | 'units' | 'barcodes' | 'warehouses' | 'suppliers' = 'products';
+  let masterSub: MasterDataSubTab = 'products';
   let inventorySub: 'all' | 'receive' | 'issue' | 'transfer' | 'adjustment' | 'scanner' | 'cycleCount' = 'all';
 
   if (path.startsWith('/companies')) {
@@ -46,6 +46,12 @@ const getInitialNavState = (pathname: string) => {
   } else if (path.startsWith('/units')) {
     tab = 'masterData';
     masterSub = 'units';
+  } else if (path.startsWith('/categories')) {
+    tab = 'masterData';
+    masterSub = 'categories';
+  } else if (path.startsWith('/brands')) {
+    tab = 'masterData';
+    masterSub = 'brands';
   } else if (path.startsWith('/warehouses')) {
     tab = 'masterData';
     masterSub = 'warehouses';
@@ -64,6 +70,8 @@ const getInitialNavState = (pathname: string) => {
   } else if (path.startsWith('/master-data')) {
     tab = 'masterData';
     if (path.includes('/companies')) masterSub = 'companies';
+    else if (path.includes('/categories')) masterSub = 'categories';
+    else if (path.includes('/brands')) masterSub = 'brands';
     else if (path.includes('/units')) masterSub = 'units';
     else if (path.includes('/warehouses')) masterSub = 'warehouses';
     else if (path.includes('/suppliers')) masterSub = 'suppliers';
@@ -107,7 +115,7 @@ export function App() {
   const [selectedTenantId, setSelectedTenantId] = useState<string>('f97fe2dc-486e-4054-931c-aadf92823e69');
 
   const [activeTab, setActiveTab] = useState<string>(() => getInitialNavState(location.pathname).tab);
-  const [activeMasterSubTab, setActiveMasterSubTab] = useState<'rbac' | 'products' | 'companies' | 'units' | 'barcodes' | 'warehouses' | 'suppliers'>(() => getInitialNavState(location.pathname).masterSub);
+  const [activeMasterSubTab, setActiveMasterSubTab] = useState<MasterDataSubTab>(() => getInitialNavState(location.pathname).masterSub);
   const [activeInventorySubTab, setActiveInventorySubTab] = useState<'all' | 'receive' | 'issue' | 'transfer' | 'adjustment' | 'scanner' | 'cycleCount'>(() => getInitialNavState(location.pathname).inventorySub);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
@@ -147,7 +155,7 @@ export function App() {
   };
 
   // Navigate when Master Data Subtab changes
-  const handleMasterSubTabChange = (subTab: 'rbac' | 'products' | 'companies' | 'units' | 'barcodes' | 'warehouses' | 'suppliers') => {
+  const handleMasterSubTabChange = (subTab: MasterDataSubTab) => {
     setActiveMasterSubTab(subTab);
     navigate(`/${subTab}`);
   };

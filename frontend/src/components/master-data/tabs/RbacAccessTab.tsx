@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Trash2 } from 'lucide-react';
+import { CheckCircle2, Trash2, Eye } from 'lucide-react';
 import { ThemeMode, UserRole } from '../../../types';
 
 interface RbacUser {
@@ -258,7 +258,18 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
                       <CheckCircle2 className="w-3.5 h-3.5" /> Active
                     </span>
                   </td>
-                  <td className="p-3 text-right">
+                  <td className="p-3 text-right space-x-1">
+                    <button
+                      onClick={() => alert(`ข้อมูลผู้ใช้งาน:\nชื่อ: ${usr.name}\nอีเมล: ${usr.email}\nแผนก: ${usr.department}\nบทบาท: ${usr.role.toUpperCase()}\nสถานะ: ${usr.status}`)}
+                      className={`p-1.5 rounded-lg transition cursor-pointer ${
+                        theme === 'dark'
+                          ? 'text-slate-400 hover:text-blue-400 hover:bg-slate-800'
+                          : 'text-slate-500 hover:text-blue-600 hover:bg-slate-100'
+                      }`}
+                      title="ดูรายละเอียดผู้ใช้งาน (View Detail)"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => onDeleteUser(usr)}
                       className={`p-1.5 rounded-lg transition cursor-pointer ${

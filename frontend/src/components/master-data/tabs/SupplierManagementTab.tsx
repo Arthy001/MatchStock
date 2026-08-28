@@ -1,12 +1,12 @@
 import React from 'react';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, Eye } from 'lucide-react';
 import { ThemeMode, Supplier } from '../../../types';
 
 interface SupplierManagementTabProps {
   theme: ThemeMode;
   t: any;
   suppliersList: Supplier[];
-  onOpenEditSupplier: (supplier: Supplier) => void;
+  onOpenEditSupplier: (supplier: Supplier, isViewOnly?: boolean) => void;
   onDeleteSupplier: (supplier: Supplier) => void;
 }
 
@@ -110,20 +110,27 @@ export const SupplierManagementTab: React.FC<SupplierManagementTabProps> = ({
                 Terms: {sup.discountTerms}
               </span>
               <button
-                onClick={() => onOpenEditSupplier(sup)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                  title="แก้ไขข้อมูลผู้จัดจำหน่าย (Full Edit)"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => onDeleteSupplier(sup)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                  title="ลบผู้จัดจำหน่าย"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+                onClick={() => onOpenEditSupplier(sup, true)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                title="ดูรายละเอียดผู้จัดจำหน่าย (View Detail)"
+              >
+                <Eye className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => onOpenEditSupplier(sup, false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                title="แก้ไขข้อมูลผู้จัดจำหน่าย (Full Edit)"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => onDeleteSupplier(sup)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                title="ลบผู้จัดจำหน่าย"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
             </div>
           ))}
         </div>

@@ -4,6 +4,7 @@ import {
   QrCode,
   Edit2,
   Trash2,
+  Eye,
   SlidersHorizontal,
   ChevronDown,
   ArrowUpDown,
@@ -12,6 +13,7 @@ import {
   Package,
 } from 'lucide-react';
 import { ThemeMode, ProductItem } from '../../../types';
+import { resolveImageUrl } from '../../../services/product.service';
 
 interface ProductCatalogTabProps {
   theme: ThemeMode;
@@ -217,10 +219,10 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                 const weightNum = Number(prod.weightKg || 0);
                 const prodName = renderText(prod.name);
                 const prodCode = renderText(prod.code);
-                const prodCategory = renderText(prod.category) || 'General';
+                const prodCategory = renderText(prod.category) || '-';
                 const prodSku = renderText(prod.sku) || prodCode || '-';
                 const prodBarcode = renderText(prod.barcodeValue);
-                const prodBrand = renderText(prod.brand) || 'General';
+                const prodBrand = renderText(prod.brand) || '-';
                 const prodUom = renderText(prod.uom) || 'PCS';
 
                 return (
@@ -253,16 +255,31 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                     {/* Item Name & Details */}
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-2.5">
-                        <img
-                          src={
-                            prod.imageUrl ||
-                            'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&auto=format&fit=crop&q=60'
-                          }
-                          alt=""
-                          className={`w-8 h-8 rounded-md object-cover border shrink-0 ${
-                            isDark ? 'border-zinc-700 bg-zinc-800' : 'border-zinc-200 bg-zinc-100'
+                        {resolveImageUrl(prod.imageUrl) ? (
+                          <img
+                            src={resolveImageUrl(prod.imageUrl)}
+                            alt={prod.name}
+                            onError={(e) => {
+                              (e.currentTarget as HTMLElement).style.display = 'none';
+                              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                            className={`w-8 h-8 rounded-md object-cover border shrink-0 ${
+                              isDark ? 'border-zinc-700 bg-zinc-800' : 'border-zinc-200 bg-zinc-100'
+                            }`}
+                          />
+                        ) : null}
+                        <div
+                          className={`w-8 h-8 rounded-md border flex items-center justify-center shrink-0 ${
+                            resolveImageUrl(prod.imageUrl) ? 'hidden' : 'flex'
+                          } ${
+                            isDark
+                              ? 'border-zinc-700 bg-zinc-800/80 text-zinc-400'
+                              : 'border-zinc-200 bg-zinc-100 text-zinc-400'
                           }`}
-                        />
+                        >
+                          <Package className="w-4 h-4 opacity-70" />
+                        </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
                             <span
@@ -402,6 +419,17 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                     >
                       <div className="flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                         <button
+                          onClick={() => onOpenDrawer(prod)}
+                          className={`p-1 rounded transition cursor-pointer ${
+                            isDark
+                              ? 'text-zinc-400 hover:text-blue-400 hover:bg-zinc-800'
+                              : 'text-zinc-500 hover:text-blue-600 hover:bg-zinc-200/60'
+                          }`}
+                          title="ดูรายละเอียดสินค้า (View Detail)"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
                           onClick={() => onSelectBarcode(prod)}
                           className={`p-1 rounded transition cursor-pointer ${
                             isDark
@@ -419,7 +447,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                               ? 'text-zinc-400 hover:text-blue-400 hover:bg-zinc-800'
                               : 'text-zinc-500 hover:text-blue-600 hover:bg-zinc-200/60'
                           }`}
-                          title="Quick Edit"
+                          title="แก้ไขสินค้า (Edit Product)"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>

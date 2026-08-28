@@ -189,6 +189,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       {[
                         { key: 'companies', label: t.tabCompanies },
                         { key: 'products', label: t.tabProducts },
+                        { key: 'categories', label: t.tabCategories },
+                        { key: 'brands', label: t.tabBrands },
                         { key: 'units', label: t.tabUnits },
                         { key: 'warehouses', label: t.tabWarehouses },
                         { key: 'suppliers', label: t.tabSuppliers },

@@ -30,7 +30,16 @@ export interface Tenant {
   features: SubscriptionFeatures;
 }
 
-export type MasterDataSubTab = 'products' | 'rbac' | 'companies' | 'units' | 'barcodes' | 'warehouses' | 'suppliers';
+export type MasterDataSubTab =
+  | 'products'
+  | 'categories'
+  | 'brands'
+  | 'rbac'
+  | 'companies'
+  | 'units'
+  | 'barcodes'
+  | 'warehouses'
+  | 'suppliers';
 
 export interface ProductItem {
   id: string;
@@ -39,18 +48,44 @@ export interface ProductItem {
   slug?: string;
   name: string;
   category?: string;
+  categoryId?: string;
   brand?: string;
+  brandId?: string;
   manufacturer?: string;
+  manufacturerId?: string;
+  supplierId?: string;
+  supplierName?: string;
   uom: string;
+  unitId?: string;
   weightKg: number;
+  weightValue?: number;
+  weightUnitId?: string;
   widthCm: number;
+  widthValue?: number;
   lengthCm: number;
+  lengthValue?: number;
   heightCm: number;
+  heightValue?: number;
+  dimensionUnitId?: string;
   price: number;
+  costPrice?: number;
+  costPriceMinor?: number;
+  sellingPriceMinor?: number;
+  currency?: string;
   stockOnHand: number;
   reorderLevel: number;
+  reorderPoint?: number;
   minReorderQty?: number;
+  minReorderQuantity?: number;
   isLotControl?: boolean;
+  lotControlled?: boolean;
+  isReturnable?: boolean;
+  isActive?: boolean;
+  warrantyPeriodDays?: number;
+  barcodeSymbologyId?: string;
+  taxTypeId?: string;
+  discountType?: 'percentage' | 'fixed' | string;
+  discountValue?: number;
   description?: string;
   maxLevel?: number;
   barcodeType?: 'CODE128' | 'EAN13' | 'QR_CODE';
@@ -58,6 +93,43 @@ export interface ProductItem {
   status?: 'active' | 'inactive' | 'low_stock' | 'out_of_stock';
   imageUrl?: string;
   createdAt?: string;
+}
+
+export interface UnitItem {
+  id: string;
+  code: string;
+  name: string;
+  type?: string;
+}
+
+export interface CategoryItem {
+  id: string;
+  code?: string;
+  name: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface BrandItem {
+  id: string;
+  code?: string;
+  name: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface BarcodeSymbologyItem {
+  id: string;
+  code?: string;
+  name: string;
+  description?: string;
+}
+
+export interface TaxTypeItem {
+  id: string;
+  name: string;
+  ratePercent?: number;
+  isActive?: boolean;
 }
 
 export interface WarehouseBin {

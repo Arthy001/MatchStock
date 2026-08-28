@@ -40,6 +40,8 @@ export const translations = {
     // Master Data Sub-tabs
     tabCompanies: 'บริษัทในเครือ',
     tabProducts: 'แคตตาล็อกสินค้า & SKU',
+    tabCategories: 'หมวดหมู่สินค้า',
+    tabBrands: 'แบรนด์สินค้า',
     tabUnits: 'หน่วยนับ & ขนาดมิติ',
     tabWarehouses: 'คลังสินค้า & ตำแหน่ง Bin',
     tabSuppliers: 'ผู้จัดจำหน่าย & ภาษี',
@@ -273,6 +275,8 @@ export const translations = {
     // Master Data Sub-tabs
     tabCompanies: 'Companies',
     tabProducts: 'Products & SKUs',
+    tabCategories: 'Categories',
+    tabBrands: 'Brands',
     tabUnits: 'Units & Measures',
     tabWarehouses: 'Warehouses & Bins',
     tabSuppliers: 'Suppliers & Tax',
