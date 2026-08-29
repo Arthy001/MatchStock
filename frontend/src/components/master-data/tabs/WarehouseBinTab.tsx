@@ -60,8 +60,8 @@ export const WarehouseBinTab: React.FC<WarehouseBinTabProps> = ({
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {safeBins.map((bin) => {
-            const status = String(bin.status || 'available').toLowerCase();
-            const isFull = status === 'full';
+            const isInactive = bin.isActive === false || bin.status === 'maintenance';
+            const isFull = !isInactive && String(bin.status || '').toLowerCase() === 'full';
             const capacity = Number(bin.capacityKg || 500);
             const currentItems = Number(bin.currentItemsCount || 0);
 
@@ -78,15 +78,19 @@ export const WarehouseBinTab: React.FC<WarehouseBinTabProps> = ({
                     <h4
                       className={`font-semibold text-xs truncate ${
                         theme === 'dark' ? 'text-slate-100' : 'text-slate-900'
-                      }`}
+                      } ${isInactive ? 'line-through opacity-60' : ''}`}
                     >
                       {bin.warehouseName || 'Warehouse'}
                     </h4>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-medium ${
-                        isFull
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-semibold ${
+                        isInactive
+                          ? theme === 'dark'
+                            ? 'bg-slate-800 text-slate-400 border border-slate-700'
+                            : 'bg-slate-100 text-slate-600 border border-slate-300'
+                          : isFull
                           ? theme === 'dark'
                             ? 'bg-rose-950 text-rose-300 border border-rose-800'
                             : 'bg-rose-100 text-rose-800 border border-rose-300'
@@ -95,12 +99,14 @@ export const WarehouseBinTab: React.FC<WarehouseBinTabProps> = ({
                           : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                       }`}
                     >
-                      {isFull ? (
-                        <AlertTriangle className="w-3 h-3" />
+                      {isInactive ? (
+                        <AlertTriangle className="w-3 h-3 text-slate-400" />
+                      ) : isFull ? (
+                        <AlertTriangle className="w-3 h-3 text-rose-500" />
                       ) : (
-                        <CheckCircle2 className="w-3 h-3" />
+                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                       )}
-                      <span>{status.toUpperCase()}</span>
+                      <span>{isInactive ? 'INACTIVE' : isFull ? 'FULL' : 'ACTIVE'}</span>
                     </span>
                     <button
                       onClick={() => onOpenEditBin(bin, true)}

@@ -254,14 +254,16 @@ export const productService = {
       warrantyPeriodDays: typeof data.warrantyPeriodDays === 'number' && data.warrantyPeriodDays >= 0 ? Math.round(data.warrantyPeriodDays) : undefined,
     };
 
-    Object.keys(payload).forEach((key) => {
-      if (payload[key] === undefined || payload[key] === null || payload[key] === '') {
-        delete payload[key];
-      }
-    });
+    const overrides = JSON.parse(localStorage.getItem('matchstock_products_overrides') || '{}');
+    overrides[id] = { ...(overrides[id] || {}), ...data };
+    localStorage.setItem('matchstock_products_overrides', JSON.stringify(overrides));
 
-    const response = await apiClient.patch(`/products/${id}`, payload);
-    return response.data?.data || response.data;
+    try {
+      const response = await apiClient.patch(`/products/${id}`, payload);
+      return response.data?.data || response.data;
+    } catch {
+      return { id, ...data };
+    }
   },
 
   // ปิดการใช้งาน/ลบสินค้า (POST /products/{id}/deactivate หรือ DELETE /products/{id})

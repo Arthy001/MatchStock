@@ -758,36 +758,68 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
             </div>
 
             {/* Section 9: Control Switches */}
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
-                <input
-                  type="checkbox"
-                  id="editLotControlCheckbox"
-                  checked={editIsLotControl}
-                  onChange={(e) => setEditIsLotControl(e.target.checked)}
-                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-                />
-                <label
-                  htmlFor="editLotControlCheckbox"
-                  className="text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    สถานะการใช้งานสินค้า (Active Status)
+                  </span>
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                      editIsActive !== false
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                        : 'bg-slate-200 dark:bg-slate-700 text-slate-500 border border-slate-300 dark:border-slate-600'
+                    }`}
+                  >
+                    {editIsActive !== false ? 'เปิดใช้งาน (Active)' : 'ปิดใช้งาน (Inactive)'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditIsActive && setEditIsActive(!editIsActive)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                    editIsActive !== false ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'
+                  }`}
                 >
-                  Lot / Batch Control
-                </label>
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      editIsActive !== false ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
               </div>
-              <div className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
-                <input
-                  type="checkbox"
-                  id="editReturnableCheckbox"
-                  checked={editIsReturnable}
-                  onChange={(e) => setEditIsReturnable && setEditIsReturnable(e.target.checked)}
-                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-                />
-                <label
-                  htmlFor="editReturnableCheckbox"
-                  className="text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
-                >
-                  รับคืนสินค้าได้ (Returnable)
-                </label>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                  <input
+                    type="checkbox"
+                    id="editLotControlCheckbox"
+                    checked={editIsLotControl}
+                    onChange={(e) => setEditIsLotControl(e.target.checked)}
+                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                  <label
+                    htmlFor="editLotControlCheckbox"
+                    className="text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
+                  >
+                    Lot / Batch Control
+                  </label>
+                </div>
+                <div className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                  <input
+                    type="checkbox"
+                    id="editReturnableCheckbox"
+                    checked={editIsReturnable}
+                    onChange={(e) => setEditIsReturnable && setEditIsReturnable(e.target.checked)}
+                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                  <label
+                    htmlFor="editReturnableCheckbox"
+                    className="text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
+                  >
+                    รับคืนสินค้าได้ (Returnable)
+                  </label>
+                </div>
               </div>
             </div>
 

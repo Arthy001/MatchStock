@@ -6,6 +6,8 @@ import {
   Edit2,
   Trash2,
   Eye,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 import { ThemeMode, Company } from '../../../types';
 
@@ -141,6 +143,15 @@ export const CompanyManagementTab: React.FC<CompanyManagementTabProps> = ({
                     ) : (
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">
                         สาขา {company.branchCode}
+                      </span>
+                    )}
+                    {company.isActive !== false ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1">
+                        <CheckCircle2 className="w-2.5 h-2.5" /> Active
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1">
+                        <XCircle className="w-2.5 h-2.5" /> Inactive
                       </span>
                     )}
                   </div>

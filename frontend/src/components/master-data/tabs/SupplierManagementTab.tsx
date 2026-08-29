@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2, Eye } from 'lucide-react';
+import { Edit2, Trash2, Eye, CheckCircle2, XCircle } from 'lucide-react';
 import { ThemeMode, Supplier } from '../../../types';
 
 interface SupplierManagementTabProps {
@@ -109,6 +109,23 @@ export const SupplierManagementTab: React.FC<SupplierManagementTabProps> = ({
               >
                 Terms: {sup.discountTerms}
               </span>
+              {sup.isActive !== false && sup.status !== 'inactive' ? (
+                <span
+                  className={`font-medium inline-flex items-center gap-1 text-xs ${
+                    theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'
+                  }`}
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Active
+                </span>
+              ) : (
+                <span
+                  className={`font-medium inline-flex items-center gap-1 text-xs ${
+                    theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
+                  }`}
+                >
+                  <XCircle className="w-3.5 h-3.5 text-slate-400" /> Inactive
+                </span>
+              )}
               <button
                 onClick={() => onOpenEditSupplier(sup, true)}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"

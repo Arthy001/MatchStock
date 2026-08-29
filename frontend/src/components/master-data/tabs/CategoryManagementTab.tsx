@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Edit2, Trash2, CheckCircle2, Layers, Eye } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle2, XCircle, Layers, Eye } from 'lucide-react';
 import { ThemeMode, CategoryItem } from '../../../types';
 
 interface CategoryManagementTabProps {
@@ -109,13 +109,23 @@ export const CategoryManagementTab: React.FC<CategoryManagementTabProps> = ({
                       {cat.description || '-'}
                     </td>
                     <td className="p-3">
-                      <span
-                        className={`font-medium inline-flex items-center gap-1 ${
-                          theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'
-                        }`}
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Active
-                      </span>
+                      {cat.isActive !== false ? (
+                        <span
+                          className={`font-medium inline-flex items-center gap-1 text-xs ${
+                            theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'
+                          }`}
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Active
+                        </span>
+                      ) : (
+                        <span
+                          className={`font-medium inline-flex items-center gap-1 text-xs ${
+                            theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
+                          }`}
+                        >
+                          <XCircle className="w-3.5 h-3.5 text-slate-400" /> Inactive
+                        </span>
+                      )}
                     </td>
                     <td className="p-3 text-right space-x-1">
                       <button

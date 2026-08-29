@@ -523,6 +523,8 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         setEditCompAddress={modals.setEditCompAddress}
         editCompIsHq={modals.editCompIsHq}
         setEditCompIsHq={modals.setEditCompIsHq}
+        editCompIsActive={modals.editCompIsActive}
+        setEditCompIsActive={modals.setEditCompIsActive}
       />
 
       <EditSupplierModal
@@ -548,6 +550,8 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         setEditSupTaxId={modals.setEditSupTaxId}
         editSupAddress={modals.editSupAddress}
         setEditSupAddress={modals.setEditSupAddress}
+        editSupIsActive={modals.editSupIsActive}
+        setEditSupIsActive={modals.setEditSupIsActive}
       />
 
       <EditWarehouseBinModal
@@ -569,6 +573,8 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         setEditBinRack={modals.setEditBinRack}
         editBinCapacity={modals.editBinCapacity}
         setEditBinCapacity={modals.setEditBinCapacity}
+        editBinIsActive={modals.editBinIsActive}
+        setEditBinIsActive={modals.setEditBinIsActive}
       />
 
       <EditUnitModal
@@ -584,6 +590,8 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         setEditUnitCode={modals.setEditUnitCode}
         editUnitName={modals.editUnitName}
         setEditUnitName={modals.setEditUnitName}
+        editUnitIsActive={modals.editUnitIsActive}
+        setEditUnitIsActive={modals.setEditUnitIsActive}
       />
 
       <EditCategoryModal
@@ -601,6 +609,8 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         setEditCatName={modals.setEditCatName}
         editCatDescription={modals.editCatDescription}
         setEditCatDescription={modals.setEditCatDescription}
+        editCatIsActive={modals.editCatIsActive}
+        setEditCatIsActive={modals.setEditCatIsActive}
       />
 
       <EditBrandModal
@@ -618,6 +628,8 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         setEditBrandName={modals.setEditBrandName}
         editBrandDescription={modals.editBrandDescription}
         setEditBrandDescription={modals.setEditBrandDescription}
+        editBrandIsActive={modals.editBrandIsActive}
+        setEditBrandIsActive={modals.setEditBrandIsActive}
       />
 
       <BarcodeModal

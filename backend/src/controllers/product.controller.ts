@@ -2,24 +2,46 @@ import { Request, Response } from 'express';
 import { prisma } from '../config/prisma';
 import { z } from 'zod';
 
-const createProductSchema = z.object({
+const productSchema = z.object({
   code: z.string().min(1, 'Product code is required'),
   sku: z.string().min(1, 'SKU is required'),
-  barcode: z.string().optional(),
+  slug: z.string().optional(),
   name: z.string().min(1, 'Product name is required'),
-  description: z.string().optional(),
-  baseUnitId: z.string().optional(),
-  categoryId: z.string().optional(),
-  brandId: z.string().optional(),
-  price: z.coerce.number().min(0).default(0),
+  description: z.string().optional().nullable(),
+  categoryId: z.string().optional().nullable(),
+  brandId: z.string().optional().nullable(),
+  manufacturerId: z.string().optional().nullable(),
+  supplierId: z.string().optional().nullable(),
+  unitId: z.string().optional().nullable(),
+  baseUnitId: z.string().optional().nullable(),
+  unitOfMeasure: z.string().optional().nullable(),
+  barcode: z.string().optional().nullable(),
+  barcodeValue: z.string().optional().nullable(),
+  barcodeSymbologyId: z.string().optional().nullable(),
+  taxTypeId: z.string().optional().nullable(),
+  price: z.coerce.number().min(0).optional(),
+  costPrice: z.coerce.number().min(0).optional(),
+  sellingPriceMinor: z.coerce.number().optional(),
+  costPriceMinor: z.coerce.number().optional(),
+  currency: z.string().default('THB'),
   weightKg: z.coerce.number().optional(),
+  weightValue: z.coerce.number().optional(),
   widthCm: z.coerce.number().optional(),
+  widthValue: z.coerce.number().optional(),
   lengthCm: z.coerce.number().optional(),
+  lengthValue: z.coerce.number().optional(),
   heightCm: z.coerce.number().optional(),
+  heightValue: z.coerce.number().optional(),
   reorderPoint: z.coerce.number().optional(),
+  reorderLevel: z.coerce.number().optional(),
+  minReorderQuantity: z.coerce.number().optional(),
   minReorderQty: z.coerce.number().optional(),
   isLotControl: z.boolean().optional(),
-  initialStock: z.coerce.number().optional(),
+  lotControlled: z.boolean().optional(),
+  isReturnable: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+  warrantyPeriodDays: z.coerce.number().optional(),
+  imageUrl: z.string().optional().nullable(),
 });
 
 export const productController = {
@@ -27,14 +49,15 @@ export const productController = {
   getProducts: async (req: Request, res: Response) => {
     try {
       const tenantId = req.tenantId || (req.headers['x-tenant-id'] as string) || 'default-tenant';
-      const { search, categoryId, brandId, page = 1, limit = 50 } = req.query;
+      const { search, categoryId, brandId, page = 1, limit = 100 } = req.query;
 
       const pageNum = Math.max(1, Number(page));
-      const take = Math.min(100, Math.max(1, Number(limit)));
+      const take = Math.min(200, Math.max(1, Number(limit)));
       const skip = (pageNum - 1) * take;
 
       const whereClause: any = {
         tenantId,
+        deletedAt: null,
       };
 
       if (categoryId) {
@@ -49,7 +72,7 @@ export const productController = {
           { name: { contains: queryStr, mode: 'insensitive' } },
           { sku: { contains: queryStr, mode: 'insensitive' } },
           { code: { contains: queryStr, mode: 'insensitive' } },
-          { barcode: { contains: queryStr, mode: 'insensitive' } },
+          { barcodeValue: { contains: queryStr, mode: 'insensitive' } },
         ];
       }
 
@@ -57,10 +80,8 @@ export const productController = {
         prisma.product.findMany({
           where: whereClause,
           include: {
-            baseUnit: true,
-            category: true,
-            brand: true,
-            inventoryBalances: true,
+            images: true,
+            tags: true,
           },
           orderBy: { createdAt: 'desc' },
           skip,
@@ -70,27 +91,49 @@ export const productController = {
       ]);
 
       const formatted = products.map((p) => {
-        const totalOnHand = p.inventoryBalances.reduce((sum, b) => sum + Number(b.quantityOnHand), 0);
+        const sellingPrice = p.sellingPriceMinor ? Number(p.sellingPriceMinor) / 100 : 0;
+        const costPrice = p.costPriceMinor ? Number(p.costPriceMinor) / 100 : 0;
         return {
           id: p.id,
           code: p.code,
           sku: p.sku,
-          barcode: p.barcode || '',
+          barcode: p.barcodeValue || '',
+          barcodeValue: p.barcodeValue || '',
           slug: p.slug || '',
           name: p.name,
           description: p.description || '',
-          price: Number(p.price),
-          weightKg: Number(p.weightKg || 0),
-          widthCm: Number(p.widthCm || 0),
-          lengthCm: Number(p.lengthCm || 0),
-          heightCm: Number(p.heightCm || 0),
+          price: sellingPrice,
+          costPrice: costPrice,
+          sellingPriceMinor: Number(p.sellingPriceMinor || 0),
+          costPriceMinor: Number(p.costPriceMinor || 0),
+          currency: p.currency || 'THB',
+          weightKg: Number(p.weightValue || 0),
+          weightValue: Number(p.weightValue || 0),
+          widthCm: Number(p.widthValue || 0),
+          widthValue: Number(p.widthValue || 0),
+          lengthCm: Number(p.lengthValue || 0),
+          lengthValue: Number(p.lengthValue || 0),
+          heightCm: Number(p.heightValue || 0),
+          heightValue: Number(p.heightValue || 0),
           reorderPoint: Number(p.reorderPoint || 0),
-          minReorderQty: Number(p.minReorderQty || 0),
-          isLotControl: p.isLotControl,
-          stockOnHand: totalOnHand,
-          unit: p.baseUnit?.code || 'PCS',
-          category: p.category?.name || 'General',
-          brand: p.brand?.name || 'MatchStock',
+          reorderLevel: Number(p.reorderPoint || 0),
+          minReorderQty: Number(p.minReorderQuantity || 0),
+          minReorderQuantity: Number(p.minReorderQuantity || 0),
+          isLotControl: p.lotControlled,
+          lotControlled: p.lotControlled,
+          isReturnable: p.isReturnable,
+          isActive: p.isActive,
+          warrantyPeriodDays: p.warrantyPeriodDays || 0,
+          stockOnHand: p.tags?.length || 0,
+          uom: p.unitOfMeasure || 'PCS',
+          unitId: p.unitId,
+          categoryId: p.categoryId,
+          brandId: p.brandId,
+          supplierId: p.supplierId,
+          barcodeSymbologyId: p.barcodeSymbologyId,
+          taxTypeId: p.taxTypeId,
+          imageUrl: p.images?.[0]?.url || '',
+          images: p.images || [],
           createdAt: p.createdAt.toISOString(),
           updatedAt: p.updatedAt.toISOString(),
         };
@@ -125,11 +168,8 @@ export const productController = {
       const product = await prisma.product.findFirst({
         where: { id, tenantId },
         include: {
-          baseUnit: true,
-          category: true,
-          brand: true,
-          inventoryBalances: true,
           images: true,
+          tags: true,
         },
       });
 
@@ -158,59 +198,57 @@ export const productController = {
   createProduct: async (req: Request, res: Response) => {
     try {
       const tenantId = req.tenantId || (req.headers['x-tenant-id'] as string) || 'default-tenant';
-      const validated = createProductSchema.parse(req.body);
+      const validated = productSchema.parse(req.body);
 
-      // Ensure base unit exists for tenant or fallback
-      let baseUnitId = validated.baseUnitId;
-      if (!baseUnitId) {
-        const defaultUnit = await prisma.unit.findFirst({
-          where: { tenantId },
-        });
-        if (defaultUnit) {
-          baseUnitId = defaultUnit.id;
-        } else {
-          const newUnit = await prisma.unit.create({
-            data: {
-              tenantId,
-              code: 'PCS',
-              name: 'Pieces',
-            },
-          });
-          baseUnitId = newUnit.id;
-        }
-      }
+      const sellingPriceMinor = validated.sellingPriceMinor ?? (validated.price !== undefined ? Math.round(validated.price * 100) : 0);
+      const costPriceMinor = validated.costPriceMinor ?? (validated.costPrice !== undefined ? Math.round(validated.costPrice * 100) : 0);
+      const barcodeValue = validated.barcodeValue || validated.barcode || null;
+      const slug = validated.slug || `${validated.sku.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString().slice(-4)}`;
 
       const newProduct = await prisma.product.create({
         data: {
           tenantId,
           code: validated.code,
           sku: validated.sku,
-          barcode: validated.barcode,
+          slug,
           name: validated.name,
-          description: validated.description,
-          baseUnitId,
+          description: validated.description || null,
+          unitId: validated.unitId || validated.baseUnitId || null,
+          unitOfMeasure: validated.unitOfMeasure || 'PCS',
           categoryId: validated.categoryId || null,
           brandId: validated.brandId || null,
-          price: validated.price,
-          weightKg: validated.weightKg || 0,
-          widthCm: validated.widthCm || 0,
-          lengthCm: validated.lengthCm || 0,
-          heightCm: validated.heightCm || 0,
-          reorderPoint: validated.reorderPoint || 0,
-          minReorderQty: validated.minReorderQty || 0,
-          isLotControl: validated.isLotControl || false,
+          manufacturerId: validated.manufacturerId || null,
+          supplierId: validated.supplierId || null,
+          barcodeValue,
+          barcodeSymbologyId: validated.barcodeSymbologyId || null,
+          taxTypeId: validated.taxTypeId || null,
+          sellingPriceMinor: BigInt(sellingPriceMinor),
+          costPriceMinor: BigInt(costPriceMinor),
+          currency: validated.currency || 'THB',
+          weightValue: validated.weightValue ?? validated.weightKg ?? 0,
+          widthValue: validated.widthValue ?? validated.widthCm ?? 0,
+          lengthValue: validated.lengthValue ?? validated.lengthCm ?? 0,
+          heightValue: validated.heightValue ?? validated.heightCm ?? 0,
+          reorderPoint: validated.reorderPoint ?? validated.reorderLevel ?? 10,
+          minReorderQuantity: validated.minReorderQuantity ?? validated.minReorderQty ?? 5,
+          lotControlled: validated.lotControlled ?? validated.isLotControl ?? false,
+          isReturnable: validated.isReturnable ?? false,
+          isActive: validated.isActive ?? true,
+          warrantyPeriodDays: validated.warrantyPeriodDays ?? 0,
         },
         include: {
-          baseUnit: true,
-          category: true,
-          brand: true,
+          images: true,
         },
       });
 
       res.status(201).json({
         success: true,
         message: 'Product created successfully',
-        data: newProduct,
+        data: {
+          ...newProduct,
+          sellingPriceMinor: Number(newProduct.sellingPriceMinor || 0),
+          costPriceMinor: Number(newProduct.costPriceMinor || 0),
+        },
       });
     } catch (error: any) {
       if (error instanceof z.ZodError) {
@@ -229,12 +267,12 @@ export const productController = {
     }
   },
 
-  // PUT /api/v1/products/:id
+  // PUT & PATCH /api/v1/products/:id
   updateProduct: async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const tenantId = req.tenantId || (req.headers['x-tenant-id'] as string) || 'default-tenant';
-      const validated = createProductSchema.partial().parse(req.body);
+      const validated = productSchema.partial().parse(req.body);
 
       const existing = await prisma.product.findFirst({
         where: { id, tenantId },
@@ -247,36 +285,74 @@ export const productController = {
         });
       }
 
+      const updateData: any = {};
+      if (validated.name !== undefined) updateData.name = validated.name;
+      if (validated.code !== undefined) updateData.code = validated.code;
+      if (validated.sku !== undefined) updateData.sku = validated.sku;
+      if (validated.slug !== undefined) updateData.slug = validated.slug;
+      if (validated.description !== undefined) updateData.description = validated.description;
+      if (validated.categoryId !== undefined) updateData.categoryId = validated.categoryId;
+      if (validated.brandId !== undefined) updateData.brandId = validated.brandId;
+      if (validated.manufacturerId !== undefined) updateData.manufacturerId = validated.manufacturerId;
+      if (validated.supplierId !== undefined) updateData.supplierId = validated.supplierId;
+      if (validated.unitId !== undefined) updateData.unitId = validated.unitId;
+      if (validated.unitOfMeasure !== undefined) updateData.unitOfMeasure = validated.unitOfMeasure;
+      if (validated.barcodeValue !== undefined || validated.barcode !== undefined) {
+        updateData.barcodeValue = validated.barcodeValue ?? validated.barcode;
+      }
+      if (validated.barcodeSymbologyId !== undefined) updateData.barcodeSymbologyId = validated.barcodeSymbologyId;
+      if (validated.taxTypeId !== undefined) updateData.taxTypeId = validated.taxTypeId;
+      if (validated.sellingPriceMinor !== undefined) {
+        updateData.sellingPriceMinor = BigInt(validated.sellingPriceMinor);
+      } else if (validated.price !== undefined) {
+        updateData.sellingPriceMinor = BigInt(Math.round(validated.price * 100));
+      }
+      if (validated.costPriceMinor !== undefined) {
+        updateData.costPriceMinor = BigInt(validated.costPriceMinor);
+      } else if (validated.costPrice !== undefined) {
+        updateData.costPriceMinor = BigInt(Math.round(validated.costPrice * 100));
+      }
+      if (validated.weightValue !== undefined || validated.weightKg !== undefined) {
+        updateData.weightValue = validated.weightValue ?? validated.weightKg;
+      }
+      if (validated.widthValue !== undefined || validated.widthCm !== undefined) {
+        updateData.widthValue = validated.widthValue ?? validated.widthCm;
+      }
+      if (validated.lengthValue !== undefined || validated.lengthCm !== undefined) {
+        updateData.lengthValue = validated.lengthValue ?? validated.lengthCm;
+      }
+      if (validated.heightValue !== undefined || validated.heightCm !== undefined) {
+        updateData.heightValue = validated.heightValue ?? validated.heightCm;
+      }
+      if (validated.reorderPoint !== undefined || validated.reorderLevel !== undefined) {
+        updateData.reorderPoint = validated.reorderPoint ?? validated.reorderLevel;
+      }
+      if (validated.minReorderQuantity !== undefined || validated.minReorderQty !== undefined) {
+        updateData.minReorderQuantity = validated.minReorderQuantity ?? validated.minReorderQty;
+      }
+      if (validated.lotControlled !== undefined || validated.isLotControl !== undefined) {
+        updateData.lotControlled = validated.lotControlled ?? validated.isLotControl;
+      }
+      if (validated.isReturnable !== undefined) updateData.isReturnable = validated.isReturnable;
+      if (validated.isActive !== undefined) updateData.isActive = validated.isActive;
+      if (validated.warrantyPeriodDays !== undefined) updateData.warrantyPeriodDays = validated.warrantyPeriodDays;
+
       const updated = await prisma.product.update({
         where: { id },
-        data: {
-          ...(validated.name && { name: validated.name }),
-          ...(validated.code && { code: validated.code }),
-          ...(validated.sku && { sku: validated.sku }),
-          ...(validated.barcode !== undefined && { barcode: validated.barcode }),
-          ...(validated.description !== undefined && { description: validated.description }),
-          ...(validated.price !== undefined && { price: validated.price }),
-          ...(validated.weightKg !== undefined && { weightKg: validated.weightKg }),
-          ...(validated.widthCm !== undefined && { widthCm: validated.widthCm }),
-          ...(validated.lengthCm !== undefined && { lengthCm: validated.lengthCm }),
-          ...(validated.heightCm !== undefined && { heightCm: validated.heightCm }),
-          ...(validated.categoryId !== undefined && { categoryId: validated.categoryId }),
-          ...(validated.brandId !== undefined && { brandId: validated.brandId }),
-          ...(validated.reorderPoint !== undefined && { reorderPoint: validated.reorderPoint }),
-          ...(validated.minReorderQty !== undefined && { minReorderQty: validated.minReorderQty }),
-          ...(validated.isLotControl !== undefined && { isLotControl: validated.isLotControl }),
-        },
+        data: updateData,
         include: {
-          baseUnit: true,
-          category: true,
-          brand: true,
+          images: true,
         },
       });
 
       res.status(200).json({
         success: true,
         message: 'Product updated successfully',
-        data: updated,
+        data: {
+          ...updated,
+          sellingPriceMinor: Number(updated.sellingPriceMinor || 0),
+          costPriceMinor: Number(updated.costPriceMinor || 0),
+        },
       });
     } catch (error: any) {
       if (error instanceof z.ZodError) {
@@ -312,13 +388,14 @@ export const productController = {
         });
       }
 
-      await prisma.product.delete({
+      await prisma.product.update({
         where: { id },
+        data: { deletedAt: new Date(), isActive: false },
       });
 
       res.status(200).json({
         success: true,
-        message: 'Product deleted successfully',
+        message: 'Product deactivated/deleted successfully',
       });
     } catch (error: any) {
       console.error('Error deleting product:', error);

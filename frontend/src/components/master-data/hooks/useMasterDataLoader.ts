@@ -20,6 +20,7 @@ export interface UnitItem {
   code: string;
   name: string;
   type?: string;
+  isActive?: boolean;
 }
 
 export interface RbacUser {
@@ -94,39 +95,49 @@ export const useMasterDataLoader = () => {
         ? (prods as any).items
         : [];
 
+      const localInactive = JSON.parse(localStorage.getItem('matchstock_local_inactive_products') || '[]');
+      const combinedProds = [...rawProds, ...localInactive.filter((lp: any) => !rawProds.some((r: any) => r.id === lp.id))];
+
+      const overrides = JSON.parse(localStorage.getItem('matchstock_products_overrides') || '{}');
       setProductsList(
-        rawProds.map((p: any) => ({
-          ...p,
-          id: p.id || `prod-${Math.random().toString(36).substring(2, 9)}`,
-          code: p.code || 'PRD-000',
-          name: p.name || 'Unnamed Product',
-          sku: p.sku || p.code || 'SKU-GEN',
-          category: typeof p.category === 'object' ? (p.category?.name || '-') : (p.category || '-'),
-          categoryId: p.categoryId || (typeof p.category === 'object' ? p.category?.id : undefined),
-          brand: typeof p.brand === 'object' ? (p.brand?.name || '-') : (p.brand || '-'),
-          brandId: p.brandId || (typeof p.brand === 'object' ? p.brand?.id : undefined),
-          unitId: p.unitId || (typeof p.unit === 'object' ? p.unit?.id : undefined),
-          supplierId: p.supplierId || (typeof p.supplier === 'object' ? p.supplier?.id : undefined),
-          barcodeSymbologyId: p.barcodeSymbologyId,
-          taxTypeId: p.taxTypeId,
-          barcodeValue: p.barcodeValue || p.barcode || '',
-          price: Number(p.price || (p.sellingPriceMinor ? p.sellingPriceMinor / 100 : 0)),
-          costPrice: Number(p.costPrice || (p.costPriceMinor ? p.costPriceMinor / 100 : 0)),
-          stockOnHand: Number(p.stockOnHand || p.inStockCount || 0),
-          reorderLevel: Number(p.reorderLevel || p.reorderPoint || 10),
-          minReorderQty: Number(p.minReorderQty || p.minReorderQuantity || 5),
-          weightKg: Number(p.weightKg || p.weightValue || 0),
-          widthCm: Number(p.widthCm || p.widthValue || 0),
-          lengthCm: Number(p.lengthCm || p.lengthValue || 0),
-          heightCm: Number(p.heightCm || p.heightValue || 0),
-          isLotControl: Boolean(p.isLotControl || p.lotControlled),
-          isReturnable: Boolean(p.isReturnable),
-          warrantyPeriodDays: Number(p.warrantyPeriodDays || 0),
-          barcodeType: p.barcodeType || 'CODE128',
-          status: p.status || (p.stockOnHand > 0 ? 'active' : 'out_of_stock'),
-          imageUrl: p.imageUrl || p.images?.[0]?.url || '',
-          images: p.images || [],
-        }))
+        combinedProds.map((p: any) => {
+          const ovr = overrides[p.id] || {};
+          const mergedIsActive = ovr.isActive !== undefined ? ovr.isActive : (p.isActive !== undefined ? p.isActive : true);
+          return {
+            ...p,
+            ...ovr,
+            id: p.id || `prod-${Math.random().toString(36).substring(2, 9)}`,
+            code: ovr.code || p.code || 'PRD-000',
+            name: ovr.name || p.name || 'Unnamed Product',
+            sku: ovr.sku || p.sku || p.code || 'SKU-GEN',
+            category: typeof p.category === 'object' ? (p.category?.name || '-') : (p.category || '-'),
+            categoryId: p.categoryId || (typeof p.category === 'object' ? p.category?.id : undefined),
+            brand: typeof p.brand === 'object' ? (p.brand?.name || '-') : (p.brand || '-'),
+            brandId: p.brandId || (typeof p.brand === 'object' ? p.brand?.id : undefined),
+            unitId: p.unitId || (typeof p.unit === 'object' ? p.unit?.id : undefined),
+            supplierId: p.supplierId || (typeof p.supplier === 'object' ? p.supplier?.id : undefined),
+            barcodeSymbologyId: p.barcodeSymbologyId,
+            taxTypeId: p.taxTypeId,
+            barcodeValue: p.barcodeValue || p.barcode || '',
+            price: Number(p.price || (p.sellingPriceMinor ? p.sellingPriceMinor / 100 : 0)),
+            costPrice: Number(p.costPrice || (p.costPriceMinor ? p.costPriceMinor / 100 : 0)),
+            stockOnHand: Number(p.stockOnHand || p.inStockCount || 0),
+            reorderLevel: Number(p.reorderLevel || p.reorderPoint || 10),
+            minReorderQty: Number(p.minReorderQty || p.minReorderQuantity || 5),
+            weightKg: Number(p.weightKg || p.weightValue || 0),
+            widthCm: Number(p.widthCm || p.widthValue || 0),
+            lengthCm: Number(p.lengthCm || p.lengthValue || 0),
+            heightCm: Number(p.heightCm || p.heightValue || 0),
+            isLotControl: Boolean(p.isLotControl || p.lotControlled),
+            isReturnable: Boolean(p.isReturnable),
+            isActive: mergedIsActive,
+            warrantyPeriodDays: Number(p.warrantyPeriodDays || 0),
+            barcodeType: p.barcodeType || 'CODE128',
+            status: p.status || (p.stockOnHand > 0 ? 'active' : 'out_of_stock'),
+            imageUrl: p.imageUrl || p.images?.[0]?.url || '',
+            images: p.images || [],
+          };
+        })
       );
       setLoadedTabs((prev) => new Set(prev).add('products').add('barcodes'));
     } catch (err) {
@@ -210,9 +221,52 @@ export const useMasterDataLoader = () => {
     fetchingRef.current['warehouses'] = true;
     setIsLoading(true);
     try {
-      const bins = await warehouseService.getBins().catch(() => []);
-      const rawBins = Array.isArray(bins) ? bins : Array.isArray((bins as any)?.data) ? (bins as any).data : [];
-      setBinsList(rawBins);
+      const res = await warehouseService.getBins().catch(() => []);
+      const raw = Array.isArray(res) ? res : Array.isArray((res as any)?.data) ? (res as any).data : [];
+      const whOverrides = JSON.parse(localStorage.getItem('matchstock_warehouses_overrides') || '{}');
+      const binOverrides = JSON.parse(localStorage.getItem('matchstock_bins_overrides') || '{}');
+      
+      const normalized: WarehouseBin[] = [];
+      raw.forEach((wh: any) => {
+        const whOvr = whOverrides[wh.id] || {};
+        const whIsActive = whOvr.isActive !== undefined ? whOvr.isActive : (wh.isActive !== false);
+
+        if (Array.isArray(wh.bins) && wh.bins.length > 0) {
+          wh.bins.forEach((b: any) => {
+            const bOvr = binOverrides[b.id] || {};
+            const bIsActive = bOvr.isActive !== undefined ? bOvr.isActive : (b.isActive !== false && whIsActive);
+            normalized.push({
+              id: b.id,
+              warehouseId: wh.id,
+              warehouseName: whOvr.name || wh.name || 'Main Warehouse',
+              binCode: bOvr.code || b.code || b.binCode || 'BIN-01',
+              zone: bOvr.zone || b.zone || (b.code ? b.code.split('-')[0] : 'Zone A'),
+              rack: bOvr.rack || b.rack || (b.code ? b.code.split('-')[1] || 'Rack 1' : 'Rack 1'),
+              shelf: bOvr.shelf || b.shelf || 'Level 1',
+              capacityKg: Number(bOvr.capacityKg || b.maxCapacity || b.capacityKg || wh.maxCapacity || 500),
+              currentItemsCount: Number(b.currentItemsCount || 0),
+              status: bIsActive ? (b.status === 'maintenance' ? 'available' : (b.status || 'available')) : 'maintenance',
+              isActive: bIsActive,
+            });
+          });
+        } else {
+          normalized.push({
+            id: wh.id,
+            warehouseId: wh.id,
+            warehouseName: whOvr.name || wh.name || wh.warehouseName || 'Main Warehouse',
+            binCode: whOvr.code || wh.code || wh.binCode || 'MAIN-01',
+            zone: whOvr.zone || wh.zone || (wh.code ? wh.code.split('-')[0] : 'Zone A'),
+            rack: whOvr.rack || wh.rack || (wh.code ? wh.code.split('-')[1] || 'Rack 1' : 'Rack 1'),
+            shelf: whOvr.shelf || wh.shelf || 'Level 1',
+            capacityKg: Number(whOvr.capacityKg || wh.maxCapacity || wh.capacityKg || 1000),
+            currentItemsCount: Number(wh.currentItemsCount || 0),
+            status: whIsActive ? (wh.status === 'maintenance' ? 'available' : (wh.status || 'available')) : 'maintenance',
+            isActive: whIsActive,
+          });
+        }
+      });
+
+      setBinsList(normalized);
       setLoadedTabs((prev) => new Set(prev).add('warehouses'));
     } catch (err) {
       console.error('Error loading bins:', err);

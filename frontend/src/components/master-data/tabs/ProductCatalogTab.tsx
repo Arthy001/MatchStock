@@ -41,10 +41,21 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
   onDeleteProduct,
 }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'LOW' | 'OUT'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'IN_STOCK' | 'LOW' | 'OUT' | 'INACTIVE'>('ALL');
 
   const isDark = theme === 'dark';
   const safeProducts = Array.isArray(products) ? products : [];
+
+  const activeProducts = safeProducts.filter((p) => p && p.isActive !== false);
+  const inactiveProducts = safeProducts.filter((p) => p && p.isActive === false);
+  const inStockProducts = safeProducts.filter((p) => p && Number(p.stockOnHand || 0) > Number(p.reorderLevel || 10));
+  const lowStockProducts = safeProducts.filter((p) => {
+    if (!p) return false;
+    const s = Number(p.stockOnHand || 0);
+    const r = Number(p.reorderLevel || 10);
+    return s > 0 && s <= r;
+  });
+  const outStockProducts = safeProducts.filter((p) => p && Number(p.stockOnHand || 0) === 0);
 
   const toggleSelectAll = () => {
     if (selectedIds.length === safeProducts.length) {
@@ -63,11 +74,16 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
 
   const filtered = safeProducts.filter((p) => {
     if (!p) return false;
+    
+    if (statusFilter === 'ALL') return true;
+    if (statusFilter === 'ACTIVE') return p.isActive !== false;
+    if (statusFilter === 'INACTIVE') return p.isActive === false;
+
     const stock = Number(p.stockOnHand || 0);
     const rop = Number(p.reorderLevel || 10);
     if (statusFilter === 'OUT') return stock === 0;
     if (statusFilter === 'LOW') return stock > 0 && stock <= rop;
-    if (statusFilter === 'ACTIVE') return stock > rop;
+    if (statusFilter === 'IN_STOCK') return stock > rop;
     return true;
   });
 
@@ -86,10 +102,10 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
         }`}
       >
         {/* Status Segment Tabs */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           <button
             onClick={() => setStatusFilter('ALL')}
-            className={`px-3 py-1.5 rounded text-[14px] font-medium transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded text-[13px] font-medium transition cursor-pointer ${
               statusFilter === 'ALL'
                 ? isDark
                   ? 'bg-zinc-800 text-white font-semibold shadow-xs'
@@ -99,11 +115,11 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                 : 'text-zinc-600 hover:text-zinc-900'
             }`}
           >
-            All Items ({safeProducts.length})
+            ทั้งหมด ({safeProducts.length})
           </button>
           <button
             onClick={() => setStatusFilter('ACTIVE')}
-            className={`px-3 py-1.5 rounded text-[14px] font-medium transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded text-[13px] font-medium transition flex items-center gap-1.5 cursor-pointer ${
               statusFilter === 'ACTIVE'
                 ? isDark
                   ? 'bg-zinc-800 text-emerald-400 font-semibold shadow-xs'
@@ -114,11 +130,26 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
             }`}
           >
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            In Stock
+            เปิดใช้งาน ({activeProducts.length})
+          </button>
+          <button
+            onClick={() => setStatusFilter('IN_STOCK')}
+            className={`px-3 py-1.5 rounded text-[13px] font-medium transition flex items-center gap-1.5 cursor-pointer ${
+              statusFilter === 'IN_STOCK'
+                ? isDark
+                  ? 'bg-zinc-800 text-blue-400 font-semibold shadow-xs'
+                  : 'bg-white text-blue-700 border border-zinc-300 shadow-xs font-semibold'
+                : isDark
+                ? 'text-zinc-400 hover:text-blue-400'
+                : 'text-zinc-600 hover:text-blue-600'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+            พร้อมขาย ({inStockProducts.length})
           </button>
           <button
             onClick={() => setStatusFilter('LOW')}
-            className={`px-3 py-1.5 rounded text-[14px] font-medium transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded text-[13px] font-medium transition flex items-center gap-1.5 cursor-pointer ${
               statusFilter === 'LOW'
                 ? isDark
                   ? 'bg-zinc-800 text-amber-400 font-semibold shadow-xs'
@@ -129,11 +160,11 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
             }`}
           >
             <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-            Low Stock
+            ใกล้หมด ({lowStockProducts.length})
           </button>
           <button
             onClick={() => setStatusFilter('OUT')}
-            className={`px-3 py-1.5 rounded text-[14px] font-medium transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded text-[13px] font-medium transition flex items-center gap-1.5 cursor-pointer ${
               statusFilter === 'OUT'
                 ? isDark
                   ? 'bg-zinc-800 text-rose-400 font-semibold shadow-xs'
@@ -144,7 +175,22 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
             }`}
           >
             <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-            Out of Stock
+            หมดสต็อก ({outStockProducts.length})
+          </button>
+          <button
+            onClick={() => setStatusFilter('INACTIVE')}
+            className={`px-3 py-1.5 rounded text-[13px] font-medium transition flex items-center gap-1.5 cursor-pointer ${
+              statusFilter === 'INACTIVE'
+                ? isDark
+                  ? 'bg-zinc-800 text-slate-300 font-semibold shadow-xs'
+                  : 'bg-white text-slate-800 border border-zinc-300 shadow-xs font-semibold'
+                : isDark
+                ? 'text-zinc-500 hover:text-zinc-300'
+                : 'text-zinc-500 hover:text-zinc-800'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+            ปิดใช้งาน ({inactiveProducts.length})
           </button>
         </div>
 
@@ -285,10 +331,15 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                             <span
                               className={`font-semibold text-xs truncate ${
                                 isDark ? 'text-zinc-100' : 'text-zinc-900'
-                              }`}
+                              } ${prod.isActive === false ? 'line-through opacity-60' : ''}`}
                             >
                               {prodName}
                             </span>
+                            {prod.isActive === false && (
+                              <span className="shrink-0 px-1 py-0.2 rounded text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-300 dark:border-slate-700">
+                                Inactive
+                              </span>
+                            )}
                             {prod.isLotControl && (
                               <span className="shrink-0 px-1 py-0.2 rounded text-[10px] font-mono font-medium bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
                                 LOT

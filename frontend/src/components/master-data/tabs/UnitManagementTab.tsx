@@ -1,12 +1,7 @@
 import React from 'react';
-import { Plus, Edit2, Trash2, CheckCircle2, Eye } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle2, XCircle, Eye } from 'lucide-react';
 import { ThemeMode } from '../../../types';
-
-interface UnitItem {
-  id: string;
-  code: string;
-  name: string;
-}
+import { UnitItem } from '../hooks/useMasterDataLoader';
 
 interface UnitManagementTabProps {
   theme: ThemeMode;
@@ -111,13 +106,23 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
                     {unit.name}
                   </td>
                   <td className="p-3">
-                    <span
-                      className={`font-medium inline-flex items-center gap-1 ${
-                        theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'
-                      }`}
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Active
-                    </span>
+                    {unit.isActive !== false ? (
+                      <span
+                        className={`font-medium inline-flex items-center gap-1 text-xs ${
+                          theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'
+                        }`}
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Active
+                      </span>
+                    ) : (
+                      <span
+                        className={`font-medium inline-flex items-center gap-1 text-xs ${
+                          theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
+                        }`}
+                      >
+                        <XCircle className="w-3.5 h-3.5 text-slate-400" /> Inactive
+                      </span>
+                    )}
                   </td>
                   <td className="p-3 text-right space-x-1">
                     <button

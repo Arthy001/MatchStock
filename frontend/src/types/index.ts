@@ -100,6 +100,7 @@ export interface UnitItem {
   code: string;
   name: string;
   type?: string;
+  isActive?: boolean;
 }
 
 export interface CategoryItem {
@@ -143,6 +144,7 @@ export interface WarehouseBin {
   capacityKg: number;
   currentItemsCount: number;
   status: 'available' | 'full' | 'maintenance';
+  isActive?: boolean;
 }
 
 export interface Supplier {
@@ -157,6 +159,7 @@ export interface Supplier {
   discountTerms: string;
   address: string;
   status: 'active' | 'inactive';
+  isActive?: boolean;
 }
 
 export interface Company {
@@ -171,6 +174,7 @@ export interface Company {
   email?: string;
   address?: string;
   isHeadquarter: boolean;
+  isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
   warehouses?: any[];

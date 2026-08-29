@@ -150,6 +150,16 @@ export const useProductDrawer = ({
         return;
       }
 
+      // Save locally to preserve inactive products even if remote server hides soft-deleted items
+      const localInactive = JSON.parse(localStorage.getItem('matchstock_local_inactive_products') || '[]');
+      if (editIsActive === false) {
+        const updated = [{ ...drawerProduct, ...updateData, isActive: false }, ...localInactive.filter((p: any) => p.id !== drawerProduct.id)];
+        localStorage.setItem('matchstock_local_inactive_products', JSON.stringify(updated));
+      } else {
+        const updated = localInactive.filter((p: any) => p.id !== drawerProduct.id);
+        localStorage.setItem('matchstock_local_inactive_products', JSON.stringify(updated));
+      }
+
       setProductsList((prev) =>
         prev.map((p) =>
           p.id === drawerProduct.id

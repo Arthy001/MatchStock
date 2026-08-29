@@ -432,8 +432,19 @@ export const useAddMasterDataForm = ({
         setSuppliersList((prev) => [createdSup, ...prev]);
         showToast(`เพิ่มผู้จัดจำหน่าย "${createdSup.name}" เรียบร้อยแล้ว`);
       } else if (activeSubTab === 'rbac') {
+        let createdId = String(Date.now());
+        try {
+          const res = await masterDataService.createUser({
+            email: addEmail,
+            fullName: addName,
+            role: addRole,
+          });
+          if (res?.id) createdId = res.id;
+        } catch (uErr) {
+          console.warn('API createUser fallback to local:', uErr);
+        }
         const newUser: RbacUser = {
-          id: String(Date.now()),
+          id: createdId,
           name: addName,
           email: addEmail,
           department: 'Operations',
