@@ -2,6 +2,18 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-01 — Sync `docs/openapi.yaml` จาก live spec จริงอีกรอบ + แก้ Swagger cache
+
+**ปัญหาที่พบ**: หลังจากงาน isDeleted rollout เมื่อวาน (`DELETE /{id}` ใหม่ให้ 10 master-data model) เอกสาร `docs/openapi.yaml` **ไม่เคย sync ตามเลย** — ยัง"ไม่มี" `delete:` method ให้ endpoint พวกนี้แม้แต่ตัวเดียว (มีแค่ `get`/`patch`) และตัวอย่าง response ยังไม่มี field `isDeleted` เลยด้วย
+
+**สาเหตุที่ Swagger (live `/api-docs`) เองก็ดู "ไม่เปลี่ยน" ทั้งที่โค้ดจริงอัพเดทแล้ว**: `/api-docs`/`/api-docs-json` ไม่เคยส่ง `Cache-Control` header เลย ทำให้ browser ใช้ heuristic cache ของตัวเองได้ตามใจ (reload ธรรมดาอาจไม่ re-fetch จริง) — เพิ่ม `Cache-Control: no-store` ให้ทั้งสอง route แล้ว (`main.ts`) ตาม pattern เดียวกับ `platform.html`/`monitoring.js` ที่ทำไว้อยู่แล้วในแอปนี้
+
+**การแก้ไข `docs/openapi.yaml`**:
+- ดึงจาก `GET https://match-stock.ddns.net/api-docs-json` ตรงๆ อีกครั้ง (source เดียวกับ PR #13) — คราวนี้ **ไม่ได้ทับทั้งไฟล์แบบ PR #13** เพราะพบว่าไฟล์เดิมมี "hand-written forward-spec" ของทีมอยู่ 11 path (`/billing/*`, `/platform/billing/*`, `/platform/subscription-plans*`, `/goods-receipts/staged-items`, `/putaway/*`) ที่**ตั้งใจไม่โผล่ใน live spec** (controller เหล่านี้เป็น `@ApiExcludeController()` ทั้งหมด - Billing/Platform เป็น internal, ส่วน putaway/staged-items ยังไม่ implement จริง) — ทับทั้งไฟล์แบบเดิมจะ**ลบเอกสารพวกนี้ทิ้งโดยไม่ตั้งใจ**
+- แก้เป็น **merge**: sync ทุก path/schema ที่มีอยู่จริงใน live spec (รวม `delete:` ใหม่ทั้ง 10 model + example ที่มี `isDeleted` ถูกต้อง) แต่ยังคง 11 path + 10 schema (`SubscribeRequestDto`, `CreateSubscriptionPlanDto`, `StagedItemDto`, ฯลฯ) ที่ทีมเขียนไว้ล่วงหน้าไว้ครบ ไม่ลบทิ้ง
+
+**ยืนยันแล้ว**: `/api-docs` และ `/api-docs-json` มี `Cache-Control: no-store` จริงบน production, ไฟล์ที่ sync ใหม่มี 97 path (86 จาก live + 11 ที่เก็บไว้) ตรวจ `delete:` ของ Product/Category/Warehouse/Units ฯลฯ มีครบทุกตัว
+
 ## 2026-08-31 — Implement Subscription Quotas, Feature Gating, Company Scoping และ Billing API เข้า backend จริง
 
 ต่อยอดจาก `docs/TENANT_USER_SUBSCRIPTION_PLAN.md` + ส่วน Backend ของ `docs/BACKEND_FRONTEND_IMPLEMENTATION_GUIDE.md` — schema.prisma/openapi.yaml ของ repo นี้ระบุ spec ไว้แล้ว (commit `2fa27ea`) รอบนี้คือ **implement เข้า backend จริงครบทุกจุด ทดสอบ end-to-end บน local Docker และ production แล้ว**:
