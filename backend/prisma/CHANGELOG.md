@@ -2,6 +2,16 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-01 (2) — แก้ `MenuController`/`RentalsController` ถูก `@ApiExcludeController()` โดยไม่ตั้งใจ
+
+**ปัญหาที่พบ**: หลังแก้ cache header รอบก่อนแล้ว ผู้ใช้ยังรายงานว่า Swagger endpoint ไม่ครบ — ตรวจ `@Controller()` ทุกตัวใน backend เทียบกับ live spec เจอว่า `GET /menu` (nav tree ที่กรองตาม `MenuItem.requiredFeature`/`SubscriptionPlan.features` — งาน Dynamic Menu จาก PR #17 เมื่อวาน) และทั้ง controller `/rentals` (list/get/deposit-checkout) **หายไปจาก live spec ทั้งคู่**
+
+**สาเหตุ**: ทั้งสองไฟล์เป็น controller ฝั่ง tenant (ไม่ใช่ platform-admin) แต่ติด `@ApiExcludeController()` อยู่ - ตรวจสอบทุก controller ที่มี decorator นี้แล้วพบว่าเป็นกลุ่ม `platform/*` (admin realm, ถูกต้อง), webhook/mqtt callback (ถูกต้อง), reader-ops/monitoring/reader-config (internal ops tool, ถูกต้อง) แต่ `MenuController` (`menu`) กับ `RentalsController` (`rentals`) ไม่มีเหตุผลทางสถาปัตยกรรมรองรับเลย - สันนิษฐานว่า copy-paste มาจาก controller ฝั่ง admin (`MenuItemsAdminController`/`RentalAssignmentsAdminController`) แล้วลืมเอาออก
+
+**การแก้ไข**: เอา `@ApiExcludeController()` ออกจากทั้งสองไฟล์ (`src/modules/menu/menu.controller.ts`, `src/modules/rentals/rentals.controller.ts`) - build/test บน local Docker แล้ว deploy ขึ้น production แล้ว sync `docs/openapi.yaml` เพิ่ม 4 path ใหม่ (`GET /menu`, `GET /rentals`, `GET /rentals/{id}`, `POST /rentals/{id}/deposit-checkout`) + schema `CollectDepositDto`
+
+**ยืนยันแล้ว**: live `/api-docs-json` มี path เพิ่มจาก 86 เป็น 90 จริง เช็คแล้วมี `GET /menu`, `/rentals` ครบทั้ง 3 endpoint
+
 ## 2026-09-01 — Sync `docs/openapi.yaml` จาก live spec จริงอีกรอบ + แก้ Swagger cache
 
 **ปัญหาที่พบ**: หลังจากงาน isDeleted rollout เมื่อวาน (`DELETE /{id}` ใหม่ให้ 10 master-data model) เอกสาร `docs/openapi.yaml` **ไม่เคย sync ตามเลย** — ยัง"ไม่มี" `delete:` method ให้ endpoint พวกนี้แม้แต่ตัวเดียว (มีแค่ `get`/`patch`) และตัวอย่าง response ยังไม่มี field `isDeleted` เลยด้วย

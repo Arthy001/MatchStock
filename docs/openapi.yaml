@@ -5992,6 +5992,93 @@ paths:
       summary: Update subscription plan pricing/quotas (Platform Super Admin).
       tags:
         - Platform Billing
+  /menu:
+    get:
+      operationId: MenuController_getMenu_v1
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+      security:
+        - jwt: []
+      summary: Nested nav tree of menu items granted to the signed-in user's tenant and visible to their role.
+      tags:
+        - Menu
+  /rentals:
+    get:
+      operationId: RentalsController_list_v1
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            example: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+            type: number
+      responses:
+        '200':
+          description: ''
+      security:
+        - jwt: []
+      summary: List the signed-in tenant's rental assignments.
+      tags:
+        - Rentals
+  /rentals/{id}:
+    get:
+      operationId: RentalsController_get_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      security:
+        - jwt: []
+      summary: Get one rental assignment with its shipment legs.
+      tags:
+        - Rentals
+  /rentals/{id}/deposit-checkout:
+    post:
+      operationId: RentalsController_payDeposit_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CollectDepositDto'
+      responses:
+        '201':
+          description: ''
+      security:
+        - jwt: []
+      summary: Pay this assignment's deposit (customer-initiated, like POST /billing/checkout). Returns authorizeUri if 3DS/PromptPay confirmation is needed.
+      tags:
+        - Rentals
 info:
   title: MatchStock API
   description: |-
@@ -7320,3 +7407,17 @@ components:
         message:
           type: string
           example: Warehouse limit reached for current plan (3/3). Please upgrade your subscription.
+    CollectDepositDto:
+      type: object
+      properties:
+        method:
+          enum:
+            - card
+            - promptpay
+          type: string
+          example: card
+        cardToken:
+          type: string
+          example: tokn_test_abc123
+      required:
+        - method
