@@ -608,9 +608,10 @@ model Product {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  tenant Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  images ProductImage[]
-  tags   Tag[]
+  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  images            ProductImage[]
+  tags              Tag[]
+  goodsReceiptLines GoodsReceiptLine[]
 
   @@unique([tenantId, sku])
   @@unique([tenantId, code])
@@ -761,8 +762,9 @@ model Supplier {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  company       Company?       @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  goodsReceipts GoodsReceipt[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -915,7 +917,8 @@ model BinLocation {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  warehouse         Warehouse          @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  goodsReceiptLines GoodsReceiptLine[]
 
   @@unique([warehouseId, code])
   @@index([tenantId])
@@ -1051,13 +1054,17 @@ model DeviceIngestionStat {
 // =============================================================================
 
 model GoodsReceipt {
-  id            String   @id @default(uuid()) @db.Uuid
-  tenantId      String   @map("tenant_id") @db.Uuid
-  receiptNumber String   @map("receipt_number") @db.VarChar(100)
-  warehouseId   String   @map("warehouse_id") @db.Uuid
-  binLocationId String?  @map("bin_location_id") @db.Uuid
-  receivedAt    DateTime @map("received_at")
-  notes         String?  @db.VarChar(1000)
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @map("tenant_id") @db.Uuid
+  supplierId        String?   @map("supplier_id") @db.Uuid
+  warehouseId       String    @map("warehouse_id") @db.Uuid
+  binLocationId     String?   @map("bin_location_id") @db.Uuid
+  receiptNumber     String    @map("receipt_number") @db.VarChar(100)
+  poNumber          String?   @map("po_number") @db.VarChar(100)
+  supplierInvoiceNo String?   @map("supplier_invoice_no") @db.VarChar(100)
+  photoUrls         String[]  @default([]) @map("photo_urls")
+  receivedAt        DateTime  @map("received_at")
+  notes             String?   @db.VarChar(1000)
 
   createdByType String?   @map("created_by_type") @db.VarChar(20)
   createdById   String?   @map("created_by_id") @db.Uuid
@@ -1070,9 +1077,41 @@ model GoodsReceipt {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  tenant    Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  supplier  Supplier?          @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  warehouse Warehouse          @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  lines     GoodsReceiptLine[]
+
   @@unique([tenantId, receiptNumber])
   @@index([tenantId])
+  @@index([supplierId])
+  @@index([warehouseId])
   @@map("goods_receipts")
+}
+
+model GoodsReceiptLine {
+  id              String    @id @default(uuid()) @db.Uuid
+  goodsReceiptId  String    @map("goods_receipt_id") @db.Uuid
+  productId       String    @map("product_id") @db.Uuid
+  quantity        Int       // จำนวนที่รับเข้าสมบูรณ์
+  damagedQuantity Int       @default(0) @map("damaged_quantity") // จำนวนที่ชำรุดตอนตรวจรับ
+  putawayQuantity Int       @default(0) @map("putaway_quantity") // จำนวนที่จัดเก็บเข้า Bin แล้ว
+  lotNumber       String?   @map("lot_number") @db.VarChar(100)
+  productionDate  DateTime? @map("production_date")
+  expiryDate      DateTime? @map("expiry_date")
+  unitCostMinor   BigInt?   @map("unit_cost_minor") // ราคาต้นทุนต่อหน่วย (สตางค์)
+  binLocationId   String?   @map("bin_location_id") @db.Uuid // null = พักที่ Staging
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  goodsReceipt GoodsReceipt @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
+  product      Product      @relation(fields: [productId], references: [id])
+  binLocation  BinLocation? @relation(fields: [binLocationId], references: [id], onDelete: SetNull)
+
+  @@index([goodsReceiptId])
+  @@index([productId])
+  @@index([binLocationId])
+  @@map("goods_receipt_lines")
 }
 
 model GoodsIssue {

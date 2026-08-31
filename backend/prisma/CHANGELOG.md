@@ -2,7 +2,22 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
-## 2026-08-31 — เพิ่ม Subscription Quotas, Menu Feature Gating, และ Company Scoping
+## 2026-08-31 — Rework ระบบรับสินค้า (Goods Receiving) & จัดเก็บ (Flexible Putaway)
+
+อัปเดต `schema.prisma` เพื่อรองรับระบบรับสินค้าที่ยืดหยุ่นและการจัดเก็บเข้าชั้นวาง (1-Step / 2-Step Putaway):
+
+1. **`GoodsReceipt`**:
+   - เพิ่ม `supplierId` (`supplier_id` - Nullable): รองรับการผูกกับ Supplier
+   - เพิ่ม `poNumber` (`po_number` - Nullable): รองรับเลขที่ใบสั่งซื้อ PO จากกระดาษ
+   - เพิ่ม `supplierInvoiceNo` (`supplier_invoice_no` - Nullable): รองรับเลขที่ใบส่งของ/ใบกำกับสินค้า
+   - เพิ่ม `photoUrls` (`photo_urls` - String Array): แนบรูปถ่ายใบส่งของหรือสภาพกล่องสินค้า
+   - ผูกความสัมพันธ์กับ `Supplier?`
+2. **`GoodsReceiptLine` (โมเดลใหม่)**:
+   - ตารางรายการสินค้ารายบรรทัด: `productId`, `quantity` (ยอดรับสมบูรณ์), `damagedQuantity` (ยอดชำรุดตอนตรวจรับ), `putawayQuantity` (ยอดที่ขึ้นชั้นวางแล้ว)
+   - ข้อมูล Lot/FEFO: `lotNumber`, `productionDate`, `expiryDate`, `unitCostMinor`
+   - พิกัดจัดเก็บ: `binLocationId` (`null` = พักที่จุด Staging รอ Putaway, ระบุค่า = 1-Step Direct Putaway)
+   - ผูกความสัมพันธ์กับ `GoodsReceipt`, `Product`, `BinLocation`
+3. **เอกสารการออกแบบ**: จัดทำ `docs/RECEIVING_AND_PUTAWAY_DESIGN.md` อธิบาย Workflow และข้อกำหนดระบบครบถ้วน
 
 อัปเดต `schema.prisma`, `seed.ts`, และ `docs/openapi.yaml` เพื่อรองรับระบบ Subscription Packages (Free, Pro, Ultra) และ Multi-Company Scoping:
 
