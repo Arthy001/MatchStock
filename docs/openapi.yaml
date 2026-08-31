@@ -1,18 +1,4 @@
 openapi: 3.0.0
-info:
-  title: MatchStock API Contract
-  description: |-
-    RFID inventory ingestion + management API. Every route below is shown at its real /api/v1/... path. Most endpoints require a user JWT (sign in via POST /api/v1/auth/login, then click "Authorize" below and paste the accessToken). POST /api/v1/ingestion/readings is authenticated differently: each request is signed with the device secret rather than carrying a bearer token - see that endpoint's description for the X-Device-Key-Id/X-Signature headers.
-
-    Response envelope: every successful response is wrapped as `{ "success": true, "data": <shown below>, "message": string, "meta"?: {page,limit,totalCount,totalPages} }` (`meta` only on paginated list endpoints) - the schemas documented per endpoint below describe the `data` field only, not the outer envelope. Every error response is `{ "success": false, "message": string, "errors": string[] }` - `message` is a fixed category label (e.g. "Validation failed", "Not found"), the actual reason(s) are always in `errors` (the real HTTP status code is on the response line, not duplicated in the body). A handful of non-JSON endpoints (file downloads, the RFID ingestion endpoint, the payment webhook) are exempt and return their body unwrapped - each says so in its own description.
-  version: '1.0'
-servers:
-  - url: https://match-stock.ddns.net/api/v1
-    description: Production (OCI VM)
-  - url: http://localhost:3010/api/v1
-    description: Local Development Server
-security:
-  - jwt: []
 paths:
   /auth/login:
     post:
@@ -301,6 +287,7 @@ paths:
                       categoryId: f870ae79-783c-40d9-92cf-2676ddcfdf64
                       unitOfMeasure: null
                       isActive: true
+                      isDeleted: false
                       isReturnable: false
                       unitId: null
                       brandId: null
@@ -387,6 +374,7 @@ paths:
                     categoryId: f870ae79-783c-40d9-92cf-2676ddcfdf64
                     unitOfMeasure: null
                     isActive: true
+                    isDeleted: false
                     isReturnable: false
                     unitId: null
                     brandId: null
@@ -455,6 +443,7 @@ paths:
                     categoryId: f870ae79-783c-40d9-92cf-2676ddcfdf64
                     unitOfMeasure: null
                     isActive: true
+                    isDeleted: false
                     isReturnable: false
                     unitId: null
                     brandId: null
@@ -548,6 +537,7 @@ paths:
                     categoryId: f870ae79-783c-40d9-92cf-2676ddcfdf64
                     unitOfMeasure: null
                     isActive: true
+                    isDeleted: false
                     isReturnable: false
                     unitId: null
                     brandId: null
@@ -588,7 +578,7 @@ paths:
       tags:
         - Products
     delete:
-      operationId: ProductsController_deactivate_v1
+      operationId: ProductsController_softDelete_v1
       parameters:
         - name: id
           required: true
@@ -644,18 +634,15 @@ paths:
                     createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
                     updatedByType: user
                     updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
-                    deletedAt: '2026-08-31T12:15:23.620Z'
+                    deletedAt: '2026-08-31T00:00:00.000Z'
                     deletedByType: user
                     deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
                     createdAt: '2026-08-18T02:39:41.690Z'
-                    updatedAt: '2026-08-31T12:15:23.620Z'
+                    updatedAt: '2026-08-18T02:39:41.690Z'
                   message: Operation completed successfully
       security:
         - jwt: []
-      summary: >-
-        Delete a product (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every
-        list/detail/search/import-export response, but the row is kept for history and its sku/code/slug is freed
-        for reuse. Use PATCH { isActive:false } for a reversible suspend instead.
+      summary: 'Delete a product (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/search/import-export response, but the row is kept for history and its sku/code/slug is freed for reuse. Use PATCH { isActive:false } for a reversible suspend instead.'
       tags:
         - Products
   /products/{id}/images:
@@ -937,6 +924,47 @@ paths:
         - jwt: []
       tags:
         - Units
+    delete:
+      operationId: UnitsController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: pcs
+                    name: Pieces
+                    type: quantity
+                    description: null
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a unit (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
+      tags:
+        - Units
   /units/{id}/deactivate:
     post:
       operationId: UnitsController_deactivate_v1
@@ -1153,6 +1181,46 @@ paths:
                   message: Operation completed successfully
       security:
         - jwt: []
+      tags:
+        - Brands
+    delete:
+      operationId: BrandsController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: acme
+                    name: Acme
+                    description: null
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a brand (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
       tags:
         - Brands
   /brands/{id}/deactivate:
@@ -1380,6 +1448,48 @@ paths:
         - jwt: []
       tags:
         - Manufacturers
+    delete:
+      operationId: ManufacturersController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: globex-mfg
+                    name: Globex Manufacturing
+                    contactPerson: Somchai Owner
+                    phone: +66-2-123-4567
+                    email: contact@globex-mfg.example
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a manufacturer (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
+      tags:
+        - Manufacturers
   /manufacturers/{id}/deactivate:
     post:
       operationId: ManufacturersController_deactivate_v1
@@ -1603,6 +1713,47 @@ paths:
         - jwt: []
       tags:
         - Suppliers
+    delete:
+      operationId: SuppliersController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: thai-packaging-co
+                    name: Thai Packaging Co., Ltd.
+                    contactPerson: Somchai Owner
+                    phone: +66-2-123-4567
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a supplier (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
+      tags:
+        - Suppliers
   /suppliers/{id}/deactivate:
     post:
       operationId: SuppliersController_deactivate_v1
@@ -1821,6 +1972,46 @@ paths:
         - jwt: []
       tags:
         - Categories
+    delete:
+      operationId: CategoriesController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: packaging
+                    name: Packaging
+                    description: null
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a category (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
+      tags:
+        - Categories
   /categories/{id}/deactivate:
     post:
       operationId: CategoriesController_deactivate_v1
@@ -2032,6 +2223,45 @@ paths:
                   message: Operation completed successfully
       security:
         - jwt: []
+      tags:
+        - Tax Types
+    delete:
+      operationId: TaxTypesController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    name: VAT
+                    ratePercent: 7
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a tax type (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
       tags:
         - Tax Types
   /tax-types/{id}/deactivate:
@@ -2250,6 +2480,46 @@ paths:
         - jwt: []
       tags:
         - Barcode Symbologies
+    delete:
+      operationId: BarcodeSymbologiesController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: ean-13
+                    name: EAN-13
+                    description: null
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a barcode symbology (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
+      tags:
+        - Barcode Symbologies
   /barcode-symbologies/{id}/deactivate:
     post:
       operationId: BarcodeSymbologiesController_deactivate_v1
@@ -2447,6 +2717,47 @@ paths:
       security:
         - jwt: []
       summary: Update a warehouse.
+      tags:
+        - Warehouses
+    delete:
+      operationId: WarehousesController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    name: Main Warehouse
+                    code: WH-MAIN
+                    address: null
+                    isActive: true
+                    maxCapacity: null
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a warehouse (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
       tags:
         - Warehouses
   /warehouses/{id}/stock:
@@ -2691,6 +3002,52 @@ paths:
                   message: Operation completed successfully
       security:
         - jwt: []
+      tags:
+        - Warehouses
+    delete:
+      operationId: WarehousesController_removeBin_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+        - name: binId
+          required: true
+          in: path
+          schema:
+            example: c4f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6c
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: c4f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6c
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                    code: A-01
+                    isActive: true
+                    maxCapacity: null
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a bin location (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
       tags:
         - Warehouses
   /warehouses/{id}/bins/{binId}/deactivate:
@@ -3767,99 +4124,6 @@ paths:
       summary: Receive one or more tags under this receipt - pre-registers unseen tags, binds each to the product with this receipt's lot/production/expiry data.
       tags:
         - Goods Receipts
-  /goods-receipts/staged-items:
-    get:
-      operationId: GoodsReceiptsController_getStagedItems_v1
-      summary: List all goods receipt items currently held in receiving staging awaiting putaway.
-      tags:
-        - Goods Receipts
-        - Putaway
-      security:
-        - jwt: []
-      parameters:
-        - name: warehouseId
-          in: query
-          required: false
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Staged items pending putaway
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/StagedItemDto'
-  /putaway/suggest-bin:
-    get:
-      operationId: PutawayController_suggestBin_v1
-      summary: Get suggested bin locations for a product based on zone, category, and capacity.
-      tags:
-        - Putaway
-      security:
-        - jwt: []
-      parameters:
-        - name: warehouseId
-          in: query
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: productId
-          in: query
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: quantity
-          in: query
-          required: false
-          schema:
-            type: integer
-            default: 1
-      responses:
-        '200':
-          description: Suggested bin locations
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PutawaySuggestionResponseDto'
-  /putaway/confirm:
-    post:
-      operationId: PutawayController_confirmPutaway_v1
-      summary: Confirm items moved from receiving staging into target bin location.
-      tags:
-        - Putaway
-      security:
-        - jwt: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PutawayConfirmDto'
-      responses:
-        '200':
-          description: Putaway confirmed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: Putaway confirmed successfully
   /goods-issues:
     get:
       operationId: GoodsIssuesController_list_v1
@@ -5360,6 +5624,99 @@ paths:
       summary: Delete a company/branch.
       tags:
         - Companies
+  /goods-receipts/staged-items:
+    get:
+      operationId: GoodsReceiptsController_getStagedItems_v1
+      summary: List all goods receipt items currently held in receiving staging awaiting putaway.
+      tags:
+        - Goods Receipts
+        - Putaway
+      security:
+        - jwt: []
+      parameters:
+        - name: warehouseId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Staged items pending putaway
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StagedItemDto'
+  /putaway/suggest-bin:
+    get:
+      operationId: PutawayController_suggestBin_v1
+      summary: Get suggested bin locations for a product based on zone, category, and capacity.
+      tags:
+        - Putaway
+      security:
+        - jwt: []
+      parameters:
+        - name: warehouseId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: productId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: quantity
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Suggested bin locations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PutawaySuggestionResponseDto'
+  /putaway/confirm:
+    post:
+      operationId: PutawayController_confirmPutaway_v1
+      summary: Confirm items moved from receiving staging into target bin location.
+      tags:
+        - Putaway
+      security:
+        - jwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutawayConfirmDto'
+      responses:
+        '200':
+          description: Putaway confirmed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Putaway confirmed successfully
   /billing/plans:
     get:
       operationId: BillingController_getPlans_v1
@@ -5635,6 +5992,20 @@ paths:
       summary: Update subscription plan pricing/quotas (Platform Super Admin).
       tags:
         - Platform Billing
+info:
+  title: MatchStock API
+  description: |-
+    RFID inventory ingestion + management API. Every route below is shown at its real /api/v1/... path. Most endpoints require a user JWT (sign in via POST /api/v1/auth/login, then click "Authorize" below and paste the accessToken). POST /api/v1/ingestion/readings is authenticated differently: each request is signed with the device secret rather than carrying a bearer token - see that endpoint's description for the X-Device-Key-Id/X-Signature headers.
+
+    Response envelope: every successful response is wrapped as `{ "success": true, "data": <shown below>, "message": string, "meta"?: {page,limit,totalCount,totalPages} }` (`meta` only on paginated list endpoints) - the schemas documented per endpoint below describe the `data` field only, not the outer envelope. Every error response is `{ "success": false, "message": string, "errors": string[] }` - `message` is a fixed category label (e.g. "Validation failed", "Not found"), the actual reason(s) are always in `errors` (the real HTTP status code is on the response line, not duplicated in the body). A handful of non-JSON endpoints (file downloads, the RFID ingestion endpoint, the payment webhook) are exempt and return their body unwrapped - each says so in its own description.
+  version: '1.0'
+  contact: {}
+tags: []
+servers:
+  - url: https://match-stock.ddns.net/api/v1
+    description: Production (OCI VM)
+  - url: http://localhost:3010/api/v1
+    description: Local Development Server
 components:
   securitySchemes:
     jwt:
@@ -5684,6 +6055,10 @@ components:
             - warehouse_staff
             - purchasing_staff
           example: operator
+        companyId:
+          type: string
+          format: uuid
+          description: Restrict this user to one Company (branch/subsidiary) - omit/null to see every company in the tenant.
       required:
         - email
         - password
@@ -5704,6 +6079,11 @@ components:
         isActive:
           type: boolean
           example: true
+        companyId:
+          type: string
+          nullable: true
+          format: uuid
+          description: Restrict this user to one Company (branch/subsidiary) - null clears the restriction (sees every company in the tenant).
     UpdateProductDto:
       type: object
       properties:
@@ -5734,10 +6114,6 @@ components:
         isActive:
           type: boolean
           example: true
-        isDeleted:
-          type: boolean
-          example: false
-          description: Soft-delete flag (true when record is in trash/deleted).
         isReturnable:
           type: boolean
           example: true
@@ -5971,6 +6347,10 @@ components:
         phone:
           type: string
           maxLength: 50
+        companyId:
+          type: string
+          format: uuid
+          description: Set only if this supplier is really an inter-company subsidiary in the same tenant, not an outside vendor.
       required:
         - name
     UpdateSupplierDto:
@@ -5990,6 +6370,11 @@ components:
         isDeleted:
           type: boolean
           example: false
+        companyId:
+          type: string
+          nullable: true
+          format: uuid
+          description: Set only if this supplier is really an inter-company subsidiary in the same tenant, not an outside vendor. null clears it back to an outside vendor.
     CreateCategoryDto:
       type: object
       properties:
@@ -6107,6 +6492,11 @@ components:
           minimum: 0
           example: 1000
           description: Total tag-count ceiling - GET /alerts flags this warehouse once the live count exceeds it.
+        companyId:
+          type: string
+          nullable: true
+          format: uuid
+          description: Scope this warehouse to one Company (branch/subsidiary) - null = shared/tenant-wide warehouse.
     UpdateBinLocationDto:
       type: object
       properties:
@@ -6266,162 +6656,19 @@ components:
           type: string
           format: uuid
           example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
-        supplierId:
-          type: string
-          format: uuid
-          nullable: true
-          example: c4d5e6f7-8a9b-0c1d-2e3f-4a5b6c7d8e9f
-        poNumber:
-          type: string
-          maxLength: 100
-          nullable: true
-          example: PO-2026-08001
-        supplierInvoiceNo:
-          type: string
-          maxLength: 100
-          nullable: true
-          example: INV-998822
-        photoUrls:
-          type: array
-          items:
-            type: string
-          example:
-            - https://match-stock.ddns.net/uploads/receipts/gr-proof-01.jpg
         binLocationId:
           type: string
           format: uuid
-          nullable: true
-          description: Default putaway bin for 1-step direct receiving. If null, items enter receiving staging.
+          description: Default putaway bin for this receipt.
         receivedAt:
           type: string
-          example: '2026-08-31T00:00:00.000Z'
+          example: '2026-08-17T00:00:00.000Z'
         notes:
           type: string
           maxLength: 1000
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/CreateGoodsReceiptItemDto'
       required:
         - receiptNumber
         - warehouseId
-    CreateGoodsReceiptItemDto:
-      type: object
-      properties:
-        productId:
-          type: string
-          format: uuid
-          example: fed2e82f-7ee9-465f-bd43-ac982a9675a7
-        quantity:
-          type: integer
-          minimum: 1
-          example: 50
-        damagedQuantity:
-          type: integer
-          minimum: 0
-          default: 0
-          example: 0
-        lotNumber:
-          type: string
-          nullable: true
-          example: LOT-2026-08A
-        productionDate:
-          type: string
-          nullable: true
-          example: '2026-08-01T00:00:00.000Z'
-        expiryDate:
-          type: string
-          nullable: true
-          example: '2028-08-01T00:00:00.000Z'
-        unitCostMinor:
-          type: integer
-          nullable: true
-          description: Cost price in minor units (satangs)
-          example: 120000
-        binLocationId:
-          type: string
-          format: uuid
-          nullable: true
-          description: Target bin for direct receiving. If null, remains in staging.
-      required:
-        - productId
-        - quantity
-    StagedItemDto:
-      type: object
-      properties:
-        receiptId:
-          type: string
-          format: uuid
-        receiptNumber:
-          type: string
-        productId:
-          type: string
-          format: uuid
-        productName:
-          type: string
-        sku:
-          type: string
-        stagedQuantity:
-          type: integer
-          example: 50
-        lotNumber:
-          type: string
-          nullable: true
-        receivedAt:
-          type: string
-    PutawaySuggestionResponseDto:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          type: object
-          properties:
-            suggestedBins:
-              type: array
-              items:
-                type: object
-                properties:
-                  binId:
-                    type: string
-                    format: uuid
-                  binCode:
-                    type: string
-                    example: A-01-01
-                  zone:
-                    type: string
-                    example: Zone A
-                  currentOccupancy:
-                    type: integer
-                    example: 20
-                  maxCapacity:
-                    type: integer
-                    example: 100
-                  reason:
-                    type: string
-                    example: Matching category zone and available capacity
-    PutawayConfirmDto:
-      type: object
-      properties:
-        receiptId:
-          type: string
-          format: uuid
-        productId:
-          type: string
-          format: uuid
-        targetBinCode:
-          type: string
-          example: A-01-01
-        quantity:
-          type: integer
-          minimum: 1
-          example: 50
-      required:
-        - receiptId
-        - productId
-        - targetBinCode
-        - quantity
     ReceiveGoodsDto:
       type: object
       properties:
@@ -6812,6 +7059,123 @@ components:
         isDeleted:
           type: boolean
           example: false
+    CreateGoodsReceiptItemDto:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+          example: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+        quantity:
+          type: integer
+          minimum: 1
+          example: 50
+        damagedQuantity:
+          type: integer
+          minimum: 0
+          default: 0
+          example: 0
+        lotNumber:
+          type: string
+          nullable: true
+          example: LOT-2026-08A
+        productionDate:
+          type: string
+          nullable: true
+          example: '2026-08-01T00:00:00.000Z'
+        expiryDate:
+          type: string
+          nullable: true
+          example: '2028-08-01T00:00:00.000Z'
+        unitCostMinor:
+          type: integer
+          nullable: true
+          description: Cost price in minor units (satangs)
+          example: 120000
+        binLocationId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Target bin for direct receiving. If null, remains in staging.
+      required:
+        - productId
+        - quantity
+    StagedItemDto:
+      type: object
+      properties:
+        receiptId:
+          type: string
+          format: uuid
+        receiptNumber:
+          type: string
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        sku:
+          type: string
+        stagedQuantity:
+          type: integer
+          example: 50
+        lotNumber:
+          type: string
+          nullable: true
+        receivedAt:
+          type: string
+    PutawaySuggestionResponseDto:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            suggestedBins:
+              type: array
+              items:
+                type: object
+                properties:
+                  binId:
+                    type: string
+                    format: uuid
+                  binCode:
+                    type: string
+                    example: A-01-01
+                  zone:
+                    type: string
+                    example: Zone A
+                  currentOccupancy:
+                    type: integer
+                    example: 20
+                  maxCapacity:
+                    type: integer
+                    example: 100
+                  reason:
+                    type: string
+                    example: Matching category zone and available capacity
+    PutawayConfirmDto:
+      type: object
+      properties:
+        receiptId:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        targetBinCode:
+          type: string
+          example: A-01-01
+        quantity:
+          type: integer
+          minimum: 1
+          example: 50
+      required:
+        - receiptId
+        - productId
+        - targetBinCode
+        - quantity
     SubscribeRequestDto:
       type: object
       properties:
@@ -6820,7 +7184,9 @@ components:
           example: PRO_MONTHLY
         billingCycle:
           type: string
-          enum: [monthly, yearly]
+          enum:
+            - monthly
+            - yearly
           example: monthly
         gatewayCardId:
           type: string
@@ -6845,11 +7211,15 @@ components:
           example: MatchStock Pro
         type:
           type: string
-          enum: [web, hardware]
+          enum:
+            - web
+            - hardware
           example: web
         billingCycle:
           type: string
-          enum: [monthly, yearly]
+          enum:
+            - monthly
+            - yearly
           example: monthly
         priceMinor:
           type: integer
@@ -6876,7 +7246,10 @@ components:
           type: array
           items:
             type: string
-          example: [products.basic, warehouse.bins, stock.fefo]
+          example:
+            - products.basic
+            - warehouse.bins
+            - stock.fefo
       required:
         - code
         - name
