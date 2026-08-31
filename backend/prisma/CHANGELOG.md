@@ -2,6 +2,17 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-01 (4) — Sync `schema.prisma` กลับ: 2 field ที่ backend มีอยู่แล้วแต่ docs ตกหล่น
+
+ตอนตรวจสอบ backend เทียบกับ `schema.prisma` บน develop (ก่อนหน้านี้) พบว่า backend จริง **มากกว่า** docs อยู่ 2 จุด (คนละทิศกับ gap ปกติ - ของจริง implement ไปแล้วแต่ schema.prisma repo นี้ไม่เคย sync ตาม):
+
+1. **`ReaderOpsOperator`**: ขาด `isActive`/`deletedAt`/`deletedByType`/`deletedById`/`updatedAt` (soft-delete + suspend, แพทเทิร์นเดียวกับ `User`/`PlatformAdmin` - login account ที่มี MFA)
+2. **`WebhookSubscription`**: ขาด `deletedAt`/`deletedByType`/`deletedById` (soft-delete ผ่าน `withSoftDelete` extension - ของจริงมีมาตั้งแต่รอบ isDeleted rollout ก่อนหน้านี้)
+
+เพิ่มกลับเข้า `schema.prisma` ให้ตรงกับ backend จริงทุกตัวอักษร แล้วรัน `npx prisma format` ทับ - format เก็บงานที่ตกหล่นให้เพิ่มอีกอย่าง: **`Tenant.goodsReceipts` reverse relation หายไป** ตั้งแต่ commit `ce4aa7b` (เพิ่ม `GoodsReceipt.tenant` relation แต่ไม่เพิ่ม back-relation ฝั่ง `Tenant` - ทำให้ schema จุดนี้ invalid มาตั้งแต่ commit นั้น) - `prisma format` เติมให้อัตโนมัติ ยืนยันด้วย `prisma validate` ผ่านแล้ว
+
+**ยืนยันแล้ว**: diff `schema.prisma` กับ backend จริงเหลือแค่ 2 จุดที่ต่างกันโดยตั้งใจ (บันทึกไว้ใน CHANGELOG entry ก่อนหน้า - `GoodsReceiptLine` ไม่มี `@relation`/FK ตาม convention ตระกูล stock-transactions, และ `Product` ใช้ partial-unique-index แทน plain `@@unique` สำหรับ soft-delete) นอกนั้นตรงกันทุกตัวอักษร ไม่มีการเปลี่ยนแปลงฝั่ง backend จริงเลยรอบนี้ (docs-only sync)
+
 ## 2026-09-01 (3) — Implement Goods Receipt Lines + Flexible Putaway เข้า backend จริง
 
 ต่อยอดจาก commit `ce4aa7b` (rework goods receipt schema with lines and flexible putaway design) - ตอนตรวจสอบ backend เทียบกับ `schema.prisma` บน develop พบว่าฟีเจอร์นี้ยังไม่ได้ implement เข้า backend เลย รอบนี้คือ **implement เข้าจริงครบทุกจุดตาม `docs/RECEIVING_AND_PUTAWAY_DESIGN.md` ทดสอบ end-to-end บน local Docker และ production แล้ว**:
