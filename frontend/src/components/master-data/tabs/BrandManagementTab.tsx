@@ -23,25 +23,15 @@ export const BrandManagementTab: React.FC<BrandManagementTabProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Action Bar */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <Tag className="w-5 h-5 text-indigo-600" />
-            แบรนด์สินค้าทั้งหมด ({safeBrands.length})
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            จัดการรายชื่อแบรนด์และยี่ห้อสินค้าทั้งหมดในระบบ MatchStock
-          </p>
-        </div>
-
-        <button
-          onClick={onOpenAddModal}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold shadow-xs transition cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>เพิ่มแบรนด์ใหม่</span>
-        </button>
+      {/* Table Section Header */}
+      <div>
+        <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+          <Tag className="w-5 h-5 text-indigo-600" />
+          แบรนด์สินค้าทั้งหมด ({safeBrands.length})
+        </h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          จัดการรายชื่อแบรนด์และยี่ห้อสินค้าทั้งหมดในระบบ MatchStock
+        </p>
       </div>
 
       {/* Brands Table */}

@@ -326,79 +326,66 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Header Card */}
-      <div
-        className={`p-6 rounded-2xl border transition-all ${
-          theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
-        }`}
-      >
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-blue-600/10 text-blue-600 dark:text-blue-400">
-                <Barcode className="w-6 h-6" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-slate-900 dark:text-slate-50">
-                  {t.scannerTitle}
-                </h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-0.5">
-                  {t.scannerSubtitle}
-                </p>
-              </div>
-            </div>
-          </div>
+      {/* Enterprise Title & Actions Toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-zinc-200/60 dark:border-zinc-800/60">
+        <div>
+          <h2 className={`text-xl font-bold tracking-tight ${theme === 'dark' ? 'text-zinc-100' : 'text-zinc-900'}`}>
+            {t.scannerTitle}
+          </h2>
+          <p className={`text-[15px] font-normal mt-0.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>
+            {t.scannerSubtitle}
+          </p>
+        </div>
 
-          {/* Quick Sound/Haptic Controls & Camera Switcher */}
-          <div className="flex flex-wrap items-center gap-2">
-            {cameras.length > 1 && (
-              <select
-                value={selectedCameraId}
-                onChange={(e) => {
-                  setSelectedCameraId(e.target.value);
-                  if (isScanning) {
-                    stopCameraScanner().then(() => startCameraScanner());
-                  }
-                }}
-                className={`text-xs px-3 py-2 rounded-xl border font-medium focus:ring-2 focus:ring-blue-500 transition ${
-                  theme === 'dark'
-                    ? 'bg-slate-800 border-slate-700 text-slate-200'
-                    : 'bg-slate-50 border-slate-200 text-slate-700'
-                }`}
-              >
-                {cameras.map((cam) => (
-                  <option key={cam.id} value={cam.id}>
-                    📷 {cam.label || `Camera ${cam.id.slice(0, 5)}`}
-                  </option>
-                ))}
-              </select>
-            )}
-
-            <button
-              onClick={() => setSoundEnabled((prev) => !prev)}
-              className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition ${
-                soundEnabled
-                  ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300'
-                  : 'bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400'
-              }`}
-              title={soundEnabled ? 'Audio Feedback: ON' : 'Audio Feedback: OFF'}
-            >
-              {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-              <span className="hidden sm:inline">{soundEnabled ? 'Beep ON' : 'Beep OFF'}</span>
-            </button>
-
-            <button
-              onClick={toggleCamera}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition shadow-sm ${
-                isScanning
-                  ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20'
+        {/* Quick Sound/Haptic Controls & Camera Switcher */}
+        <div className="flex flex-wrap items-center gap-2">
+          {cameras.length > 1 && (
+            <select
+              value={selectedCameraId}
+              onChange={(e) => {
+                setSelectedCameraId(e.target.value);
+                if (isScanning) {
+                  stopCameraScanner().then(() => startCameraScanner());
+                }
+              }}
+              className={`text-xs px-3 py-1.5 rounded-md border font-medium focus:ring-2 focus:ring-blue-500 transition ${
+                theme === 'dark'
+                  ? 'bg-zinc-800 border-zinc-700 text-zinc-200'
+                  : 'bg-zinc-50 border-zinc-300 text-zinc-700'
               }`}
             >
-              {isScanning ? <CameraOff className="w-4 h-4" /> : <Camera className="w-4 h-4" />}
-              <span>{isScanning ? 'ปิดกล้องสแกน' : 'เปิดกล้องสแกน (Start Scanner)'}</span>
-            </button>
-          </div>
+              {cameras.map((cam) => (
+                <option key={cam.id} value={cam.id}>
+                  📷 {cam.label || `Camera ${cam.id.slice(0, 5)}`}
+                </option>
+              ))}
+            </select>
+          )}
+
+          <button
+            onClick={() => setSoundEnabled((prev) => !prev)}
+            className={`p-2 rounded-md border text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+              soundEnabled
+                ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300'
+                : 'bg-zinc-100 border-zinc-200 text-zinc-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400'
+            }`}
+            title={soundEnabled ? 'Audio Feedback: ON' : 'Audio Feedback: OFF'}
+          >
+            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            <span className="hidden sm:inline">{soundEnabled ? 'Beep ON' : 'Beep OFF'}</span>
+          </button>
+
+          <button
+            onClick={toggleCamera}
+            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-[14px] font-semibold transition cursor-pointer active:scale-[0.99] ${
+              isScanning
+                ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-xs shadow-rose-600/30'
+                : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-xs shadow-blue-600/30'
+            }`}
+          >
+            {isScanning ? <CameraOff className="w-4 h-4" /> : <Camera className="w-4 h-4" />}
+            <span>{isScanning ? 'ปิดกล้องสแกน' : 'เปิดกล้องสแกน'}</span>
+          </button>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Search, Bell, Sun, Moon, Building2, Command, Menu } from 'lucide-react';
 import { Language, ThemeMode, Tenant, User } from '../types';
 import { getTranslation } from '../i18n';
@@ -31,6 +31,29 @@ export const Header: React.FC<HeaderProps> = ({
   onMobileMenuToggle,
 }) => {
   const t = getTranslation(lang);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [isMac, setIsMac] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsMac(/(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent || navigator.platform));
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Intercept Ctrl+F or ⌘+F (รองรับทั้งแป้นพิมพ์ภาษาอังกฤษ และภาษาไทย 'ด'/'โ')
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        (e.code === 'KeyF' || e.key?.toLowerCase() === 'f' || e.key === 'ด' || e.key === 'โ')
+      ) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <header
@@ -68,20 +91,29 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="hidden md:flex items-center w-72 lg:w-96 relative">
         <Search className={`w-4 h-4 absolute left-3 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`} />
         <input
+          ref={searchInputRef}
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={t.searchPlaceholder}
-          className={`w-full pl-9 pr-14 py-1.5 rounded-lg text-xs font-semibold border focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition ${
+          className={`w-full pl-9 pr-16 py-1.5 rounded-lg text-xs font-semibold border focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition ${
             theme === 'dark'
               ? 'bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-400'
               : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-500'
           }`}
         />
-        <div className={`absolute right-2.5 flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border font-mono ${
-          theme === 'dark' ? 'text-slate-400 bg-slate-700/80 border-slate-600' : 'text-slate-600 bg-slate-200/80 border-slate-300'
-        }`}>
-          <Command className="w-3 h-3" /> F
+        <div
+          onClick={() => {
+            searchInputRef.current?.focus();
+            searchInputRef.current?.select();
+          }}
+          className={`absolute right-2.5 flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded border font-mono cursor-pointer select-none ${
+            theme === 'dark' ? 'text-slate-400 bg-slate-700/80 border-slate-600' : 'text-slate-600 bg-slate-200/80 border-slate-300'
+          }`}
+          title={isMac ? 'Command + F' : 'Ctrl + F'}
+        >
+          {isMac ? <Command className="w-3 h-3 inline" /> : <span>Ctrl</span>}
+          <span>F</span>
         </div>
       </div>
 

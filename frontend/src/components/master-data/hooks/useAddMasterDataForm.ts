@@ -279,63 +279,52 @@ export const useAddMasterDataForm = ({
         }
       } else if (activeSubTab === 'categories') {
         const catCode = addCatCode.trim() || `CAT-${Date.now().toString().slice(-4)}`;
-        let createdCat: CategoryItem;
         try {
           const res = await masterDataService.createCategory({
             code: catCode,
             name: addCatName,
             description: addCatDescription,
           });
-          createdCat = {
+          const createdCat: CategoryItem = {
             id: res?.id || `cat-${Date.now()}`,
             code: res?.code || catCode,
             name: res?.name || addCatName,
             description: res?.description || addCatDescription,
             isActive: true,
           };
-        } catch {
-          createdCat = {
-            id: `cat-${Date.now()}`,
-            code: catCode,
-            name: addCatName,
-            description: addCatDescription,
-            isActive: true,
-          };
+          setCategoriesList((prev) => [createdCat, ...prev]);
+          showToast(`เพิ่มหมวดหมู่ "${createdCat.name}" เรียบร้อยแล้ว`);
+        } catch (err: any) {
+          const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+          showToast(`เกิดข้อผิดพลาดในการเพิ่มหมวดหมู่: ${msg}`);
+          return;
         }
-        setCategoriesList((prev) => [createdCat, ...prev]);
-        showToast(`เพิ่มหมวดหมู่ "${createdCat.name}" เรียบร้อยแล้ว`);
       } else if (activeSubTab === 'brands') {
         const brdCode = addBrdCode.trim() || `BRD-${Date.now().toString().slice(-4)}`;
-        let createdBrd: BrandItem;
         try {
           const res = await masterDataService.createBrand({
             code: brdCode,
             name: addBrdName,
             description: addBrdDescription,
           });
-          createdBrd = {
+          const createdBrd: BrandItem = {
             id: res?.id || `brd-${Date.now()}`,
             code: res?.code || brdCode,
             name: res?.name || addBrdName,
             description: res?.description || addBrdDescription,
             isActive: true,
           };
-        } catch {
-          createdBrd = {
-            id: `brd-${Date.now()}`,
-            code: brdCode,
-            name: addBrdName,
-            description: addBrdDescription,
-            isActive: true,
-          };
+          setBrandsList((prev) => [createdBrd, ...prev]);
+          showToast(`เพิ่มแบรนด์ "${createdBrd.name}" เรียบร้อยแล้ว`);
+        } catch (err: any) {
+          const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+          showToast(`เกิดข้อผิดพลาดในการเพิ่มแบรนด์: ${msg}`);
+          return;
         }
-        setBrandsList((prev) => [createdBrd, ...prev]);
-        showToast(`เพิ่มแบรนด์ "${createdBrd.name}" เรียบร้อยแล้ว`);
       } else if (activeSubTab === 'companies') {
         const compCode = addCompanyCode.trim() || `COMP-${Date.now().toString().slice(-3)}`;
-        let createdCompany: Company;
         try {
-          createdCompany = await masterDataService.createCompany({
+          const createdCompany = await masterDataService.createCompany({
             code: compCode,
             name: addCompanyName,
             taxId: addCompanyTaxId,
@@ -346,113 +335,79 @@ export const useAddMasterDataForm = ({
             address: addCompanyAddress,
             isHeadquarter: addCompanyIsHq,
           });
-        } catch {
-          createdCompany = {
-            id: `comp-${Date.now()}`,
-            code: compCode,
-            name: addCompanyName,
-            taxId: addCompanyTaxId,
-            branchCode: addCompanyBranchCode || '00000',
-            branchName: addCompanyBranchName,
-            phone: addCompanyPhone,
-            email: addCompanyEmail,
-            address: addCompanyAddress,
-            isHeadquarter: addCompanyIsHq,
-            createdAt: new Date().toISOString(),
-          };
+          setCompaniesList((prev) => [createdCompany, ...prev]);
+          showToast(`เพิ่มบริษัท "${createdCompany.name}" เรียบร้อยแล้ว`);
+        } catch (err: any) {
+          const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+          showToast(`เกิดข้อผิดพลาดในการเพิ่มบริษัท: ${msg}`);
+          return;
         }
-        setCompaniesList((prev) => [createdCompany, ...prev]);
-        showToast(`เพิ่มบริษัท "${createdCompany.name}" เรียบร้อยแล้ว`);
       } else if (activeSubTab === 'units') {
         const uomCode = addCode.trim() || `UOM-${Date.now().toString().slice(-3)}`;
-        let createdUnit: UnitItem;
         try {
-          createdUnit = await masterDataService.createUnit({
+          const createdUnit = await masterDataService.createUnit({
             code: uomCode,
             name: addName,
           });
-        } catch {
-          createdUnit = {
-            id: `uom-${Date.now()}`,
-            code: uomCode,
-            name: addName,
-          };
+          setUnitsList((prev) => [createdUnit, ...prev]);
+          showToast(`เพิ่มหน่วยนับ "${createdUnit.name}" เรียบร้อยแล้ว`);
+        } catch (err: any) {
+          const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+          showToast(`เกิดข้อผิดพลาดในการเพิ่มหน่วยนับ: ${msg}`);
+          return;
         }
-        setUnitsList((prev) => [createdUnit, ...prev]);
-        showToast(`เพิ่มหน่วยนับ "${createdUnit.name}" เรียบร้อยแล้ว`);
       } else if (activeSubTab === 'warehouses') {
         const binCode = addBinCode.trim() || `BIN-${Date.now().toString().slice(-3)}`;
-        let createdBin: WarehouseBin;
         try {
-          createdBin = await warehouseService.createBin('wh-main', {
+          const createdBin = await warehouseService.createBin('wh-main', {
             code: binCode,
           });
-        } catch {
-          createdBin = {
-            id: `bin-${Date.now()}`,
-            warehouseId: 'wh-main',
-            warehouseName: addWarehouseName || 'Main Warehouse',
-            binCode: binCode,
-            zone: addZone || 'A',
-            rack: addRack || '01',
-            shelf: '1',
-            capacityKg: parseFloat(addCapacityKg) || 500,
-            currentItemsCount: 0,
-            status: 'available',
-          };
+          setBinsList((prev) => [createdBin, ...prev]);
+          showToast(`เพิ่มตำแหน่ง Bin "${createdBin.binCode || binCode}" เรียบร้อยแล้ว`);
+        } catch (err: any) {
+          const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+          showToast(`เกิดข้อผิดพลาดในการเพิ่ม Bin: ${msg}`);
+          return;
         }
-        setBinsList((prev) => [createdBin, ...prev]);
-        showToast(`เพิ่มตำแหน่ง Bin "${createdBin.binCode}" เรียบร้อยแล้ว`);
       } else if (activeSubTab === 'suppliers') {
         const supCode = addCode.trim() || `SUP-${Date.now().toString().slice(-3)}`;
-        let createdSup: Supplier;
         try {
-          createdSup = await masterDataService.createSupplier({
+          const createdSup = await masterDataService.createSupplier({
             code: supCode,
             name: addSupplierName || addName,
             contactPerson: addContactPerson,
             phone: addPhone,
             taxId: addTaxId,
           });
-        } catch {
-          createdSup = {
-            id: `sup-${Date.now()}`,
-            code: supCode,
-            name: addSupplierName || addName,
-            contactPerson: addContactPerson,
-            phone: addPhone,
-            email: addEmail || '',
-            taxId: addTaxId,
-            taxType: 'VAT7',
-            discountTerms: 'Net 30',
-            address: '',
-            status: 'active',
-          };
+          setSuppliersList((prev) => [createdSup, ...prev]);
+          showToast(`เพิ่มผู้จัดจำหน่าย "${createdSup.name}" เรียบร้อยแล้ว`);
+        } catch (err: any) {
+          const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+          showToast(`เกิดข้อผิดพลาดในการเพิ่มผู้จัดจำหน่าย: ${msg}`);
+          return;
         }
-        setSuppliersList((prev) => [createdSup, ...prev]);
-        showToast(`เพิ่มผู้จัดจำหน่าย "${createdSup.name}" เรียบร้อยแล้ว`);
       } else if (activeSubTab === 'rbac') {
-        let createdId = String(Date.now());
         try {
           const res = await masterDataService.createUser({
             email: addEmail,
             fullName: addName,
             role: addRole,
           });
-          if (res?.id) createdId = res.id;
-        } catch (uErr) {
-          console.warn('API createUser fallback to local:', uErr);
+          const newUser: RbacUser = {
+            id: res?.id || String(Date.now()),
+            name: addName,
+            email: addEmail,
+            department: 'Operations',
+            role: addRole,
+            status: 'Active',
+          };
+          setUsersList((prev) => [...prev, newUser]);
+          showToast(`เพิ่มผู้ใช้งาน "${newUser.name}" สิทธิ์ ${newUser.role} เรียบร้อยแล้ว`);
+        } catch (err: any) {
+          const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+          showToast(`เกิดข้อผิดพลาดในการเพิ่มผู้ใช้งาน: ${msg}`);
+          return;
         }
-        const newUser: RbacUser = {
-          id: createdId,
-          name: addName,
-          email: addEmail,
-          department: 'Operations',
-          role: addRole,
-          status: 'Active',
-        };
-        setUsersList((prev) => [...prev, newUser]);
-        showToast(`เพิ่มผู้ใช้งาน "${newUser.name}" สิทธิ์ ${newUser.role} เรียบร้อยแล้ว`);
       }
 
       setIsAddModalOpen(false);

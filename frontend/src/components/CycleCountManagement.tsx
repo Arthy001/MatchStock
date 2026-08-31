@@ -420,36 +420,25 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Title Banner & Actions */}
-      <div
-        className={`p-6 rounded-2xl border transition-all ${
-          theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
-        }`}
-      >
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-600/10 text-blue-600 dark:text-blue-400">
-              <ClipboardCheck className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900 dark:text-slate-50">
-                {t.cycleCountTitle}
-              </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-0.5">
-                {t.cycleCountSubtitle}
-              </p>
-            </div>
-          </div>
+      {/* Enterprise Title & Actions Toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-zinc-200/60 dark:border-zinc-800/60">
+        <div>
+          <h2 className={`text-xl font-bold tracking-tight ${theme === 'dark' ? 'text-zinc-100' : 'text-zinc-900'}`}>
+            {t.cycleCountTitle}
+          </h2>
+          <p className={`text-[15px] font-normal mt-0.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>
+            {t.cycleCountSubtitle}
+          </p>
+        </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-2 transition shadow-md shadow-blue-600/20"
-            >
-              <Plus className="w-4 h-4" />
-              <span>สร้างแผนตรวจนับใหม่ (New Audit Plan)</span>
-            </button>
-          </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-[14px] font-semibold shadow-xs shadow-blue-600/30 transition cursor-pointer active:scale-[0.99]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>สร้างแผนตรวจนับใหม่ (New Audit Plan)</span>
+          </button>
         </div>
       </div>
 

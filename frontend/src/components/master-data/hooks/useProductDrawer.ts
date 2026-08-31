@@ -129,36 +129,7 @@ export const useProductDrawer = ({
         imageUrl: drawerProduct.imageUrl || undefined,
       };
 
-      try {
-        await productService.updateProduct(drawerProduct.id, updateData);
-      } catch (apiErr: any) {
-        console.error('Backend API update failed:', apiErr.response?.data || apiErr.message);
-        const errData = apiErr.response?.data;
-        let msg = 'Update failed';
-        if (errData?.errors && Array.isArray(errData.errors)) {
-          msg = errData.errors
-            .map((e: any) => (typeof e === 'string' ? e : (e.message || e.error || `${e.path?.join('.') || e.field || 'field'}: invalid`)))
-            .join(', ');
-        } else if (errData?.message) {
-          msg = Array.isArray(errData.message) ? errData.message.join(', ') : errData.message;
-        } else if (errData?.error) {
-          msg = String(errData.error);
-        } else if (apiErr.message) {
-          msg = apiErr.message;
-        }
-        showToast(`แก้ไขข้อมูลสินค้าไม่สำเร็จ: ${msg}`);
-        return;
-      }
-
-      // Save locally to preserve inactive products even if remote server hides soft-deleted items
-      const localInactive = JSON.parse(localStorage.getItem('matchstock_local_inactive_products') || '[]');
-      if (editIsActive === false) {
-        const updated = [{ ...drawerProduct, ...updateData, isActive: false }, ...localInactive.filter((p: any) => p.id !== drawerProduct.id)];
-        localStorage.setItem('matchstock_local_inactive_products', JSON.stringify(updated));
-      } else {
-        const updated = localInactive.filter((p: any) => p.id !== drawerProduct.id);
-        localStorage.setItem('matchstock_local_inactive_products', JSON.stringify(updated));
-      }
+      await productService.updateProduct(drawerProduct.id, updateData);
 
       setProductsList((prev) =>
         prev.map((p) =>
@@ -201,8 +172,22 @@ export const useProductDrawer = ({
 
       setDrawerProduct(null);
       showToast(`บันทึกข้อมูลสินค้า "${editName}" สำเร็จ`);
-    } catch {
-      showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+    } catch (apiErr: any) {
+      console.error('Backend API update failed:', apiErr.response?.data || apiErr.message);
+      const errData = apiErr.response?.data;
+      let msg = 'Update failed';
+      if (errData?.errors && Array.isArray(errData.errors)) {
+        msg = errData.errors
+          .map((e: any) => (typeof e === 'string' ? e : (e.message || e.error || `${e.path?.join('.') || e.field || 'field'}: invalid`)))
+          .join(', ');
+      } else if (errData?.message) {
+        msg = Array.isArray(errData.message) ? errData.message.join(', ') : errData.message;
+      } else if (errData?.error) {
+        msg = String(errData.error);
+      } else if (apiErr.message) {
+        msg = apiErr.message;
+      }
+      showToast(`แก้ไขข้อมูลสินค้าไม่สำเร็จ: ${msg}`);
     } finally {
       setIsSaving(false);
     }
@@ -213,19 +198,15 @@ export const useProductDrawer = ({
       return;
     }
     try {
-      try {
-        await productService.deleteProduct(prod.id);
-      } catch (apiErr) {
-        console.warn('Backend API delete failed, deleting locally:', apiErr);
-      }
-
+      await productService.deleteProduct(prod.id);
       setProductsList((prev) => prev.filter((p) => p.id !== prod.id));
       if (drawerProduct?.id === prod.id) {
         setDrawerProduct(null);
       }
       showToast(`ลบสินค้า "${prod.name}" เรียบร้อยแล้ว`);
-    } catch {
-      showToast('ไม่สามารถลบสินค้าได้');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'ไม่สามารถลบสินค้าได้';
+      showToast(`ไม่สามารถลบสินค้าได้: ${msg}`);
     }
   };
 

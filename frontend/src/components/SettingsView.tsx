@@ -116,37 +116,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div
-        className={`p-6 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors ${
-          isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
-        }`}
-      >
+      {/* Enterprise Title & Actions Toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-zinc-200/60 dark:border-zinc-800/60">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-600/10 text-blue-600 border border-blue-500/20">
-              System Configuration
-            </span>
-            <span className="text-xs text-slate-400">Multi-Tenant Scoped</span>
-          </div>
-          <h2 className={`text-xl md:text-2xl font-bold mt-1 ${isDark ? 'text-slate-50' : 'text-slate-900'}`}>
+          <h2 className={`text-xl font-bold tracking-tight ${theme === 'dark' ? 'text-zinc-100' : 'text-zinc-900'}`}>
             {t.settingsTitle}
           </h2>
-          <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+          <p className={`text-[15px] font-normal mt-0.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>
             {t.settingsSubtitle}
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {isSaved && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 text-xs font-semibold border border-emerald-500/30 animate-in fade-in">
-              <CheckCircle2 className="w-4 h-4" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold border border-emerald-500/30 animate-in fade-in">
+              <CheckCircle2 className="w-3.5 h-3.5" />
               {t.saveSettingsSuccess}
             </span>
           )}
           <button
             onClick={handleSaveSettings}
-            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-2 shadow-md shadow-blue-600/20 transition"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-[14px] font-semibold shadow-xs shadow-blue-600/30 transition cursor-pointer active:scale-[0.99]"
           >
             <Save className="w-4 h-4" />
             <span>{t.save}</span>

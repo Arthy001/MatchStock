@@ -1,6 +1,18 @@
 import React, { useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Plus } from 'lucide-react';
+import {
+  X,
+  Plus,
+  Building2,
+  Package,
+  Layers,
+  Tag,
+  Scale,
+  Warehouse,
+  Truck,
+  ShieldCheck,
+  Barcode,
+} from 'lucide-react';
 import {
   ThemeMode,
   MasterDataSubTab,
@@ -294,40 +306,129 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
             : 'bg-white border-slate-200 text-slate-900'
         }`}
       >
-        <div className="p-5 sm:p-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900 z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0">
-              +
+        {/* Enterprise Pro Modal Header */}
+        {(() => {
+          const getHeaderDetails = () => {
+            switch (activeSubTab) {
+              case 'companies':
+                return {
+                  icon: Building2,
+                  title: 'เพิ่มบริษัทในเครือ',
+                  subtitle: 'กำหนดข้อมูลนิติบุคคล สาขา และเลขประจำตัวผู้เสียภาษี',
+                  badge: 'บริษัทใหม่',
+                  iconColor: 'text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20',
+                  badgeColor: 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+                };
+              case 'products':
+                return {
+                  icon: Package,
+                  title: 'เพิ่มสินค้าใหม่',
+                  subtitle: 'บันทึกข้อมูลสินค้า SKU ขนาดมิติ และพารามิเตอร์คลัง',
+                  badge: 'สินค้าใหม่',
+                  iconColor: 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border-indigo-500/20',
+                  badgeColor: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
+                };
+              case 'categories':
+                return {
+                  icon: Layers,
+                  title: 'เพิ่มหมวดหมู่สินค้า',
+                  subtitle: 'สร้างหมวดหมู่สินค้าสำหรับจัดกลุ่มและคัดกรอง',
+                  badge: 'หมวดหมู่ใหม่',
+                  iconColor: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+                  badgeColor: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+                };
+              case 'brands':
+                return {
+                  icon: Tag,
+                  title: 'เพิ่มแบรนด์สินค้า',
+                  subtitle: 'ลงทะเบียนยี่ห้อและเครื่องหมายการค้า',
+                  badge: 'แบรนด์ใหม่',
+                  iconColor: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20',
+                  badgeColor: 'bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+                };
+              case 'units':
+                return {
+                  icon: Scale,
+                  title: 'เพิ่มหน่วยนับสินค้า',
+                  subtitle: 'กำหนดหน่วยนับหลัก หน่วยแปลง และขนาดมิติ CBM',
+                  badge: 'หน่วยนับใหม่',
+                  iconColor: 'text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+                  badgeColor: 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800',
+                };
+              case 'warehouses':
+                return {
+                  icon: Warehouse,
+                  title: 'เพิ่มคลังสินค้าและตำแหน่ง Bin',
+                  subtitle: 'กำหนดโครงสร้างคลัง โซนจัดเก็บ และขีดจำกัดความจุ',
+                  badge: 'คลัง/Bin ใหม่',
+                  iconColor: 'text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/20',
+                  badgeColor: 'bg-purple-50 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+                };
+              case 'suppliers':
+                return {
+                  icon: Truck,
+                  title: 'เพิ่มผู้จัดจำหน่าย',
+                  subtitle: 'บันทึกข้อมูลคู่ค้า เงื่อนไขการค้า และข้อมูลการติดต่อ',
+                  badge: 'คู่ค้าใหม่',
+                  iconColor: 'text-orange-600 dark:text-orange-400 bg-orange-500/10 border-orange-500/20',
+                  badgeColor: 'bg-orange-50 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+                };
+              case 'rbac':
+                return {
+                  icon: ShieldCheck,
+                  title: 'เพิ่มผู้ใช้งานและสิทธิ์ (RBAC)',
+                  subtitle: 'สร้างบัญชีพนักงานและกำหนดสิทธิ์การเข้าถึงระบบ',
+                  badge: 'ผู้ใช้ใหม่',
+                  iconColor: 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20',
+                  badgeColor: 'bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+                };
+              case 'barcodes':
+              default:
+                return {
+                  icon: Barcode,
+                  title: 'ผูกบาร์โค้ดสินค้า',
+                  subtitle: 'กำหนดรูปแบบมาตรฐาน Code128, EAN-13 หรือ QR Code',
+                  badge: 'บาร์โค้ดใหม่',
+                  iconColor: 'text-teal-600 dark:text-teal-400 bg-teal-500/10 border-teal-500/20',
+                  badgeColor: 'bg-teal-50 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300 border-teal-200 dark:border-teal-800',
+                };
+            }
+          };
+
+          const header = getHeaderDetails();
+          const HeaderIcon = header.icon;
+
+          return (
+            <div className="p-5 sm:p-6 flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 shrink-0 bg-slate-50/75 dark:bg-slate-900/90 z-10">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className={`w-11 h-11 rounded-2xl flex items-center justify-center border shadow-xs shrink-0 ${header.iconColor}`}>
+                  <HeaderIcon className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tracking-tight">
+                      {header.title}
+                    </h3>
+                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border shadow-2xs ${header.badgeColor}`}>
+                      {header.badge}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5 truncate">
+                    {header.subtitle}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center transition shrink-0 cursor-pointer"
+                title="ปิดหน้าต่าง (Close)"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-slate-50">
-                {t.modalAddTitle}
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">
-                {activeSubTab === 'products' && 'เพิ่มรายการสินค้าใหม่ลงในแคตตาล็อก'}
-                {activeSubTab === 'companies' &&
-                  'เพิ่มบริษัทในเครือ, กำหนดสาขา และเลขประจำตัวผู้เสียภาษี'}
-                {activeSubTab === 'rbac' && 'เพิ่มบัญชีผู้ใช้และกำหนดบทบาทสิทธิ์ (RBAC)'}
-                {activeSubTab === 'units' && 'เพิ่มหน่วยนับสินค้าและมิติกายภาพ'}
-                {activeSubTab === 'barcodes' && 'ผูกบาร์โค้ดสากลและป้ายติดสินค้า'}
-                {activeSubTab === 'warehouses' &&
-                  'เพิ่มคลังสินค้าและตำแหน่งจัดเก็บย่อย (Bin)'}
-                {activeSubTab === 'suppliers' &&
-                  'เพิ่มข้อมูลผู้จัดจำหน่ายและข้อมูลภาษี'}
-                {activeSubTab === 'categories' && 'เพิ่มหมวดหมู่สินค้าใหม่สำหรับจัดกลุ่ม'}
-                {activeSubTab === 'brands' && 'เพิ่มแบรนด์สินค้าใหม่ในระบบ'}
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition shrink-0"
-            title="ปิดหน้าต่าง (Close)"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+          );
+        })()}
 
         <form
           onSubmit={onSubmit}

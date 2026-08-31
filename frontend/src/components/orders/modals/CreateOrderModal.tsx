@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, X, Trash2 } from 'lucide-react';
+import { Plus, X, Trash2, ShoppingCart, ShoppingBag } from 'lucide-react';
 import { ThemeMode, OrderItem, ProductItem } from '../../../types';
 
 interface CreateOrderModalProps {
@@ -62,23 +62,43 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
       <div className="fixed inset-0 -z-10" onClick={onClose} />
 
       <div
-        className={`w-full max-w-2xl rounded-2xl border shadow-2xl p-6 max-h-[90vh] overflow-y-auto transition relative z-10 animate-in zoom-in-95 duration-200 ${
+        className={`w-full max-w-2xl rounded-2xl border shadow-2xl max-h-[90vh] overflow-hidden flex flex-col transition relative z-10 animate-in zoom-in-95 duration-200 ${
           theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-50' : 'bg-white border-slate-200 text-slate-900'
         }`}
       >
-        <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
-          <h3 className="text-base font-bold">
-            {isSales ? 'สร้างใบสั่งขายใหม่ (Create Sales Order)' : 'สร้างใบสั่งซื้อใหม่ (Create Purchase Order)'}
-          </h3>
+        {/* Enterprise Pro Modal Header */}
+        <div className="p-5 sm:p-6 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between shrink-0 bg-slate-50/75 dark:bg-slate-900/90 z-10">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-11 h-11 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs shrink-0">
+              {isSales ? <ShoppingCart className="w-5 h-5" /> : <ShoppingBag className="w-5 h-5" />}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tracking-tight">
+                  {isSales ? 'สร้างใบสั่งขายใหม่' : 'สร้างใบสั่งซื้อใหม่'}
+                </h3>
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full border shadow-2xs bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800">
+                  {isSales ? 'Sales Order (SO)' : 'Purchase Order (PO)'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5 truncate">
+                {isSales
+                  ? 'ออกเอกสารใบสั่งขายและตัดเบิกสินค้า'
+                  : 'ออกเอกสารสั่งซื้อสินค้าจากคู่ค้าเพื่อรับเข้าคลัง'}
+              </p>
+            </div>
+          </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
+            className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center transition shrink-0 cursor-pointer"
+            title="ปิดหน้าต่าง (Close)"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={onSubmit} className="mt-5 space-y-4 text-xs">
+        <form onSubmit={onSubmit} className="p-6 space-y-4 text-xs overflow-y-auto flex-1">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">

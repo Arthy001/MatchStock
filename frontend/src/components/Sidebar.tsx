@@ -28,6 +28,8 @@ interface SidebarProps {
   activeSubTab?: string;
   onTabChange: (tab: string) => void;
   onSubTabChange?: (subTab: string) => void;
+  onMasterSubTabChange?: (subTab: any) => void;
+  onInventorySubTabChange?: (subTab: any) => void;
   onLogout: () => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
@@ -48,9 +50,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     settings: true,
   },
   activeTab,
-  activeSubTab = 'products',
+  activeSubTab,
   onTabChange,
   onSubTabChange,
+  onMasterSubTabChange,
+  onInventorySubTabChange,
   onLogout,
   isCollapsed,
   onToggleCollapse,
@@ -203,8 +207,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             key={item.key}
                             title={item.label}
                             onClick={() => {
-                              onTabChange('masterData');
-                              if (onSubTabChange) onSubTabChange(item.key);
+                              if (onMasterSubTabChange) {
+                                onMasterSubTabChange(item.key);
+                              } else {
+                                onTabChange('masterData');
+                                if (onSubTabChange) onSubTabChange(item.key);
+                              }
                               if (onMobileClose) onMobileClose();
                             }}
                             className={`w-full text-left text-[13px] py-1 px-2.5 rounded-lg transition truncate block font-medium ${
@@ -269,8 +277,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             key={item.key}
                             title={item.label}
                             onClick={() => {
-                              onTabChange('inventory');
-                              if (onSubTabChange) onSubTabChange(item.key);
+                              if (onInventorySubTabChange) {
+                                onInventorySubTabChange(item.key);
+                              } else {
+                                onTabChange('inventory');
+                                if (onSubTabChange) onSubTabChange(item.key);
+                              }
                               if (onMobileClose) onMobileClose();
                             }}
                             className={`w-full text-left text-[13px] py-1 px-2.5 rounded-lg transition truncate block font-medium ${

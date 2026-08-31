@@ -154,28 +154,9 @@ export const useMasterDataModals = ({
       );
       setEditingCompany(null);
       showToast(`แก้ไขข้อมูลบริษัท "${editCompName}" สำเร็จ`);
-    } catch {
-      setCompaniesList((prev) =>
-        prev.map((c) =>
-          c.id === editingCompany.id
-            ? {
-                ...c,
-                code: editCompCode,
-                name: editCompName,
-                taxId: editCompTaxId,
-                branchCode: editCompBranchCode,
-                branchName: editCompBranchName,
-                phone: editCompPhone,
-                email: editCompEmail,
-                address: editCompAddress,
-                isHeadquarter: editCompIsHq,
-                isActive: editCompIsActive,
-              }
-            : c
-        )
-      );
-      setEditingCompany(null);
-      showToast(`แก้ไขข้อมูลบริษัท "${editCompName}" เรียบร้อยแล้ว`);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      showToast(`เกิดข้อผิดพลาดในการแก้ไขบริษัท: ${msg}`);
     } finally {
       setIsSaving(false);
     }
@@ -187,9 +168,9 @@ export const useMasterDataModals = ({
       await masterDataService.deleteCompany(comp.id);
       setCompaniesList((prev) => prev.filter((c) => c.id !== comp.id));
       showToast(`ลบบริษัท "${comp.name}" เรียบร้อยแล้ว`);
-    } catch {
-      setCompaniesList((prev) => prev.filter((c) => c.id !== comp.id));
-      showToast(`ลบบริษัท "${comp.name}" เรียบร้อยแล้ว`);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      showToast(`เกิดข้อผิดพลาดในการลบบริษัท: ${msg}`);
     }
   };
 
@@ -243,27 +224,9 @@ export const useMasterDataModals = ({
       );
       setEditingSupplier(null);
       showToast(`แก้ไขข้อมูลผู้จัดจำหน่าย "${editSupName}" สำเร็จ`);
-    } catch {
-      setSuppliersList((prev) =>
-        prev.map((s) =>
-          s.id === editingSupplier.id
-            ? {
-                ...s,
-                code: editSupCode,
-                name: editSupName,
-                contactPerson: editSupContactPerson,
-                phone: editSupPhone,
-                email: editSupEmail,
-                taxId: editSupTaxId,
-                address: editSupAddress,
-                isActive: editSupIsActive,
-                status: editSupIsActive ? 'active' : 'inactive',
-              }
-            : s
-        )
-      );
-      setEditingSupplier(null);
-      showToast(`แก้ไขข้อมูลผู้จัดจำหน่าย "${editSupName}" เรียบร้อยแล้ว`);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      showToast(`เกิดข้อผิดพลาดในการแก้ไขผู้จัดจำหน่าย: ${msg}`);
     } finally {
       setIsSaving(false);
     }
@@ -275,9 +238,9 @@ export const useMasterDataModals = ({
       await masterDataService.deleteSupplier(sup.id);
       setSuppliersList((prev) => prev.filter((s) => s.id !== sup.id));
       showToast(`ลบผู้จัดจำหน่าย "${sup.name}" เรียบร้อยแล้ว`);
-    } catch {
-      setSuppliersList((prev) => prev.filter((s) => s.id !== sup.id));
-      showToast(`ลบผู้จัดจำหน่าย "${sup.name}" เรียบร้อยแล้ว`);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      showToast(`เกิดข้อผิดพลาดในการลบผู้จัดจำหน่าย: ${msg}`);
     }
   };
 
@@ -309,16 +272,9 @@ export const useMasterDataModals = ({
       );
       setEditingUnit(null);
       showToast(`แก้ไขข้อมูลหน่วยนับ "${editUnitName}" สำเร็จ`);
-    } catch {
-      setUnitsList((prev) =>
-        prev.map((u) =>
-          u.id === editingUnit.id
-            ? { ...u, code: editUnitCode, name: editUnitName, isActive: editUnitIsActive }
-            : u
-        )
-      );
-      setEditingUnit(null);
-      showToast(`แก้ไขข้อมูลหน่วยนับ "${editUnitName}" เรียบร้อยแล้ว`);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      showToast(`เกิดข้อผิดพลาดในการแก้ไขหน่วยนับ: ${msg}`);
     } finally {
       setIsSaving(false);
     }
@@ -330,9 +286,9 @@ export const useMasterDataModals = ({
       await masterDataService.deleteUnit(unit.id);
       setUnitsList((prev) => prev.filter((u) => u.id !== unit.id));
       showToast(`ลบหน่วยนับ "${unit.name}" เรียบร้อยแล้ว`);
-    } catch {
-      setUnitsList((prev) => prev.filter((u) => u.id !== unit.id));
-      showToast(`ลบหน่วยนับ "${unit.name}" เรียบร้อยแล้ว`);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      showToast(`เกิดข้อผิดพลาดในการลบหน่วยนับ: ${msg}`);
     }
   };
 
@@ -354,24 +310,19 @@ export const useMasterDataModals = ({
     setIsSaving(true);
     try {
       const targetWhId = editingBin.warehouseId || editingBin.id;
-      // 1. Update warehouse
-      try {
+      // Update warehouse / bin
+      if (editingBin.id !== targetWhId) {
+        await warehouseService.updateBin(targetWhId, editingBin.id, {
+          code: editBinCode,
+          name: editWhName,
+          isActive: editBinIsActive,
+        });
+      } else {
         await warehouseService.updateWarehouse(targetWhId, {
           name: editWhName,
           code: editBinCode,
           isActive: editBinIsActive,
         });
-      } catch {}
-
-      // 2. If editing a specific bin distinct from warehouseId
-      if (editingBin.id !== targetWhId) {
-        try {
-          await warehouseService.updateBin(targetWhId, editingBin.id, {
-            code: editBinCode,
-            name: editWhName,
-            isActive: editBinIsActive,
-          });
-        } catch {}
       }
 
       setBinsList((prev) =>
@@ -392,25 +343,9 @@ export const useMasterDataModals = ({
       );
       setEditingBin(null);
       showToast(`แก้ไขข้อมูลคลัง / ตำแหน่ง Bin "${editBinCode}" สำเร็จ`);
-    } catch {
-      setBinsList((prev) =>
-        prev.map((b) =>
-          b.id === editingBin.id
-            ? {
-                ...b,
-                warehouseName: editWhName,
-                binCode: editBinCode,
-                zone: editBinZone,
-                rack: editBinRack,
-                capacityKg: parseFloat(editBinCapacity) || 0,
-                isActive: editBinIsActive,
-                status: editBinIsActive ? (b.status === 'maintenance' ? 'available' : b.status) : 'maintenance',
-              }
-            : b
-        )
-      );
-      setEditingBin(null);
-      showToast(`แก้ไขข้อมูลคลัง / ตำแหน่ง Bin "${editBinCode}" เรียบร้อยแล้ว`);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      showToast(`เกิดข้อผิดพลาดในการแก้ไขตำแหน่ง Bin: ${msg}`);
     } finally {
       setIsSaving(false);
     }
@@ -422,9 +357,9 @@ export const useMasterDataModals = ({
       await warehouseService.deleteBin(bin.id);
       setBinsList((prev) => prev.filter((b) => b.id !== bin.id));
       showToast(`ลบตำแหน่ง Bin "${bin.binCode}" เรียบร้อยแล้ว`);
-    } catch {
-      setBinsList((prev) => prev.filter((b) => b.id !== bin.id));
-      showToast(`ลบตำแหน่ง Bin "${bin.binCode}" เรียบร้อยแล้ว`);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      showToast(`เกิดข้อผิดพลาดในการลบตำแหน่ง Bin: ${msg}`);
     }
   };
 
@@ -459,16 +394,8 @@ export const useMasterDataModals = ({
       setEditingCategory(null);
       showToast(`แก้ไขหมวดหมู่ "${editCatName}" สำเร็จ`);
     } catch (err: any) {
-      console.warn('Update category fallback to local update:', err);
-      setCategoriesList((prev) =>
-        prev.map((c) =>
-          c.id === editingCategory.id
-            ? { ...c, code: editCatCode, name: editCatName, description: editCatDescription, isActive: editCatIsActive }
-            : c
-        )
-      );
-      setEditingCategory(null);
-      showToast(`แก้ไขหมวดหมู่ "${editCatName}" เรียบร้อยแล้ว`);
+      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      showToast(`เกิดข้อผิดพลาดในการแก้ไขหมวดหมู่: ${msg}`);
     } finally {
       setIsSaving(false);
     }
@@ -480,10 +407,9 @@ export const useMasterDataModals = ({
       await masterDataService.deleteCategory(cat.id);
       setCategoriesList((prev) => prev.filter((c) => c.id !== cat.id));
       showToast(`ลบหมวดหมู่ "${cat.name}" เรียบร้อยแล้ว`);
-    } catch {
-      // Fallback local remove
-      setCategoriesList((prev) => prev.filter((c) => c.id !== cat.id));
-      showToast(`ลบหมวดหมู่ "${cat.name}" เรียบร้อยแล้ว`);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      showToast(`เกิดข้อผิดพลาดในการลบหมวดหมู่: ${msg}`);
     }
   };
 
@@ -518,16 +444,8 @@ export const useMasterDataModals = ({
       setEditingBrand(null);
       showToast(`แก้ไขแบรนด์ "${editBrandName}" สำเร็จ`);
     } catch (err: any) {
-      console.warn('Update brand fallback to local update:', err);
-      setBrandsList((prev) =>
-        prev.map((b) =>
-          b.id === editingBrand.id
-            ? { ...b, code: editBrandCode, name: editBrandName, description: editBrandDescription, isActive: editBrandIsActive }
-            : b
-        )
-      );
-      setEditingBrand(null);
-      showToast(`แก้ไขแบรนด์ "${editBrandName}" เรียบร้อยแล้ว`);
+      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      showToast(`เกิดข้อผิดพลาดในการแก้ไขแบรนด์: ${msg}`);
     } finally {
       setIsSaving(false);
     }
@@ -539,9 +457,9 @@ export const useMasterDataModals = ({
       await masterDataService.deleteBrand(brand.id);
       setBrandsList((prev) => prev.filter((b) => b.id !== brand.id));
       showToast(`ลบแบรนด์ "${brand.name}" เรียบร้อยแล้ว`);
-    } catch {
-      setBrandsList((prev) => prev.filter((b) => b.id !== brand.id));
-      showToast(`ลบแบรนด์ "${brand.name}" เรียบร้อยแล้ว`);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      showToast(`เกิดข้อผิดพลาดในการลบแบรนด์: ${msg}`);
     }
   };
 
@@ -549,24 +467,26 @@ export const useMasterDataModals = ({
   const handleChangeUserRole = async (usr: RbacUser, newRole: UserRole) => {
     try {
       await masterDataService.updateUserRole(usr.id, { role: newRole });
-    } catch (err) {
-      console.warn('API updateUserRole fallback to local:', err);
+      setUsersList((prev) =>
+        prev.map((u) => (u.id === usr.id ? { ...u, role: newRole } : u))
+      );
+      showToast(`อัปเดตบทบาทของ "${usr.name}" เป็น ${newRole.toUpperCase()} เรียบร้อยแล้ว`);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      showToast(`เกิดข้อผิดพลาดในการอัปเดตบทบาท: ${msg}`);
     }
-    setUsersList((prev) =>
-      prev.map((u) => (u.id === usr.id ? { ...u, role: newRole } : u))
-    );
-    showToast(`อัปเดตบทบาทของ "${usr.name}" เป็น ${newRole.toUpperCase()} เรียบร้อยแล้ว`);
   };
 
   const handleDeleteUser = async (usr: RbacUser) => {
     if (!window.confirm(`คุณต้องการลบผู้ใช้งาน "${usr.name}" หรือไม่?`)) return;
     try {
       await masterDataService.deleteUser(usr.id);
-    } catch (err) {
-      console.warn('API deleteUser fallback to local:', err);
+      setUsersList((prev) => prev.filter((u) => u.id !== usr.id));
+      showToast(`ลบผู้ใช้งาน "${usr.name}" เรียบร้อยแล้ว`);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      showToast(`เกิดข้อผิดพลาดในการลบผู้ใช้งาน: ${msg}`);
     }
-    setUsersList((prev) => prev.filter((u) => u.id !== usr.id));
-    showToast(`ลบผู้ใช้งาน "${usr.name}" เรียบร้อยแล้ว`);
   };
 
   return {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Building, X, CheckCircle2, Edit2, Eye } from 'lucide-react';
+import { Warehouse, X, CheckCircle2, Edit2, Eye } from 'lucide-react';
 import { ThemeMode, WarehouseBin } from '../../../types';
 
 interface EditWarehouseBinModalProps {
@@ -66,25 +66,39 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
             : 'bg-white border-slate-200 text-slate-900'
         }`}
       >
-        <div className="p-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-              {isViewOnly ? <Eye className="w-5 h-5" /> : <Building className="w-5 h-5" />}
+        {/* Enterprise Pro Modal Header */}
+        <div className="p-5 sm:p-6 flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-900/90 shrink-0">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-11 h-11 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-xs shrink-0">
+              {isViewOnly ? <Eye className="w-5 h-5" /> : <Warehouse className="w-5 h-5" />}
             </div>
-            <div>
-              <h3 className="font-bold text-base">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tracking-tight">
+                  {isViewOnly
+                    ? 'รายละเอียดคลัง & ตำแหน่ง Bin'
+                    : 'แก้ไขข้อมูลคลัง & ตำแหน่ง Bin'}
+                </h3>
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border shadow-2xs ${
+                  isViewOnly
+                    ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                    : 'bg-purple-50 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                }`}>
+                  {isViewOnly ? 'ดูข้อมูล' : 'แก้ไขข้อมูล'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5 truncate">
                 {isViewOnly
-                  ? 'รายละเอียดคลัง & ตำแหน่ง Bin (Bin Details)'
-                  : 'แก้ไขข้อมูลคลัง & ตำแหน่ง Bin (Edit Warehouse / Bin)'}
-              </h3>
-              <p className="text-[11px] text-slate-500">
-                {isViewOnly ? 'ดูข้อมูลโซน แร็คจัดเก็บ และความจุน้ำหนักสูงสุด' : 'แก้ไขข้อมูลคลังสินค้าและตำแหน่ง Bin'}
+                  ? 'ดูข้อมูลโซน แร็คจัดเก็บ และความจุน้ำหนักสูงสุด'
+                  : 'แก้ไขข้อมูลคลังสินค้า โซนจัดเก็บ และความจุ'}
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+            className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center transition shrink-0 cursor-pointer"
+            title="ปิดหน้าต่าง (Close)"
           >
             <X className="w-5 h-5" />
           </button>

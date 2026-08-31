@@ -8,6 +8,7 @@ import {
   ArrowRightLeft,
   SlidersHorizontal,
   Package,
+  Boxes,
   Loader2,
 } from 'lucide-react';
 import {
@@ -117,23 +118,30 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
           theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
         }`}
       >
-        {/* Modal Header (Pinned at Top) */}
-        <div className="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0 bg-white dark:bg-slate-900 z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-600/30 shrink-0">
-              <Plus className="w-5 h-5" />
+        {/* Enterprise Pro Modal Header */}
+        <div className="p-5 sm:p-6 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between shrink-0 bg-slate-50/75 dark:bg-slate-900/90 z-10">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-11 h-11 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs shrink-0">
+              <Boxes className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="font-extrabold text-lg text-slate-900 dark:text-slate-50">{t.modalNewTransaction}</h3>
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                บันทึกรายการเคลื่อนไหวสต็อกสินค้า (Multi-Tenant ISO WMS Standard)
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tracking-tight">
+                  {t.modalNewTransaction}
+                </h3>
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full border shadow-2xs bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800">
+                  {formType === 'RECEIVE' ? 'รับเข้า GR' : formType === 'ISSUE' ? 'เบิกจ่าย GI' : formType === 'TRANSFER' ? 'โอนย้าย TR' : 'ปรับปรุง ADJ'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5 truncate">
+                บันทึกรายการเคลื่อนไหวและธุรกรรมสินค้าคงคลัง (Stock Movement)
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition shrink-0 cursor-pointer"
+            className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center transition shrink-0 cursor-pointer"
             title="ปิดหน้าต่าง (Close)"
           >
             <X className="w-5 h-5" />

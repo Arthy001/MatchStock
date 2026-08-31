@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Plus, Download, CheckCircle2, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, Plus, Download, CheckCircle2, RefreshCw, Command } from 'lucide-react';
 import { ThemeMode, Language, MasterDataSubTab } from '../types';
 
 // Custom Master Data Hooks (Clean Architecture)
@@ -46,6 +46,29 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const fastSearchInputRef = useRef<HTMLInputElement>(null);
+  const [isMac, setIsMac] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsMac(/(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent || navigator.platform));
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Intercept Ctrl+K or ⌘+K (รองรับทั้งแป้นพิมพ์ภาษาอังกฤษ และภาษาไทย 'า'/'ำ')
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        (e.code === 'KeyK' || e.key?.toLowerCase() === 'k' || e.key === 'า' || e.key === 'ำ')
+      ) {
+        e.preventDefault();
+        fastSearchInputRef.current?.focus();
+        fastSearchInputRef.current?.select();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -201,12 +224,16 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         return lang === 'en' ? 'Add Brand' : 'เพิ่มแบรนด์สินค้า';
       case 'companies':
         return lang === 'en' ? 'Add Subsidiary Company' : 'เพิ่มบริษัทในเครือ';
-      case 'rbac':
-        return lang === 'en' ? 'Add New User' : 'เพิ่มผู้ใช้งานใหม่';
+      case 'units':
+        return lang === 'en' ? 'Add Unit of Measure' : 'เพิ่มหน่วยนับสินค้า';
       case 'warehouses':
         return lang === 'en' ? 'Add Warehouse / Bin' : 'เพิ่มคลัง / ตำแหน่ง Bin';
       case 'suppliers':
         return lang === 'en' ? 'Add Supplier' : 'เพิ่มผู้จัดจำหน่าย';
+      case 'rbac':
+        return lang === 'en' ? 'Add New User' : 'เพิ่มผู้ใช้งานใหม่';
+      case 'barcodes':
+        return lang === 'en' ? 'Link Barcode' : 'ผูกบาร์โค้ดสินค้า';
       default:
         return null;
     }
@@ -279,69 +306,32 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         </div>
       </div>
 
-      {/* 9 Enterprise Master Data Subtabs Segment */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar border-b border-zinc-200/80 dark:border-zinc-800/80">
-        {[
-          { key: 'companies' as MasterDataSubTab, label: lang === 'en' ? 'Companies' : 'บริษัทในเครือ', count: loadedTabs.has('companies') ? companiesList.length : undefined },
-          { key: 'products' as MasterDataSubTab, label: lang === 'en' ? 'Products & SKUs' : 'สินค้าและ SKU', count: loadedTabs.has('products') ? productsList.length : undefined },
-          { key: 'categories' as MasterDataSubTab, label: lang === 'en' ? 'Categories' : 'หมวดหมู่สินค้า', count: loadedTabs.has('categories') ? categoriesList.length : undefined },
-          { key: 'brands' as MasterDataSubTab, label: lang === 'en' ? 'Brands' : 'แบรนด์สินค้า', count: loadedTabs.has('brands') ? brandsList.length : undefined },
-          { key: 'units' as MasterDataSubTab, label: lang === 'en' ? 'Units (UOM)' : 'หน่วยนับ', count: loadedTabs.has('units') ? unitsList.length : undefined },
-          { key: 'warehouses' as MasterDataSubTab, label: lang === 'en' ? 'Warehouses & Bins' : 'คลังและตำแหน่งจัดเก็บ', count: loadedTabs.has('warehouses') ? binsList.length : undefined },
-          { key: 'suppliers' as MasterDataSubTab, label: lang === 'en' ? 'Suppliers' : 'ผู้จัดจำหน่าย', count: loadedTabs.has('suppliers') ? suppliersList.length : undefined },
-          { key: 'barcodes' as MasterDataSubTab, label: lang === 'en' ? 'Barcodes' : 'บาร์โค้ด' },
-          { key: 'rbac' as MasterDataSubTab, label: lang === 'en' ? 'User Access' : 'สิทธิ์ผู้ใช้งาน', count: loadedTabs.has('rbac') ? usersList.length : undefined },
-        ].map((tab) => {
-          const isActive = activeSubTab === tab.key;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => onSubTabChange && onSubTabChange(tab.key)}
-              className={`px-3 py-1.5 rounded-md text-[15px] font-medium transition cursor-pointer flex items-center gap-2 shrink-0 select-none ${isActive
-                  ? theme === 'dark'
-                    ? 'bg-zinc-800 text-white font-semibold shadow-xs'
-                    : 'bg-white text-zinc-900 border border-zinc-300 font-semibold shadow-xs'
-                  : theme === 'dark'
-                    ? 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
-                    : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/60'
-                }`}
-            >
-              <span>{tab.label}</span>
-              {tab.count !== undefined ? (
-                <span
-                  className={`text-[12px] font-mono px-1.5 py-0.5 rounded ${isActive
-                      ? theme === 'dark'
-                        ? 'bg-zinc-700 text-zinc-200'
-                        : 'bg-zinc-100 text-zinc-800 border border-zinc-200'
-                      : theme === 'dark'
-                        ? 'bg-zinc-800 text-zinc-500'
-                        : 'bg-zinc-100 text-zinc-600'
-                    }`}
-                >
-                  {tab.count}
-                </span>
-              ) : null}
-            </button>
-          );
-        })}
-      </div>
 
       {/* Enterprise Fast Search Toolbar */}
       <div className="relative">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
         <input
+          ref={fastSearchInputRef}
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={t.searchPlaceholder}
-          className={`w-full pl-10 pr-14 py-2.5 rounded-md border text-[15px] font-normal transition outline-hidden ${theme === 'dark'
+          className={`w-full pl-10 pr-16 py-2.5 rounded-md border text-[15px] font-normal transition outline-hidden ${theme === 'dark'
               ? 'bg-zinc-900 border-zinc-800 text-zinc-100 placeholder-zinc-500 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500'
               : 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 shadow-xs'
             }`}
         />
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[11px] text-zinc-400 border border-zinc-200 dark:border-zinc-700 px-1.5 py-0.5 rounded">
-          ⌘K
-        </span>
+        <div
+          onClick={() => {
+            fastSearchInputRef.current?.focus();
+            fastSearchInputRef.current?.select();
+          }}
+          className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[11px] text-zinc-400 border border-zinc-200 dark:border-zinc-700 px-1.5 py-0.5 rounded cursor-pointer select-none flex items-center gap-0.5 hover:text-zinc-600 dark:hover:text-zinc-200 transition"
+          title={isMac ? 'Command + K' : 'Ctrl + K'}
+        >
+          {isMac ? <Command className="w-3 h-3 inline" /> : <span>Ctrl</span>}
+          <span>K</span>
+        </div>
       </div>
 
       {/* TAB CONTENT ROUTING */}

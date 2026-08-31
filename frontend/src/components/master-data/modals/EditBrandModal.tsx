@@ -52,25 +52,39 @@ export const EditBrandModal: React.FC<EditBrandModalProps> = ({
             : 'bg-white border-slate-200 text-slate-900'
         }`}
       >
-        <div className="p-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+        {/* Enterprise Pro Modal Header */}
+        <div className="p-5 sm:p-6 flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-900/90 shrink-0">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-xs shrink-0">
               {isViewOnly ? <Eye className="w-5 h-5" /> : <Tag className="w-5 h-5" />}
             </div>
-            <div>
-              <h3 className="font-bold text-base">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tracking-tight">
+                  {isViewOnly
+                    ? 'รายละเอียดแบรนด์สินค้า'
+                    : 'แก้ไขแบรนด์สินค้า'}
+                </h3>
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border shadow-2xs ${
+                  isViewOnly
+                    ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                    : 'bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                }`}>
+                  {isViewOnly ? 'ดูข้อมูล' : 'แก้ไขข้อมูล'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5 truncate">
                 {isViewOnly
-                  ? 'รายละเอียดแบรนด์สินค้า (Brand Details)'
-                  : 'แก้ไขแบรนด์สินค้า (Edit Brand)'}
-              </h3>
-              <p className="text-[11px] text-slate-500">
-                {isViewOnly ? 'ดูข้อมูลแบรนด์และยี่ห้อสินค้าในระบบ' : 'แก้ไขข้อมูลและคำอธิบายแบรนด์'}
+                  ? 'ดูข้อมูลแบรนด์และยี่ห้อสินค้าในระบบ'
+                  : 'แก้ไขชื่อแบรนด์ รหัส และคำอธิบาย'}
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+            className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center transition shrink-0 cursor-pointer"
+            title="ปิดหน้าต่าง (Close)"
           >
             <X className="w-5 h-5" />
           </button>

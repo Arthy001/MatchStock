@@ -86,6 +86,28 @@ const getInitialNavState = (pathname: string) => {
     else if (path.includes('/adjustment')) inventorySub = 'adjustment';
     else if (path.includes('/scanner')) inventorySub = 'scanner';
     else if (path.includes('/cycle-count')) inventorySub = 'cycleCount';
+    else inventorySub = 'all';
+  } else if (path.startsWith('/receive') || path.startsWith('/goods-receive')) {
+    tab = 'inventory';
+    inventorySub = 'receive';
+  } else if (path.startsWith('/issue') || path.startsWith('/goods-issue')) {
+    tab = 'inventory';
+    inventorySub = 'issue';
+  } else if (path.startsWith('/transfer') || path.startsWith('/stock-transfer')) {
+    tab = 'inventory';
+    inventorySub = 'transfer';
+  } else if (path.startsWith('/adjustment') || path.startsWith('/stock-adjustment')) {
+    tab = 'inventory';
+    inventorySub = 'adjustment';
+  } else if (path.startsWith('/scanner')) {
+    tab = 'inventory';
+    inventorySub = 'scanner';
+  } else if (path.startsWith('/cycle-count')) {
+    tab = 'inventory';
+    inventorySub = 'cycleCount';
+  } else if (path.startsWith('/all') || path.startsWith('/transactions')) {
+    tab = 'inventory';
+    inventorySub = 'all';
   } else if (path.startsWith('/orders') || path.startsWith('/sales')) {
     tab = 'sales';
   } else if (path.startsWith('/purchases')) {
@@ -110,8 +132,14 @@ export function App() {
     const user = localStorage.getItem('matchstock_user');
     return Boolean(token || user);
   });
-  const [lang, setLang] = useState<Language>('th');
-  const [theme, setTheme] = useState<ThemeMode>('light');
+  const [lang, setLang] = useState<Language>(() => {
+    const saved = localStorage.getItem('matchstock_lang');
+    return (saved === 'en' || saved === 'th') ? (saved as Language) : 'th';
+  });
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    const saved = localStorage.getItem('matchstock_theme');
+    return (saved === 'dark' || saved === 'light') ? (saved as ThemeMode) : 'light';
+  });
   const [selectedTenantId, setSelectedTenantId] = useState<string>('f97fe2dc-486e-4054-931c-aadf92823e69');
 
   const [activeTab, setActiveTab] = useState<string>(() => getInitialNavState(location.pathname).tab);
@@ -156,12 +184,14 @@ export function App() {
 
   // Navigate when Master Data Subtab changes
   const handleMasterSubTabChange = (subTab: MasterDataSubTab) => {
+    setActiveTab('masterData');
     setActiveMasterSubTab(subTab);
     navigate(`/${subTab}`);
   };
 
   // Navigate when Inventory Subtab changes
   const handleInventorySubTabChange = (subTab: 'all' | 'receive' | 'issue' | 'transfer' | 'adjustment' | 'scanner' | 'cycleCount') => {
+    setActiveTab('inventory');
     setActiveInventorySubTab(subTab);
     const subPath = subTab === 'all' ? '' : `/${subTab === 'cycleCount' ? 'cycle-count' : subTab}`;
     navigate(`/inventory${subPath}`);
@@ -206,8 +236,14 @@ export function App() {
     return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
   }, [navigate]);
 
-  // Sync theme class with document root
+  // Sync language setting with localStorage
   useEffect(() => {
+    localStorage.setItem('matchstock_lang', lang);
+  }, [lang]);
+
+  // Sync theme class with document root & localStorage
+  useEffect(() => {
+    localStorage.setItem('matchstock_theme', theme);
     const root = document.documentElement;
     if (theme === 'dark') {
       root.classList.add('dark');
@@ -270,13 +306,8 @@ export function App() {
           activeTab={activeTab}
           activeSubTab={activeTab === 'inventory' ? activeInventorySubTab : activeMasterSubTab}
           onTabChange={handleTabChange}
-          onSubTabChange={(sub) => {
-            if (activeTab === 'inventory') {
-              handleInventorySubTabChange(sub as any);
-            } else {
-              handleMasterSubTabChange(sub as any);
-            }
-          }}
+          onMasterSubTabChange={handleMasterSubTabChange}
+          onInventorySubTabChange={handleInventorySubTabChange}
           onLogout={handleLogout}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={handleToggleSidebarCollapse}

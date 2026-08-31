@@ -30,30 +30,21 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
             : 'bg-white border-slate-200 shadow-sm'
         }`}
       >
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3
-              className={`font-semibold text-base ${
-                theme === 'dark' ? 'text-slate-50' : 'text-slate-900'
-              }`}
-            >
-              {t.unitsTitle} (UOM Master)
-            </h3>
-            <p
-              className={`text-xs font-normal mt-1 ${
-                theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
-              }`}
-            >
-              {t.unitsSubtitle}
-            </p>
-          </div>
-          <button
-            onClick={onOpenAddModal}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
+        <div className="mb-4">
+          <h3
+            className={`font-semibold text-base ${
+              theme === 'dark' ? 'text-slate-50' : 'text-slate-900'
+            }`}
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>เพิ่มหน่วยนับ (Add UOM)</span>
-          </button>
+            {t.unitsTitle} (UOM Master)
+          </h3>
+          <p
+            className={`text-xs font-normal mt-1 ${
+              theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
+            }`}
+          >
+            {t.unitsSubtitle}
+          </p>
         </div>
 
         <div className="overflow-x-auto">

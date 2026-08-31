@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Building2, X, CheckCircle2, Edit2, Eye } from 'lucide-react';
+import { Truck, X, CheckCircle2, Edit2, Eye } from 'lucide-react';
 import { ThemeMode, Supplier } from '../../../types';
 
 interface EditSupplierModalProps {
@@ -74,25 +74,39 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
             : 'bg-white border-slate-200 text-slate-900'
         }`}
       >
-        <div className="p-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-              {isViewOnly ? <Eye className="w-5 h-5" /> : <Building2 className="w-5 h-5" />}
+        {/* Enterprise Pro Modal Header */}
+        <div className="p-5 sm:p-6 flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-900/90 shrink-0">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-11 h-11 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 flex items-center justify-center shadow-xs shrink-0">
+              {isViewOnly ? <Eye className="w-5 h-5" /> : <Truck className="w-5 h-5" />}
             </div>
-            <div>
-              <h3 className="font-bold text-base">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tracking-tight">
+                  {isViewOnly
+                    ? 'รายละเอียดผู้จัดจำหน่าย'
+                    : 'แก้ไขข้อมูลผู้จัดจำหน่าย'}
+                </h3>
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border shadow-2xs ${
+                  isViewOnly
+                    ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                    : 'bg-orange-50 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 border-orange-200 dark:border-orange-800'
+                }`}>
+                  {isViewOnly ? 'ดูข้อมูล' : 'แก้ไขข้อมูล'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5 truncate">
                 {isViewOnly
-                  ? 'รายละเอียดผู้จัดจำหน่าย (Supplier Details)'
-                  : 'แก้ไขข้อมูลผู้จัดจำหน่าย (Edit Supplier)'}
-              </h3>
-              <p className="text-[11px] text-slate-500">
-                {isViewOnly ? 'ดูข้อมูลคู่ค้า ผู้ติดต่อ และเลขประจำตัวผู้เสียภาษี' : 'แก้ไขข้อมูลและเงื่อนไขผู้จัดจำหน่าย'}
+                  ? 'ดูข้อมูลคู่ค้า ผู้ติดต่อ และเลขประจำตัวผู้เสียภาษี'
+                  : 'แก้ไขข้อมูลคู่ค้า เงื่อนไขการค้า และข้อมูลการติดต่อ'}
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+            className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center transition shrink-0 cursor-pointer"
+            title="ปิดหน้าต่าง (Close)"
           >
             <X className="w-5 h-5" />
           </button>
