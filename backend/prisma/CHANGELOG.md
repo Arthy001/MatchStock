@@ -2,6 +2,23 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-08-31 — Implement Subscription Quotas, Feature Gating, Company Scoping และ Billing API เข้า backend จริง
+
+ต่อยอดจาก `docs/TENANT_USER_SUBSCRIPTION_PLAN.md` + ส่วน Backend ของ `docs/BACKEND_FRONTEND_IMPLEMENTATION_GUIDE.md` — schema.prisma/openapi.yaml ของ repo นี้ระบุ spec ไว้แล้ว (commit `2fa27ea`) รอบนี้คือ **implement เข้า backend จริงครบทุกจุด ทดสอบ end-to-end บน local Docker และ production แล้ว**:
+
+1. **Migration ใหม่** (`20260831150000_subscription_quotas_company_scoping_menu_gating`): `User.companyId`, `Supplier.companyId`, `Warehouse.companyId` (ทุกตัว nullable + FK ไป `Company`), `SubscriptionPlan.maxWarehouses`/`maxProducts`, `MenuItem.requiredFeature`
+2. **Feature Gating จริง**: `EntitlementGuard` เช็ค `@RequireFeature('code')` เทียบกับ `SubscriptionPlan.features` ของ tenant ปัจจุบัน หลังผ่านเช็ค active แล้ว — ติดตัวอย่างจริงที่ `GET /reports/stock-valuation` (`reports.valuation`) และ `GET /reports/moving-analysis` (`reports.moving_analysis`)
+3. **Quota Enforcement จริง**: `UsersService.createInCompany()`/`WarehousesService.createWarehouse()`/`ProductsService.createProduct()` เช็ค `COUNT < plan.maxXxx` ก่อนสร้างเสมอ throw `403 QUOTA_EXCEEDED` ตาม payload ที่ spec กำหนดเป๊ะ
+4. **Billing API ใหม่**: `GET /billing/current-subscription` (แพ็กเกจ+โควตาการใช้งานจริง), `POST /billing/subscribe` (ทางลัดขั้นตอนเดียว ครอบ `createSubscription()`+`checkout()` เดิม รองรับ upgrade แบบ swap แผนในที่), `POST /billing/cancel` (ยกเลิก subscription ปัจจุบันไม่ต้องส่ง id), `GET /platform/billing/subscriptions` (ภาพรวมข้าม tenant), `POST`/`PATCH /platform/subscription-plans` (Platform Admin จัดการแพ็กเกจ) — endpoint เดิม (`/billing/subscriptions`, `/checkout`) ยังอยู่ครบสำหรับ flow 3DS/PromptPay
+5. **Company Scoping (เก็บ field เท่านั้น รอบนี้)**: `companyId` เพิ่มเข้า Create/Update DTO ของ Warehouse/Supplier/User แล้ว บันทึกได้จริง — **ยังไม่กรอง data visibility ตาม company** (ส่วนต่อขยายที่ค้างไว้ตามที่ตกลงกัน)
+6. **Menu Feature Gating**: `MenuItemsService.getMenuForUser()` มองเห็นเมนูอัตโนมัติถ้า `MenuItem.requiredFeature` อยู่ใน `plan.features` ปัจจุบัน (หรือถูก grant มือไว้แล้วผ่าน `TenantMenuItem` เดิม) — `platform/menu-items` รับ `requiredFeature` ตอนสร้าง/แก้ได้แล้ว
+7. **Seed**: แทนที่ `STARTER`/`GROWTH`/`ENTERPRISE` ด้วย `FREE`/`PRO_MONTHLY`/`ULTRA_MONTHLY` ตาม spec เป๊ะ (ราคา/โควตา/ฟีเจอร์ครบ) — plan เก่าถูก deactivate ไม่ลบ (ยัง resolve ได้สำหรับ subscription เก่าที่ migrate ไม่ทัน) — **migrate `Subscription.planCode` ของทุก tenant ที่มีอยู่จริงจากโค้ดเก่าไปโค้ดใหม่แล้ว** ตาม tier เทียบเท่า (`STARTER`→`FREE`, `GROWTH`→`PRO_MONTHLY`, `ENTERPRISE`→`ULTRA_MONTHLY`)
+8. **บั๊กที่พบและแก้ระหว่างทำ**: global exception filter (`all-exceptions.filter.ts`) เดิมทิ้งฟิลด์ custom ของ HttpException payload (เช่น `error`/`resource`/`currentUsage`) เหลือแค่ `message`/`errors` — ทำให้ payload ของ `QUOTA_EXCEEDED`/`FEATURE_NOT_INCLUDED` ที่ spec กำหนดไว้ไม่ครบตอนตอบกลับจริง แก้ให้ spread field เพิ่มเติมผ่านแล้ว; `prisma/seed.ts` มีบั๊กเดิมค้างอยู่ (`tenantId_email` ไม่ใช่ unique key จริงหลัง migration email-unique-ทั้งระบบ) แก้เป็น `email` ตรงๆ ด้วยเพราะบล็อกการรัน seed ทั้งไฟล์
+
+**ทดสอบแล้ว**: quota block เมื่อเกิน, feature-gate บล็อก FREE tier ไม่ให้เข้า valuation/moving-analysis จริง, เมนูโชว์/ซ่อนอัตโนมัติตามแผน, upgrade/cancel subscription ทำงานถูกต้อง, platform billing overview เห็นข้าม tenant จริง — ทั้งหมดยืนยันบน production (`match-stock.ddns.net`) แล้ว ไม่ใช่แค่ local
+
+**ยังไม่ทำรอบนี้ (ตามที่ตกลง)**: กรอง data visibility ตาม `companyId` จริง (list/get ต่างๆ ยังไม่กรอง), ตัดสิทธิ์ `@RequireFeature` ให้ endpoint อื่นนอกจาก reports 2 ตัว (รอ business ตัดสินใจ mapping ที่เหลือ)
+
 ## 2026-08-31 — Rework ระบบรับสินค้า (Goods Receiving) & จัดเก็บ (Flexible Putaway)
 
 อัปเดต `schema.prisma` เพื่อรองรับระบบรับสินค้าที่ยืดหยุ่นและการจัดเก็บเข้าชั้นวาง (1-Step / 2-Step Putaway):
