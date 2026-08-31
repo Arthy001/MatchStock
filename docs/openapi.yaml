@@ -614,7 +614,8 @@ paths:
                     description: null
                     categoryId: f870ae79-783c-40d9-92cf-2676ddcfdf64
                     unitOfMeasure: null
-                    isActive: false
+                    isActive: true
+                    isDeleted: true
                     isReturnable: false
                     unitId: null
                     brandId: null
@@ -643,15 +644,18 @@ paths:
                     createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
                     updatedByType: user
                     updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
-                    deletedAt: null
-                    deletedByType: null
-                    deletedById: null
+                    deletedAt: '2026-08-31T12:15:23.620Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
                     createdAt: '2026-08-18T02:39:41.690Z'
-                    updatedAt: '2026-08-18T02:39:41.690Z'
+                    updatedAt: '2026-08-31T12:15:23.620Z'
                   message: Operation completed successfully
       security:
         - jwt: []
-      summary: Deactivate a product (soft-delete - isActive:false).
+      summary: >-
+        Delete a product (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every
+        list/detail/search/import-export response, but the row is kept for history and its sku/code/slug is freed
+        for reuse. Use PATCH { isActive:false } for a reversible suspend instead.
       tags:
         - Products
   /products/{id}/images:

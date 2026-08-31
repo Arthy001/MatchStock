@@ -2,6 +2,32 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-08-31 — เพิ่ม `isDeleted` ให้อีก 10 master-data model ตามที่ทีมออกแบบไว้ (PR #15)
+
+ต่อยอดจาก entry ด้านล่าง (Soft-Delete Policy) — schema.prisma + docs/openapi.yaml ของ repo นี้ถูกอัพเดทไปก่อนแล้ว (commit `3efb224`) เพิ่ม `isDeleted Boolean @default(false)` ให้ `Unit`, `Brand`, `Manufacturer`, `Supplier`, `Company`, `Category`, `BarcodeSymbology`, `Warehouse`, `BinLocation`, `TaxType` และเปิดให้แก้ผ่าน `UpdateXxxDto` (`PATCH .../{id}` ธรรมดา ไม่มี endpoint DELETE ใหม่)
+
+**สิ่งที่เพิ่มในรอบนี้**: sync field เข้า backend จริง — migration (`20260831140000_master_data_is_deleted`), เพิ่ม `isDeleted` เข้า `UpdateXxxDto`/service `update()` ทั้ง 10 โมเดล, ทดสอบ end-to-end ผ่าน API จริงบน local Docker ครบทุกโมเดล (create → default `false` → PATCH `true` → อ่านค่ากลับถูกต้อง) ไม่มี compile/runtime error
+
+**ข้อควรระวังที่ตั้งใจคงไว้ตามที่ทีมออกแบบ ไม่ใช่บั๊ก**:
+1. `isDeleted` เป็นแค่ field เก็บค่า **ไม่ได้กรอง list()/getById() ให้หายไปอัตโนมัติ** — พฤติกรรมเดียวกับ `isActive` ของโมเดลกลุ่มนี้ในปัจจุบัน (ซึ่งก็ไม่เคยกรอง list เช่นกัน) ถ้าต้องการซ่อนจริง ฝั่ง client ต้องกรองเอง หรือรอ backend เพิ่ม logic ภายหลัง
+2. **`Company` มี 2 สัญญาณ "ถูกลบ" แยกกัน**: `deletedAt` (ของเดิม ใช้งานจริงผ่าน `DELETE /companies/{id}` มีผลซ่อนจาก list/getById จริง) กับ `isDeleted` ใหม่นี้ (ตั้งค่าผ่าน `PUT /companies/{id}` ได้ แต่ไม่มีผลอะไรกับการมองเห็น) — ทดสอบยืนยันแล้วว่าตั้ง `isDeleted:true` ไม่ทำให้บริษัทหายจาก `GET`, ต้องเรียก `DELETE` จริงเท่านั้นถึงจะซ่อน
+3. ไม่มีการเพิ่ม partial unique index ให้ทั้ง 10 โมเดล (ต่างจาก `Product`/`Company` ที่มีอยู่แล้ว) — soft-delete แล้ว `code`/`sku` ของโมเดลกลุ่มนี้ยังใช้ซ้ำไม่ได้
+
+**แก้เพิ่มใน `docs/openapi.yaml`**: `DELETE /products/{id}` ยัง summary/response example ค้างพฤติกรรมเก่า (`isActive:false`, `deletedAt:null`) จากก่อนที่ entry ด้านล่างจะแก้ backend จริง — sync ให้ตรงกับ `ProductsController` ปัจจุบัน (`isDeleted:true`, `deletedAt`/`deletedByType`/`deletedById` มีค่าจริง, `isActive` ไม่ถูกแตะ)
+
+## 2026-08-31 — Soft-Delete Policy: ปิดช่องโหว่ hard-delete/ไม่มีกลไกลบ 6 จุด
+
+**ปัญหาที่พบ**: `DELETE /products/:id` เดิมแค่ flip `isActive` (แค่ suspend ที่ reverse ได้) ไม่เคยเขียน `deletedAt`/`deletedBy*` จริงทั้งที่คอลัมน์มีอยู่แล้ว และมีอีก 5 จุดในระบบที่ hard-delete แถวถาวร (กู้คืน/ตรวจสอบย้อนหลังไม่ได้เลย) หรือไม่มีกลไกลบเลย
+
+**การแก้ไข**:
+- **`Product`**: เพิ่ม `isDeleted` เป็นตัวบ่งชี้การลบจริงแบบ one-way (แยกจาก `isActive` ที่ยังเป็น suspend แบบ reverse ได้เหมือนเดิม) `DELETE /products/:id` เขียน `isDeleted:true`+`deletedAt`/`deletedBy*` จริง, `sku`/`code`/`slug` ของสินค้าที่ลบแล้วนำกลับมาใช้ซ้ำได้ทันที (partial unique index)
+- **Prisma extension กลาง** (`prisma-soft-delete.extension.ts`) ให้ query ทุกตัวกรอง `deletedAt`/`isDeleted` อัตโนมัติ และบล็อกการ hard-delete บนโมเดลกลุ่มนี้
+- **ปิดช่องโหว่เพิ่ม 5 จุด**: `WebhookSubscription` (hard-delete จริง → soft-delete), `ReaderOpsOperator` (ไม่มีกลไกลบเลยทั้งที่เป็นบัญชี MFA login → เพิ่ม `isActive`+soft-delete), `Role`, `TenantMenuItem`, `ProductImage` (ทั้ง 3 เปลี่ยนจาก hard-delete เป็น soft-delete)
+
+**ผลกระทบต่อ API สาธารณะ**: มีแค่ `DELETE /products/{id}` จุดเดียวที่ response เปลี่ยนแบบมีผลต่อผู้ใช้ API จริง (endpoint อื่นที่แก้เป็น platform-admin internal ที่ไม่อยู่ใน public docs อยู่แล้ว หรือ response shape ไม่เปลี่ยน)
+
+**ยังไม่ทำรอบนี้**: soft-delete ให้ master-data อีก ~9 ตาราง — ดู entry ด้านบน (ทำแล้วในรอบถัดมาแบบ `isDeleted` เดี่ยวๆ ไม่ใช่ `deletedAt` แบบเดียวกับที่นี่ เป็นการตัดสินใจที่ต่างกัน)
+
 ## 2026-08-28 — แก้ Cross-Origin-Resource-Policy ทำให้ frontend คนละ origin โหลดรูปสินค้าไม่ได้
 
 frontend ที่ host คนละ origin โหลด `<img src="https://match-stock.ddns.net/uploads/products/xxx.jpg">` แล้วโดนเบราว์เซอร์บล็อกด้วย `net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin` (response เป็น 200 OK จริง แต่ browser ไม่ยอมส่ง byte ต่อให้หน้าเว็บ)
