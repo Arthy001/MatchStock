@@ -563,6 +563,7 @@ model Product {
   categoryId         String?       @map("category_id") @db.Uuid
   unitOfMeasure      String?       @map("unit_of_measure") @db.VarChar(20)
   isActive           Boolean       @default(true) @map("is_active")
+  isDeleted          Boolean       @default(false) @map("is_deleted")
   isReturnable       Boolean       @default(false) @map("is_returnable")
   unitId             String?       @map("unit_id") @db.Uuid
   brandId            String?       @map("brand_id") @db.Uuid
@@ -659,6 +660,7 @@ model Unit {
   name     String   @db.VarChar(100)
   type     UnitType @default(quantity)
   isActive Boolean  @default(true) @map("is_active")
+  isDeleted Boolean @default(false) @map("is_deleted")
 
   createdByType String?   @map("created_by_type") @db.VarChar(20)
   createdById   String?   @map("created_by_id") @db.Uuid
@@ -685,6 +687,7 @@ model Brand {
   name        String  @db.VarChar(100)
   description String? @db.VarChar(1000)
   isActive    Boolean @default(true) @map("is_active")
+  isDeleted   Boolean @default(false) @map("is_deleted")
 
   createdByType String?   @map("created_by_type") @db.VarChar(20)
   createdById   String?   @map("created_by_id") @db.Uuid
@@ -712,6 +715,7 @@ model Manufacturer {
   phone         String? @db.VarChar(50)
   email         String? @db.VarChar(100)
   isActive      Boolean @default(true) @map("is_active")
+  isDeleted     Boolean @default(false) @map("is_deleted")
 
   createdByType String?   @map("created_by_type") @db.VarChar(20)
   createdById   String?   @map("created_by_id") @db.Uuid
@@ -738,6 +742,7 @@ model Supplier {
   contactPerson String? @map("contact_person") @db.VarChar(100)
   phone         String? @db.VarChar(50)
   isActive      Boolean @default(true) @map("is_active")
+  isDeleted     Boolean @default(false) @map("is_deleted")
 
   createdByType String?   @map("created_by_type") @db.VarChar(20)
   createdById   String?   @map("created_by_id") @db.Uuid
@@ -768,6 +773,7 @@ model Company {
   email         String? @db.VarChar(255)
   address       String? @db.Text
   isHeadquarter Boolean @default(false) @map("is_headquarter")
+  isDeleted     Boolean @default(false) @map("is_deleted")
 
   createdByType String?   @map("created_by_type") @db.VarChar(20)
   createdById   String?   @map("created_by_id") @db.Uuid
@@ -794,6 +800,7 @@ model Category {
   name        String  @db.VarChar(255)
   description String? @db.VarChar(1000)
   isActive    Boolean @default(true) @map("is_active")
+  isDeleted   Boolean @default(false) @map("is_deleted")
 
   createdByType String?   @map("created_by_type") @db.VarChar(20)
   createdById   String?   @map("created_by_id") @db.Uuid
@@ -824,6 +831,7 @@ model BarcodeSymbology {
   name        String  @db.VarChar(100)
   description String? @db.VarChar(1000)
   isActive    Boolean @default(true) @map("is_active")
+  isDeleted   Boolean @default(false) @map("is_deleted")
 
   createdByType String?   @map("created_by_type") @db.VarChar(20)
   createdById   String?   @map("created_by_id") @db.Uuid
@@ -849,6 +857,7 @@ model Warehouse {
   code        String  @db.VarChar(50)
   address     String? @db.VarChar(500)
   isActive    Boolean @default(true) @map("is_active")
+  isDeleted   Boolean @default(false) @map("is_deleted")
   maxCapacity Int?    @map("max_capacity")
 
   createdByType String?   @map("created_by_type") @db.VarChar(20)
@@ -876,6 +885,7 @@ model BinLocation {
   warehouseId String  @map("warehouse_id") @db.Uuid
   code        String  @db.VarChar(50)
   isActive    Boolean @default(true) @map("is_active")
+  isDeleted   Boolean @default(false) @map("is_deleted")
   maxCapacity Int?    @map("max_capacity")
 
   createdByType String?   @map("created_by_type") @db.VarChar(20)
@@ -903,6 +913,7 @@ model TaxType {
   name        String  @db.VarChar(100)
   ratePercent Float   @map("rate_percent")
   isActive    Boolean @default(true) @map("is_active")
+  isDeleted   Boolean @default(false) @map("is_deleted")
 
   createdByType String?   @map("created_by_type") @db.VarChar(20)
   createdById   String?   @map("created_by_id") @db.Uuid

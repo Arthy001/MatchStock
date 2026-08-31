@@ -5362,6 +5362,10 @@ components:
         isActive:
           type: boolean
           example: true
+        isDeleted:
+          type: boolean
+          example: false
+          description: Soft-delete flag (true when record is in trash/deleted).
         isReturnable:
           type: boolean
           example: true
@@ -5498,6 +5502,9 @@ components:
           maxLength: 100
         isActive:
           type: boolean
+        isDeleted:
+          type: boolean
+          example: false
     CreateBrandDto:
       type: object
       properties:
@@ -5526,6 +5533,9 @@ components:
           maxLength: 1000
         isActive:
           type: boolean
+        isDeleted:
+          type: boolean
+          example: false
     CreateManufacturerDto:
       type: object
       properties:
@@ -5568,6 +5578,9 @@ components:
           format: email
         isActive:
           type: boolean
+        isDeleted:
+          type: boolean
+          example: false
     CreateSupplierDto:
       type: object
       properties:
@@ -5602,6 +5615,9 @@ components:
           maxLength: 50
         isActive:
           type: boolean
+        isDeleted:
+          type: boolean
+          example: false
     CreateCategoryDto:
       type: object
       properties:
@@ -5630,6 +5646,9 @@ components:
           maxLength: 1000
         isActive:
           type: boolean
+        isDeleted:
+          type: boolean
+          example: false
     CreateTaxTypeDto:
       type: object
       properties:
@@ -5660,6 +5679,9 @@ components:
         isActive:
           type: boolean
           example: true
+        isDeleted:
+          type: boolean
+          example: false
     CreateBarcodeSymbologyDto:
       type: object
       properties:
@@ -5688,6 +5710,9 @@ components:
           maxLength: 1000
         isActive:
           type: boolean
+        isDeleted:
+          type: boolean
+          example: false
     UpdateWarehouseDto:
       type: object
       properties:
@@ -5702,6 +5727,9 @@ components:
         isActive:
           type: boolean
           example: true
+        isDeleted:
+          type: boolean
+          example: false
         maxCapacity:
           type: number
           minimum: 0
@@ -5717,6 +5745,9 @@ components:
         isActive:
           type: boolean
           example: true
+        isDeleted:
+          type: boolean
+          example: false
         maxCapacity:
           type: number
           minimum: 0
@@ -6263,3 +6294,6 @@ components:
         isHeadquarter:
           type: boolean
           example: true
+        isDeleted:
+          type: boolean
+          example: false
