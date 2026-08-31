@@ -3767,6 +3767,99 @@ paths:
       summary: Receive one or more tags under this receipt - pre-registers unseen tags, binds each to the product with this receipt's lot/production/expiry data.
       tags:
         - Goods Receipts
+  /goods-receipts/staged-items:
+    get:
+      operationId: GoodsReceiptsController_getStagedItems_v1
+      summary: List all goods receipt items currently held in receiving staging awaiting putaway.
+      tags:
+        - Goods Receipts
+        - Putaway
+      security:
+        - jwt: []
+      parameters:
+        - name: warehouseId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Staged items pending putaway
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StagedItemDto'
+  /putaway/suggest-bin:
+    get:
+      operationId: PutawayController_suggestBin_v1
+      summary: Get suggested bin locations for a product based on zone, category, and capacity.
+      tags:
+        - Putaway
+      security:
+        - jwt: []
+      parameters:
+        - name: warehouseId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: productId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: quantity
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Suggested bin locations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PutawaySuggestionResponseDto'
+  /putaway/confirm:
+    post:
+      operationId: PutawayController_confirmPutaway_v1
+      summary: Confirm items moved from receiving staging into target bin location.
+      tags:
+        - Putaway
+      security:
+        - jwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutawayConfirmDto'
+      responses:
+        '200':
+          description: Putaway confirmed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Putaway confirmed successfully
   /goods-issues:
     get:
       operationId: GoodsIssuesController_list_v1
@@ -6173,19 +6266,162 @@ components:
           type: string
           format: uuid
           example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+        supplierId:
+          type: string
+          format: uuid
+          nullable: true
+          example: c4d5e6f7-8a9b-0c1d-2e3f-4a5b6c7d8e9f
+        poNumber:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: PO-2026-08001
+        supplierInvoiceNo:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: INV-998822
+        photoUrls:
+          type: array
+          items:
+            type: string
+          example:
+            - https://match-stock.ddns.net/uploads/receipts/gr-proof-01.jpg
         binLocationId:
           type: string
           format: uuid
-          description: Default putaway bin for this receipt.
+          nullable: true
+          description: Default putaway bin for 1-step direct receiving. If null, items enter receiving staging.
         receivedAt:
           type: string
-          example: '2026-08-17T00:00:00.000Z'
+          example: '2026-08-31T00:00:00.000Z'
         notes:
           type: string
           maxLength: 1000
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateGoodsReceiptItemDto'
       required:
         - receiptNumber
         - warehouseId
+    CreateGoodsReceiptItemDto:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+          example: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+        quantity:
+          type: integer
+          minimum: 1
+          example: 50
+        damagedQuantity:
+          type: integer
+          minimum: 0
+          default: 0
+          example: 0
+        lotNumber:
+          type: string
+          nullable: true
+          example: LOT-2026-08A
+        productionDate:
+          type: string
+          nullable: true
+          example: '2026-08-01T00:00:00.000Z'
+        expiryDate:
+          type: string
+          nullable: true
+          example: '2028-08-01T00:00:00.000Z'
+        unitCostMinor:
+          type: integer
+          nullable: true
+          description: Cost price in minor units (satangs)
+          example: 120000
+        binLocationId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Target bin for direct receiving. If null, remains in staging.
+      required:
+        - productId
+        - quantity
+    StagedItemDto:
+      type: object
+      properties:
+        receiptId:
+          type: string
+          format: uuid
+        receiptNumber:
+          type: string
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        sku:
+          type: string
+        stagedQuantity:
+          type: integer
+          example: 50
+        lotNumber:
+          type: string
+          nullable: true
+        receivedAt:
+          type: string
+    PutawaySuggestionResponseDto:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            suggestedBins:
+              type: array
+              items:
+                type: object
+                properties:
+                  binId:
+                    type: string
+                    format: uuid
+                  binCode:
+                    type: string
+                    example: A-01-01
+                  zone:
+                    type: string
+                    example: Zone A
+                  currentOccupancy:
+                    type: integer
+                    example: 20
+                  maxCapacity:
+                    type: integer
+                    example: 100
+                  reason:
+                    type: string
+                    example: Matching category zone and available capacity
+    PutawayConfirmDto:
+      type: object
+      properties:
+        receiptId:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        targetBinCode:
+          type: string
+          example: A-01-01
+        quantity:
+          type: integer
+          minimum: 1
+          example: 50
+      required:
+        - receiptId
+        - productId
+        - targetBinCode
+        - quantity
     ReceiveGoodsDto:
       type: object
       properties:
