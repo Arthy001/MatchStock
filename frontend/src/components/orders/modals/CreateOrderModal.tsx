@@ -1,9 +1,10 @@
 import React from 'react';
 import { Plus, X, Trash2, ShoppingCart, ShoppingBag } from 'lucide-react';
-import { ThemeMode, OrderItem, ProductItem } from '../../../types';
+import { ThemeMode, Language, OrderItem, ProductItem } from '../../../types';
 
 interface CreateOrderModalProps {
   theme: ThemeMode;
+  lang?: Language;
   t: any;
   isSales: boolean;
   isOpen: boolean;
@@ -31,6 +32,7 @@ interface CreateOrderModalProps {
 
 export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   theme,
+  lang = 'th',
   isSales,
   isOpen,
   onClose,
@@ -55,6 +57,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   onRemoveItem,
 }) => {
   if (!isOpen) return null;
+  const isEn = lang === 'en';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
@@ -75,7 +78,9 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tracking-tight">
-                  {isSales ? 'สร้างใบสั่งขายใหม่' : 'สร้างใบสั่งซื้อใหม่'}
+                  {isSales
+                    ? (isEn ? 'Create Sales Order' : 'สร้างใบสั่งขายใหม่')
+                    : (isEn ? 'Create Purchase Order' : 'สร้างใบสั่งซื้อใหม่')}
                 </h3>
                 <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full border shadow-2xs bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800">
                   {isSales ? 'Sales Order (SO)' : 'Purchase Order (PO)'}
@@ -83,8 +88,8 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5 truncate">
                 {isSales
-                  ? 'ออกเอกสารใบสั่งขายและตัดเบิกสินค้า'
-                  : 'ออกเอกสารสั่งซื้อสินค้าจากคู่ค้าเพื่อรับเข้าคลัง'}
+                  ? (isEn ? 'Generate outbound sales order and prepare inventory for fulfillment.' : 'ออกเอกสารใบสั่งขายและตัดเบิกสินค้า')
+                  : (isEn ? 'Generate procurement purchase order and schedule warehouse receipt.' : 'ออกเอกสารสั่งซื้อสินค้าจากคู่ค้าเพื่อรับเข้าคลัง')}
               </p>
             </div>
           </div>
@@ -92,7 +97,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
             type="button"
             onClick={onClose}
             className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center transition shrink-0 cursor-pointer"
-            title="ปิดหน้าต่าง (Close)"
+            title={isEn ? 'Close' : 'ปิดหน้าต่าง (Close)'}
           >
             <X className="w-5 h-5" />
           </button>
@@ -102,14 +107,18 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                {isSales ? 'ชื่อลูกค้า / บริษัท:' : 'ชื่อผู้จัดจำหน่าย / ซัพพลายเออร์:'}
+                {isSales
+                  ? (isEn ? 'Customer / Company Name:' : 'ชื่อลูกค้า / บริษัท:')
+                  : (isEn ? 'Supplier / Vendor Name:' : 'ชื่อผู้จัดจำหน่าย / ซัพพลายเออร์:')}
               </label>
               <input
                 type="text"
                 required
                 value={formPartyName}
                 onChange={(e) => setFormPartyName(e.target.value)}
-                placeholder={isSales ? 'เช่น บจก. สยามโรโบติกส์' : 'เช่น บจก. ซูมิโตโม แมชชีนเนอรี่'}
+                placeholder={isSales
+                  ? (isEn ? 'e.g. Siam Robotics Co., Ltd.' : 'เช่น บจก. สยามโรโบติกส์')
+                  : (isEn ? 'e.g. Sumitomo Machinery Co., Ltd.' : 'เช่น บจก. ซูมิโตโม แมชชีนเนอรี่')}
                 className={`w-full px-3 py-2 rounded-xl border font-medium focus:ring-2 focus:ring-blue-500 transition ${
                   theme === 'dark'
                     ? 'bg-slate-800 border-slate-700 text-slate-100'
@@ -120,13 +129,13 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
 
             <div>
               <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                ผู้ติดต่อ / เบอร์โทร:
+                {isEn ? 'Contact Person / Phone:' : 'ผู้ติดต่อ / เบอร์โทร:'}
               </label>
               <input
                 type="text"
                 value={formContactPerson}
                 onChange={(e) => setFormContactPerson(e.target.value)}
-                placeholder="เช่น คุณกิตติศักดิ์ (081-xxx-xxxx)"
+                placeholder={isEn ? 'e.g. Kittisak (081-xxx-xxxx)' : 'เช่น คุณกิตติศักดิ์ (081-xxx-xxxx)'}
                 className={`w-full px-3 py-2 rounded-xl border font-medium focus:ring-2 focus:ring-blue-500 transition ${
                   theme === 'dark'
                     ? 'bg-slate-800 border-slate-700 text-slate-100'
@@ -138,7 +147,9 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">วันที่สั่งซื้อ:</label>
+              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                {isEn ? 'Order Date:' : 'วันที่สั่งซื้อ:'}
+              </label>
               <input
                 type="date"
                 required
@@ -153,7 +164,9 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
             </div>
 
             <div>
-              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">กำหนดส่งมอบ:</label>
+              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                {isEn ? 'Expected Delivery:' : 'กำหนดส่งมอบ:'}
+              </label>
               <input
                 type="date"
                 required
@@ -168,7 +181,9 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
             </div>
 
             <div>
-              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">คลังเป้าหมาย:</label>
+              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                {isEn ? 'Warehouse:' : 'คลังเป้าหมาย:'}
+              </label>
               <select
                 value={formWarehouseId}
                 onChange={(e) => setFormWarehouseId(e.target.value)}
@@ -190,14 +205,16 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
           {/* Items in Order */}
           <div className="pt-2">
             <div className="flex items-center justify-between mb-2">
-              <span className="font-bold text-slate-700 dark:text-slate-300">รายการสินค้า (Order Items):</span>
+              <span className="font-bold text-slate-700 dark:text-slate-300">
+                {isEn ? 'Order Items:' : 'รายการสินค้า (Order Items):'}
+              </span>
               <button
                 type="button"
                 onClick={onAddItem}
                 className="px-2.5 py-1 rounded-lg bg-blue-600/10 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white font-bold transition flex items-center gap-1 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                เพิ่มสินค้า
+                {isEn ? 'Add Item' : 'เพิ่มสินค้า'}
               </button>
             </div>
 
@@ -218,7 +235,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                       min="1"
                       value={item.quantity}
                       onChange={(e) => onUpdateItemQty(item.id, parseInt(e.target.value, 10) || 1)}
-                      placeholder="จำนวน"
+                      placeholder={isEn ? 'Qty' : 'จำนวน'}
                       className={`w-full text-center px-2 py-1.5 rounded-lg border font-mono font-bold text-xs ${
                         theme === 'dark'
                           ? 'bg-slate-800 border-slate-700 text-slate-100'
@@ -233,7 +250,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                       min="0"
                       value={item.unitPrice}
                       onChange={(e) => onUpdateItemPrice(item.id, parseFloat(e.target.value) || 0)}
-                      placeholder="ราคา/หน่วย"
+                      placeholder={isEn ? 'Price/Unit' : 'ราคา/หน่วย'}
                       className={`w-full text-right px-2 py-1.5 rounded-lg border font-mono font-bold text-xs ${
                         theme === 'dark'
                           ? 'bg-slate-800 border-slate-700 text-slate-100'
@@ -262,7 +279,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
 
           {/* Price Summary */}
           <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex justify-between items-center font-bold">
-            <span>ยอดสุทธิรวมภาษี (Grand Total):</span>
+            <span>{isEn ? 'Grand Total (Incl. VAT):' : 'ยอดสุทธิรวมภาษี (Grand Total):'}</span>
             <span className="text-base text-blue-600 dark:text-blue-400 font-extrabold">
               ฿{calculatedTotal.toLocaleString()}
             </span>
@@ -274,13 +291,13 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold transition cursor-pointer"
             >
-              ยกเลิก
+              {isEn ? 'Cancel' : 'ยกเลิก'}
             </button>
             <button
               type="submit"
               className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md shadow-blue-600/20 transition cursor-pointer"
             >
-              ยืนยันบันทึกเอกสาร
+              {isEn ? 'Save Order' : 'ยืนยันบันทึกเอกสาร'}
             </button>
           </div>
         </form>

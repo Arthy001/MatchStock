@@ -1,10 +1,11 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Warehouse, X, CheckCircle2, Edit2, Eye } from 'lucide-react';
-import { ThemeMode, WarehouseBin } from '../../../types';
+import { ThemeMode, Language, WarehouseBin } from '../../../types';
 
 interface EditWarehouseBinModalProps {
   theme: ThemeMode;
+  lang?: Language;
   t: any;
   bin: WarehouseBin | null;
   isViewOnly?: boolean;
@@ -28,6 +29,7 @@ interface EditWarehouseBinModalProps {
 
 export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
   theme,
+  lang = 'th',
   t,
   bin,
   isViewOnly = false,
@@ -49,6 +51,7 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
   setEditBinIsActive,
 }) => {
   if (!bin) return null;
+  const isEn = lang === 'en';
 
   const disabledCls = isViewOnly
     ? 'bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 cursor-not-allowed'
@@ -76,21 +79,21 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tracking-tight">
                   {isViewOnly
-                    ? 'รายละเอียดคลัง & ตำแหน่ง Bin'
-                    : 'แก้ไขข้อมูลคลัง & ตำแหน่ง Bin'}
+                    ? (isEn ? 'Warehouse & Bin Details' : 'รายละเอียดคลัง & ตำแหน่ง Bin')
+                    : (isEn ? 'Edit Warehouse & Bin Location' : 'แก้ไขข้อมูลคลัง & ตำแหน่ง Bin')}
                 </h3>
                 <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border shadow-2xs ${
                   isViewOnly
                     ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                     : 'bg-purple-50 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200 dark:border-purple-800'
                 }`}>
-                  {isViewOnly ? 'ดูข้อมูล' : 'แก้ไขข้อมูล'}
+                  {isViewOnly ? (isEn ? 'View Only' : 'ดูข้อมูล') : (isEn ? 'Edit' : 'แก้ไขข้อมูล')}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5 truncate">
                 {isViewOnly
-                  ? 'ดูข้อมูลโซน แร็คจัดเก็บ และความจุน้ำหนักสูงสุด'
-                  : 'แก้ไขข้อมูลคลังสินค้า โซนจัดเก็บ และความจุ'}
+                  ? (isEn ? 'Inspect zone, rack positioning, and storage weight limits' : 'ดูข้อมูลโซน แร็คจัดเก็บ และความจุน้ำหนักสูงสุด')
+                  : (isEn ? 'Update warehouse name, zone, rack, and capacity limit' : 'แก้ไขข้อมูลคลังสินค้า โซนจัดเก็บ และความจุ')}
               </p>
             </div>
           </div>
@@ -98,7 +101,7 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
             type="button"
             onClick={onClose}
             className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center transition shrink-0 cursor-pointer"
-            title="ปิดหน้าต่าง (Close)"
+            title={isEn ? 'Close' : 'ปิดหน้าต่าง (Close)'}
           >
             <X className="w-5 h-5" />
           </button>
@@ -107,7 +110,7 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
         <form onSubmit={onSave} className="p-5 space-y-3.5 text-sm">
           <div>
             <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-              ชื่อคลังสินค้า (Warehouse Name) <span className="text-rose-500 font-bold">*</span>
+              {isEn ? 'Warehouse Name' : 'ชื่อคลังสินค้า (Warehouse Name)'} <span className="text-rose-500 font-bold">*</span>
             </label>
             <input
               type="text"
@@ -122,7 +125,7 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                รหัสตำแหน่ง (Bin Code) <span className="text-rose-500 font-bold">*</span>
+                {isEn ? 'Bin Code' : 'รหัสตำแหน่ง (Bin Code)'} <span className="text-rose-500 font-bold">*</span>
               </label>
               <input
                 type="text"
@@ -135,7 +138,7 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
             </div>
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                โซน (Zone) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+                {isEn ? 'Zone' : 'โซน (Zone)'} <span className="text-slate-400 font-normal text-xs">({isEn ? 'Optional' : 'ไม่บังคับ'})</span>
               </label>
               <input
                 type="text"
@@ -150,7 +153,7 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                แร็คจัดเก็บ (Rack) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+                {isEn ? 'Rack' : 'แร็คจัดเก็บ (Rack)'} <span className="text-slate-400 font-normal text-xs">({isEn ? 'Optional' : 'ไม่บังคับ'})</span>
               </label>
               <input
                 type="text"
@@ -162,7 +165,7 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
             </div>
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                ความจุสูงสุด (Capacity kg) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+                {isEn ? 'Max Capacity (kg)' : 'ความจุสูงสุด (Capacity kg)'} <span className="text-slate-400 font-normal text-xs">({isEn ? 'Optional' : 'ไม่บังคับ'})</span>
               </label>
               <input
                 type="number"
@@ -178,10 +181,12 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
           <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
             <div>
               <span className="block font-semibold text-[13px] text-slate-800 dark:text-slate-200">
-                สถานะการใช้งาน (Active Status)
+                {isEn ? 'Active Status' : 'สถานะการใช้งาน (Active Status)'}
               </span>
               <span className="text-xs text-slate-500">
-                {editBinIsActive ? 'เปิดใช้งาน (Active) - พร้อมใช้งานและเก็บสินค้า' : 'ปิดใช้งาน (Inactive / ซ่อมบำรุง) - งดการจัดเก็บชั่วคราว'}
+                {editBinIsActive
+                  ? (isEn ? 'Active - Available for storing inventory' : 'เปิดใช้งาน (Active) - พร้อมใช้งานและเก็บสินค้า')
+                  : (isEn ? 'Inactive / Maintenance - Temporarily unavailable' : 'ปิดใช้งาน (Inactive / ซ่อมบำรุง) - งดการจัดเก็บชั่วคราว')}
               </span>
             </div>
             <button
@@ -217,7 +222,7 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
                     className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md shadow-blue-600/30 transition flex items-center gap-1.5 cursor-pointer"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
-                    <span>แก้ไขข้อมูล</span>
+                    <span>{isEn ? 'Edit Details' : 'แก้ไขข้อมูล'}</span>
                   </button>
                 )}
               </>
@@ -236,7 +241,7 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
                   className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>{isSaving ? 'กำลังบันทึก...' : t.save}</span>
+                  <span>{isSaving ? (isEn ? 'Saving...' : 'กำลังบันทึก...') : t.save}</span>
                 </button>
               </>
             )}

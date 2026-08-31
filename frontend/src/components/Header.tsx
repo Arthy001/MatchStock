@@ -119,25 +119,6 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right Controls & Tools */}
       <div className="flex items-center gap-2.5">
-        {/* Tenant Selector */}
-        <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-bold ${
-          theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-100' : 'bg-slate-100 border-slate-300 text-slate-900'
-        }`}>
-          <Building2 className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
-          <select
-            value={selectedTenantId}
-            onChange={(e) => onTenantSelect(e.target.value)}
-            className={`bg-transparent border-none focus:outline-none font-bold cursor-pointer text-xs ${
-              theme === 'dark' ? 'text-slate-100' : 'text-slate-900'
-            }`}
-          >
-            {tenants.map((ten) => (
-              <option key={ten.id} value={ten.id} className={theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-white text-slate-900'}>
-                {ten.name}
-              </option>
-            ))}
-          </select>
-        </div>
 
         {/* ISO Segmented Language Control [ TH | EN ] */}
         <div

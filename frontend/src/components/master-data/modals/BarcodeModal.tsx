@@ -1,20 +1,23 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { X, Printer, Barcode } from 'lucide-react';
-import { ThemeMode, ProductItem } from '../../../types';
+import { ThemeMode, Language, ProductItem } from '../../../types';
 
 interface BarcodeModalProps {
   theme: ThemeMode;
+  lang?: Language;
   product: ProductItem | null;
   onClose: () => void;
 }
 
 export const BarcodeModal: React.FC<BarcodeModalProps> = ({
   theme,
+  lang = 'th',
   product,
   onClose,
 }) => {
   if (!product) return null;
+  const isEn = lang === 'en';
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] overflow-hidden bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
@@ -37,14 +40,14 @@ export const BarcodeModal: React.FC<BarcodeModalProps> = ({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100 tracking-tight">
-                  ป้ายบาร์โค้ดสินค้า
+                  {isEn ? 'Product Barcode Label' : 'ป้ายบาร์โค้ดสินค้า'}
                 </h3>
                 <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full border shadow-2xs bg-teal-50 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300 border-teal-200 dark:border-teal-800">
                   Label
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 font-normal truncate">
-                ตัวอย่างก่อนพิมพ์ป้ายบาร์โค้ด
+                {isEn ? 'Print preview for barcode label' : 'ตัวอย่างก่อนพิมพ์ป้ายบาร์โค้ด'}
               </p>
             </div>
           </div>
@@ -52,7 +55,7 @@ export const BarcodeModal: React.FC<BarcodeModalProps> = ({
             type="button"
             onClick={onClose}
             className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center transition shrink-0 cursor-pointer"
-            title="ปิดหน้าต่าง (Close)"
+            title={isEn ? 'Close' : 'ปิดหน้าต่าง (Close)'}
           >
             <X className="w-4 h-4" />
           </button>
@@ -85,7 +88,7 @@ export const BarcodeModal: React.FC<BarcodeModalProps> = ({
             className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-xs cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            <span>Print Barcode Label</span>
+            <span>{isEn ? 'Print Barcode Label' : 'พิมพ์ป้ายบาร์โค้ด'}</span>
           </button>
         </div>
       </div>

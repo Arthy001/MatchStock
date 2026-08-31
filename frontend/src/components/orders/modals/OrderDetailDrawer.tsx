@@ -7,10 +7,11 @@ import {
   CheckCircle2,
   Clock,
 } from 'lucide-react';
-import { ThemeMode, Order, OrderStatus } from '../../../types';
+import { ThemeMode, Language, Order, OrderStatus } from '../../../types';
 
 interface OrderDetailDrawerProps {
   theme: ThemeMode;
+  lang?: Language;
   t: any;
   isSales: boolean;
   isOpen: boolean;
@@ -22,6 +23,7 @@ interface OrderDetailDrawerProps {
 
 export const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
   theme,
+  lang = 'th',
   isSales,
   isOpen,
   order,
@@ -30,6 +32,7 @@ export const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
   onNavigateToStockAction,
 }) => {
   if (!isOpen || !order) return null;
+  const isEn = lang === 'en';
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-slate-900/60 backdrop-blur-xs flex justify-end animate-in fade-in duration-200">
@@ -50,7 +53,9 @@ export const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
             <div>
               <h3 className="font-bold text-sm">{order.orderNo}</h3>
               <p className="text-[11px] text-slate-500">
-                {isSales ? 'ใบสั่งขาย (Sales Order)' : 'ใบสั่งซื้อ (Purchase Order)'}
+                {isSales
+                  ? (isEn ? 'Sales Order (SO)' : 'ใบสั่งขาย (Sales Order)')
+                  : (isEn ? 'Purchase Order (PO)' : 'ใบสั่งซื้อ (Purchase Order)')}
               </p>
             </div>
           </div>
@@ -68,40 +73,42 @@ export const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
           {/* Partner / Customer Info */}
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 space-y-2">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              {isSales ? 'ข้อมูลลูกค้า (Customer Info)' : 'ข้อมูลซัพพลายเออร์ (Supplier Info)'}
+              {isSales
+                ? (isEn ? 'Customer Information' : 'ข้อมูลลูกค้า (Customer Info)')
+                : (isEn ? 'Supplier Information' : 'ข้อมูลซัพพลายเออร์ (Supplier Info)')}
             </p>
             <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
               {order.partyName}
             </h4>
             {order.contactPerson && (
-              <p className="text-slate-600 dark:text-slate-400">ผู้ติดต่อ: {order.contactPerson}</p>
+              <p className="text-slate-600 dark:text-slate-400">{isEn ? 'Contact:' : 'ผู้ติดต่อ:'} {order.contactPerson}</p>
             )}
             {order.phone && (
-              <p className="text-slate-600 dark:text-slate-400">โทรศัพท์: {order.phone}</p>
+              <p className="text-slate-600 dark:text-slate-400">{isEn ? 'Phone:' : 'โทรศัพท์:'} {order.phone}</p>
             )}
             {order.email && (
-              <p className="text-slate-600 dark:text-slate-400">อีเมล: {order.email}</p>
+              <p className="text-slate-600 dark:text-slate-400">{isEn ? 'Email:' : 'อีเมล:'} {order.email}</p>
             )}
           </div>
 
           {/* Order Logistics Info */}
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60">
-              <p className="text-[10px] text-slate-500 font-medium">วันที่สั่ง</p>
+              <p className="text-[10px] text-slate-500 font-medium">{isEn ? 'Order Date' : 'วันที่สั่ง'}</p>
               <p className="font-mono font-bold mt-0.5">{order.orderDate}</p>
             </div>
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60">
-              <p className="text-[10px] text-slate-500 font-medium">กำหนดส่งมอบ</p>
+              <p className="text-[10px] text-slate-500 font-medium">{isEn ? 'Expected Date' : 'กำหนดส่งมอบ'}</p>
               <p className="font-mono font-bold mt-0.5 text-blue-600 dark:text-blue-400">
                 {order.expectedDate}
               </p>
             </div>
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60">
-              <p className="text-[10px] text-slate-500 font-medium">คลังเป้าหมาย</p>
+              <p className="text-[10px] text-slate-500 font-medium">{isEn ? 'Destination Warehouse' : 'คลังเป้าหมาย'}</p>
               <p className="font-semibold mt-0.5 truncate">{order.warehouseName}</p>
             </div>
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60">
-              <p className="text-[10px] text-slate-500 font-medium">เครดิต / ชำระเงิน</p>
+              <p className="text-[10px] text-slate-500 font-medium">{isEn ? 'Payment Terms' : 'เครดิต / ชำระเงิน'}</p>
               <p className="font-semibold mt-0.5 truncate">{order.paymentTerms}</p>
             </div>
           </div>
@@ -109,7 +116,7 @@ export const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
           {/* Order Items Table */}
           <div>
             <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-2">
-              รายการสินค้าในคำสั่ง ({order.items.length} รายการ)
+              {isEn ? `Order Line Items (${order.items.length} items)` : `รายการสินค้าในคำสั่ง (${order.items.length} รายการ)`}
             </p>
             <div className="space-y-2">
               {order.items.map((item) => (
@@ -136,21 +143,21 @@ export const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
           {/* Price Calculations */}
           <div className="p-4 rounded-xl bg-blue-50/50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 space-y-1.5">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>มูลค่าสินค้ารวม (Subtotal):</span>
+              <span>{isEn ? 'Subtotal:' : 'มูลค่าสินค้ารวม (Subtotal):'}</span>
               <span>฿{order.subtotal.toLocaleString()}</span>
             </div>
             {order.discountTotal > 0 && (
               <div className="flex justify-between text-rose-600 dark:text-rose-400">
-                <span>ส่วนลดรวม (Discount):</span>
+                <span>{isEn ? 'Total Discount:' : 'ส่วนลดรวม (Discount):'}</span>
                 <span>-฿{order.discountTotal.toLocaleString()}</span>
               </div>
             )}
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>ภาษีมูลค่าเพิ่ม 7% (VAT):</span>
+              <span>{isEn ? 'VAT (7%):' : 'ภาษีมูลค่าเพิ่ม 7% (VAT):'}</span>
               <span>฿{order.taxAmount.toLocaleString()}</span>
             </div>
             <div className="flex justify-between font-extrabold text-base pt-2 border-t border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-100">
-              <span>ยอดสุทธิ (Grand Total):</span>
+              <span>{isEn ? 'Grand Total:' : 'ยอดสุทธิ (Grand Total):'}</span>
               <span>฿{order.grandTotal.toLocaleString()}</span>
             </div>
           </div>
@@ -166,11 +173,11 @@ export const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                 theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-100 border-slate-300 text-slate-900'
               }`}
             >
-              <option value="DRAFT">สถานะ: ฉบับร่าง (Draft)</option>
-              <option value="CONFIRMED">สถานะ: ยืนยันแล้ว (Confirmed)</option>
-              <option value="PROCESSING">สถานะ: กำลังดำเนินงาน (Processing)</option>
-              <option value="COMPLETED">สถานะ: เสร็จสมบูรณ์ (Completed)</option>
-              <option value="CANCELLED">สถานะ: ยกเลิก (Cancelled)</option>
+              <option value="DRAFT">{isEn ? 'Status: Draft' : 'สถานะ: ฉบับร่าง (Draft)'}</option>
+              <option value="CONFIRMED">{isEn ? 'Status: Confirmed' : 'สถานะ: ยืนยันแล้ว (Confirmed)'}</option>
+              <option value="PROCESSING">{isEn ? 'Status: Processing' : 'สถานะ: กำลังดำเนินงาน (Processing)'}</option>
+              <option value="COMPLETED">{isEn ? 'Status: Completed' : 'สถานะ: เสร็จสมบูรณ์ (Completed)'}</option>
+              <option value="CANCELLED">{isEn ? 'Status: Cancelled' : 'สถานะ: ยกเลิก (Cancelled)'}</option>
             </select>
 
             <button
@@ -178,7 +185,7 @@ export const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
               className="w-1/2 py-2 rounded-xl border border-slate-300 dark:border-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
             >
               <Printer className="w-4 h-4" />
-              <span>พิมพ์เอกสาร (Print)</span>
+              <span>{isEn ? 'Print Order' : 'พิมพ์เอกสาร (Print)'}</span>
             </button>
           </div>
 
@@ -192,7 +199,11 @@ export const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
             className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/20 transition cursor-pointer"
           >
             <Truck className="w-4 h-4" />
-            <span>{isSales ? 'ส่งไปทำรายการเบิกจ่าย (GI)' : 'ส่งไปทำรายการรับเข้า (GR)'}</span>
+            <span>
+              {isSales
+                ? (isEn ? 'Proceed to Goods Issue (GI)' : 'ส่งไปทำรายการเบิกจ่าย (GI)')
+                : (isEn ? 'Proceed to Goods Receipt (GR)' : 'ส่งไปทำรายการรับเข้า (GR)')}
+            </span>
           </button>
         </div>
       </div>

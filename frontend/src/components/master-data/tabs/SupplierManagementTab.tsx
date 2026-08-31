@@ -1,9 +1,10 @@
 import React from 'react';
 import { Edit2, Trash2, Eye, CheckCircle2, XCircle } from 'lucide-react';
-import { ThemeMode, Supplier } from '../../../types';
+import { ThemeMode, Language, Supplier } from '../../../types';
 
 interface SupplierManagementTabProps {
   theme: ThemeMode;
+  lang?: Language;
   t: any;
   suppliersList: Supplier[];
   onOpenEditSupplier: (supplier: Supplier, isViewOnly?: boolean) => void;
@@ -12,11 +13,13 @@ interface SupplierManagementTabProps {
 
 export const SupplierManagementTab: React.FC<SupplierManagementTabProps> = ({
   theme,
+  lang = 'th',
   t,
   suppliersList = [],
   onOpenEditSupplier,
   onDeleteSupplier,
 }) => {
+  const isEn = lang === 'en';
   const safeSuppliers = Array.isArray(suppliersList) ? suppliersList : [];
   return (
     <div
@@ -45,7 +48,9 @@ export const SupplierManagementTab: React.FC<SupplierManagementTabProps> = ({
 
       {safeSuppliers.length === 0 ? (
         <div className="py-12 text-center text-zinc-400">
-          <p className="font-medium text-xs">ยังไม่มีข้อมูลผู้จัดจำหน่ายในระบบ</p>
+          <p className="font-medium text-xs">
+            {isEn ? 'No suppliers found in system' : 'ยังไม่มีข้อมูลผู้จัดจำหน่ายในระบบ'}
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -80,10 +85,10 @@ export const SupplierManagementTab: React.FC<SupplierManagementTabProps> = ({
                   theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
                 }`}
               >
-                Contact: {sup.contactPerson} ({sup.phone}) • Email: {sup.email}
+                {isEn ? 'Contact:' : 'ติดต่อ:'} {sup.contactPerson} ({sup.phone}) • {isEn ? 'Email:' : 'อีเมล:'} {sup.email}
               </p>
               <p className="text-[11px] text-slate-400 mt-0.5 font-normal">
-                Address: {sup.address}
+                {isEn ? 'Address:' : 'ที่อยู่:'} {sup.address}
               </p>
             </div>
 
@@ -129,21 +134,21 @@ export const SupplierManagementTab: React.FC<SupplierManagementTabProps> = ({
               <button
                 onClick={() => onOpenEditSupplier(sup, true)}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                title="ดูรายละเอียดผู้จัดจำหน่าย (View Detail)"
+                title={isEn ? 'View Supplier Details' : 'ดูรายละเอียดผู้จัดจำหน่าย (View Detail)'}
               >
                 <Eye className="w-4 h-4" />
               </button>
               <button
                 onClick={() => onOpenEditSupplier(sup, false)}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                title="แก้ไขข้อมูลผู้จัดจำหน่าย (Full Edit)"
+                title={isEn ? 'Edit Supplier' : 'แก้ไขข้อมูลผู้จัดจำหน่าย (Full Edit)'}
               >
                 <Edit2 className="w-4 h-4" />
               </button>
               <button
                 onClick={() => onDeleteSupplier(sup)}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                title="ลบผู้จัดจำหน่าย"
+                title={isEn ? 'Delete Supplier' : 'ลบผู้จัดจำหน่าย (Delete Supplier)'}
               >
                 <Trash2 className="w-4 h-4" />
               </button>

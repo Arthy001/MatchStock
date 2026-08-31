@@ -15,7 +15,7 @@ import {
   Check,
   Link2,
 } from 'lucide-react';
-import { ThemeMode, ProductItem, CategoryItem, BrandItem, BarcodeSymbologyItem, TaxTypeItem, Supplier } from '../../../types';
+import { ThemeMode, Language, ProductItem, CategoryItem, BrandItem, BarcodeSymbologyItem, TaxTypeItem, Supplier } from '../../../types';
 import { productService, resolveImageUrl } from '../../../services/product.service';
 
 interface UnitItem {
@@ -27,6 +27,7 @@ interface UnitItem {
 
 interface ProductDrawerProps {
   theme: ThemeMode;
+  lang?: Language;
   t: any;
   product: ProductItem | null;
   onClose: () => void;
@@ -95,6 +96,7 @@ interface ProductDrawerProps {
 
 export const ProductDrawer: React.FC<ProductDrawerProps> = ({
   theme,
+  lang = 'th',
   t,
   product,
   onClose,
@@ -245,7 +247,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                     theme === 'dark' ? 'text-slate-50' : 'text-slate-900'
                   }`}
                 >
-                  แก้ไขข้อมูลสินค้า (Edit Product)
+                  {lang === 'en' ? 'Product Details & Edit' : 'แก้ไขข้อมูลสินค้า (Edit Product)'}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {product.sku || product.code}
@@ -903,7 +905,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
               className="w-1/2 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-xs shadow-md shadow-blue-600/30 transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>{isSaving ? 'กำลังบันทึก...' : t.save}</span>
+              <span>{isSaving ? (lang === 'en' ? 'Saving...' : 'กำลังบันทึก...') : t.save}</span>
             </button>
           </div>
           <button
@@ -913,7 +915,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
             className="w-full py-2 rounded-xl text-rose-600 hover:bg-rose-500/10 font-semibold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span>ลบสินค้านี้ออกจากระบบ (Delete)</span>
+            <span>{lang === 'en' ? 'Delete Product from System' : 'ลบสินค้านี้ออกจากระบบ (Delete)'}</span>
           </button>
         </div>
       </div>

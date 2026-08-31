@@ -1,10 +1,11 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Building2, X, CheckCircle2, Edit2, Eye } from 'lucide-react';
-import { ThemeMode, Company } from '../../../types';
+import { ThemeMode, Language, Company } from '../../../types';
 
 interface EditCompanyModalProps {
   theme: ThemeMode;
+  lang?: Language;
   t: any;
   company: Company | null;
   isViewOnly?: boolean;
@@ -30,12 +31,11 @@ interface EditCompanyModalProps {
   setEditCompAddress: (val: string) => void;
   editCompIsHq: boolean;
   setEditCompIsHq: (val: boolean) => void;
-  editCompIsActive: boolean;
-  setEditCompIsActive: (val: boolean) => void;
 }
 
 export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
   theme,
+  lang = 'th',
   t,
   company,
   isViewOnly = false,
@@ -61,10 +61,9 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
   setEditCompAddress,
   editCompIsHq,
   setEditCompIsHq,
-  editCompIsActive,
-  setEditCompIsActive,
 }) => {
   if (!company) return null;
+  const isEn = lang === 'en';
 
   const disabledCls = isViewOnly
     ? 'bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 cursor-not-allowed'
@@ -92,21 +91,21 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tracking-tight">
                   {isViewOnly
-                    ? 'รายละเอียดบริษัทในเครือ'
-                    : 'แก้ไขข้อมูลบริษัทในเครือ'}
+                    ? (isEn ? 'Subsidiary Company Details' : 'รายละเอียดบริษัทในเครือ')
+                    : (isEn ? 'Edit Subsidiary Company' : 'แก้ไขข้อมูลบริษัทในเครือ')}
                 </h3>
                 <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border shadow-2xs ${
                   isViewOnly
                     ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                     : 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800'
                 }`}>
-                  {isViewOnly ? 'ดูข้อมูล' : 'แก้ไขข้อมูล'}
+                  {isViewOnly ? (isEn ? 'View Info' : 'ดูข้อมูล') : (isEn ? 'Edit Info' : 'แก้ไขข้อมูล')}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5 truncate">
                 {isViewOnly
-                  ? 'ดูข้อมูลนิติบุคคล สาขา และที่อยู่สถานประกอบการ'
-                  : 'แก้ไขข้อมูลนิติบุคคล สาขา และเลขประจำตัวผู้เสียภาษี'}
+                  ? (isEn ? 'View corporate entity, branch, and registered address' : 'ดูข้อมูลนิติบุคคล สาขา และที่อยู่สถานประกอบการ')
+                  : (isEn ? 'Update corporate entity, branch, and tax identifier' : 'แก้ไขข้อมูลนิติบุคคล สาขา และเลขประจำตัวผู้เสียภาษี')}
               </p>
             </div>
           </div>
@@ -114,7 +113,7 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
             type="button"
             onClick={onClose}
             className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center transition shrink-0 cursor-pointer"
-            title="ปิดหน้าต่าง (Close)"
+            title={isEn ? 'Close Window' : 'ปิดหน้าต่าง (Close)'}
           >
             <X className="w-5 h-5" />
           </button>
@@ -127,7 +126,7 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                รหัสบริษัท (Company Code) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+                {isEn ? 'Company Code' : 'รหัสบริษัท (Company Code)'} <span className="text-slate-400 font-normal text-xs">{isEn ? '(Optional)' : '(ไม่บังคับ)'}</span>
               </label>
               <input
                 type="text"
@@ -139,7 +138,7 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
             </div>
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                ชื่อบริษัท / นิติบุคคล <span className="text-rose-500 font-bold">*</span>
+                {isEn ? 'Company / Entity Name' : 'ชื่อบริษัท / นิติบุคคล'} <span className="text-rose-500 font-bold">*</span>
               </label>
               <input
                 type="text"
@@ -155,7 +154,7 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                เลขประจำตัวผู้เสียภาษี (Tax ID) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+                {isEn ? 'Tax ID' : 'เลขประจำตัวผู้เสียภาษี (Tax ID)'} <span className="text-slate-400 font-normal text-xs">{isEn ? '(Optional)' : '(ไม่บังคับ)'}</span>
               </label>
               <input
                 type="text"
@@ -167,7 +166,7 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
             </div>
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                รหัสสาขา (Branch Code) <span className="text-rose-500 font-bold">*</span>
+                {isEn ? 'Branch Code' : 'รหัสสาขา (Branch Code)'} <span className="text-rose-500 font-bold">*</span>
               </label>
               <input
                 type="text"
@@ -183,7 +182,7 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                ชื่อสาขา (Branch Name) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+                {isEn ? 'Branch Name' : 'ชื่อสาขา (Branch Name)'} <span className="text-slate-400 font-normal text-xs">{isEn ? '(Optional)' : '(ไม่บังคับ)'}</span>
               </label>
               <input
                 type="text"
@@ -195,7 +194,7 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
             </div>
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                เบอร์โทรศัพท์ (Phone) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+                {isEn ? 'Phone Number' : 'เบอร์โทรศัพท์ (Phone)'} <span className="text-slate-400 font-normal text-xs">{isEn ? '(Optional)' : '(ไม่บังคับ)'}</span>
               </label>
               <input
                 type="text"
@@ -209,7 +208,7 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
 
           <div>
             <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-              อีเมลติดต่อ (Email) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+              {isEn ? 'Email Address' : 'อีเมลติดต่อ (Email)'} <span className="text-slate-400 font-normal text-xs">{isEn ? '(Optional)' : '(ไม่บังคับ)'}</span>
             </label>
             <input
               type="email"
@@ -222,7 +221,7 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
 
           <div>
             <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-              ที่อยู่สถานประกอบการ (Legal Address) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+              {isEn ? 'Legal Address' : 'ที่อยู่สถานประกอบการ (Legal Address)'} <span className="text-slate-400 font-normal text-xs">{isEn ? '(Optional)' : '(ไม่บังคับ)'}</span>
             </label>
             <textarea
               rows={2}
@@ -246,34 +245,8 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
               htmlFor="editCompIsHqCheckboxModal"
               className="text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
             >
-              กำหนดเป็นสำนักงานใหญ่ (Headquarters Entity)
+              {isEn ? 'Set as Headquarters Entity' : 'กำหนดเป็นสำนักงานใหญ่ (Headquarters Entity)'}
             </label>
-          </div>
-
-          {/* Active Status Switch */}
-          <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
-            <div>
-              <span className="block font-semibold text-[13px] text-slate-800 dark:text-slate-200">
-                สถานะการใช้งาน (Active Status)
-              </span>
-              <span className="text-xs text-slate-500">
-                {editCompIsActive ? 'เปิดใช้งาน (Active) - แสดงในตัวเลือกบริษัท' : 'ปิดใช้งาน (Inactive) - ซ่อนจากรายการเลือก'}
-              </span>
-            </div>
-            <button
-              type="button"
-              disabled={isViewOnly}
-              onClick={() => setEditCompIsActive(!editCompIsActive)}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
-                editCompIsActive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
-              } ${isViewOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                  editCompIsActive ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </button>
           </div>
 
           <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
@@ -293,7 +266,7 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
                     className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md shadow-blue-600/30 transition flex items-center gap-1.5 cursor-pointer"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
-                    <span>แก้ไขข้อมูล</span>
+                    <span>{isEn ? 'Edit Info' : 'แก้ไขข้อมูล'}</span>
                   </button>
                 )}
               </>
@@ -312,7 +285,7 @@ export const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
                   className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>{isSaving ? 'กำลังบันทึก...' : t.save}</span>
+                  <span>{isSaving ? (isEn ? 'Saving...' : 'กำลังบันทึก...') : t.save}</span>
                 </button>
               </>
             )}

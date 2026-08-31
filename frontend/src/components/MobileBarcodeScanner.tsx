@@ -324,6 +324,8 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
     setScanHistory([]);
   };
 
+  const isEn = lang === 'en';
+
   return (
     <div className="space-y-6">
       {/* Enterprise Title & Actions Toolbar */}
@@ -384,7 +386,7 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
             }`}
           >
             {isScanning ? <CameraOff className="w-4 h-4" /> : <Camera className="w-4 h-4" />}
-            <span>{isScanning ? 'ปิดกล้องสแกน' : 'เปิดกล้องสแกน'}</span>
+            <span>{isEn ? (isScanning ? 'Stop Camera' : 'Start Camera') : (isScanning ? 'ปิดกล้องสแกน' : 'เปิดกล้องสแกน')}</span>
           </button>
         </div>
       </div>
@@ -407,7 +409,9 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
                   }`}
                 />
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                  {isScanning ? 'กำลังสแกนผ่านกล้อง...' : 'หน้าต่างสแกนเนอร์ (Camera Viewport)'}
+                  {isScanning
+                    ? (isEn ? 'Scanning via camera...' : 'กำลังสแกนผ่านกล้อง...')
+                    : (isEn ? 'Camera Viewport' : 'หน้าต่างสแกนเนอร์ (Camera Viewport)')}
                 </h3>
               </div>
               {isScanning && (
@@ -426,16 +430,20 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
                   <div className="w-16 h-16 rounded-2xl bg-blue-600/20 text-blue-400 flex items-center justify-center mb-3 border border-blue-500/30">
                     <Scan className="w-8 h-8 animate-pulse" />
                   </div>
-                  <h4 className="text-sm font-bold text-slate-200 mb-1">กล้องยังไม่ได้เปิดทำงาน</h4>
+                  <h4 className="text-sm font-bold text-slate-200 mb-1">
+                    {isEn ? 'Camera is not active' : 'กล้องยังไม่ได้เปิดทำงาน'}
+                  </h4>
                   <p className="text-xs text-slate-400 max-w-xs leading-relaxed mb-4">
-                    กดปุ่มเปิดกล้องเพื่อสแกน QR Code หรือ Barcode สากล (CODE128, EAN13, EAN8) ผ่านอุปกรณ์
+                    {isEn
+                      ? 'Click button below to start camera and scan QR Code or standard Barcodes (CODE128, EAN13, EAN8).'
+                      : 'กดปุ่มเปิดกล้องเพื่อสแกน QR Code หรือ Barcode สากล (CODE128, EAN13, EAN8) ผ่านอุปกรณ์'}
                   </p>
                   <button
                     onClick={startCameraScanner}
                     className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-2 transition shadow-md shadow-blue-600/30"
                   >
                     <Camera className="w-4 h-4" />
-                    เปิดกล้องทันที
+                    {isEn ? 'Start Camera Now' : 'เปิดกล้องทันที'}
                   </button>
                 </div>
               )}
@@ -453,7 +461,7 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
                     <span className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-blue-400" />
                   </div>
                   <p className="text-[11px] text-white/80 font-medium mt-3 bg-slate-900/80 px-3 py-1 rounded-full backdrop-blur-xs border border-white/10">
-                    เล็งกล้องให้อยู่ในกรอบบาร์โค้ด
+                    {isEn ? 'Align barcode within frame' : 'เล็งกล้องให้อยู่ในกรอบบาร์โค้ด'}
                   </p>
                 </div>
               )}
@@ -470,8 +478,8 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
             {/* Manual Barcode / USB Scanner Input */}
             <form onSubmit={handleManualSubmit} className="mt-5 space-y-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                <span>หรือระบุรหัส Barcode / SKU / Serial ด้วยตนเอง:</span>
-                <span className="text-[10px] text-slate-400 font-normal">รองรับปืนยิงบาร์โค้ด USB</span>
+                <span>{isEn ? 'Or enter Barcode / SKU / Serial manually:' : 'หรือระบุรหัส Barcode / SKU / Serial ด้วยตนเอง:'}</span>
+                <span className="text-[10px] text-slate-400 font-normal">{isEn ? 'Supports USB scanners' : 'รองรับปืนยิงบาร์โค้ด USB'}</span>
               </label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
@@ -480,7 +488,7 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
                     type="text"
                     value={manualBarcode}
                     onChange={(e) => setManualBarcode(e.target.value)}
-                    placeholder="เช่น 8851234567890 หรือ SKU-901..."
+                    placeholder={isEn ? 'e.g. 8851234567890 or SKU-901...' : 'เช่น 8851234567890 หรือ SKU-901...'}
                     className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-xs font-mono font-medium focus:ring-2 focus:ring-blue-500 transition ${
                       theme === 'dark'
                         ? 'bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-500'
@@ -491,10 +499,10 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
                 <button
                   type="submit"
                   disabled={!manualBarcode.trim()}
-                  className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-xs"
+                  className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-xs cursor-pointer"
                 >
                   <Search className="w-4 h-4" />
-                  <span>ค้นหา</span>
+                  <span>{isEn ? 'Search' : 'ค้นหา'}</span>
                 </button>
               </div>
             </form>
@@ -513,7 +521,7 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
               <div className="flex items-center gap-2">
                 <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                  ข้อมูลสินค้าที่ตรวจพบ (Matched Product Details)
+                  {isEn ? 'Matched Product Details' : 'ข้อมูลสินค้าที่ตรวจพบ (Matched Product Details)'}
                 </h3>
               </div>
               {lastScannedCode && (
@@ -554,8 +562,8 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
                         }`}
                       >
                         {matchedProduct.stockOnHand > matchedProduct.reorderLevel
-                          ? 'สต็อกปกติ (In Stock)'
-                          : 'สต็อกใกล้หมด (Low Stock)'}
+                          ? (isEn ? 'In Stock' : 'สต็อกปกติ (In Stock)')
+                          : (isEn ? 'Low Stock' : 'สต็อกใกล้หมด (Low Stock)')}
                       </span>
                     </div>
 
@@ -565,19 +573,19 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs pt-1">
                       <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
-                        <p className="text-[10px] font-medium text-slate-500">รหัส SKU</p>
+                        <p className="text-[10px] font-medium text-slate-500">{isEn ? 'SKU Code' : 'รหัส SKU'}</p>
                         <p className="font-mono font-semibold text-slate-800 dark:text-slate-200 truncate">
                           {matchedProduct.sku}
                         </p>
                       </div>
                       <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
-                        <p className="text-[10px] font-medium text-slate-500">บาร์โค้ด</p>
+                        <p className="text-[10px] font-medium text-slate-500">{isEn ? 'Barcode' : 'บาร์โค้ด'}</p>
                         <p className="font-mono font-semibold text-slate-800 dark:text-slate-200 truncate">
                           {matchedProduct.barcodeValue}
                         </p>
                       </div>
                       <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
-                        <p className="text-[10px] font-medium text-slate-500">หน่วยนับ (UOM)</p>
+                        <p className="text-[10px] font-medium text-slate-500">{isEn ? 'Unit (UOM)' : 'หน่วยนับ (UOM)'}</p>
                         <p className="font-semibold text-slate-800 dark:text-slate-200">
                           {matchedProduct.uom}
                         </p>
@@ -589,7 +597,7 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
                 {/* Stock On Hand & Value Highlight Bento */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="p-3.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50">
-                    <p className="text-[11px] font-bold text-blue-600 dark:text-blue-400">คงเหลือในคลัง (On Hand)</p>
+                    <p className="text-[11px] font-bold text-blue-600 dark:text-blue-400">{isEn ? 'Stock On Hand' : 'คงเหลือในคลัง (On Hand)'}</p>
                     <p className="text-xl font-extrabold text-blue-900 dark:text-blue-100 mt-0.5">
                       {matchedProduct.stockOnHand.toLocaleString()}{' '}
                       <span className="text-xs font-medium text-blue-600 dark:text-blue-300">
@@ -598,13 +606,13 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
                     </p>
                   </div>
                   <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
-                    <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400">ราคาต่อหน่วย</p>
+                    <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400">{isEn ? 'Unit Price' : 'ราคาต่อหน่วย'}</p>
                     <p className="text-xl font-extrabold text-slate-900 dark:text-slate-50 mt-0.5">
                       ฿{matchedProduct.price.toLocaleString()}
                     </p>
                   </div>
                   <div className="p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50">
-                    <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">มูลค่าสต็อกรวม</p>
+                    <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">{isEn ? 'Total Stock Value' : 'มูลค่าสต็อกรวม'}</p>
                     <p className="text-xl font-extrabold text-emerald-900 dark:text-emerald-100 mt-0.5">
                       ฿{(matchedProduct.stockOnHand * matchedProduct.price).toLocaleString()}
                     </p>
@@ -615,40 +623,40 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
                 <div className="pt-2">
                   <p className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-1.5">
                     <Sparkles className="w-4 h-4 text-blue-500" />
-                    <span>เลือกทำรายการต่อสำหรับสินค้านี้ (Quick Actions):</span>
+                    <span>{isEn ? 'Quick Actions for this item:' : 'เลือกทำรายการต่อสำหรับสินค้านี้ (Quick Actions):'}</span>
                   </p>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                     <button
                       onClick={() => onSelectAction && onSelectAction('RECEIVE', matchedProduct)}
-                      className="p-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition shadow-sm"
+                      className="p-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition shadow-sm cursor-pointer"
                     >
                       <PlusCircle className="w-5 h-5" />
-                      <span>1. รับเข้า (GR)</span>
+                      <span>{isEn ? '1. Receive (GR)' : '1. รับเข้า (GR)'}</span>
                     </button>
 
                     <button
                       onClick={() => onSelectAction && onSelectAction('ISSUE', matchedProduct)}
-                      className="p-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition shadow-sm"
+                      className="p-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition shadow-sm cursor-pointer"
                     >
                       <MinusCircle className="w-5 h-5" />
-                      <span>2. เบิกจ่าย (GI)</span>
+                      <span>{isEn ? '2. Issue (GI)' : '2. เบิกจ่าย (GI)'}</span>
                     </button>
 
                     <button
                       onClick={() => onSelectAction && onSelectAction('TRANSFER', matchedProduct)}
-                      className="p-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition shadow-sm"
+                      className="p-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition shadow-sm cursor-pointer"
                     >
                       <ArrowLeftRight className="w-5 h-5" />
-                      <span>3. โอนย้ายคลัง</span>
+                      <span>{isEn ? '3. Transfer' : '3. โอนย้ายคลัง'}</span>
                     </button>
 
                     <button
                       onClick={() => onSelectAction && onSelectAction('ADJUSTMENT', matchedProduct)}
-                      className="p-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition shadow-sm"
+                      className="p-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition shadow-sm cursor-pointer"
                     >
                       <Sliders className="w-5 h-5" />
-                      <span>4. ปรับยอดสต็อก</span>
+                      <span>{isEn ? '4. Adjustment' : '4. ปรับยอดสต็อก'}</span>
                     </button>
                   </div>
                 </div>
@@ -660,10 +668,12 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
                   <Scan className="w-7 h-7" />
                 </div>
                 <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                  พร้อมสำหรับการสแกน
+                  {isEn ? 'Ready for Scanning' : 'พร้อมสำหรับการสแกน'}
                 </h4>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                  สแกนบาร์โค้ดผ่านกล้อง หรือพิมพ์รหัสในช่องค้นหาด้านซ้ายเพื่อดูข้อมูลสินค้าและสต็อกคงเหลือ
+                  {isEn
+                    ? 'Scan barcode via camera or enter code in search box to view product details and stock on hand.'
+                    : 'สแกนบาร์โค้ดผ่านกล้อง หรือพิมพ์รหัสในช่องค้นหาด้านซ้ายเพื่อดูข้อมูลสินค้าและสต็อกคงเหลือ'}
                 </p>
               </div>
             )}
@@ -679,17 +689,17 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
               <div className="flex items-center gap-2">
                 <History className="w-5 h-5 text-slate-500" />
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                  ประวัติการสแกนรอบนี้ ({scanHistory.length} รายการ)
+                  {isEn ? `Session Scan History (${scanHistory.length} items)` : `ประวัติการสแกนรอบนี้ (${scanHistory.length} รายการ)`}
                 </h3>
               </div>
 
               {scanHistory.length > 0 && (
                 <button
                   onClick={handleClearHistory}
-                  className="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
+                  className="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  ล้างประวัติ
+                  {isEn ? 'Clear History' : 'ล้างประวัติ'}
                 </button>
               )}
             </div>
@@ -703,11 +713,11 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
                     }`}
                   >
                     <tr>
-                      <th className="py-2.5 px-3 font-semibold">เวลา</th>
-                      <th className="py-2.5 px-3 font-semibold">รหัสบาร์โค้ด</th>
-                      <th className="py-2.5 px-3 font-semibold">ชื่อสินค้า</th>
-                      <th className="py-2.5 px-3 font-semibold">ประเภทสแกน</th>
-                      <th className="py-2.5 px-3 font-semibold text-right">การจัดการ</th>
+                      <th className="py-2.5 px-3 font-semibold">{isEn ? 'Time' : 'เวลา'}</th>
+                      <th className="py-2.5 px-3 font-semibold">{isEn ? 'Barcode' : 'รหัสบาร์โค้ด'}</th>
+                      <th className="py-2.5 px-3 font-semibold">{isEn ? 'Product Name' : 'ชื่อสินค้า'}</th>
+                      <th className="py-2.5 px-3 font-semibold">{isEn ? 'Scan Type' : 'ประเภทสแกน'}</th>
+                      <th className="py-2.5 px-3 font-semibold text-right">{isEn ? 'Actions' : 'การจัดการ'}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -724,7 +734,7 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
                           {item.barcode}
                         </td>
                         <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
-                          {item.product ? item.product.name : <span className="text-rose-500">ไม่พบในระบบ</span>}
+                          {item.product ? item.product.name : <span className="text-rose-500">{isEn ? 'Not found in system' : 'ไม่พบในระบบ'}</span>}
                         </td>
                         <td className="py-2.5 px-3">
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
@@ -737,7 +747,7 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
                               e.stopPropagation();
                               handleCopy(item.barcode);
                             }}
-                            className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition"
+                            className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition cursor-pointer"
                             title="Copy Barcode"
                           >
                             {copiedText === item.barcode ? (
@@ -753,7 +763,7 @@ export const MobileBarcodeScanner: React.FC<MobileBarcodeScannerProps> = ({
                 </table>
               </div>
             ) : (
-              <p className="text-xs text-slate-400 text-center py-6">ยังไม่มีประวัติการสแกนใน Session นี้</p>
+              <p className="text-xs text-slate-400 text-center py-6">{isEn ? 'No scan history recorded in this session' : 'ยังไม่มีประวัติการสแกนใน Session นี้'}</p>
             )}
           </div>
         </div>

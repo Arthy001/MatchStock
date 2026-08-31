@@ -1,7 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Scale, X, CheckCircle2, Edit2, Eye } from 'lucide-react';
-import { ThemeMode } from '../../../types';
+import { ThemeMode, Language } from '../../../types';
 
 interface UnitItem {
   id: string;
@@ -11,6 +11,7 @@ interface UnitItem {
 
 interface EditUnitModalProps {
   theme: ThemeMode;
+  lang?: Language;
   t: any;
   unit: UnitItem | null;
   isViewOnly?: boolean;
@@ -28,6 +29,7 @@ interface EditUnitModalProps {
 
 export const EditUnitModal: React.FC<EditUnitModalProps> = ({
   theme,
+  lang = 'th',
   t,
   unit,
   isViewOnly = false,
@@ -43,6 +45,7 @@ export const EditUnitModal: React.FC<EditUnitModalProps> = ({
   setEditUnitIsActive,
 }) => {
   if (!unit) return null;
+  const isEn = lang === 'en';
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] overflow-hidden bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
@@ -64,21 +67,21 @@ export const EditUnitModal: React.FC<EditUnitModalProps> = ({
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tracking-tight">
                   {isViewOnly
-                    ? 'รายละเอียดหน่วยนับ'
-                    : 'แก้ไขข้อมูลหน่วยนับ'}
+                    ? (isEn ? 'Unit of Measure Details' : 'รายละเอียดหน่วยนับ')
+                    : (isEn ? 'Edit Unit of Measure (UOM)' : 'แก้ไขข้อมูลหน่วยนับ')}
                 </h3>
                 <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border shadow-2xs ${
                   isViewOnly
                     ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                     : 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800'
                 }`}>
-                  {isViewOnly ? 'ดูข้อมูล' : 'แก้ไขข้อมูล'}
+                  {isViewOnly ? (isEn ? 'View Only' : 'ดูข้อมูล') : (isEn ? 'Edit' : 'แก้ไขข้อมูล')}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5 truncate">
                 {isViewOnly
-                  ? 'ดูข้อมูลหน่วยนับและมิติต่างๆ ในระบบ'
-                  : 'แก้ไขรหัสหน่วยนับ ชื่อ และคำอธิบาย'}
+                  ? (isEn ? 'Inspect base packaging unit and measurement standards' : 'ดูข้อมูลหน่วยนับและมิติต่างๆ ในระบบ')
+                  : (isEn ? 'Update UOM code, display name, and active status' : 'แก้ไขรหัสหน่วยนับ ชื่อ และคำอธิบาย')}
               </p>
             </div>
           </div>
@@ -86,7 +89,7 @@ export const EditUnitModal: React.FC<EditUnitModalProps> = ({
             type="button"
             onClick={onClose}
             className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center transition shrink-0 cursor-pointer"
-            title="ปิดหน้าต่าง (Close)"
+            title={isEn ? 'Close' : 'ปิดหน้าต่าง (Close)'}
           >
             <X className="w-5 h-5" />
           </button>
@@ -95,7 +98,7 @@ export const EditUnitModal: React.FC<EditUnitModalProps> = ({
         <form onSubmit={onSave} className="p-5 space-y-4 text-sm">
           <div>
             <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-              รหัสหน่วยนับ (UOM Code) <span className="text-rose-500 font-bold">*</span>
+              {isEn ? 'UOM Code' : 'รหัสหน่วยนับ (UOM Code)'} <span className="text-rose-500 font-bold">*</span>
             </label>
             <input
               type="text"
@@ -115,7 +118,7 @@ export const EditUnitModal: React.FC<EditUnitModalProps> = ({
 
           <div>
             <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-              ชื่อหน่วยนับ (Unit Name) <span className="text-rose-500 font-bold">*</span>
+              {isEn ? 'Unit Name' : 'ชื่อหน่วยนับ (Unit Name)'} <span className="text-rose-500 font-bold">*</span>
             </label>
             <input
               type="text"
@@ -137,10 +140,12 @@ export const EditUnitModal: React.FC<EditUnitModalProps> = ({
           <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
             <div>
               <span className="block font-semibold text-[13px] text-slate-800 dark:text-slate-200">
-                สถานะการใช้งาน (Active Status)
+                {isEn ? 'Active Status' : 'สถานะการใช้งาน (Active Status)'}
               </span>
               <span className="text-xs text-slate-500">
-                {editUnitIsActive ? 'เปิดใช้งาน (Active) - แสดงในตัวเลือกหน่วยนับ' : 'ปิดใช้งาน (Inactive) - ซ่อนจากรายการเลือก'}
+                {editUnitIsActive
+                  ? (isEn ? 'Active - Visible in UOM selection' : 'เปิดใช้งาน (Active) - แสดงในตัวเลือกหน่วยนับ')
+                  : (isEn ? 'Inactive - Hidden from selection' : 'ปิดใช้งาน (Inactive) - ซ่อนจากรายการเลือก')}
               </span>
             </div>
             <button
@@ -176,7 +181,7 @@ export const EditUnitModal: React.FC<EditUnitModalProps> = ({
                     className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md shadow-blue-600/30 transition flex items-center gap-1.5 cursor-pointer"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
-                    <span>แก้ไขข้อมูล</span>
+                    <span>{isEn ? 'Edit Details' : 'แก้ไขข้อมูล'}</span>
                   </button>
                 )}
               </>
@@ -195,7 +200,7 @@ export const EditUnitModal: React.FC<EditUnitModalProps> = ({
                   className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>{isSaving ? 'กำลังบันทึก...' : t.save}</span>
+                  <span>{isSaving ? (isEn ? 'Saving...' : 'กำลังบันทึก...') : t.save}</span>
                 </button>
               </>
             )}

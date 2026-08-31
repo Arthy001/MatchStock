@@ -14,11 +14,28 @@ import { masterDataService } from '../../../services/masterData.service';
 import { warehouseService } from '../../../services/warehouse.service';
 import { UnitItem, RbacUser } from './useMasterDataLoader';
 
+const extractErrorMessage = (err: any): string => {
+  const data = err.response?.data;
+  if (!data) return err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+  if (Array.isArray(data.errors) && data.errors.length > 0) {
+    return data.errors
+      .map((e: any) => (typeof e === 'string' ? e : (e.message || e.error || `${e.field || 'field'}: invalid`)))
+      .join(', ');
+  }
+  if (data.message && data.message !== 'Validation failed') {
+    return Array.isArray(data.message) ? data.message.join(', ') : String(data.message);
+  }
+  if (data.error) return String(data.error);
+  if (Array.isArray(data.errors)) return data.errors.join(', ');
+  return data.message || err.message || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์';
+};
+
 interface UseAddMasterDataFormProps {
   activeSubTab: MasterDataSubTab;
   categoriesList: CategoryItem[];
   brandsList: BrandItem[];
   unitsList: UnitItem[];
+  companiesList?: Company[];
   setProductsList: Dispatch<SetStateAction<ProductItem[]>>;
   setCompaniesList: Dispatch<SetStateAction<Company[]>>;
   setSuppliersList: Dispatch<SetStateAction<Supplier[]>>;
@@ -35,6 +52,7 @@ export const useAddMasterDataForm = ({
   categoriesList,
   brandsList,
   unitsList,
+  companiesList,
   setProductsList,
   setCompaniesList,
   setSuppliersList,
@@ -90,7 +108,7 @@ export const useAddMasterDataForm = ({
   const [addCompanyCode, setAddCompanyCode] = useState('');
   const [addCompanyName, setAddCompanyName] = useState('');
   const [addCompanyTaxId, setAddCompanyTaxId] = useState('');
-  const [addCompanyBranchCode, setAddCompanyBranchCode] = useState('00000');
+  const [addCompanyBranchCode, setAddCompanyBranchCode] = useState('');
   const [addCompanyBranchName, setAddCompanyBranchName] = useState('');
   const [addCompanyPhone, setAddCompanyPhone] = useState('');
   const [addCompanyEmail, setAddCompanyEmail] = useState('');
@@ -114,7 +132,19 @@ export const useAddMasterDataForm = ({
   const [addPhone, setAddPhone] = useState('');
   const [addTaxId, setAddTaxId] = useState('');
 
+  // Field inline validation errors
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const clearError = (field: string) => {
+    setFormErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
   const resetForm = () => {
+    setFormErrors({});
     setAddName('');
     setAddCode('');
     setAddSku('');
@@ -145,6 +175,12 @@ export const useAddMasterDataForm = ({
     setAddCompanyName('');
     setAddCompanyCode('');
     setAddCompanyTaxId('');
+    setAddCompanyBranchCode('');
+    setAddCompanyBranchName('');
+    setAddCompanyPhone('');
+    setAddCompanyEmail('');
+    setAddCompanyAddress('');
+    setAddCompanyIsHq(false);
     setAddEmail('');
     setAddCatCode('');
     setAddCatName('');
@@ -165,11 +201,17 @@ export const useAddMasterDataForm = ({
 
   const handleCreateNewItem = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormErrors({});
     try {
       if (activeSubTab === 'products' || activeSubTab === 'barcodes') {
-        const itemCode = addCode.trim() || `PRD-${Date.now().toString().slice(-4)}`;
-        const itemSku = addSku.trim() || `SKU-${Date.now().toString().slice(-6)}`;
-        const itemBarcode = addBarcode.trim() || `885${Date.now().toString().slice(-10)}`;
+        if (!addName.trim()) {
+          setFormErrors({ productName: 'กรุณากรอกชื่อสินค้า' });
+          return;
+        }
+
+        const itemCode = addCode.trim() || `SKU-${Date.now().toString().slice(-4)}`;
+        const itemSku = addSku.trim() || itemCode;
+        const itemBarcode = addBarcode.trim() || `${Date.now()}`;
 
         let createdProduct: ProductItem;
         try {
@@ -278,57 +320,105 @@ export const useAddMasterDataForm = ({
           return;
         }
       } else if (activeSubTab === 'categories') {
+        if (!addCatName.trim()) {
+          setFormErrors({ categoryName: 'กรุณากรอกชื่อหมวดหมู่สินค้า' });
+          return;
+        }
         const catCode = addCatCode.trim() || `CAT-${Date.now().toString().slice(-4)}`;
         try {
           const res = await masterDataService.createCategory({
             code: catCode,
-            name: addCatName,
+            name: addCatName.trim(),
             description: addCatDescription,
           });
           const createdCat: CategoryItem = {
             id: res?.id || `cat-${Date.now()}`,
             code: res?.code || catCode,
-            name: res?.name || addCatName,
+            name: res?.name || addCatName.trim(),
             description: res?.description || addCatDescription,
             isActive: true,
           };
           setCategoriesList((prev) => [createdCat, ...prev]);
           showToast(`เพิ่มหมวดหมู่ "${createdCat.name}" เรียบร้อยแล้ว`);
         } catch (err: any) {
-          const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+          const msg = extractErrorMessage(err);
           showToast(`เกิดข้อผิดพลาดในการเพิ่มหมวดหมู่: ${msg}`);
           return;
         }
       } else if (activeSubTab === 'brands') {
+        if (!addBrdName.trim()) {
+          setFormErrors({ brandName: 'กรุณากรอกชื่อแบรนด์สินค้า' });
+          return;
+        }
         const brdCode = addBrdCode.trim() || `BRD-${Date.now().toString().slice(-4)}`;
         try {
           const res = await masterDataService.createBrand({
             code: brdCode,
-            name: addBrdName,
+            name: addBrdName.trim(),
             description: addBrdDescription,
           });
           const createdBrd: BrandItem = {
             id: res?.id || `brd-${Date.now()}`,
             code: res?.code || brdCode,
-            name: res?.name || addBrdName,
+            name: res?.name || addBrdName.trim(),
             description: res?.description || addBrdDescription,
             isActive: true,
           };
           setBrandsList((prev) => [createdBrd, ...prev]);
           showToast(`เพิ่มแบรนด์ "${createdBrd.name}" เรียบร้อยแล้ว`);
         } catch (err: any) {
-          const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+          const msg = extractErrorMessage(err);
           showToast(`เกิดข้อผิดพลาดในการเพิ่มแบรนด์: ${msg}`);
           return;
         }
       } else if (activeSubTab === 'companies') {
+        if (!addCompanyName.trim()) {
+          setFormErrors({ companyName: 'กรุณากรอกชื่อบริษัท / นิติบุคคล' });
+          return;
+        }
+
+        const targetName = addCompanyName.trim().toLowerCase();
+        const targetBranch = (addCompanyBranchCode.trim() || '00000').toLowerCase();
+        const targetTaxId = addCompanyTaxId.trim();
+
+        // 1. ตรวจสอบชื่อบริษัท + รหัสสาขา ซ้ำกัน
+        const duplicateBranch = companiesList?.find(
+          (c) =>
+            c.name.trim().toLowerCase() === targetName &&
+            (c.branchCode || '00000').toLowerCase() === targetBranch
+        );
+        if (duplicateBranch) {
+          setFormErrors({
+            branchCode: `สาขา ${addCompanyBranchCode.trim() || '00000'} ของบริษัท "${addCompanyName.trim()}" มีอยู่ในระบบแล้ว`,
+          });
+          showToast(`สาขา ${addCompanyBranchCode.trim() || '00000'} ของบริษัท "${addCompanyName.trim()}" มีอยู่ในระบบแล้ว`);
+          return;
+        }
+
+        // 2. ถ้ากรอก Tax ID ตรวจสอบ Tax ID + รหัสสาขา ซ้ำกัน
+        if (targetTaxId) {
+          const duplicateTaxBranch = companiesList?.find(
+            (c) =>
+              c.taxId &&
+              c.taxId.trim() === targetTaxId &&
+              (c.branchCode || '00000').toLowerCase() === targetBranch
+          );
+          if (duplicateTaxBranch) {
+            setFormErrors({
+              branchCode: `เลขผู้เสียภาษีนี้มีสาขา ${addCompanyBranchCode.trim() || '00000'} ในระบบแล้ว`,
+            });
+            showToast(`เลขประจำตัวผู้เสียภาษีนี้มีรหัสสาขา ${addCompanyBranchCode.trim() || '00000'} อยู่แล้ว`);
+            return;
+          }
+        }
+
         const compCode = addCompanyCode.trim() || `COMP-${Date.now().toString().slice(-3)}`;
         try {
           const createdCompany = await masterDataService.createCompany({
             code: compCode,
-            name: addCompanyName,
+            name: addCompanyName.trim(),
             taxId: addCompanyTaxId,
-            branchCode: addCompanyBranchCode || '00000',
+            branchCode: addCompanyBranchCode.trim() || '00000',
             branchName: addCompanyBranchName,
             phone: addCompanyPhone,
             email: addCompanyEmail,
@@ -338,21 +428,25 @@ export const useAddMasterDataForm = ({
           setCompaniesList((prev) => [createdCompany, ...prev]);
           showToast(`เพิ่มบริษัท "${createdCompany.name}" เรียบร้อยแล้ว`);
         } catch (err: any) {
-          const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+          const msg = extractErrorMessage(err);
           showToast(`เกิดข้อผิดพลาดในการเพิ่มบริษัท: ${msg}`);
           return;
         }
       } else if (activeSubTab === 'units') {
+        if (!addName.trim()) {
+          setFormErrors({ unitName: 'กรุณากรอกชื่อหน่วยนับสินค้า' });
+          return;
+        }
         const uomCode = addCode.trim() || `UOM-${Date.now().toString().slice(-3)}`;
         try {
           const createdUnit = await masterDataService.createUnit({
             code: uomCode,
-            name: addName,
+            name: addName.trim(),
           });
           setUnitsList((prev) => [createdUnit, ...prev]);
           showToast(`เพิ่มหน่วยนับ "${createdUnit.name}" เรียบร้อยแล้ว`);
         } catch (err: any) {
-          const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+          const msg = extractErrorMessage(err);
           showToast(`เกิดข้อผิดพลาดในการเพิ่มหน่วยนับ: ${msg}`);
           return;
         }
@@ -365,16 +459,21 @@ export const useAddMasterDataForm = ({
           setBinsList((prev) => [createdBin, ...prev]);
           showToast(`เพิ่มตำแหน่ง Bin "${createdBin.binCode || binCode}" เรียบร้อยแล้ว`);
         } catch (err: any) {
-          const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+          const msg = extractErrorMessage(err);
           showToast(`เกิดข้อผิดพลาดในการเพิ่ม Bin: ${msg}`);
           return;
         }
       } else if (activeSubTab === 'suppliers') {
+        const supName = (addSupplierName || addName).trim();
+        if (!supName) {
+          setFormErrors({ supplierName: 'กรุณากรอกชื่อผู้จัดจำหน่าย' });
+          return;
+        }
         const supCode = addCode.trim() || `SUP-${Date.now().toString().slice(-3)}`;
         try {
           const createdSup = await masterDataService.createSupplier({
             code: supCode,
-            name: addSupplierName || addName,
+            name: supName,
             contactPerson: addContactPerson,
             phone: addPhone,
             taxId: addTaxId,
@@ -382,21 +481,25 @@ export const useAddMasterDataForm = ({
           setSuppliersList((prev) => [createdSup, ...prev]);
           showToast(`เพิ่มผู้จัดจำหน่าย "${createdSup.name}" เรียบร้อยแล้ว`);
         } catch (err: any) {
-          const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+          const msg = extractErrorMessage(err);
           showToast(`เกิดข้อผิดพลาดในการเพิ่มผู้จัดจำหน่าย: ${msg}`);
           return;
         }
       } else if (activeSubTab === 'rbac') {
+        if (!addEmail.trim()) {
+          setFormErrors({ userEmail: 'กรุณากรอกอีเมลผู้ใช้งาน' });
+          return;
+        }
         try {
           const res = await masterDataService.createUser({
-            email: addEmail,
-            fullName: addName,
+            email: addEmail.trim(),
+            fullName: addName.trim() || addEmail.split('@')[0],
             role: addRole,
           });
           const newUser: RbacUser = {
             id: res?.id || String(Date.now()),
-            name: addName,
-            email: addEmail,
+            name: addName.trim() || addEmail.split('@')[0],
+            email: addEmail.trim(),
             department: 'Operations',
             role: addRole,
             status: 'Active',
@@ -404,7 +507,7 @@ export const useAddMasterDataForm = ({
           setUsersList((prev) => [...prev, newUser]);
           showToast(`เพิ่มผู้ใช้งาน "${newUser.name}" สิทธิ์ ${newUser.role} เรียบร้อยแล้ว`);
         } catch (err: any) {
-          const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+          const msg = extractErrorMessage(err);
           showToast(`เกิดข้อผิดพลาดในการเพิ่มผู้ใช้งาน: ${msg}`);
           return;
         }
@@ -414,7 +517,8 @@ export const useAddMasterDataForm = ({
       resetForm();
     } catch (err: any) {
       console.error('Error in handleCreateNewItem:', err);
-      showToast('เกิดข้อผิดพลาดในการเพิ่มข้อมูล');
+      const msg = extractErrorMessage(err);
+      showToast(`เกิดข้อผิดพลาดในการเพิ่มข้อมูล: ${msg}`);
     }
   };
 
@@ -422,6 +526,8 @@ export const useAddMasterDataForm = ({
     isAddModalOpen,
     setIsAddModalOpen,
     handleCreateNewItem,
+    formErrors,
+    clearError,
     addName,
     setAddName,
     addCode,

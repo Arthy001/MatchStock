@@ -1,9 +1,10 @@
 import React from 'react';
 import { Plus, Edit2, Trash2, CheckCircle2, XCircle, Tag, Eye } from 'lucide-react';
-import { ThemeMode, BrandItem } from '../../../types';
+import { ThemeMode, Language, BrandItem } from '../../../types';
 
 interface BrandManagementTabProps {
   theme: ThemeMode;
+  lang?: Language;
   t: any;
   brandsList: BrandItem[];
   onOpenAddModal: () => void;
@@ -13,12 +14,14 @@ interface BrandManagementTabProps {
 
 export const BrandManagementTab: React.FC<BrandManagementTabProps> = ({
   theme,
+  lang = 'th',
   t,
   brandsList = [],
   onOpenAddModal,
   onOpenEditBrand,
   onDeleteBrand,
 }) => {
+  const isEn = lang === 'en';
   const safeBrands = Array.isArray(brandsList) ? brandsList : [];
 
   return (
@@ -27,10 +30,12 @@ export const BrandManagementTab: React.FC<BrandManagementTabProps> = ({
       <div>
         <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
           <Tag className="w-5 h-5 text-indigo-600" />
-          แบรนด์สินค้าทั้งหมด ({safeBrands.length})
+          {isEn ? 'All Product Brands' : 'แบรนด์สินค้าทั้งหมด'} ({safeBrands.length})
         </h3>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          จัดการรายชื่อแบรนด์และยี่ห้อสินค้าทั้งหมดในระบบ MatchStock
+          {isEn
+            ? 'Manage brand registrations, trademarks, and vendor affiliations in MatchStock'
+            : 'จัดการรายชื่อแบรนด์และยี่ห้อสินค้าทั้งหมดในระบบ MatchStock'}
         </p>
       </div>
 
@@ -53,11 +58,11 @@ export const BrandManagementTab: React.FC<BrandManagementTabProps> = ({
                 }`}
               >
                 <th className="p-3 w-12 text-center">#</th>
-                <th className="p-3">รหัสแบรนด์ (Code)</th>
-                <th className="p-3">ชื่อแบรนด์ (Brand Name)</th>
-                <th className="p-3">คำอธิบาย (Description)</th>
-                <th className="p-3">สถานะ (Status)</th>
-                <th className="p-3 text-right">จัดการ (Actions)</th>
+                <th className="p-3">{isEn ? 'Brand Code' : 'รหัสแบรนด์ (Code)'}</th>
+                <th className="p-3">{isEn ? 'Brand Name' : 'ชื่อแบรนด์ (Brand Name)'}</th>
+                <th className="p-3">{isEn ? 'Description' : 'คำอธิบาย (Description)'}</th>
+                <th className="p-3">{isEn ? 'Status' : 'สถานะ (Status)'}</th>
+                <th className="p-3 text-right">{isEn ? 'Actions' : 'จัดการ (Actions)'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -65,7 +70,7 @@ export const BrandManagementTab: React.FC<BrandManagementTabProps> = ({
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-slate-400">
                     <Tag className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                    ไม่พบข้อมูลแบรนด์สินค้า
+                    {isEn ? 'No product brands found' : 'ไม่พบข้อมูลแบรนด์สินค้า'}
                   </td>
                 </tr>
               ) : (
@@ -125,7 +130,7 @@ export const BrandManagementTab: React.FC<BrandManagementTabProps> = ({
                             ? 'text-slate-400 hover:text-blue-400 hover:bg-slate-800'
                             : 'text-slate-500 hover:text-blue-600 hover:bg-slate-100'
                         }`}
-                        title="ดูรายละเอียดแบรนด์ (View Detail)"
+                        title={isEn ? 'View Brand Details' : 'ดูรายละเอียดแบรนด์ (View Detail)'}
                       >
                         <Eye className="w-4 h-4" />
                       </button>
@@ -136,7 +141,7 @@ export const BrandManagementTab: React.FC<BrandManagementTabProps> = ({
                             ? 'text-slate-400 hover:text-blue-400 hover:bg-slate-800'
                             : 'text-slate-500 hover:text-blue-600 hover:bg-slate-100'
                         }`}
-                        title="แก้ไขแบรนด์ (Edit Brand)"
+                        title={isEn ? 'Edit Brand' : 'แก้ไขแบรนด์ (Edit Brand)'}
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -147,7 +152,7 @@ export const BrandManagementTab: React.FC<BrandManagementTabProps> = ({
                             ? 'text-slate-400 hover:text-rose-400 hover:bg-slate-800'
                             : 'text-slate-500 hover:text-rose-600 hover:bg-slate-100'
                         }`}
-                        title="ลบแบรนด์ (Delete Brand)"
+                        title={isEn ? 'Delete Brand' : 'ลบแบรนด์ (Delete Brand)'}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

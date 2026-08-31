@@ -8,10 +8,11 @@ import {
   Package,
   Eye,
 } from 'lucide-react';
-import { ThemeMode, WarehouseBin } from '../../../types';
+import { ThemeMode, Language, WarehouseBin } from '../../../types';
 
 interface WarehouseBinTabProps {
   theme: ThemeMode;
+  lang?: Language;
   t: any;
   binsList: WarehouseBin[];
   onOpenEditBin: (bin: WarehouseBin, isViewOnly?: boolean) => void;
@@ -20,11 +21,13 @@ interface WarehouseBinTabProps {
 
 export const WarehouseBinTab: React.FC<WarehouseBinTabProps> = ({
   theme,
+  lang = 'th',
   t,
   binsList = [],
   onOpenEditBin,
   onDeleteBin,
 }) => {
+  const isEn = lang === 'en';
   const safeBins = Array.isArray(binsList) ? binsList : [];
 
   return (
@@ -55,7 +58,11 @@ export const WarehouseBinTab: React.FC<WarehouseBinTabProps> = ({
       {safeBins.length === 0 ? (
         <div className="py-12 text-center text-zinc-400">
           <Package className="w-8 h-8 mx-auto mb-2 opacity-40" />
-          <p className="font-medium text-xs">ยังไม่มีข้อมูลคลังสินค้าหรือตำแหน่ง Bin ในระบบ</p>
+          <p className="font-medium text-xs">
+            {isEn
+              ? 'No warehouses or bin locations found in system'
+              : 'ยังไม่มีข้อมูลคลังสินค้าหรือตำแหน่ง Bin ในระบบ'}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -111,21 +118,21 @@ export const WarehouseBinTab: React.FC<WarehouseBinTabProps> = ({
                     <button
                       onClick={() => onOpenEditBin(bin, true)}
                       className="p-1 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                      title="ดูรายละเอียดคลัง / Bin (View Detail)"
+                      title={isEn ? 'View Warehouse / Bin Details' : 'ดูรายละเอียดคลัง / Bin (View Detail)'}
                     >
                       <Eye className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => onOpenEditBin(bin, false)}
                       className="p-1 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                      title="แก้ไขข้อมูลคลัง / Bin (Edit Warehouse/Bin)"
+                      title={isEn ? 'Edit Warehouse / Bin' : 'แก้ไขข้อมูลคลัง / Bin (Edit Warehouse/Bin)'}
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => onDeleteBin(bin)}
                       className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                      title="ลบตำแหน่ง Bin"
+                      title={isEn ? 'Delete Bin Location' : 'ลบตำแหน่ง Bin (Delete Bin)'}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -164,9 +171,9 @@ export const WarehouseBinTab: React.FC<WarehouseBinTabProps> = ({
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Items Stored:</span>
+                    <span>{isEn ? 'Items Stored:' : 'จำนวนสินค้าจัดเก็บ:'}</span>
                     <span className="font-semibold text-blue-600">
-                      {currentItems} units
+                      {currentItems} {isEn ? 'units' : 'ชิ้น'}
                     </span>
                   </div>
                 </div>

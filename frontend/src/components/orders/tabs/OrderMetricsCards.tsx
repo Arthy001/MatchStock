@@ -6,10 +6,11 @@ import {
   Package,
   CheckCircle2,
 } from 'lucide-react';
-import { ThemeMode, OrderType } from '../../../types';
+import { ThemeMode, Language, OrderType } from '../../../types';
 
 interface OrderMetricsCardsProps {
   theme: ThemeMode;
+  lang?: Language;
   t: any;
   type: OrderType;
   isSales: boolean;
@@ -25,15 +26,28 @@ interface OrderMetricsCardsProps {
 
 export const OrderMetricsCards: React.FC<OrderMetricsCardsProps> = ({
   theme,
+  lang = 'th',
   isSales,
   metrics,
   onOpenCreateModal,
 }) => {
-  const title = isSales ? 'ใบสั่งขาย (Sales Orders - SO)' : 'ใบสั่งซื้อสินค้า (Purchase Orders - PO)';
+  const isEn = lang === 'en';
+
+  const title = isSales
+    ? (isEn ? 'Sales Orders (SO)' : 'ใบสั่งขาย (Sales Orders - SO)')
+    : (isEn ? 'Purchase Orders (PO)' : 'ใบสั่งซื้อสินค้า (Purchase Orders - PO)');
+
   const subtitle = isSales
-    ? 'จัดการรายการสั่งซื้อจากลูกค้า การจองสต็อก และการเตรียมจัดส่งสินค้า'
-    : 'จัดการการสั่งซื้อสินค้าจากคู่ค้า ผู้จัดจำหน่าย และการนัดหมายรับเข้าคลัง';
-  const actionBtnLabel = isSales ? 'สร้างใบสั่งขาย (New SO)' : 'สร้างใบสั่งซื้อ (New PO)';
+    ? (isEn
+        ? 'Manage customer sales orders, stock reservations, and goods issue preparation.'
+        : 'จัดการรายการสั่งซื้อจากลูกค้า การจองสต็อก และการเตรียมจัดส่งสินค้า')
+    : (isEn
+        ? 'Manage vendor purchase orders, procurement contracts, and warehouse receiving.'
+        : 'จัดการการสั่งซื้อสินค้าจากคู่ค้า ผู้จัดจำหน่าย และการนัดหมายรับเข้าคลัง');
+
+  const actionBtnLabel = isSales
+    ? (isEn ? 'Create Sales Order' : 'สร้างใบสั่งขาย (New SO)')
+    : (isEn ? 'Create Purchase Order' : 'สร้างใบสั่งซื้อ (New PO)');
 
   return (
     <div className="space-y-6">
@@ -69,7 +83,9 @@ export const OrderMetricsCards: React.FC<OrderMetricsCardsProps> = ({
           theme === 'dark' ? 'bg-zinc-900/70 border-zinc-800' : 'bg-white border-zinc-200/80 shadow-xs'
         }`}>
           <div>
-            <p className={`text-xs font-semibold ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>มูลค่ารวมทั้งหมด (Total Value)</p>
+            <p className={`text-xs font-semibold ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>
+              {isEn ? 'Total Order Value' : 'มูลค่ารวมทั้งหมด (Total Value)'}
+            </p>
             <p className="text-lg md:text-xl font-bold text-zinc-900 dark:text-zinc-100 mt-1 font-mono">
               ฿{metrics.totalValue.toLocaleString()}
             </p>
@@ -83,9 +99,11 @@ export const OrderMetricsCards: React.FC<OrderMetricsCardsProps> = ({
           theme === 'dark' ? 'bg-zinc-900/70 border-zinc-800' : 'bg-white border-zinc-200/80 shadow-xs'
         }`}>
           <div>
-            <p className={`text-xs font-semibold ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>รอดำเนินการ (Confirmed)</p>
+            <p className={`text-xs font-semibold ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>
+              {isEn ? 'Confirmed' : 'รอดำเนินการ (Confirmed)'}
+            </p>
             <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
-              {metrics.confirmedCount} <span className="text-xs font-normal text-zinc-500">orders</span>
+              {metrics.confirmedCount} <span className="text-xs font-normal text-zinc-500">{isEn ? 'orders' : 'รายการ'}</span>
             </p>
           </div>
           <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
@@ -97,9 +115,11 @@ export const OrderMetricsCards: React.FC<OrderMetricsCardsProps> = ({
           theme === 'dark' ? 'bg-zinc-900/70 border-zinc-800' : 'bg-white border-zinc-200/80 shadow-xs'
         }`}>
           <div>
-            <p className={`text-xs font-semibold ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>กำลังเตรียม/จัดส่ง (Processing)</p>
+            <p className={`text-xs font-semibold ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>
+              {isEn ? 'Processing' : 'กำลังเตรียม/จัดส่ง (Processing)'}
+            </p>
             <p className="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1">
-              {metrics.processingCount} <span className="text-xs font-normal text-zinc-500">orders</span>
+              {metrics.processingCount} <span className="text-xs font-normal text-zinc-500">{isEn ? 'orders' : 'รายการ'}</span>
             </p>
           </div>
           <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
@@ -111,9 +131,11 @@ export const OrderMetricsCards: React.FC<OrderMetricsCardsProps> = ({
           theme === 'dark' ? 'bg-zinc-900/70 border-zinc-800' : 'bg-white border-zinc-200/80 shadow-xs'
         }`}>
           <div>
-            <p className={`text-xs font-semibold ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>สำเร็จเรียบร้อย (Completed)</p>
+            <p className={`text-xs font-semibold ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>
+              {isEn ? 'Completed' : 'สำเร็จเรียบร้อย (Completed)'}
+            </p>
             <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-              {metrics.completedCount} <span className="text-xs font-normal text-zinc-500">orders</span>
+              {metrics.completedCount} <span className="text-xs font-normal text-zinc-500">{isEn ? 'orders' : 'รายการ'}</span>
             </p>
           </div>
           <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">

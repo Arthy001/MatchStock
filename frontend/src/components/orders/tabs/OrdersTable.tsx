@@ -6,10 +6,11 @@ import {
   Calendar,
   Package,
 } from 'lucide-react';
-import { ThemeMode, Order, OrderStatus } from '../../../types';
+import { ThemeMode, Language, Order, OrderStatus } from '../../../types';
 
 interface OrdersTableProps {
   theme: ThemeMode;
+  lang?: Language;
   t: any;
   isSales: boolean;
   filteredOrders: Order[];
@@ -20,12 +21,15 @@ interface OrdersTableProps {
 
 export const OrdersTable: React.FC<OrdersTableProps> = ({
   theme,
+  lang = 'th',
   isSales,
   filteredOrders,
   statusFilter,
   setStatusFilter,
   onOpenDetail,
 }) => {
+  const isEn = lang === 'en';
+
   return (
     <div
       className={`p-6 rounded-2xl border transition-all ${
@@ -46,20 +50,20 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
               }`}
             >
               {st === 'ALL'
-                ? 'ทั้งหมด'
+                ? (isEn ? 'All' : 'ทั้งหมด')
                 : st === 'CONFIRMED'
-                ? 'ยืนยันคำสั่ง'
+                ? (isEn ? 'Confirmed' : 'ยืนยันคำสั่ง')
                 : st === 'PROCESSING'
-                ? 'กำลังดำเนินงาน'
+                ? (isEn ? 'Processing' : 'กำลังดำเนินงาน')
                 : st === 'COMPLETED'
-                ? 'เสร็จสมบูรณ์'
-                : 'ยกเลิก'}
+                ? (isEn ? 'Completed' : 'เสร็จสมบูรณ์')
+                : (isEn ? 'Cancelled' : 'ยกเลิก')}
             </button>
           ))}
         </div>
 
         <span className="text-xs text-slate-500 font-medium">
-          พบ {filteredOrders.length} รายการ
+          {isEn ? `Found ${filteredOrders.length} records` : `พบ ${filteredOrders.length} รายการ`}
         </span>
       </div>
 
@@ -72,15 +76,19 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
             }`}
           >
             <tr>
-              <th className="py-3 px-3.5 font-semibold">เลขที่เอกสาร</th>
-              <th className="py-3 px-3 font-semibold">{isSales ? 'ชื่อลูกค้า / บริษัท' : 'ชื่อซัพพลายเออร์'}</th>
-              <th className="py-3 px-3 font-semibold">วันที่สั่ง</th>
-              <th className="py-3 px-3 font-semibold">กำหนดส่งมอบ</th>
-              <th className="py-3 px-3 font-semibold">คลังเป้าหมาย</th>
-              <th className="py-3 px-3 font-semibold text-right">จำนวนสินค้า</th>
-              <th className="py-3 px-3 font-semibold text-right">ยอดสุทธิ (Grand Total)</th>
-              <th className="py-3 px-3 font-semibold text-center">สถานะ</th>
-              <th className="py-3 px-3.5 font-semibold text-center">การจัดการ</th>
+              <th className="py-3 px-3.5 font-semibold">{isEn ? 'Order No' : 'เลขที่เอกสาร'}</th>
+              <th className="py-3 px-3 font-semibold">
+                {isSales
+                  ? (isEn ? 'Customer / Company' : 'ชื่อลูกค้า / บริษัท')
+                  : (isEn ? 'Supplier / Vendor' : 'ชื่อซัพพลายเออร์')}
+              </th>
+              <th className="py-3 px-3 font-semibold">{isEn ? 'Order Date' : 'วันที่สั่ง'}</th>
+              <th className="py-3 px-3 font-semibold">{isEn ? 'Expected Date' : 'กำหนดส่งมอบ'}</th>
+              <th className="py-3 px-3 font-semibold">{isEn ? 'Warehouse' : 'คลังเป้าหมาย'}</th>
+              <th className="py-3 px-3 font-semibold text-right">{isEn ? 'Total Items' : 'จำนวนสินค้า'}</th>
+              <th className="py-3 px-3 font-semibold text-right">{isEn ? 'Grand Total' : 'ยอดสุทธิ (Grand Total)'}</th>
+              <th className="py-3 px-3 font-semibold text-center">{isEn ? 'Status' : 'สถานะ'}</th>
+              <th className="py-3 px-3.5 font-semibold text-center">{isEn ? 'Actions' : 'การจัดการ'}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -88,7 +96,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
               <tr>
                 <td colSpan={9} className="py-12 text-center text-slate-400 font-medium">
                   <Package className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-700 mb-2" />
-                  ไม่พบรายการใบสั่งซื้อ/ขายตามเงื่อนไขที่เลือก
+                  {isEn ? 'No orders match selected criteria' : 'ไม่พบรายการใบสั่งซื้อ/ขายตามเงื่อนไขที่เลือก'}
                 </td>
               </tr>
             ) : (
@@ -109,7 +117,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                   <td className="py-3 px-3 text-slate-600 dark:text-slate-400 font-mono">{order.expectedDate}</td>
                   <td className="py-3 px-3 text-slate-700 dark:text-slate-300 font-medium">{order.warehouseName}</td>
                   <td className="py-3 px-3 text-right font-medium">
-                    {order.items.reduce((acc, curr) => acc + curr.quantity, 0)} ชิ้น ({order.items.length} SKUs)
+                    {order.items.reduce((acc, curr) => acc + curr.quantity, 0)} {isEn ? 'units' : 'ชิ้น'} ({order.items.length} SKUs)
                   </td>
                   <td className="py-3 px-3 text-right font-bold text-slate-900 dark:text-slate-50">
                     ฿{order.grandTotal.toLocaleString()}
@@ -129,12 +137,12 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                       {order.status === 'COMPLETED' && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
                       {order.status === 'CONFIRMED' && <Clock className="w-3 h-3 text-blue-500" />}
                       {order.status === 'COMPLETED'
-                        ? 'เสร็จสมบูรณ์'
+                        ? (isEn ? 'Completed' : 'เสร็จสมบูรณ์')
                         : order.status === 'CONFIRMED'
-                        ? 'ยืนยันคำสั่ง'
+                        ? (isEn ? 'Confirmed' : 'ยืนยันคำสั่ง')
                         : order.status === 'PROCESSING'
-                        ? 'กำลังดำเนินการ'
-                        : 'ยกเลิก'}
+                        ? (isEn ? 'Processing' : 'กำลังดำเนินการ')
+                        : (isEn ? 'Cancelled' : 'ยกเลิก')}
                     </span>
                   </td>
                   <td className="py-3 px-3.5 text-center">
@@ -147,7 +155,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                       className="px-2.5 py-1 rounded-lg text-xs font-bold text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition cursor-pointer"
                     >
                       <Eye className="w-4 h-4 inline-block mr-1" />
-                      ดูรายละเอียด
+                      {isEn ? 'View Details' : 'ดูรายละเอียด'}
                     </button>
                   </td>
                 </tr>

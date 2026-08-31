@@ -2,6 +2,7 @@ import { useState, Dispatch, SetStateAction } from 'react';
 import { ProductItem, CategoryItem, BrandItem, Supplier } from '../../../types';
 import { productService } from '../../../services/product.service';
 import { UnitItem } from './useMasterDataLoader';
+import { ConfirmDeleteData } from '../modals/ConfirmDeleteModal';
 
 interface UseProductDrawerProps {
   productsList: ProductItem[];
@@ -11,6 +12,7 @@ interface UseProductDrawerProps {
   unitsList: UnitItem[];
   suppliersList: Supplier[];
   showToast: (msg: string) => void;
+  onOpenConfirmDelete?: (data: ConfirmDeleteData) => void;
 }
 
 export const useProductDrawer = ({
@@ -20,6 +22,7 @@ export const useProductDrawer = ({
   unitsList,
   suppliersList,
   showToast,
+  onOpenConfirmDelete,
 }: UseProductDrawerProps) => {
   const [drawerProduct, setDrawerProduct] = useState<ProductItem | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -194,9 +197,30 @@ export const useProductDrawer = ({
   };
 
   const handleDeleteProduct = async (prod: ProductItem) => {
-    if (!window.confirm(`คุณแน่ใจว่าต้องการลบสินค้า "${prod.name}" (${prod.sku})?`)) {
+    if (onOpenConfirmDelete) {
+      onOpenConfirmDelete({
+        title: 'ยืนยันการลบสินค้า',
+        itemType: 'สินค้า (SKU)',
+        itemName: prod.name,
+        itemCode: prod.sku || prod.code,
+        description: `หมวดหมู่: ${prod.category || '-'} | แบรนด์: ${prod.brand || '-'}`,
+        onConfirm: async () => {
+          try {
+            await productService.deleteProduct(prod.id);
+            setProductsList((prev) => prev.filter((p) => p.id !== prod.id));
+            if (drawerProduct?.id === prod.id) {
+              setDrawerProduct(null);
+            }
+            showToast(`ลบสินค้า "${prod.name}" เรียบร้อยแล้ว`);
+          } catch (err: any) {
+            const msg = err.response?.data?.message || err.message || 'ไม่สามารถลบสินค้าได้';
+            showToast(`ไม่สามารถลบสินค้าได้: ${msg}`);
+          }
+        },
+      });
       return;
     }
+
     try {
       await productService.deleteProduct(prod.id);
       setProductsList((prev) => prev.filter((p) => p.id !== prod.id));

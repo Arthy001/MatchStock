@@ -12,11 +12,12 @@ import {
   Layers,
   Package,
 } from 'lucide-react';
-import { ThemeMode, ProductItem } from '../../../types';
+import { ThemeMode, Language, ProductItem } from '../../../types';
 import { resolveImageUrl } from '../../../services/product.service';
 
 interface ProductCatalogTabProps {
   theme: ThemeMode;
+  lang?: Language;
   t: any;
   products: ProductItem[];
   onOpenDrawer: (prod: ProductItem) => void;
@@ -34,6 +35,7 @@ const renderText = (val: any): string => {
 
 export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
   theme,
+  lang = 'th',
   t,
   products = [],
   onOpenDrawer,
@@ -44,6 +46,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'IN_STOCK' | 'LOW' | 'OUT' | 'INACTIVE'>('ALL');
 
   const isDark = theme === 'dark';
+  const isEn = lang === 'en';
   const safeProducts = Array.isArray(products) ? products : [];
 
   const activeProducts = safeProducts.filter((p) => p && p.isActive !== false);
@@ -115,7 +118,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                 : 'text-zinc-600 hover:text-zinc-900'
             }`}
           >
-            ทั้งหมด ({safeProducts.length})
+            {isEn ? 'All' : 'ทั้งหมด'} ({safeProducts.length})
           </button>
           <button
             onClick={() => setStatusFilter('ACTIVE')}
@@ -130,7 +133,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
             }`}
           >
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            เปิดใช้งาน ({activeProducts.length})
+            {isEn ? 'Active' : 'เปิดใช้งาน'} ({activeProducts.length})
           </button>
           <button
             onClick={() => setStatusFilter('IN_STOCK')}
@@ -145,7 +148,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
             }`}
           >
             <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-            พร้อมขาย ({inStockProducts.length})
+            {isEn ? 'In Stock' : 'พร้อมขาย'} ({inStockProducts.length})
           </button>
           <button
             onClick={() => setStatusFilter('LOW')}
@@ -160,7 +163,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
             }`}
           >
             <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-            ใกล้หมด ({lowStockProducts.length})
+            {isEn ? 'Low Stock' : 'ใกล้หมด'} ({lowStockProducts.length})
           </button>
           <button
             onClick={() => setStatusFilter('OUT')}
@@ -175,7 +178,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
             }`}
           >
             <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-            หมดสต็อก ({outStockProducts.length})
+            {isEn ? 'Out of Stock' : 'หมดสต็อก'} ({outStockProducts.length})
           </button>
           <button
             onClick={() => setStatusFilter('INACTIVE')}
@@ -190,7 +193,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
             }`}
           >
             <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-            ปิดใช้งาน ({inactiveProducts.length})
+            {isEn ? 'Inactive' : 'ปิดใช้งาน'} ({inactiveProducts.length})
           </button>
         </div>
 
@@ -198,7 +201,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
         <div className="flex items-center gap-2">
           {selectedIds.length > 0 && (
             <span className="text-[13px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-0.5 rounded border border-blue-200 dark:border-blue-800">
-              {selectedIds.length} selected
+              {selectedIds.length} {isEn ? 'selected' : 'รายการที่เลือก'}
             </span>
           )}
 
@@ -210,7 +213,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
             }`}
           >
             <SlidersHorizontal className="w-4 h-4 text-zinc-500" />
-            <span>Customize Columns</span>
+            <span>{isEn ? 'Customize Columns' : 'ปรับแต่งคอลัมน์'}</span>
           </button>
         </div>
       </div>
@@ -234,13 +237,13 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                   className="rounded border-zinc-300 dark:border-zinc-700 text-blue-600 focus:ring-0 cursor-pointer"
                 />
               </th>
-              <th className="py-2.5 px-3 min-w-[280px]">Item / Description</th>
-              <th className="py-2.5 px-3 min-w-[140px]">SKU & Barcode</th>
-              <th className="py-2.5 px-3 min-w-[110px]">Brand</th>
-              <th className="py-2.5 px-3 min-w-[130px] text-right">Physical Dim</th>
-              <th className="py-2.5 px-3 min-w-[140px] text-right">Inventory / ROP</th>
-              <th className="py-2.5 px-3 min-w-[110px] text-right">Unit Price</th>
-              <th className="py-2.5 px-3 w-24 text-right pr-4">Actions</th>
+              <th className="py-2.5 px-3 min-w-[280px]">{isEn ? 'Item / Description' : 'สินค้า / รายละเอียด'}</th>
+              <th className="py-2.5 px-3 min-w-[140px]">{isEn ? 'SKU & Barcode' : 'SKU และบาร์โค้ด'}</th>
+              <th className="py-2.5 px-3 min-w-[110px]">{isEn ? 'Brand' : 'แบรนด์'}</th>
+              <th className="py-2.5 px-3 min-w-[130px] text-right">{isEn ? 'Physical Dim' : 'มิติกายภาพ'}</th>
+              <th className="py-2.5 px-3 min-w-[140px] text-right">{isEn ? 'Inventory / ROP' : 'สต็อก / จุดสั่งซื้อ'}</th>
+              <th className="py-2.5 px-3 min-w-[110px] text-right">{isEn ? 'Unit Price' : 'ราคาต่อหน่วย'}</th>
+              <th className="py-2.5 px-3 w-24 text-right pr-4">{isEn ? 'Actions' : 'จัดการ'}</th>
             </tr>
           </thead>
 
@@ -253,7 +256,9 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
               <tr>
                 <td colSpan={8} className="py-12 text-center text-zinc-400">
                   <Package className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                  <p className="font-medium text-xs">No matching products found</p>
+                  <p className="font-medium text-xs">
+                    {isEn ? 'No matching products found' : 'ไม่พบข้อมูลสินค้าที่ค้นหา'}
+                  </p>
                 </td>
               </tr>
             ) : (
@@ -476,7 +481,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                               ? 'text-zinc-400 hover:text-blue-400 hover:bg-zinc-800'
                               : 'text-zinc-500 hover:text-blue-600 hover:bg-zinc-200/60'
                           }`}
-                          title="ดูรายละเอียดสินค้า (View Detail)"
+                          title={isEn ? 'View Product Details' : 'ดูรายละเอียดสินค้า (View Detail)'}
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </button>
@@ -487,7 +492,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                               ? 'text-zinc-400 hover:text-blue-400 hover:bg-zinc-800'
                               : 'text-zinc-500 hover:text-blue-600 hover:bg-zinc-200/60'
                           }`}
-                          title="Preview & Print Barcode"
+                          title={isEn ? 'Preview & Print Barcode' : 'ดูและพิมพ์บาร์โค้ด (Barcode)'}
                         >
                           <QrCode className="w-3.5 h-3.5" />
                         </button>
@@ -498,7 +503,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                               ? 'text-zinc-400 hover:text-blue-400 hover:bg-zinc-800'
                               : 'text-zinc-500 hover:text-blue-600 hover:bg-zinc-200/60'
                           }`}
-                          title="แก้ไขสินค้า (Edit Product)"
+                          title={isEn ? 'Edit Product' : 'แก้ไขสินค้า (Edit Product)'}
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
@@ -509,7 +514,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                               ? 'text-zinc-400 hover:text-rose-400 hover:bg-zinc-800'
                               : 'text-zinc-500 hover:text-rose-600 hover:bg-zinc-200/60'
                           }`}
-                          title="Delete"
+                          title={isEn ? 'Delete Product' : 'ลบสินค้า (Delete Product)'}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

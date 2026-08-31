@@ -66,6 +66,7 @@ export const OrdersManagement: React.FC<OrdersManagementProps> = ({
       {/* Header & KPI Summary Cards */}
       <OrderMetricsCards
         theme={theme}
+        lang={lang}
         t={t}
         type={type}
         isSales={isSales}
@@ -76,6 +77,7 @@ export const OrdersManagement: React.FC<OrdersManagementProps> = ({
       {/* Orders Data Table & Status Filters */}
       <OrdersTable
         theme={theme}
+        lang={lang}
         t={t}
         isSales={isSales}
         filteredOrders={filteredOrders}
@@ -87,6 +89,7 @@ export const OrdersManagement: React.FC<OrdersManagementProps> = ({
       {/* 480px Slide-Over Detail Drawer */}
       <OrderDetailDrawer
         theme={theme}
+        lang={lang}
         t={t}
         isSales={isSales}
         isOpen={isDrawerOpen}
@@ -99,6 +102,7 @@ export const OrdersManagement: React.FC<OrdersManagementProps> = ({
       {/* Create Order Modal */}
       <CreateOrderModal
         theme={theme}
+        lang={lang}
         t={t}
         isSales={isSales}
         isOpen={isCreateModalOpen}

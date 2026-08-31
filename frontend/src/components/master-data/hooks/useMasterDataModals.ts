@@ -11,6 +11,23 @@ import {
 import { masterDataService } from '../../../services/masterData.service';
 import { warehouseService } from '../../../services/warehouse.service';
 import { UnitItem, RbacUser } from './useMasterDataLoader';
+import { ConfirmDeleteData } from '../modals/ConfirmDeleteModal';
+
+const extractErrorMessage = (err: any): string => {
+  const data = err.response?.data;
+  if (!data) return err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+  if (Array.isArray(data.errors) && data.errors.length > 0) {
+    return data.errors
+      .map((e: any) => (typeof e === 'string' ? e : (e.message || e.error || `${e.field || 'field'}: invalid`)))
+      .join(', ');
+  }
+  if (data.message && data.message !== 'Validation failed') {
+    return Array.isArray(data.message) ? data.message.join(', ') : String(data.message);
+  }
+  if (data.error) return String(data.error);
+  if (Array.isArray(data.errors)) return data.errors.join(', ');
+  return data.message || err.message || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์';
+};
 
 interface UseMasterDataModalsProps {
   companiesList: Company[];
@@ -31,18 +48,29 @@ interface UseMasterDataModalsProps {
 }
 
 export const useMasterDataModals = ({
+  companiesList,
   setCompaniesList,
+  suppliersList,
   setSuppliersList,
+  unitsList,
   setUnitsList,
+  binsList,
   setBinsList,
+  categoriesList,
   setCategoriesList,
+  brandsList,
   setBrandsList,
+  usersList,
   setUsersList,
   showToast,
 }: UseMasterDataModalsProps) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isViewOnly, setIsViewOnly] = useState(false);
   const [selectedProductForBarcode, setSelectedProductForBarcode] = useState<ProductItem | null>(null);
+
+  // Modal confirm delete state
+  const [deleteConfirmData, setDeleteConfirmData] = useState<ConfirmDeleteData | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Selected item states
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
@@ -62,7 +90,6 @@ export const useMasterDataModals = ({
   const [editCompEmail, setEditCompEmail] = useState('');
   const [editCompAddress, setEditCompAddress] = useState('');
   const [editCompIsHq, setEditCompIsHq] = useState(false);
-  const [editCompIsActive, setEditCompIsActive] = useState(true);
 
   // Edit Supplier form state
   const [editSupCode, setEditSupCode] = useState('');
@@ -112,25 +139,60 @@ export const useMasterDataModals = ({
     setEditCompEmail(comp.email || '');
     setEditCompAddress(comp.address || '');
     setEditCompIsHq(Boolean(comp.isHeadquarter));
-    setEditCompIsActive(comp.isActive !== false);
   };
 
   const handleSaveEditCompany = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCompany) return;
+
+    if (!editCompName.trim()) {
+      showToast('กรุณากรอกชื่อบริษัท / นิติบุคคล');
+      return;
+    }
+
+    const targetName = editCompName.trim().toLowerCase();
+    const targetBranch = (editCompBranchCode.trim() || '00000').toLowerCase();
+    const targetTaxId = editCompTaxId.trim();
+
+    // 1. ตรวจสอบชื่อบริษัท + รหัสสาขา ซ้ำกับบริษัทอื่น
+    const duplicateBranch = companiesList.find(
+      (c) =>
+        c.id !== editingCompany.id &&
+        c.name.trim().toLowerCase() === targetName &&
+        (c.branchCode || '00000').toLowerCase() === targetBranch
+    );
+    if (duplicateBranch) {
+      showToast(`สาขา ${editCompBranchCode.trim() || '00000'} ของบริษัท "${editCompName.trim()}" มีอยู่ในระบบแล้ว`);
+      return;
+    }
+
+    // 2. ถ้ากรอก Tax ID ตรวจสอบ Tax ID + รหัสสาขา ซ้ำกับบริษัทอื่น
+    if (targetTaxId) {
+      const duplicateTaxBranch = companiesList.find(
+        (c) =>
+          c.id !== editingCompany.id &&
+          c.taxId &&
+          c.taxId.trim() === targetTaxId &&
+          (c.branchCode || '00000').toLowerCase() === targetBranch
+      );
+      if (duplicateTaxBranch) {
+        showToast(`เลขประจำตัวผู้เสียภาษีนี้มีรหัสสาขา ${editCompBranchCode.trim() || '00000'} อยู่แล้ว`);
+        return;
+      }
+    }
+
     setIsSaving(true);
     try {
       await masterDataService.updateCompany(editingCompany.id, {
         code: editCompCode,
-        name: editCompName,
+        name: editCompName.trim(),
         taxId: editCompTaxId,
-        branchCode: editCompBranchCode,
+        branchCode: editCompBranchCode.trim() || '00000',
         branchName: editCompBranchName,
         phone: editCompPhone,
         email: editCompEmail,
         address: editCompAddress,
         isHeadquarter: editCompIsHq,
-        isActive: editCompIsActive,
       });
 
       setCompaniesList((prev) =>
@@ -147,7 +209,6 @@ export const useMasterDataModals = ({
                 email: editCompEmail,
                 address: editCompAddress,
                 isHeadquarter: editCompIsHq,
-                isActive: editCompIsActive,
               }
             : c
         )
@@ -155,23 +216,35 @@ export const useMasterDataModals = ({
       setEditingCompany(null);
       showToast(`แก้ไขข้อมูลบริษัท "${editCompName}" สำเร็จ`);
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      const msg = extractErrorMessage(err);
       showToast(`เกิดข้อผิดพลาดในการแก้ไขบริษัท: ${msg}`);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteCompany = async (comp: Company) => {
-    if (!window.confirm(`คุณแน่ใจว่าต้องการลบบริษัท "${comp.name}"?`)) return;
-    try {
-      await masterDataService.deleteCompany(comp.id);
-      setCompaniesList((prev) => prev.filter((c) => c.id !== comp.id));
-      showToast(`ลบบริษัท "${comp.name}" เรียบร้อยแล้ว`);
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
-      showToast(`เกิดข้อผิดพลาดในการลบบริษัท: ${msg}`);
-    }
+  const handleDeleteCompany = (comp: Company) => {
+    setDeleteConfirmData({
+      title: 'ยืนยันการลบบริษัทในเครือ',
+      itemType: 'บริษัท / สาขา',
+      itemName: comp.name,
+      itemCode: comp.code || comp.branchCode,
+      description: `สาขา: ${comp.branchName || comp.branchCode || '00000'} | เลขผู้เสียภาษี: ${comp.taxId || '-'}`,
+      onConfirm: async () => {
+        setIsDeleting(true);
+        try {
+          await masterDataService.deleteCompany(comp.id);
+          setCompaniesList((prev) => prev.filter((c) => c.id !== comp.id));
+          showToast(`ลบบริษัท "${comp.name}" เรียบร้อยแล้ว`);
+          setDeleteConfirmData(null);
+        } catch (err: any) {
+          const msg = extractErrorMessage(err);
+          showToast(`เกิดข้อผิดพลาดในการลบบริษัท: ${msg}`);
+        } finally {
+          setIsDeleting(false);
+        }
+      },
+    });
   };
 
   // --- Handlers: Supplier ---
@@ -225,23 +298,35 @@ export const useMasterDataModals = ({
       setEditingSupplier(null);
       showToast(`แก้ไขข้อมูลผู้จัดจำหน่าย "${editSupName}" สำเร็จ`);
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      const msg = extractErrorMessage(err);
       showToast(`เกิดข้อผิดพลาดในการแก้ไขผู้จัดจำหน่าย: ${msg}`);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteSupplier = async (sup: Supplier) => {
-    if (!window.confirm(`คุณแน่ใจว่าต้องการลบผู้จัดจำหน่าย "${sup.name}"?`)) return;
-    try {
-      await masterDataService.deleteSupplier(sup.id);
-      setSuppliersList((prev) => prev.filter((s) => s.id !== sup.id));
-      showToast(`ลบผู้จัดจำหน่าย "${sup.name}" เรียบร้อยแล้ว`);
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
-      showToast(`เกิดข้อผิดพลาดในการลบผู้จัดจำหน่าย: ${msg}`);
-    }
+  const handleDeleteSupplier = (sup: Supplier) => {
+    setDeleteConfirmData({
+      title: 'ยืนยันการลบผู้จัดจำหน่าย',
+      itemType: 'คู่ค้า / ซัพพลายเออร์',
+      itemName: sup.name,
+      itemCode: sup.code,
+      description: `ผู้ติดต่อ: ${sup.contactPerson || '-'} | โทร: ${sup.phone || '-'}`,
+      onConfirm: async () => {
+        setIsDeleting(true);
+        try {
+          await masterDataService.deleteSupplier(sup.id);
+          setSuppliersList((prev) => prev.filter((s) => s.id !== sup.id));
+          showToast(`ลบผู้จัดจำหน่าย "${sup.name}" เรียบร้อยแล้ว`);
+          setDeleteConfirmData(null);
+        } catch (err: any) {
+          const msg = extractErrorMessage(err);
+          showToast(`เกิดข้อผิดพลาดในการลบผู้จัดจำหน่าย: ${msg}`);
+        } finally {
+          setIsDeleting(false);
+        }
+      },
+    });
   };
 
   // --- Handlers: Unit ---
@@ -258,7 +343,7 @@ export const useMasterDataModals = ({
     if (!editingUnit) return;
     setIsSaving(true);
     try {
-      await masterDataService.updateUnit(editingUnit.id, {
+      const updated = await masterDataService.updateUnit(editingUnit.id, {
         code: editUnitCode,
         name: editUnitName,
         isActive: editUnitIsActive,
@@ -266,30 +351,42 @@ export const useMasterDataModals = ({
       setUnitsList((prev) =>
         prev.map((u) =>
           u.id === editingUnit.id
-            ? { ...u, code: editUnitCode, name: editUnitName, isActive: editUnitIsActive }
+            ? { ...u, ...updated, code: editUnitCode, name: editUnitName, isActive: editUnitIsActive }
             : u
         )
       );
       setEditingUnit(null);
-      showToast(`แก้ไขข้อมูลหน่วยนับ "${editUnitName}" สำเร็จ`);
+      showToast(`แก้ไขหน่วยนับ "${editUnitName}" สำเร็จ`);
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      const msg = extractErrorMessage(err);
       showToast(`เกิดข้อผิดพลาดในการแก้ไขหน่วยนับ: ${msg}`);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteUnit = async (unit: UnitItem) => {
-    if (!window.confirm(`คุณแน่ใจว่าต้องการลบหน่วยนับ "${unit.name}"?`)) return;
-    try {
-      await masterDataService.deleteUnit(unit.id);
-      setUnitsList((prev) => prev.filter((u) => u.id !== unit.id));
-      showToast(`ลบหน่วยนับ "${unit.name}" เรียบร้อยแล้ว`);
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
-      showToast(`เกิดข้อผิดพลาดในการลบหน่วยนับ: ${msg}`);
-    }
+  const handleDeleteUnit = (unit: UnitItem) => {
+    setDeleteConfirmData({
+      title: 'ยืนยันการลบหน่วยนับสินค้า',
+      itemType: 'หน่วยนับ (UOM)',
+      itemName: unit.name,
+      itemCode: unit.code,
+      description: (unit as any).description || undefined,
+      onConfirm: async () => {
+        setIsDeleting(true);
+        try {
+          await masterDataService.deleteUnit(unit.id);
+          setUnitsList((prev) => prev.filter((u) => u.id !== unit.id));
+          showToast(`ลบหน่วยนับ "${unit.name}" เรียบร้อยแล้ว`);
+          setDeleteConfirmData(null);
+        } catch (err: any) {
+          const msg = extractErrorMessage(err);
+          showToast(`เกิดข้อผิดพลาดในการลบหน่วยนับ: ${msg}`);
+        } finally {
+          setIsDeleting(false);
+        }
+      },
+    });
   };
 
   // --- Handlers: Warehouse Bin ---
@@ -344,23 +441,35 @@ export const useMasterDataModals = ({
       setEditingBin(null);
       showToast(`แก้ไขข้อมูลคลัง / ตำแหน่ง Bin "${editBinCode}" สำเร็จ`);
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      const msg = extractErrorMessage(err);
       showToast(`เกิดข้อผิดพลาดในการแก้ไขตำแหน่ง Bin: ${msg}`);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteBin = async (bin: WarehouseBin) => {
-    if (!window.confirm(`คุณแน่ใจว่าต้องการลบตำแหน่ง Bin "${bin.binCode}"?`)) return;
-    try {
-      await warehouseService.deleteBin(bin.id);
-      setBinsList((prev) => prev.filter((b) => b.id !== bin.id));
-      showToast(`ลบตำแหน่ง Bin "${bin.binCode}" เรียบร้อยแล้ว`);
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
-      showToast(`เกิดข้อผิดพลาดในการลบตำแหน่ง Bin: ${msg}`);
-    }
+  const handleDeleteBin = (bin: WarehouseBin) => {
+    setDeleteConfirmData({
+      title: 'ยืนยันการลบตำแหน่งจัดเก็บ Bin',
+      itemType: 'Bin Location',
+      itemName: bin.binCode,
+      itemCode: bin.zone ? `โซน ${bin.zone}` : undefined,
+      description: `คลังสินค้า: ${bin.warehouseName || '-'} | แร็ค: ${bin.rack || '-'}`,
+      onConfirm: async () => {
+        setIsDeleting(true);
+        try {
+          await warehouseService.deleteBin(bin.id);
+          setBinsList((prev) => prev.filter((b) => b.id !== bin.id));
+          showToast(`ลบตำแหน่ง Bin "${bin.binCode}" เรียบร้อยแล้ว`);
+          setDeleteConfirmData(null);
+        } catch (err: any) {
+          const msg = extractErrorMessage(err);
+          showToast(`เกิดข้อผิดพลาดในการลบตำแหน่ง Bin: ${msg}`);
+        } finally {
+          setIsDeleting(false);
+        }
+      },
+    });
   };
 
   // --- Handlers: Category ---
@@ -394,23 +503,35 @@ export const useMasterDataModals = ({
       setEditingCategory(null);
       showToast(`แก้ไขหมวดหมู่ "${editCatName}" สำเร็จ`);
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      const msg = extractErrorMessage(err);
       showToast(`เกิดข้อผิดพลาดในการแก้ไขหมวดหมู่: ${msg}`);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteCategory = async (cat: CategoryItem) => {
-    if (!window.confirm(`คุณแน่ใจว่าต้องการลบหมวดหมู่ "${cat.name}"?`)) return;
-    try {
-      await masterDataService.deleteCategory(cat.id);
-      setCategoriesList((prev) => prev.filter((c) => c.id !== cat.id));
-      showToast(`ลบหมวดหมู่ "${cat.name}" เรียบร้อยแล้ว`);
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
-      showToast(`เกิดข้อผิดพลาดในการลบหมวดหมู่: ${msg}`);
-    }
+  const handleDeleteCategory = (cat: CategoryItem) => {
+    setDeleteConfirmData({
+      title: 'ยืนยันการลบหมวดหมู่สินค้า',
+      itemType: 'หมวดหมู่ (Category)',
+      itemName: cat.name,
+      itemCode: cat.code,
+      description: cat.description || undefined,
+      onConfirm: async () => {
+        setIsDeleting(true);
+        try {
+          await masterDataService.deleteCategory(cat.id);
+          setCategoriesList((prev) => prev.filter((c) => c.id !== cat.id));
+          showToast(`ลบหมวดหมู่ "${cat.name}" เรียบร้อยแล้ว`);
+          setDeleteConfirmData(null);
+        } catch (err: any) {
+          const msg = extractErrorMessage(err);
+          showToast(`เกิดข้อผิดพลาดในการลบหมวดหมู่: ${msg}`);
+        } finally {
+          setIsDeleting(false);
+        }
+      },
+    });
   };
 
   // --- Handlers: Brand ---
@@ -444,23 +565,35 @@ export const useMasterDataModals = ({
       setEditingBrand(null);
       showToast(`แก้ไขแบรนด์ "${editBrandName}" สำเร็จ`);
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      const msg = extractErrorMessage(err);
       showToast(`เกิดข้อผิดพลาดในการแก้ไขแบรนด์: ${msg}`);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteBrand = async (brand: BrandItem) => {
-    if (!window.confirm(`คุณแน่ใจว่าต้องการลบแบรนด์ "${brand.name}"?`)) return;
-    try {
-      await masterDataService.deleteBrand(brand.id);
-      setBrandsList((prev) => prev.filter((b) => b.id !== brand.id));
-      showToast(`ลบแบรนด์ "${brand.name}" เรียบร้อยแล้ว`);
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
-      showToast(`เกิดข้อผิดพลาดในการลบแบรนด์: ${msg}`);
-    }
+  const handleDeleteBrand = (brand: BrandItem) => {
+    setDeleteConfirmData({
+      title: 'ยืนยันการลบแบรนด์สินค้า',
+      itemType: 'แบรนด์ (Brand)',
+      itemName: brand.name,
+      itemCode: brand.code,
+      description: brand.description || undefined,
+      onConfirm: async () => {
+        setIsDeleting(true);
+        try {
+          await masterDataService.deleteBrand(brand.id);
+          setBrandsList((prev) => prev.filter((b) => b.id !== brand.id));
+          showToast(`ลบแบรนด์ "${brand.name}" เรียบร้อยแล้ว`);
+          setDeleteConfirmData(null);
+        } catch (err: any) {
+          const msg = extractErrorMessage(err);
+          showToast(`เกิดข้อผิดพลาดในการลบแบรนด์: ${msg}`);
+        } finally {
+          setIsDeleting(false);
+        }
+      },
+    });
   };
 
   // --- Handlers: RBAC ---
@@ -472,21 +605,33 @@ export const useMasterDataModals = ({
       );
       showToast(`อัปเดตบทบาทของ "${usr.name}" เป็น ${newRole.toUpperCase()} เรียบร้อยแล้ว`);
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+      const msg = extractErrorMessage(err);
       showToast(`เกิดข้อผิดพลาดในการอัปเดตบทบาท: ${msg}`);
     }
   };
 
-  const handleDeleteUser = async (usr: RbacUser) => {
-    if (!window.confirm(`คุณต้องการลบผู้ใช้งาน "${usr.name}" หรือไม่?`)) return;
-    try {
-      await masterDataService.deleteUser(usr.id);
-      setUsersList((prev) => prev.filter((u) => u.id !== usr.id));
-      showToast(`ลบผู้ใช้งาน "${usr.name}" เรียบร้อยแล้ว`);
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
-      showToast(`เกิดข้อผิดพลาดในการลบผู้ใช้งาน: ${msg}`);
-    }
+  const handleDeleteUser = (usr: RbacUser) => {
+    setDeleteConfirmData({
+      title: 'ยืนยันการลบผู้ใช้งานระบบ',
+      itemType: 'ผู้ใช้ (User)',
+      itemName: usr.name,
+      itemCode: usr.role?.toUpperCase(),
+      description: `อีเมล: ${usr.email}`,
+      onConfirm: async () => {
+        setIsDeleting(true);
+        try {
+          await masterDataService.deleteUser(usr.id);
+          setUsersList((prev) => prev.filter((u) => u.id !== usr.id));
+          showToast(`ลบผู้ใช้งาน "${usr.name}" เรียบร้อยแล้ว`);
+          setDeleteConfirmData(null);
+        } catch (err: any) {
+          const msg = extractErrorMessage(err);
+          showToast(`เกิดข้อผิดพลาดในการลบผู้ใช้งาน: ${msg}`);
+        } finally {
+          setIsDeleting(false);
+        }
+      },
+    });
   };
 
   return {
@@ -495,6 +640,11 @@ export const useMasterDataModals = ({
     setIsViewOnly,
     selectedProductForBarcode,
     setSelectedProductForBarcode,
+
+    // Confirm Delete
+    deleteConfirmData,
+    setDeleteConfirmData,
+    isDeleting,
 
     // Company
     editingCompany,
@@ -517,8 +667,6 @@ export const useMasterDataModals = ({
     setEditCompAddress,
     editCompIsHq,
     setEditCompIsHq,
-    editCompIsActive,
-    setEditCompIsActive,
     openEditCompany,
     handleSaveEditCompany,
     handleDeleteCompany,

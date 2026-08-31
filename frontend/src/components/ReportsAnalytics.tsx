@@ -151,16 +151,20 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
   const totalStockUnits = products.reduce((acc, curr) => acc + curr.stockOnHand, 0) || 2850;
   const lowStockItems = products.filter((p) => p.stockOnHand <= p.reorderLevel);
 
+  const isEn = lang === 'en';
+
   return (
     <div className="space-y-6">
       {/* Enterprise Title & Actions Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-zinc-200/60 dark:border-zinc-800/60">
         <div>
           <h2 className={`text-xl font-bold tracking-tight ${theme === 'dark' ? 'text-zinc-100' : 'text-zinc-900'}`}>
-            รายงานและการวิเคราะห์สต็อกสินค้า (Inventory Reports & Analytics)
+            {isEn ? 'Inventory Reports & Analytics' : 'รายงานและการวิเคราะห์สต็อกสินค้า (Inventory Reports & Analytics)'}
           </h2>
           <p className={`text-[15px] font-normal mt-0.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>
-            ศูนย์กลางการวิเคราะห์มูลค่าสินค้าคงคลัง, อัตราหมุนเวียน (Stock Turnover), และการใช้พื้นที่คลัง
+            {isEn
+              ? 'Executive intelligence on total stock valuation, inventory turnover rates, and warehouse storage capacity.'
+              : 'ศูนย์กลางการวิเคราะห์มูลค่าสินค้าคงคลัง, อัตราหมุนเวียน (Stock Turnover), และการใช้พื้นที่คลัง'}
           </p>
         </div>
 
@@ -186,7 +190,7 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-[13px] font-medium hover:bg-zinc-50 dark:hover:bg-zinc-700 transition cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
-            <span>พิมพ์รายงาน</span>
+            <span>{isEn ? 'Print Report' : 'พิมพ์รายงาน'}</span>
           </button>
         </div>
       </div>
@@ -199,7 +203,9 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">มูลค่าสต็อกคงคลังรวม</span>
+            <span className="text-xs font-bold text-slate-500">
+              {isEn ? 'Total Inventory Value' : 'มูลค่าสต็อกคงคลังรวม'}
+            </span>
             <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
               <DollarSign className="w-4 h-4" />
             </div>
@@ -209,7 +215,7 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
           </p>
           <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-semibold mt-1">
             <TrendingUp className="w-3.5 h-3.5" />
-            <span>+4.2% จากไตรมาสก่อน</span>
+            <span>{isEn ? '+4.2% from last quarter' : '+4.2% จากไตรมาสก่อน'}</span>
           </div>
         </div>
 
@@ -219,15 +225,19 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">อัตราหมุนเวียนสต็อก (Turnover)</span>
+            <span className="text-xs font-bold text-slate-500">
+              {isEn ? 'Turnover Rate' : 'อัตราหมุนเวียนสต็อก (Turnover)'}
+            </span>
             <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400">
               <RefreshCw className="w-4 h-4" />
             </div>
           </div>
           <p className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-2">
-            5.2x <span className="text-xs font-medium text-slate-500">รอบ/ปี</span>
+            5.2x <span className="text-xs font-medium text-slate-500">{isEn ? 'times/year' : 'รอบ/ปี'}</span>
           </p>
-          <div className="text-[11px] text-slate-500 mt-1">เกณฑ์ปกติระดับอุตสาหกรรม (Healthy)</div>
+          <div className="text-[11px] text-slate-500 mt-1">
+            {isEn ? 'Healthy Industry Standard' : 'เกณฑ์ปกติระดับอุตสาหกรรม (Healthy)'}
+          </div>
         </div>
 
         <div
@@ -236,16 +246,22 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">จำนวนสินค้าคงเหลือรวม</span>
+            <span className="text-xs font-bold text-slate-500">
+              {isEn ? 'Total Inventory Units' : 'จำนวนสินค้าคงเหลือรวม'}
+            </span>
             <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-950 text-purple-600 dark:text-purple-400">
               <Package className="w-4 h-4" />
             </div>
           </div>
           <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-50 mt-2">
             {totalStockUnits.toLocaleString()}{' '}
-            <span className="text-xs font-medium text-slate-500">ชิ้น ({products.length} SKUs)</span>
+            <span className="text-xs font-medium text-slate-500">
+              {isEn ? `units (${products.length} SKUs)` : `ชิ้น (${products.length} SKUs)`}
+            </span>
           </p>
-          <div className="text-[11px] text-slate-500 mt-1">กระจายใน 3 คลังสินค้า</div>
+          <div className="text-[11px] text-slate-500 mt-1">
+            {isEn ? 'Distributed across 3 warehouses' : 'กระจายใน 3 คลังสินค้า'}
+          </div>
         </div>
 
         <div
@@ -254,16 +270,20 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">สินค้าใกล้หมดคลัง (ROP Alert)</span>
+            <span className="text-xs font-bold text-slate-500">
+              {isEn ? 'Low Stock (ROP Alert)' : 'สินค้าใกล้หมดคลัง (ROP Alert)'}
+            </span>
             <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400">
               <AlertTriangle className="w-4 h-4" />
             </div>
           </div>
           <p className="text-2xl font-extrabold text-rose-600 dark:text-rose-400 mt-2">
             {lowStockItems.length}{' '}
-            <span className="text-xs font-medium text-slate-500">รายการ</span>
+            <span className="text-xs font-medium text-slate-500">{isEn ? 'items' : 'รายการ'}</span>
           </p>
-          <div className="text-[11px] text-rose-600 font-semibold mt-1">ต้องการการสั่งซื้อเติมสต็อกด่วน</div>
+          <div className="text-[11px] text-rose-600 font-semibold mt-1">
+            {isEn ? 'Urgent replenishment required' : 'ต้องการการสั่งซื้อเติมสต็อกด่วน'}
+          </div>
         </div>
       </div>
 
@@ -278,14 +298,18 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                แนวโน้มปริมาณการรับเข้า vs เบิกจ่าย (Inbound & Outbound Movement)
+                {isEn
+                  ? 'Inbound & Outbound Movement Trends'
+                  : 'แนวโน้มปริมาณการรับเข้า vs เบิกจ่าย (Inbound & Outbound Movement)'}
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                เปรียบเทียบยอดรับเข้า (GR) และยอดเบิกจ่าย (GI) ตลอด 6 เดือนย้อนหลัง
+                {isEn
+                  ? 'Comparison of Goods Receipt (GR) and Goods Issue (GI) volume across last 6 months.'
+                  : 'เปรียบเทียบยอดรับเข้า (GR) และยอดเบิกจ่าย (GI) ตลอด 6 เดือนย้อนหลัง'}
               </p>
             </div>
             <span className="text-xs font-mono font-bold text-blue-600 bg-blue-50 dark:bg-blue-950 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800">
-              หน่วย: จำนวนชิ้น (Units)
+              {isEn ? 'Units: Pieces (Units)' : 'หน่วย: จำนวนชิ้น (Units)'}
             </span>
           </div>
 
@@ -317,7 +341,7 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
                 <Area
                   type="monotone"
-                  name="รับเข้าคลัง (Goods Receive)"
+                  name={isEn ? 'Goods Receipt (Inbound)' : 'รับเข้าคลัง (Goods Receive)'}
                   dataKey="inbound"
                   stroke="#2563eb"
                   strokeWidth={2}
@@ -326,7 +350,7 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
                 />
                 <Area
                   type="monotone"
-                  name="เบิกจ่ายออก (Goods Issue)"
+                  name={isEn ? 'Goods Issue (Outbound)' : 'เบิกจ่ายออก (Goods Issue)'}
                   dataKey="outbound"
                   stroke="#10b981"
                   strokeWidth={2}
@@ -347,7 +371,7 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                สัดส่วนมูลค่าตามหมวดหมู่
+                {isEn ? 'Stock Valuation by Category' : 'สัดส่วนมูลค่าตามหมวดหมู่'}
               </h3>
               <p className="text-[11px] text-slate-500 mt-0.5">Stock Valuation by Category</p>
             </div>
@@ -371,7 +395,7 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: any) => [`฿${Number(value).toLocaleString()}`, 'มูลค่า']}
+                  formatter={(value: any) => [`฿${Number(value).toLocaleString()}`, isEn ? 'Valuation' : 'มูลค่า']}
                   contentStyle={{
                     backgroundColor: isDark ? '#0f172a' : '#ffffff',
                     borderColor: isDark ? '#1e293b' : '#e2e8f0',
@@ -417,7 +441,7 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
             <div className="flex items-center gap-2">
               <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                อัตราการใช้พื้นที่คลังสินค้า (Capacity Utilization)
+                {isEn ? 'Warehouse Capacity Utilization' : 'อัตราการใช้พื้นที่คลังสินค้า (Capacity Utilization)'}
               </h3>
             </div>
           </div>
@@ -439,7 +463,7 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
                         : 'text-emerald-600'
                     }`}
                   >
-                    {wh.percent}% ({wh.current.toLocaleString()}/{wh.capacity.toLocaleString()} Units)
+                    {wh.percent}% ({wh.current.toLocaleString()}/{wh.capacity.toLocaleString()} {isEn ? 'Units' : 'ชิ้น'})
                   </span>
                 </div>
                 {/* Progress bar */}
@@ -466,7 +490,7 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-amber-500" />
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                5 อันดับสินค้าเคลื่อนไหวเร็วสูงสุด (Top Fast-Moving SKUs)
+                {isEn ? 'Top 5 Fast-Moving SKUs' : '5 อันดับสินค้าเคลื่อนไหวเร็วสูงสุด (Top Fast-Moving SKUs)'}
               </h3>
             </div>
           </div>
@@ -485,7 +509,7 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
                 </div>
                 <div className="text-right">
                   <span className="font-bold text-slate-900 dark:text-slate-100 font-mono">
-                    {sku.velocity} ชิ้น/เดือน
+                    {sku.velocity} {isEn ? 'units/month' : 'ชิ้น/เดือน'}
                   </span>
                   <span className="ml-2 text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded">
                     Turnover: {sku.turnover}
@@ -507,11 +531,15 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-rose-500" />
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-              แจ้งเตือนสินค้าถึงจุดสั่งซื้อซ้ำ (Reorder Point Alerts - Action Required)
+              {isEn
+                ? 'Critical Reorder Point (ROP) Alerts'
+                : 'แจ้งเตือนสินค้าถึงจุดสั่งซื้อซ้ำ (Reorder Point Alerts - Action Required)'}
             </h3>
           </div>
           <span className="text-xs text-rose-600 font-bold">
-            {lowStockItems.length} รายการที่ต้องเปิด PO เติมสต็อก
+            {isEn
+              ? `${lowStockItems.length} items require replenishment PO`
+              : `${lowStockItems.length} รายการที่ต้องเปิด PO เติมสต็อก`}
           </span>
         </div>
 
@@ -523,13 +551,13 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
               }`}
             >
               <tr>
-                <th className="py-3 px-3.5 font-semibold">รหัสสินค้า / SKU</th>
-                <th className="py-3 px-3 font-semibold">ชื่อสินค้า</th>
-                <th className="py-3 px-3 font-semibold">หมวดหมู่</th>
-                <th className="py-3 px-3 font-semibold text-right">สต็อกปัจจุบัน</th>
-                <th className="py-3 px-3 font-semibold text-right">จุดสั่งซื้อซ้ำ (ROP)</th>
-                <th className="py-3 px-3 font-semibold text-right">แนะนำสั่งซื้อ</th>
-                <th className="py-3 px-3.5 font-semibold text-center">การดำเนินการ</th>
+                <th className="py-3 px-3.5 font-semibold">{isEn ? 'SKU / Code' : 'รหัสสินค้า / SKU'}</th>
+                <th className="py-3 px-3 font-semibold">{isEn ? 'Product Name' : 'ชื่อสินค้า'}</th>
+                <th className="py-3 px-3 font-semibold">{isEn ? 'Category' : 'หมวดหมู่'}</th>
+                <th className="py-3 px-3 font-semibold text-right">{isEn ? 'Current Stock' : 'สต็อกปัจจุบัน'}</th>
+                <th className="py-3 px-3 font-semibold text-right">{isEn ? 'Reorder Point (ROP)' : 'จุดสั่งซื้อซ้ำ (ROP)'}</th>
+                <th className="py-3 px-3 font-semibold text-right">{isEn ? 'Suggested Order' : 'แนะนำสั่งซื้อ'}</th>
+                <th className="py-3 px-3.5 font-semibold text-center">{isEn ? 'Actions' : 'การดำเนินการ'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -552,10 +580,10 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
                   <td className="py-3 px-3.5 text-center">
                     <button
                       onClick={onNavigateToPO}
-                      className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] inline-flex items-center gap-1 shadow-xs transition"
+                      className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] inline-flex items-center gap-1 shadow-xs transition cursor-pointer"
                     >
                       <ShoppingCart className="w-3.5 h-3.5" />
-                      <span>เปิดใบสั่งซื้อ (PO)</span>
+                      <span>{isEn ? 'Create PO' : 'เปิดใบสั่งซื้อ (PO)'}</span>
                     </button>
                   </td>
                 </tr>

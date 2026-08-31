@@ -8,23 +8,28 @@ export const masterDataService = {
   },
 
   createCategory: async (data: { name: string; code?: string; description?: string }) => {
-    const response = await apiClient.post('/categories', data);
+    const payload: any = { name: data.name?.trim() };
+    if (data.code?.trim()) payload.code = data.code.trim();
+    if (data.description?.trim()) payload.description = data.description.trim();
+
+    const response = await apiClient.post('/categories', payload);
     return response.data?.data || response.data;
   },
 
   updateCategory: async (id: string, data: { name?: string; code?: string; description?: string; isActive?: boolean }) => {
-    const response = await apiClient.patch(`/categories/${id}`, data);
+    const payload: any = {};
+    if (data.name !== undefined) payload.name = data.name.trim();
+    if (data.code?.trim()) payload.code = data.code.trim();
+    if (data.description?.trim()) payload.description = data.description.trim();
+    if (data.isActive !== undefined) payload.isActive = data.isActive;
+
+    const response = await apiClient.patch(`/categories/${id}`, payload);
     return response.data?.data || response.data;
   },
 
   deleteCategory: async (id: string) => {
-    try {
-      const response = await apiClient.post(`/categories/${id}/deactivate`);
-      return response.data?.data || response.data;
-    } catch {
-      const response = await apiClient.delete(`/categories/${id}`);
-      return response.data?.data || response.data;
-    }
+    const response = await apiClient.delete(`/categories/${id}`);
+    return response.data?.data || response.data;
   },
 
   // Brands
@@ -34,23 +39,28 @@ export const masterDataService = {
   },
 
   createBrand: async (data: { name: string; code?: string; description?: string }) => {
-    const response = await apiClient.post('/brands', data);
+    const payload: any = { name: data.name?.trim() };
+    if (data.code?.trim()) payload.code = data.code.trim();
+    if (data.description?.trim()) payload.description = data.description.trim();
+
+    const response = await apiClient.post('/brands', payload);
     return response.data?.data || response.data;
   },
 
   updateBrand: async (id: string, data: { name?: string; code?: string; description?: string; isActive?: boolean }) => {
-    const response = await apiClient.patch(`/brands/${id}`, data);
+    const payload: any = {};
+    if (data.name !== undefined) payload.name = data.name.trim();
+    if (data.code?.trim()) payload.code = data.code.trim();
+    if (data.description?.trim()) payload.description = data.description.trim();
+    if (data.isActive !== undefined) payload.isActive = data.isActive;
+
+    const response = await apiClient.patch(`/brands/${id}`, payload);
     return response.data?.data || response.data;
   },
 
   deleteBrand: async (id: string) => {
-    try {
-      const response = await apiClient.post(`/brands/${id}/deactivate`);
-      return response.data?.data || response.data;
-    } catch {
-      const response = await apiClient.delete(`/brands/${id}`);
-      return response.data?.data || response.data;
-    }
+    const response = await apiClient.delete(`/brands/${id}`);
+    return response.data?.data || response.data;
   },
 
   // Companies (1 Tenant : N Companies)
@@ -70,7 +80,19 @@ export const masterDataService = {
     address?: string;
     isHeadquarter?: boolean;
   }) => {
-    const response = await apiClient.post('/companies', data);
+    const payload: any = {
+      name: data.name?.trim(),
+      branchCode: data.branchCode?.trim() || '00000',
+      isHeadquarter: Boolean(data.isHeadquarter),
+    };
+    if (data.code?.trim()) payload.code = data.code.trim();
+    if (data.taxId?.trim()) payload.taxId = data.taxId.trim();
+    if (data.branchName?.trim()) payload.branchName = data.branchName.trim();
+    if (data.phone?.trim()) payload.phone = data.phone.trim();
+    if (data.email?.trim()) payload.email = data.email.trim();
+    if (data.address?.trim()) payload.address = data.address.trim();
+
+    const response = await apiClient.post('/companies', payload);
     return response.data?.data || response.data;
   },
 
@@ -86,10 +108,20 @@ export const masterDataService = {
       email?: string;
       address?: string;
       isHeadquarter?: boolean;
-      isActive?: boolean;
     }
   ) => {
-    const response = await apiClient.patch(`/companies/${id}`, data);
+    const payload: any = {};
+    if (data.name !== undefined) payload.name = data.name.trim();
+    if (data.code?.trim()) payload.code = data.code.trim();
+    if (data.taxId?.trim()) payload.taxId = data.taxId.trim();
+    if (data.branchCode !== undefined) payload.branchCode = data.branchCode.trim() || '00000';
+    if (data.branchName?.trim()) payload.branchName = data.branchName.trim();
+    if (data.phone?.trim()) payload.phone = data.phone.trim();
+    if (data.email?.trim()) payload.email = data.email.trim();
+    if (data.address?.trim()) payload.address = data.address.trim();
+    if (data.isHeadquarter !== undefined) payload.isHeadquarter = data.isHeadquarter;
+
+    const response = await apiClient.put(`/companies/${id}`, payload);
     return response.data?.data || response.data;
   },
 
@@ -105,23 +137,32 @@ export const masterDataService = {
   },
 
   createUnit: async (data: { code: string; name: string; type?: string; description?: string }) => {
-    const response = await apiClient.post('/units', data);
+    const payload: any = {
+      code: data.code.trim(),
+      name: data.name.trim(),
+    };
+    if (data.type?.trim()) payload.type = data.type.trim();
+    if (data.description?.trim()) payload.description = data.description.trim();
+
+    const response = await apiClient.post('/units', payload);
     return response.data?.data || response.data;
   },
 
   updateUnit: async (id: string, data: { code?: string; name?: string; type?: string; description?: string; isActive?: boolean }) => {
-    const response = await apiClient.patch(`/units/${id}`, data);
+    const payload: any = {};
+    if (data.code !== undefined) payload.code = data.code.trim();
+    if (data.name !== undefined) payload.name = data.name.trim();
+    if (data.type?.trim()) payload.type = data.type.trim();
+    if (data.description?.trim()) payload.description = data.description.trim();
+    if (data.isActive !== undefined) payload.isActive = data.isActive;
+
+    const response = await apiClient.patch(`/units/${id}`, payload);
     return response.data?.data || response.data;
   },
 
   deleteUnit: async (id: string) => {
-    try {
-      const response = await apiClient.post(`/units/${id}/deactivate`);
-      return response.data?.data || response.data;
-    } catch {
-      const response = await apiClient.delete(`/units/${id}`);
-      return response.data?.data || response.data;
-    }
+    const response = await apiClient.delete(`/units/${id}`);
+    return response.data?.data || response.data;
   },
 
   // Suppliers
@@ -131,23 +172,38 @@ export const masterDataService = {
   },
 
   createSupplier: async (data: { name: string; code?: string; contactPerson?: string; phone?: string; email?: string; taxId?: string; address?: string }) => {
-    const response = await apiClient.post('/suppliers', data);
+    const payload: any = {
+      name: data.name?.trim(),
+    };
+    if (data.code?.trim()) payload.code = data.code.trim();
+    if (data.contactPerson?.trim()) payload.contactPerson = data.contactPerson.trim();
+    if (data.phone?.trim()) payload.phone = data.phone.trim();
+    if (data.email?.trim()) payload.email = data.email.trim();
+    if (data.taxId?.trim()) payload.taxId = data.taxId.trim();
+    if (data.address?.trim()) payload.address = data.address.trim();
+
+    const response = await apiClient.post('/suppliers', payload);
     return response.data?.data || response.data;
   },
 
   updateSupplier: async (id: string, data: { name?: string; code?: string; contactPerson?: string; phone?: string; email?: string; taxId?: string; address?: string; isActive?: boolean }) => {
-    const response = await apiClient.patch(`/suppliers/${id}`, data);
+    const payload: any = {};
+    if (data.name !== undefined) payload.name = data.name.trim();
+    if (data.code?.trim()) payload.code = data.code.trim();
+    if (data.contactPerson?.trim()) payload.contactPerson = data.contactPerson.trim();
+    if (data.phone?.trim()) payload.phone = data.phone.trim();
+    if (data.email?.trim()) payload.email = data.email.trim();
+    if (data.taxId?.trim()) payload.taxId = data.taxId.trim();
+    if (data.address?.trim()) payload.address = data.address.trim();
+    if (data.isActive !== undefined) payload.isActive = data.isActive;
+
+    const response = await apiClient.patch(`/suppliers/${id}`, payload);
     return response.data?.data || response.data;
   },
 
   deleteSupplier: async (id: string) => {
-    try {
-      const response = await apiClient.post(`/suppliers/${id}/deactivate`);
-      return response.data?.data || response.data;
-    } catch {
-      const response = await apiClient.delete(`/suppliers/${id}`);
-      return response.data?.data || response.data;
-    }
+    const response = await apiClient.delete(`/suppliers/${id}`);
+    return response.data?.data || response.data;
   },
 
   // Barcode Symbologies
@@ -175,27 +231,24 @@ export const masterDataService = {
   },
 
   createUser: async (data: { email: string; fullName: string; role: string; password?: string }) => {
-    const response = await apiClient.post('/users', data);
+    const payload: any = {
+      email: data.email.trim(),
+      fullName: data.fullName.trim(),
+      role: data.role,
+    };
+    if (data.password?.trim()) payload.password = data.password.trim();
+
+    const response = await apiClient.post('/users', payload);
     return response.data?.data || response.data;
   },
 
-  updateUser: async (id: string, data: { fullName?: string; role?: string; isActive?: boolean }) => {
-    const response = await apiClient.patch(`/users/${id}`, data);
-    return response.data?.data || response.data;
-  },
-
-  updateUserRole: async (id: string, data: { role: string; isActive?: boolean }) => {
-    const response = await apiClient.patch(`/users/${id}`, data);
+  updateUserRole: async (id: string, data: { role: string }) => {
+    const response = await apiClient.patch(`/users/${id}/role`, data);
     return response.data?.data || response.data;
   },
 
   deleteUser: async (id: string) => {
-    try {
-      const response = await apiClient.post(`/users/${id}/deactivate`);
-      return response.data?.data || response.data;
-    } catch {
-      const response = await apiClient.delete(`/users/${id}`);
-      return response.data?.data || response.data;
-    }
+    const response = await apiClient.delete(`/users/${id}`);
+    return response.data?.data || response.data;
   },
 };

@@ -1,10 +1,11 @@
 import React from 'react';
-import { Plus, Edit2, Trash2, CheckCircle2, XCircle, Eye } from 'lucide-react';
-import { ThemeMode } from '../../../types';
+import { Plus, Edit2, Trash2, CheckCircle2, XCircle, Eye, Scale } from 'lucide-react';
+import { ThemeMode, Language } from '../../../types';
 import { UnitItem } from '../hooks/useMasterDataLoader';
 
 interface UnitManagementTabProps {
   theme: ThemeMode;
+  lang?: Language;
   t: any;
   unitsList: UnitItem[];
   onOpenAddModal: () => void;
@@ -14,12 +15,14 @@ interface UnitManagementTabProps {
 
 export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
   theme,
+  lang = 'th',
   t,
   unitsList = [],
   onOpenAddModal,
   onOpenEditUnit,
   onDeleteUnit,
 }) => {
+  const isEn = lang === 'en';
   const safeUnits = Array.isArray(unitsList) ? unitsList : [];
   return (
     <div className="space-y-6">
@@ -32,18 +35,21 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
       >
         <div className="mb-4">
           <h3
-            className={`font-semibold text-base ${
+            className={`font-semibold text-base flex items-center gap-2 ${
               theme === 'dark' ? 'text-slate-50' : 'text-slate-900'
             }`}
           >
-            {t.unitsTitle} (UOM Master)
+            <Scale className="w-5 h-5 text-cyan-600" />
+            {isEn ? 'Units of Measure (UOM Master)' : `${t.unitsTitle} (UOM Master)`} ({safeUnits.length})
           </h3>
           <p
             className={`text-xs font-normal mt-1 ${
               theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
             }`}
           >
-            {t.unitsSubtitle}
+            {isEn
+              ? 'Define base packaging units, volume conversions, and measurement standards'
+              : t.unitsSubtitle}
           </p>
         </div>
 
@@ -57,10 +63,10 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
                     : 'border-slate-200 text-slate-700 bg-slate-100'
                 }`}
               >
-                <th className="p-3">รหัสหน่วย (UOM Code)</th>
-                <th className="p-3">ชื่อหน่วยนับ (Unit Name)</th>
-                <th className="p-3">สถานะ (Status)</th>
-                <th className="p-3 text-right">{t.actions}</th>
+                <th className="p-3">{isEn ? 'UOM Code' : 'รหัสหน่วย (UOM Code)'}</th>
+                <th className="p-3">{isEn ? 'Unit Name' : 'ชื่อหน่วยนับ (Unit Name)'}</th>
+                <th className="p-3">{isEn ? 'Status' : 'สถานะ (Status)'}</th>
+                <th className="p-3 text-right">{isEn ? 'Actions' : t.actions}</th>
               </tr>
             </thead>
             <tbody
@@ -69,7 +75,7 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
               {safeUnits.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="py-8 text-center text-zinc-400 text-xs font-medium">
-                    ยังไม่มีข้อมูลหน่วยนับสินค้าในระบบ
+                    {isEn ? 'No units of measure found in system' : 'ยังไม่มีข้อมูลหน่วยนับสินค้าในระบบ'}
                   </td>
                 </tr>
               ) : (
@@ -82,8 +88,8 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
                     <span
                       className={`px-2.5 py-1 rounded-lg font-mono font-bold text-xs border ${
                         theme === 'dark'
-                          ? 'bg-blue-950/60 text-blue-300 border-blue-800/60'
-                          : 'bg-blue-50 text-blue-700 border-blue-200'
+                          ? 'bg-cyan-950/60 text-cyan-300 border-cyan-800/60'
+                          : 'bg-cyan-50 text-cyan-700 border-cyan-200'
                       }`}
                     >
                       {unit.code}
@@ -123,7 +129,7 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
                           ? 'text-slate-400 hover:text-blue-400 hover:bg-slate-800'
                           : 'text-slate-500 hover:text-blue-600 hover:bg-slate-100'
                       }`}
-                      title="ดูรายละเอียดหน่วยนับ (View Detail)"
+                      title={isEn ? 'View Unit Details' : 'ดูรายละเอียดหน่วยนับ (View Detail)'}
                     >
                       <Eye className="w-4 h-4" />
                     </button>
@@ -134,7 +140,7 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
                           ? 'text-slate-400 hover:text-blue-400 hover:bg-slate-800'
                           : 'text-slate-500 hover:text-blue-600 hover:bg-slate-100'
                       }`}
-                      title="แก้ไขหน่วยนับ (Edit UOM)"
+                      title={isEn ? 'Edit UOM' : 'แก้ไขหน่วยนับ (Edit UOM)'}
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
@@ -145,7 +151,7 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
                           ? 'text-slate-400 hover:text-rose-400 hover:bg-slate-800'
                           : 'text-slate-500 hover:text-rose-600 hover:bg-slate-100'
                       }`}
-                      title="ลบหน่วยนับ (Delete UOM)"
+                      title={isEn ? 'Delete UOM' : 'ลบหน่วยนับ (Delete UOM)'}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

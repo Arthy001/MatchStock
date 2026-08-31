@@ -1,10 +1,11 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Truck, X, CheckCircle2, Edit2, Eye } from 'lucide-react';
-import { ThemeMode, Supplier } from '../../../types';
+import { ThemeMode, Language, Supplier } from '../../../types';
 
 interface EditSupplierModalProps {
   theme: ThemeMode;
+  lang?: Language;
   t: any;
   supplier: Supplier | null;
   isViewOnly?: boolean;
@@ -32,6 +33,7 @@ interface EditSupplierModalProps {
 
 export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
   theme,
+  lang = 'th',
   t,
   supplier,
   isViewOnly = false,
@@ -57,6 +59,7 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
   setEditSupIsActive,
 }) => {
   if (!supplier) return null;
+  const isEn = lang === 'en';
 
   const disabledCls = isViewOnly
     ? 'bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 cursor-not-allowed'
@@ -84,21 +87,21 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tracking-tight">
                   {isViewOnly
-                    ? 'รายละเอียดผู้จัดจำหน่าย'
-                    : 'แก้ไขข้อมูลผู้จัดจำหน่าย'}
+                    ? (isEn ? 'Supplier Details' : 'รายละเอียดผู้จัดจำหน่าย')
+                    : (isEn ? 'Edit Supplier Profile' : 'แก้ไขข้อมูลผู้จัดจำหน่าย')}
                 </h3>
                 <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border shadow-2xs ${
                   isViewOnly
                     ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                     : 'bg-orange-50 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 border-orange-200 dark:border-orange-800'
                 }`}>
-                  {isViewOnly ? 'ดูข้อมูล' : 'แก้ไขข้อมูล'}
+                  {isViewOnly ? (isEn ? 'View Only' : 'ดูข้อมูล') : (isEn ? 'Edit' : 'แก้ไขข้อมูล')}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5 truncate">
                 {isViewOnly
-                  ? 'ดูข้อมูลคู่ค้า ผู้ติดต่อ และเลขประจำตัวผู้เสียภาษี'
-                  : 'แก้ไขข้อมูลคู่ค้า เงื่อนไขการค้า และข้อมูลการติดต่อ'}
+                  ? (isEn ? 'Inspect vendor credentials, contacts, and tax info' : 'ดูข้อมูลคู่ค้า ผู้ติดต่อ และเลขประจำตัวผู้เสียภาษี')
+                  : (isEn ? 'Update vendor profile, payment terms, and contact info' : 'แก้ไขข้อมูลคู่ค้า เงื่อนไขการค้า และข้อมูลการติดต่อ')}
               </p>
             </div>
           </div>
@@ -106,7 +109,7 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
             type="button"
             onClick={onClose}
             className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center transition shrink-0 cursor-pointer"
-            title="ปิดหน้าต่าง (Close)"
+            title={isEn ? 'Close' : 'ปิดหน้าต่าง (Close)'}
           >
             <X className="w-5 h-5" />
           </button>
@@ -148,7 +151,7 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                ผู้ติดต่อ (Contact Person) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+                {isEn ? 'Contact Person' : 'ผู้ติดต่อ (Contact Person)'} <span className="text-slate-400 font-normal text-xs">({isEn ? 'Optional' : 'ไม่บังคับ'})</span>
               </label>
               <input
                 type="text"
@@ -160,7 +163,7 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
             </div>
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                เบอร์โทรศัพท์ (Phone) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+                {isEn ? 'Phone' : 'เบอร์โทรศัพท์ (Phone)'} <span className="text-slate-400 font-normal text-xs">({isEn ? 'Optional' : 'ไม่บังคับ'})</span>
               </label>
               <input
                 type="text"
@@ -175,7 +178,7 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                อีเมล (Email) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+                {isEn ? 'Email' : 'อีเมล (Email)'} <span className="text-slate-400 font-normal text-xs">({isEn ? 'Optional' : 'ไม่บังคับ'})</span>
               </label>
               <input
                 type="email"
@@ -187,7 +190,7 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
             </div>
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                เลขผู้เสียภาษี (Tax ID) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+                {isEn ? 'Tax ID' : 'เลขผู้เสียภาษี (Tax ID)'} <span className="text-slate-400 font-normal text-xs">({isEn ? 'Optional' : 'ไม่บังคับ'})</span>
               </label>
               <input
                 type="text"
@@ -201,7 +204,7 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
 
           <div>
             <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-              ที่อยู่ (Address) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+              {isEn ? 'Address' : 'ที่อยู่ (Address)'} <span className="text-slate-400 font-normal text-xs">({isEn ? 'Optional' : 'ไม่บังคับ'})</span>
             </label>
             <textarea
               rows={2}
@@ -216,10 +219,12 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
           <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
             <div>
               <span className="block font-semibold text-[13px] text-slate-800 dark:text-slate-200">
-                สถานะการใช้งาน (Active Status)
+                {isEn ? 'Active Status' : 'สถานะการใช้งาน (Active Status)'}
               </span>
               <span className="text-xs text-slate-500">
-                {editSupIsActive ? 'เปิดใช้งาน (Active) - แสดงในตัวเลือกผู้จัดจำหน่าย' : 'ปิดใช้งาน (Inactive) - ซ่อนจากรายการเลือก'}
+                {editSupIsActive
+                  ? (isEn ? 'Active - Visible in supplier directory' : 'เปิดใช้งาน (Active) - แสดงในตัวเลือกผู้จัดจำหน่าย')
+                  : (isEn ? 'Inactive - Hidden from directory' : 'ปิดใช้งาน (Inactive) - ซ่อนจากรายการเลือก')}
               </span>
             </div>
             <button
@@ -255,7 +260,7 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
                     className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md shadow-blue-600/30 transition flex items-center gap-1.5 cursor-pointer"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
-                    <span>แก้ไขข้อมูล</span>
+                    <span>{isEn ? 'Edit Details' : 'แก้ไขข้อมูล'}</span>
                   </button>
                 )}
               </>
@@ -274,7 +279,7 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
                   className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>{isSaving ? 'กำลังบันทึก...' : t.save}</span>
+                  <span>{isSaving ? (isEn ? 'Saving...' : 'กำลังบันทึก...') : t.save}</span>
                 </button>
               </>
             )}

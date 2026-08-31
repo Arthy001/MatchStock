@@ -1,9 +1,10 @@
 import React from 'react';
 import { Plus, Edit2, Trash2, CheckCircle2, XCircle, Layers, Eye } from 'lucide-react';
-import { ThemeMode, CategoryItem } from '../../../types';
+import { ThemeMode, Language, CategoryItem } from '../../../types';
 
 interface CategoryManagementTabProps {
   theme: ThemeMode;
+  lang?: Language;
   t: any;
   categoriesList: CategoryItem[];
   onOpenAddModal: () => void;
@@ -13,12 +14,14 @@ interface CategoryManagementTabProps {
 
 export const CategoryManagementTab: React.FC<CategoryManagementTabProps> = ({
   theme,
+  lang = 'th',
   t,
   categoriesList = [],
   onOpenAddModal,
   onOpenEditCategory,
   onDeleteCategory,
 }) => {
+  const isEn = lang === 'en';
   const safeCategories = Array.isArray(categoriesList) ? categoriesList : [];
 
   return (
@@ -27,10 +30,12 @@ export const CategoryManagementTab: React.FC<CategoryManagementTabProps> = ({
       <div>
         <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
           <Layers className="w-5 h-5 text-blue-600" />
-          หมวดหมู่สินค้าทั้งหมด ({safeCategories.length})
+          {isEn ? 'All Product Categories' : 'หมวดหมู่สินค้าทั้งหมด'} ({safeCategories.length})
         </h3>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          จัดการโครงสร้างหมวดหมู่เพื่อจัดระเบียบสต็อกและการออกรายงาน
+          {isEn
+            ? 'Manage product category hierarchy for inventory organization and reporting'
+            : 'จัดการโครงสร้างหมวดหมู่เพื่อจัดระเบียบสต็อกและการออกรายงาน'}
         </p>
       </div>
 
@@ -53,11 +58,11 @@ export const CategoryManagementTab: React.FC<CategoryManagementTabProps> = ({
                 }`}
               >
                 <th className="p-3 w-12 text-center">#</th>
-                <th className="p-3">รหัสหมวดหมู่ (Code)</th>
-                <th className="p-3">ชื่อหมวดหมู่ (Category Name)</th>
-                <th className="p-3">คำอธิบาย (Description)</th>
-                <th className="p-3">สถานะ (Status)</th>
-                <th className="p-3 text-right">จัดการ (Actions)</th>
+                <th className="p-3">{isEn ? 'Category Code' : 'รหัสหมวดหมู่ (Code)'}</th>
+                <th className="p-3">{isEn ? 'Category Name' : 'ชื่อหมวดหมู่ (Category Name)'}</th>
+                <th className="p-3">{isEn ? 'Description' : 'คำอธิบาย (Description)'}</th>
+                <th className="p-3">{isEn ? 'Status' : 'สถานะ (Status)'}</th>
+                <th className="p-3 text-right">{isEn ? 'Actions' : 'จัดการ (Actions)'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -65,7 +70,7 @@ export const CategoryManagementTab: React.FC<CategoryManagementTabProps> = ({
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-slate-400">
                     <Layers className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                    ไม่พบข้อมูลหมวดหมู่สินค้า
+                    {isEn ? 'No product categories found' : 'ไม่พบข้อมูลหมวดหมู่สินค้า'}
                   </td>
                 </tr>
               ) : (
@@ -125,7 +130,7 @@ export const CategoryManagementTab: React.FC<CategoryManagementTabProps> = ({
                             ? 'text-slate-400 hover:text-blue-400 hover:bg-slate-800'
                             : 'text-slate-500 hover:text-blue-600 hover:bg-slate-100'
                         }`}
-                        title="ดูรายละเอียดหมวดหมู่ (View Detail)"
+                        title={isEn ? 'View Category Details' : 'ดูรายละเอียดหมวดหมู่ (View Detail)'}
                       >
                         <Eye className="w-4 h-4" />
                       </button>
@@ -136,7 +141,7 @@ export const CategoryManagementTab: React.FC<CategoryManagementTabProps> = ({
                             ? 'text-slate-400 hover:text-blue-400 hover:bg-slate-800'
                             : 'text-slate-500 hover:text-blue-600 hover:bg-slate-100'
                         }`}
-                        title="แก้ไขหมวดหมู่ (Edit Category)"
+                        title={isEn ? 'Edit Category' : 'แก้ไขหมวดหมู่ (Edit Category)'}
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -147,7 +152,7 @@ export const CategoryManagementTab: React.FC<CategoryManagementTabProps> = ({
                             ? 'text-slate-400 hover:text-rose-400 hover:bg-slate-800'
                             : 'text-slate-500 hover:text-rose-600 hover:bg-slate-100'
                         }`}
-                        title="ลบหมวดหมู่ (Delete Category)"
+                        title={isEn ? 'Delete Category' : 'ลบหมวดหมู่ (Delete Category)'}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

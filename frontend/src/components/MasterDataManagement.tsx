@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Plus, Download, CheckCircle2, RefreshCw, Command } from 'lucide-react';
+import { Search, Plus, Download, CheckCircle2, AlertCircle, RefreshCw, Command } from 'lucide-react';
 import { ThemeMode, Language, MasterDataSubTab } from '../types';
 
 // Custom Master Data Hooks (Clean Architecture)
@@ -29,6 +29,7 @@ import { EditWarehouseBinModal } from './master-data/modals/EditWarehouseBinModa
 import { EditUnitModal } from './master-data/modals/EditUnitModal';
 import { AddMasterDataModal } from './master-data/modals/AddMasterDataModal';
 import { BarcodeModal } from './master-data/modals/BarcodeModal';
+import { ConfirmDeleteModal } from './master-data/modals/ConfirmDeleteModal';
 
 interface MasterDataProps {
   theme: ThemeMode;
@@ -105,18 +106,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
     loadTabData(activeSubTab);
   }, [activeSubTab, loadTabData]);
 
-  // 2. Product Edit Drawer Hook
-  const productDrawer = useProductDrawer({
-    productsList,
-    setProductsList,
-    categoriesList,
-    brandsList,
-    unitsList,
-    suppliersList,
-    showToast,
-  });
-
-  // 3. Modals & Operation Handlers Hook (Company, Supplier, Unit, Warehouse, Category, Brand, RBAC)
+  // 2. Modals & Operation Handlers Hook (Company, Supplier, Unit, Warehouse, Category, Brand, RBAC)
   const modals = useMasterDataModals({
     companiesList,
     setCompaniesList,
@@ -135,12 +125,25 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
     showToast,
   });
 
+  // 3. Product Edit Drawer Hook
+  const productDrawer = useProductDrawer({
+    productsList,
+    setProductsList,
+    categoriesList,
+    brandsList,
+    unitsList,
+    suppliersList,
+    showToast,
+    onOpenConfirmDelete: (data) => modals.setDeleteConfirmData(data),
+  });
+
   // 4. Unified Add Modal Form Hook
   const addForm = useAddMasterDataForm({
     activeSubTab,
     categoriesList,
     brandsList,
     unitsList,
+    companiesList,
     setProductsList,
     setCompaniesList,
     setSuppliersList,
@@ -249,13 +252,33 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2.5 border border-zinc-700 animate-in slide-in-from-bottom duration-200">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 dark:text-emerald-600 shrink-0" />
-          <span className="font-medium text-xs">{toastMessage}</span>
-        </div>
-      )}
+      {/* Toast Notification (Floating above all modals) */}
+      {toastMessage && (() => {
+        const isError =
+          toastMessage.includes('ข้อผิดพลาด') ||
+          toastMessage.includes('ไม่สำเร็จ') ||
+          toastMessage.includes('ไม่สามารถ') ||
+          toastMessage.includes('ล้มเหลว') ||
+          toastMessage.toLowerCase().includes('error') ||
+          toastMessage.toLowerCase().includes('failed');
+
+        return (
+          <div
+            className={`fixed top-6 right-6 z-[99999] px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border backdrop-blur-md animate-in slide-in-from-top duration-200 max-w-md ${
+              isError
+                ? 'bg-rose-950/95 dark:bg-rose-900/95 text-rose-100 border-rose-600/80 shadow-rose-950/40'
+                : 'bg-slate-900/95 dark:bg-slate-800/95 text-white border-slate-700/80 shadow-slate-950/40'
+            }`}
+          >
+            {isError ? (
+              <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
+            ) : (
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            )}
+            <span className="font-semibold text-xs md:text-sm leading-snug">{toastMessage}</span>
+          </div>
+        );
+      })()}
 
       {/* Enterprise Title & Actions Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-zinc-200/60 dark:border-zinc-800/60">
@@ -338,6 +361,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
       {activeSubTab === 'products' && (
         <ProductCatalogTab
           theme={theme}
+          lang={lang}
           t={t}
           products={filteredProducts}
           onOpenDrawer={productDrawer.openDrawerForProduct}
@@ -349,6 +373,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
       {activeSubTab === 'categories' && (
         <CategoryManagementTab
           theme={theme}
+          lang={lang}
           t={t}
           categoriesList={categoriesList}
           onOpenAddModal={() => addForm.setIsAddModalOpen(true)}
@@ -360,6 +385,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
       {activeSubTab === 'brands' && (
         <BrandManagementTab
           theme={theme}
+          lang={lang}
           t={t}
           brandsList={brandsList}
           onOpenAddModal={() => addForm.setIsAddModalOpen(true)}
@@ -371,6 +397,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
       {activeSubTab === 'companies' && (
         <CompanyManagementTab
           theme={theme}
+          lang={lang}
           searchQuery={searchQuery}
           companies={companiesList}
           onOpenEdit={modals.openEditCompany}
@@ -381,6 +408,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
       {activeSubTab === 'rbac' && (
         <RbacAccessTab
           theme={theme}
+          lang={lang}
           t={t}
           usersList={usersList}
           onChangeUserRole={modals.handleChangeUserRole}
@@ -391,6 +419,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
       {activeSubTab === 'units' && (
         <UnitManagementTab
           theme={theme}
+          lang={lang}
           t={t}
           unitsList={unitsList}
           onOpenAddModal={() => addForm.setIsAddModalOpen(true)}
@@ -404,6 +433,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
       {activeSubTab === 'warehouses' && (
         <WarehouseBinTab
           theme={theme}
+          lang={lang}
           t={t}
           binsList={binsList}
           onOpenEditBin={modals.openEditBin}
@@ -414,6 +444,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
       {activeSubTab === 'suppliers' && (
         <SupplierManagementTab
           theme={theme}
+          lang={lang}
           t={t}
           suppliersList={suppliersList}
           onOpenEditSupplier={modals.openEditSupplier}
@@ -424,6 +455,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
       {/* MODALS & DRAWERS */}
       <ProductDrawer
         theme={theme}
+        lang={lang}
         t={t}
         product={productDrawer.drawerProduct}
         categoriesList={categoriesList}
@@ -488,6 +520,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
 
       <EditCompanyModal
         theme={theme}
+        lang={lang}
         t={t}
         company={modals.editingCompany}
         isViewOnly={modals.isViewOnly}
@@ -513,12 +546,11 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         setEditCompAddress={modals.setEditCompAddress}
         editCompIsHq={modals.editCompIsHq}
         setEditCompIsHq={modals.setEditCompIsHq}
-        editCompIsActive={modals.editCompIsActive}
-        setEditCompIsActive={modals.setEditCompIsActive}
       />
 
       <EditSupplierModal
         theme={theme}
+        lang={lang}
         t={t}
         supplier={modals.editingSupplier}
         isViewOnly={modals.isViewOnly}
@@ -546,6 +578,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
 
       <EditWarehouseBinModal
         theme={theme}
+        lang={lang}
         t={t}
         bin={modals.editingBin}
         isViewOnly={modals.isViewOnly}
@@ -569,6 +602,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
 
       <EditUnitModal
         theme={theme}
+        lang={lang}
         t={t}
         unit={modals.editingUnit}
         isViewOnly={modals.isViewOnly}
@@ -586,6 +620,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
 
       <EditCategoryModal
         theme={theme}
+        lang={lang}
         t={t}
         category={modals.editingCategory}
         isViewOnly={modals.isViewOnly}
@@ -605,6 +640,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
 
       <EditBrandModal
         theme={theme}
+        lang={lang}
         t={t}
         brand={modals.editingBrand}
         isViewOnly={modals.isViewOnly}
@@ -624,17 +660,21 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
 
       <BarcodeModal
         theme={theme}
+        lang={lang}
         product={modals.selectedProductForBarcode}
         onClose={() => modals.setSelectedProductForBarcode(null)}
       />
 
       <AddMasterDataModal
         theme={theme}
+        lang={lang}
         t={t}
         isOpen={addForm.isAddModalOpen}
         onClose={() => addForm.setIsAddModalOpen(false)}
         activeSubTab={activeSubTab}
         onSubmit={addForm.handleCreateNewItem}
+        errors={addForm.formErrors}
+        clearError={addForm.clearError}
         categoriesList={categoriesList}
         brandsList={brandsList}
         unitsList={unitsList}
@@ -747,6 +787,15 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         setAddBrdName={addForm.setAddBrdName}
         addBrdDescription={addForm.addBrdDescription}
         setAddBrdDescription={addForm.setAddBrdDescription}
+      />
+
+      <ConfirmDeleteModal
+        theme={theme}
+        lang={lang}
+        isOpen={Boolean(modals.deleteConfirmData)}
+        isDeleting={modals.isDeleting}
+        data={modals.deleteConfirmData}
+        onClose={() => modals.setDeleteConfirmData(null)}
       />
     </div>
   );

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import {
   ThemeMode,
+  Language,
   MasterDataSubTab,
   UserRole,
   CategoryItem,
@@ -37,6 +38,7 @@ import {
 
 interface AddMasterDataModalProps {
   theme: ThemeMode;
+  lang?: Language;
   t: Record<string, string>;
   isOpen: boolean;
   onClose: () => void;
@@ -170,10 +172,15 @@ interface AddMasterDataModalProps {
   setAddBrdName?: (val: string) => void;
   addBrdDescription?: string;
   setAddBrdDescription?: (val: string) => void;
+
+  // Validation
+  errors?: Record<string, string>;
+  clearError?: (field: string) => void;
 }
 
 export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
   theme,
+  lang = 'th',
   t,
   isOpen,
   onClose,
@@ -185,6 +192,8 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
   suppliersList = [],
   barcodeSymbologiesList = [],
   taxTypesList = [],
+  errors,
+  clearError,
   addName,
   setAddName,
   addCode,
@@ -293,6 +302,7 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
+  const isEn = lang === 'en';
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] overflow-hidden bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
@@ -313,72 +323,72 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
               case 'companies':
                 return {
                   icon: Building2,
-                  title: 'เพิ่มบริษัทในเครือ',
-                  subtitle: 'กำหนดข้อมูลนิติบุคคล สาขา และเลขประจำตัวผู้เสียภาษี',
-                  badge: 'บริษัทใหม่',
+                  title: isEn ? 'Add Subsidiary Company' : 'เพิ่มบริษัทในเครือ',
+                  subtitle: isEn ? 'Define entity, branch code, and Tax ID' : 'กำหนดข้อมูลนิติบุคคล สาขา และเลขประจำตัวผู้เสียภาษี',
+                  badge: isEn ? 'New Company' : 'บริษัทใหม่',
                   iconColor: 'text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20',
                   badgeColor: 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800',
                 };
               case 'products':
                 return {
                   icon: Package,
-                  title: 'เพิ่มสินค้าใหม่',
-                  subtitle: 'บันทึกข้อมูลสินค้า SKU ขนาดมิติ และพารามิเตอร์คลัง',
-                  badge: 'สินค้าใหม่',
+                  title: isEn ? 'Add New Product' : 'เพิ่มสินค้าใหม่',
+                  subtitle: isEn ? 'Record product SKU, dimensions, and inventory controls' : 'บันทึกข้อมูลสินค้า SKU ขนาดมิติ และพารามิเตอร์คลัง',
+                  badge: isEn ? 'New Product' : 'สินค้าใหม่',
                   iconColor: 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border-indigo-500/20',
                   badgeColor: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
                 };
               case 'categories':
                 return {
                   icon: Layers,
-                  title: 'เพิ่มหมวดหมู่สินค้า',
-                  subtitle: 'สร้างหมวดหมู่สินค้าสำหรับจัดกลุ่มและคัดกรอง',
-                  badge: 'หมวดหมู่ใหม่',
+                  title: isEn ? 'Add Product Category' : 'เพิ่มหมวดหมู่สินค้า',
+                  subtitle: isEn ? 'Create category for grouping and filtration' : 'สร้างหมวดหมู่สินค้าสำหรับจัดกลุ่มและคัดกรอง',
+                  badge: isEn ? 'New Category' : 'หมวดหมู่ใหม่',
                   iconColor: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
                   badgeColor: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
                 };
               case 'brands':
                 return {
                   icon: Tag,
-                  title: 'เพิ่มแบรนด์สินค้า',
-                  subtitle: 'ลงทะเบียนยี่ห้อและเครื่องหมายการค้า',
-                  badge: 'แบรนด์ใหม่',
+                  title: isEn ? 'Add Brand' : 'เพิ่มแบรนด์สินค้า',
+                  subtitle: isEn ? 'Register brand names and trademarks' : 'ลงทะเบียนยี่ห้อและเครื่องหมายการค้า',
+                  badge: isEn ? 'New Brand' : 'แบรนด์ใหม่',
                   iconColor: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20',
                   badgeColor: 'bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800',
                 };
               case 'units':
                 return {
                   icon: Scale,
-                  title: 'เพิ่มหน่วยนับสินค้า',
-                  subtitle: 'กำหนดหน่วยนับหลัก หน่วยแปลง และขนาดมิติ CBM',
-                  badge: 'หน่วยนับใหม่',
+                  title: isEn ? 'Add Unit of Measure' : 'เพิ่มหน่วยนับสินค้า',
+                  subtitle: isEn ? 'Configure base UOM, conversions, and CBM volume' : 'กำหนดหน่วยนับหลัก หน่วยแปลง และขนาดมิติ CBM',
+                  badge: isEn ? 'New UOM' : 'หน่วยนับใหม่',
                   iconColor: 'text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
                   badgeColor: 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800',
                 };
               case 'warehouses':
                 return {
                   icon: Warehouse,
-                  title: 'เพิ่มคลังสินค้าและตำแหน่ง Bin',
-                  subtitle: 'กำหนดโครงสร้างคลัง โซนจัดเก็บ และขีดจำกัดความจุ',
-                  badge: 'คลัง/Bin ใหม่',
+                  title: isEn ? 'Add Warehouse & Bin' : 'เพิ่มคลังสินค้าและตำแหน่ง Bin',
+                  subtitle: isEn ? 'Define storage layout, picking zones, and max capacity' : 'กำหนดโครงสร้างคลัง โซนจัดเก็บ และขีดจำกัดความจุ',
+                  badge: isEn ? 'New Wh/Bin' : 'คลัง/Bin ใหม่',
                   iconColor: 'text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/20',
                   badgeColor: 'bg-purple-50 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200 dark:border-purple-800',
                 };
               case 'suppliers':
                 return {
                   icon: Truck,
-                  title: 'เพิ่มผู้จัดจำหน่าย',
-                  subtitle: 'บันทึกข้อมูลคู่ค้า เงื่อนไขการค้า และข้อมูลการติดต่อ',
-                  badge: 'คู่ค้าใหม่',
+                  title: isEn ? 'Add Supplier' : 'เพิ่มผู้จัดจำหน่าย',
+                  subtitle: isEn ? 'Record vendor profile, terms, and contact info' : 'บันทึกข้อมูลคู่ค้า เงื่อนไขการค้า และข้อมูลการติดต่อ',
+                  badge: isEn ? 'New Supplier' : 'คู่ค้าใหม่',
                   iconColor: 'text-orange-600 dark:text-orange-400 bg-orange-500/10 border-orange-500/20',
                   badgeColor: 'bg-orange-50 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 border-orange-200 dark:border-orange-800',
                 };
               case 'rbac':
                 return {
                   icon: ShieldCheck,
-                  title: 'เพิ่มผู้ใช้งานและสิทธิ์ (RBAC)',
-                  subtitle: 'สร้างบัญชีพนักงานและกำหนดสิทธิ์การเข้าถึงระบบ',
-                  badge: 'ผู้ใช้ใหม่',
+                  title: isEn ? 'Add User & Permissions (RBAC)' : 'เพิ่มผู้ใช้งานและสิทธิ์ (RBAC)',
+                  subtitle: isEn ? 'Create staff account and assign system access' : 'สร้างบัญชีพนักงานและกำหนดสิทธิ์การเข้าถึงระบบ',
+                  badge: isEn ? 'New User' : 'ผู้ใช้ใหม่',
                   iconColor: 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20',
                   badgeColor: 'bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800',
                 };
@@ -386,9 +396,9 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
               default:
                 return {
                   icon: Barcode,
-                  title: 'ผูกบาร์โค้ดสินค้า',
-                  subtitle: 'กำหนดรูปแบบมาตรฐาน Code128, EAN-13 หรือ QR Code',
-                  badge: 'บาร์โค้ดใหม่',
+                  title: isEn ? 'Link Barcode' : 'ผูกบาร์โค้ดสินค้า',
+                  subtitle: isEn ? 'Configure Code128, EAN-13, or QR Code standard' : 'กำหนดรูปแบบมาตรฐาน Code128, EAN-13 หรือ QR Code',
+                  badge: isEn ? 'New Barcode' : 'บาร์โค้ดใหม่',
                   iconColor: 'text-teal-600 dark:text-teal-400 bg-teal-500/10 border-teal-500/20',
                   badgeColor: 'bg-teal-50 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300 border-teal-200 dark:border-teal-800',
                 };
@@ -422,7 +432,7 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
                 type="button"
                 onClick={onClose}
                 className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center transition shrink-0 cursor-pointer"
-                title="ปิดหน้าต่าง (Close)"
+                title={isEn ? 'Close Window' : 'ปิดหน้าต่าง (Close)'}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -431,6 +441,7 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
         })()}
 
         <form
+          noValidate
           onSubmit={onSubmit}
           className="flex-1 flex flex-col min-h-0 overflow-hidden"
         >
@@ -439,6 +450,7 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
             {activeSubTab === 'companies' && (
               <AddCompanyFormFields
                 theme={theme}
+                lang={lang}
                 addCompanyCode={addCompanyCode}
                 setAddCompanyCode={setAddCompanyCode}
                 addCompanyName={addCompanyName}
@@ -457,6 +469,8 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
                 setAddCompanyAddress={setAddCompanyAddress}
                 addCompanyIsHq={addCompanyIsHq}
                 setAddCompanyIsHq={setAddCompanyIsHq}
+                errors={errors}
+                clearError={clearError}
               />
             )}
 
@@ -481,6 +495,8 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
                 setAddCatName={setAddCatName}
                 addCatDescription={addCatDescription}
                 setAddCatDescription={setAddCatDescription}
+                errors={errors}
+                clearError={clearError}
               />
             )}
 

@@ -1,6 +1,6 @@
 import React from 'react';
-import { CheckCircle2, Trash2, Eye } from 'lucide-react';
-import { ThemeMode, UserRole } from '../../../types';
+import { CheckCircle2, Trash2, Eye, ShieldCheck } from 'lucide-react';
+import { ThemeMode, Language, UserRole } from '../../../types';
 
 interface RbacUser {
   id: string;
@@ -13,6 +13,7 @@ interface RbacUser {
 
 interface RbacAccessTabProps {
   theme: ThemeMode;
+  lang?: Language;
   t: any;
   usersList: RbacUser[];
   onChangeUserRole: (user: RbacUser, newRole: UserRole) => void;
@@ -21,11 +22,15 @@ interface RbacAccessTabProps {
 
 export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
   theme,
+  lang = 'th',
   t,
-  usersList,
+  usersList = [],
   onChangeUserRole,
   onDeleteUser,
 }) => {
+  const isEn = lang === 'en';
+  const safeUsers = Array.isArray(usersList) ? usersList : [];
+
   return (
     <div className="space-y-6">
       <div
@@ -38,11 +43,12 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3
-              className={`font-semibold text-base ${
+              className={`font-semibold text-base flex items-center gap-2 ${
                 theme === 'dark' ? 'text-slate-50' : 'text-slate-900'
               }`}
             >
-              {t.rbacTitle}
+              <ShieldCheck className="w-5 h-5 text-rose-600" />
+              {t.rbacTitle} ({safeUsers.length})
             </h3>
             <p
               className={`text-xs font-normal mt-1 ${
@@ -90,7 +96,7 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
                 theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
               }`}
             >
-              จัดการทุกระบบ & สิทธิ์การใช้
+              {isEn ? 'Manage all systems & user permissions' : 'จัดการทุกระบบ & สิทธิ์การใช้'}
             </p>
           </div>
 
@@ -120,7 +126,7 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
                 theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
               }`}
             >
-              อนุมัติเอกสารและดูรายงาน
+              {isEn ? 'Document approvals & business reports' : 'อนุมัติเอกสารและดูรายงาน'}
             </p>
           </div>
 
@@ -150,7 +156,7 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
                 theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
               }`}
             >
-              รับ/จ่าย สแกนบาร์โค้ด
+              {isEn ? 'Receiving, dispatching & barcode scan' : 'รับ/จ่าย สแกนบาร์โค้ด'}
             </p>
           </div>
 
@@ -180,7 +186,7 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
                 theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
               }`}
             >
-              ออกใบสั่งซื้อและจัดการผู้จัดจำหน่าย
+              {isEn ? 'Issue purchase orders & vendor management' : 'ออกใบสั่งซื้อและจัดการผู้จัดจำหน่าย'}
             </p>
           </div>
         </div>
@@ -196,9 +202,9 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
                     : 'border-slate-200 text-slate-700 bg-slate-100'
                 }`}
               >
-                <th className="p-3">User Name</th>
-                <th className="p-3">Email</th>
-                <th className="p-3">Department</th>
+                <th className="p-3">{isEn ? 'User Name' : 'ชื่อผู้ใช้ (Name)'}</th>
+                <th className="p-3">{isEn ? 'Email' : 'อีเมล (Email)'}</th>
+                <th className="p-3">{isEn ? 'Department' : 'แผนก (Department)'}</th>
                 <th className="p-3">{t.role}</th>
                 <th className="p-3">{t.status}</th>
                 <th className="p-3 text-right">{t.actions}</th>
@@ -209,81 +215,89 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
                 theme === 'dark' ? 'divide-slate-800' : 'divide-slate-200'
               }`}
             >
-              {usersList.map((usr) => (
-                <tr
-                  key={usr.id}
-                  className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition"
-                >
-                  <td
-                    className={`p-3 font-semibold ${
-                      theme === 'dark' ? 'text-slate-100' : 'text-slate-900'
-                    }`}
-                  >
-                    {usr.name}
-                  </td>
-                  <td
-                    className={`p-3 font-normal ${
-                      theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
-                    }`}
-                  >
-                    {usr.email}
-                  </td>
-                  <td className="p-3 font-medium">{usr.department}</td>
-                  <td className="p-3">
-                    <select
-                      value={usr.role}
-                      onChange={(e) =>
-                        onChangeUserRole(usr, e.target.value as UserRole)
-                      }
-                      className={`px-2 py-1 rounded text-xs font-semibold border outline-hidden ${
-                        theme === 'dark'
-                          ? 'bg-slate-800 border-slate-700 text-white'
-                          : 'bg-slate-50 border-slate-300 text-slate-900'
-                      }`}
-                    >
-                      <option value="admin">ADMIN</option>
-                      <option value="manager">MANAGER</option>
-                      <option value="warehouse_staff">WAREHOUSE STAFF</option>
-                      <option value="purchasing_staff">PURCHASING</option>
-                    </select>
-                  </td>
-                  <td className="p-3">
-                    <span
-                      className={`font-medium inline-flex items-center gap-1 ${
-                        theme === 'dark'
-                          ? 'text-emerald-400'
-                          : 'text-emerald-700'
-                      }`}
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Active
-                    </span>
-                  </td>
-                  <td className="p-3 text-right space-x-1">
-                    <button
-                      onClick={() => alert(`ข้อมูลผู้ใช้งาน:\nชื่อ: ${usr.name}\nอีเมล: ${usr.email}\nแผนก: ${usr.department}\nบทบาท: ${usr.role.toUpperCase()}\nสถานะ: ${usr.status}`)}
-                      className={`p-1.5 rounded-lg transition cursor-pointer ${
-                        theme === 'dark'
-                          ? 'text-slate-400 hover:text-blue-400 hover:bg-slate-800'
-                          : 'text-slate-500 hover:text-blue-600 hover:bg-slate-100'
-                      }`}
-                      title="ดูรายละเอียดผู้ใช้งาน (View Detail)"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => onDeleteUser(usr)}
-                      className={`p-1.5 rounded-lg transition cursor-pointer ${
-                        theme === 'dark'
-                          ? 'text-slate-400 hover:text-rose-400 hover:bg-slate-800'
-                          : 'text-slate-500 hover:text-rose-600 hover:bg-slate-100'
-                      }`}
-                      title="ลบผู้ใช้งาน (Delete)"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+              {safeUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-slate-400">
+                    {isEn ? 'No users found' : 'ไม่พบข้อมูลผู้ใช้งาน'}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                safeUsers.map((usr) => (
+                  <tr
+                    key={usr.id}
+                    className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition"
+                  >
+                    <td
+                      className={`p-3 font-semibold ${
+                        theme === 'dark' ? 'text-slate-100' : 'text-slate-900'
+                      }`}
+                    >
+                      {usr.name}
+                    </td>
+                    <td
+                      className={`p-3 font-normal ${
+                        theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
+                      }`}
+                    >
+                      {usr.email}
+                    </td>
+                    <td className="p-3 font-medium">{usr.department}</td>
+                    <td className="p-3">
+                      <select
+                        value={usr.role}
+                        onChange={(e) =>
+                          onChangeUserRole(usr, e.target.value as UserRole)
+                        }
+                        className={`px-2 py-1 rounded text-xs font-semibold border outline-hidden ${
+                          theme === 'dark'
+                            ? 'bg-slate-800 border-slate-700 text-white'
+                            : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
+                      >
+                        <option value="admin">ADMIN</option>
+                        <option value="manager">MANAGER</option>
+                        <option value="warehouse_staff">WAREHOUSE STAFF</option>
+                        <option value="purchasing_staff">PURCHASING</option>
+                      </select>
+                    </td>
+                    <td className="p-3">
+                      <span
+                        className={`font-medium inline-flex items-center gap-1 ${
+                          theme === 'dark'
+                            ? 'text-emerald-400'
+                            : 'text-emerald-700'
+                        }`}
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Active
+                      </span>
+                    </td>
+                    <td className="p-3 text-right space-x-1">
+                      <button
+                        onClick={() => alert(`ข้อมูลผู้ใช้งาน:\nชื่อ: ${usr.name}\nอีเมล: ${usr.email}\nแผนก: ${usr.department}\nบทบาท: ${usr.role.toUpperCase()}\nสถานะ: ${usr.status}`)}
+                        className={`p-1.5 rounded-lg transition cursor-pointer ${
+                          theme === 'dark'
+                            ? 'text-slate-400 hover:text-blue-400 hover:bg-slate-800'
+                            : 'text-slate-500 hover:text-blue-600 hover:bg-slate-100'
+                        }`}
+                        title={isEn ? 'View User Details' : 'ดูรายละเอียดผู้ใช้งาน (View Detail)'}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => onDeleteUser(usr)}
+                        className={`p-1.5 rounded-lg transition cursor-pointer ${
+                          theme === 'dark'
+                            ? 'text-slate-400 hover:text-rose-400 hover:bg-slate-800'
+                            : 'text-slate-500 hover:text-rose-600 hover:bg-slate-100'
+                        }`}
+                        title={isEn ? 'Delete User' : 'ลบผู้ใช้งาน (Delete)'}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
