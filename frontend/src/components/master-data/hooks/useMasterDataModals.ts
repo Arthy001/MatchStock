@@ -458,7 +458,10 @@ export const useMasterDataModals = ({
       onConfirm: async () => {
         setIsDeleting(true);
         try {
-          await warehouseService.deleteBin(bin.id);
+          // bin.warehouseId must be passed explicitly - warehouseService.deleteBin()
+          // falls back to the literal string 'default' as the warehouseId when only
+          // one argument is given, which 404s/500s against the real API (not a real id).
+          await warehouseService.deleteBin(bin.warehouseId || bin.id, bin.id);
           setBinsList((prev) => prev.filter((b) => b.id !== bin.id));
           showToast(`ลบตำแหน่ง Bin "${bin.binCode}" เรียบร้อยแล้ว`);
           setDeleteConfirmData(null);

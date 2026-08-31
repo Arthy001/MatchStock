@@ -88,10 +88,22 @@ export const warehouseService = {
     }
   },
 
-  // ลบ/ปิดการใช้งาน Bin
+  // ลบ/ปิดการใช้งาน Bin (หรือคลังสินค้าเอง ถ้าเรียกแบบ 1 argument - ดู updateBin ด้านบนที่ทำแบบเดียวกัน)
   deleteBin: async (arg1: string, arg2?: string) => {
-    let warehouseId = arg2 ? arg1 : 'default';
-    let binId = arg2 || arg1;
+    const warehouseId = arg2 ? arg1 : undefined;
+    const binId = arg2 || arg1;
+    // ไม่มี warehouseId แยก = โมดัลนี้กำลังแก้/ลบ "คลังสินค้า" เองตรงๆ (ไม่ใช่ bin ในคลัง)
+    // เดิมจุดนี้ใส่ warehouseId เป็น string "default" ไปตรงๆ ทำให้ยิง
+    // /warehouses/default/bins/{id}/... ซึ่งไม่ใช่ id จริง (500/404 จริงที่เจอ)
+    if (!warehouseId || warehouseId === binId) {
+      try {
+        const response = await apiClient.post(`/warehouses/${binId}/deactivate`);
+        return response.data?.data || response.data;
+      } catch {
+        const response = await apiClient.delete(`/warehouses/${binId}`);
+        return response.data?.data || response.data;
+      }
+    }
     try {
       const response = await apiClient.post(`/warehouses/${warehouseId}/bins/${binId}/deactivate`);
       return response.data?.data || response.data;
