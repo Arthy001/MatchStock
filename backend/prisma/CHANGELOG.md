@@ -2,6 +2,22 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-01 (3) — Implement Goods Receipt Lines + Flexible Putaway เข้า backend จริง
+
+ต่อยอดจาก commit `ce4aa7b` (rework goods receipt schema with lines and flexible putaway design) - ตอนตรวจสอบ backend เทียบกับ `schema.prisma` บน develop พบว่าฟีเจอร์นี้ยังไม่ได้ implement เข้า backend เลย รอบนี้คือ **implement เข้าจริงครบทุกจุดตาม `docs/RECEIVING_AND_PUTAWAY_DESIGN.md` ทดสอบ end-to-end บน local Docker และ production แล้ว**:
+
+1. **`GoodsReceipt`**: เพิ่ม `supplierId`/`poNumber`/`supplierInvoiceNo`/`photoUrls` จริง (FK constraint จริงสำหรับ `supplierId` -> `suppliers.id` ON DELETE SET NULL)
+2. **`GoodsReceiptLine` (โมเดลใหม่)**: `quantity`/`damagedQuantity`/`putawayQuantity`/lot-expiry/`unitCostMinor`/`binLocationId` ตาม spec เป๊ะ - **ตัดสินใจ implementation**: ไม่มี `@relation`/FK constraint ให้ `goodsReceiptId`/`productId`/`binLocationId` โดยตั้งใจ (ต่างจาก commit `ce4aa7b` ที่เขียนไว้) เพื่อให้ตรงกับ convention เดิมของทั้งตระกูล stock-transactions (`GoodsReceipt`/`GoodsIssue`/`StockTransfer` ทุกตัวเป็น plain UUID column ไม่มี FK มาตั้งแต่ต้น) - validate ที่ service layer ผ่าน `getByIdInCompany()` แทน
+3. **1-Step vs 2-Step Putaway**: `POST /goods-receipts` รับ `lines[]` พร้อม header ได้เลย - line ที่ระบุ `binLocationId` จะ `putawayQuantity = quantity` ทันที (1-Step), ถ้าไม่ระบุจะสร้างแบบ staged (`putawayQuantity: 0`) รอ 2-Step
+4. **`GET /goods-receipts/staged-items`**: คิวงาน Putaway ที่ยังไม่เสร็จ (`quantity > putawayQuantity`) - join กับ receipt/product ผ่าน `$queryRaw` (เทียบคอลัมน์สองตัวในแถวเดียวกัน Prisma query builder ทำไม่ได้ ต้อง raw SQL แบบเดียวกับ `ReportsService.getStockValuation()`)
+5. **`GET /putaway/suggest-bin`**: แนะนำ bin ตาม free capacity เท่านั้น (`maxCapacity` ลบยอด `putawayQuantity` ที่ลงไปแล้วในแต่ละ bin ผ่าน ledger นี้) - **ข้อจำกัดที่ทราบ**: schema ปัจจุบันไม่มี zone/category บน `BinLocation` เลย จับคู่ตาม "หมวดหมู่สินค้า" ตามที่ design doc อธิบายไว้ไม่ได้จริง เป็นแค่ soft suggestion ตาม capacity อย่างเดียว (design doc เองก็ระบุว่าไม่บังคับ override ได้เสมอ)
+6. **`POST /putaway/confirm`**: รองรับ partial/multi-bin putaway (design doc ยง4.1) - line หนึ่งมี `binLocationId` ได้แค่ช่องเดียว ดังนั้นการวางแบบแยกหลาย bin จะ **หด `quantity` ของ line เดิมที่ยัง staged อยู่ ลง และสร้าง line ใหม่ที่ปิดงานแล้ว (`putawayQuantity == quantity`) ชี้ไปที่ bin เป้าหมาย** แทนที่จะพยายามเก็บสอง bin ไว้ในแถวเดียว - ทดสอบ full close + partial split + over-confirm (400) + cross-tenant isolation (404) ผ่านหมดบน local Docker
+7. **`docs/openapi.yaml`**: แทนที่ placeholder ที่ทีมเขียนไว้ล่วงหน้า (`StagedItemDto`/`PutawaySuggestionResponseDto`/`PutawayConfirmDto`) ด้วย spec จริงจาก live `/api-docs-json` (`GoodsReceiptLine`/`CreateGoodsReceiptLineDto` จริง) เพราะฟีเจอร์นี้ implement เสร็จแล้ว ไม่ใช่ placeholder อีกต่อไป
+
+**ทดสอบแล้ว**: 1-Step direct putaway, 2-Step staged->confirm เต็มจำนวน, partial putaway แยก 2 bin (60+35), over-confirm เกินจำนวนคงเหลือ block ด้วย 400, cross-tenant เข้าถึง line คนอื่นไม่ได้ (404) - ยืนยันบน production (`match-stock.ddns.net`, path เพิ่มจาก 90 เป็น 93) แล้ว ไม่ใช่แค่ local
+
+**ยังไม่ทำรอบนี้ (นอกขอบเขต design doc)**: reconciliation ระหว่าง stock ที่นับผ่าน `GoodsReceiptLine` (barcode/manual) กับ stock ที่นับผ่าน Tag/RFID (`GET /warehouses/:id/stock` เดิม) - เป็นสองระบบนับสต็อกคู่ขนานที่ยังไม่เชื่อมกัน
+
 ## 2026-09-01 — Sync `docs/openapi.yaml` จาก live spec จริงอีกรอบ + แก้ Swagger cache
 
 **ปัญหาที่พบ**: หลังจากงาน isDeleted rollout เมื่อวาน (`DELETE /{id}` ใหม่ให้ 10 master-data model) เอกสาร `docs/openapi.yaml` **ไม่เคย sync ตามเลย** — ยัง"ไม่มี" `delete:` method ให้ endpoint พวกนี้แม้แต่ตัวเดียว (มีแค่ `get`/`patch`) และตัวอย่าง response ยังไม่มี field `isDeleted` เลยด้วย
