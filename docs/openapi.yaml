@@ -5267,6 +5267,281 @@ paths:
       summary: Delete a company/branch.
       tags:
         - Companies
+  /billing/plans:
+    get:
+      operationId: BillingController_getPlans_v1
+      parameters: []
+      responses:
+        '200':
+          description: List of available subscription plans
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    - id: 1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d
+                      code: FREE
+                      name: MatchStock Free
+                      type: web
+                      billingCycle: monthly
+                      priceMinor: 0
+                      currency: THB
+                      maxUsers: 2
+                      maxWarehouses: 1
+                      maxProducts: 500
+                      maxDevices: 0
+                      features:
+                        - products.basic
+                        - stock.gr_gi
+                        - barcode.scan
+                        - reports.stock_card
+                        - import_export.basic
+                    - id: 2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e
+                      code: PRO_MONTHLY
+                      name: MatchStock Pro
+                      type: web
+                      billingCycle: monthly
+                      priceMinor: 199000
+                      currency: THB
+                      maxUsers: 10
+                      maxWarehouses: 3
+                      maxProducts: 10000
+                      maxDevices: 0
+                      features:
+                        - products.basic
+                        - warehouse.bins
+                        - stock.lot_expiry
+                        - stock.fefo
+                        - cycle_count.barcode
+                        - sales_orders.manage
+                        - reports.valuation
+                    - id: 3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f
+                      code: ULTRA_MONTHLY
+                      name: MatchStock Ultra (RFID)
+                      type: web
+                      billingCycle: monthly
+                      priceMinor: 699000
+                      currency: THB
+                      maxUsers: 9999
+                      maxWarehouses: 9999
+                      maxProducts: 999999
+                      maxDevices: 10
+                      features:
+                        - '*'
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: List all active public subscription plans.
+      tags:
+        - Billing
+  /billing/current-subscription:
+    get:
+      operationId: BillingController_getCurrentSubscription_v1
+      parameters: []
+      responses:
+        '200':
+          description: Current tenant subscription details and quota usages
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: 4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a
+                    planCode: PRO_MONTHLY
+                    planName: MatchStock Pro
+                    status: active
+                    billingCycle: monthly
+                    startsAt: '2026-08-01T00:00:00.000Z'
+                    currentPeriodEnd: '2026-09-01T00:00:00.000Z'
+                    cancelAtPeriodEnd: false
+                    quotas:
+                      users:
+                        used: 4
+                        max: 10
+                      warehouses:
+                        used: 2
+                        max: 3
+                      products:
+                        used: 1250
+                        max: 10000
+                      devices:
+                        used: 0
+                        max: 0
+                    features:
+                      - products.basic
+                      - warehouse.bins
+                      - stock.lot_expiry
+                      - stock.fefo
+                      - cycle_count.barcode
+                      - sales_orders.manage
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: Get active subscription and quota usage for current tenant.
+      tags:
+        - Billing
+  /billing/subscribe:
+    post:
+      operationId: BillingController_subscribe_v1
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscribeRequestDto'
+      responses:
+        '200':
+          description: Subscription initiated or updated
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    subscriptionId: 4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a
+                    planCode: PRO_MONTHLY
+                    status: active
+                  message: Subscribed successfully
+        '402':
+          description: Payment failed or card declined
+      security:
+        - jwt: []
+      summary: Subscribe or upgrade to a new subscription plan (owner only).
+      tags:
+        - Billing
+  /billing/cancel:
+    post:
+      operationId: BillingController_cancel_v1
+      parameters: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelSubscriptionDto'
+      responses:
+        '200':
+          description: Subscription marked for cancellation
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    status: active
+                    cancelAtPeriodEnd: true
+                    currentPeriodEnd: '2026-09-01T00:00:00.000Z'
+                  message: Subscription will end at current period
+      security:
+        - jwt: []
+      summary: Cancel subscription renewal at period end (owner only).
+      tags:
+        - Billing
+  /billing/invoices:
+    get:
+      operationId: BillingController_getInvoices_v1
+      parameters: []
+      responses:
+        '200':
+          description: List of invoices and payment receipts for current tenant
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    - id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
+                      invoiceNumber: INV-202608-0001
+                      status: paid
+                      totalMinor: 199000
+                      amountPaidMinor: 199000
+                      currency: THB
+                      issuedAt: '2026-08-01T00:00:00.000Z'
+                      paidAt: '2026-08-01T00:05:00.000Z'
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: List billing invoices for tenant (owner only).
+      tags:
+        - Billing
+  /platform/billing/subscriptions:
+    get:
+      operationId: PlatformBillingController_listSubscriptions_v1
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            example: active
+        - name: planCode
+          in: query
+          schema:
+            type: string
+            example: PRO_MONTHLY
+      responses:
+        '200':
+          description: Cross-tenant subscriptions list
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    - id: 4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a
+                      tenantId: e5e91151-2499-4a6a-be28-3433f4afdba0
+                      tenantName: Acme Logistics
+                      planCode: PRO_MONTHLY
+                      status: active
+                      currentPeriodEnd: '2026-09-01T00:00:00.000Z'
+                  message: Operation completed successfully
+      security:
+        - platform-jwt: []
+      summary: Cross-tenant subscriptions overview (Platform Admin).
+      tags:
+        - Platform Billing
+  /platform/subscription-plans:
+    post:
+      operationId: PlatformBillingController_createPlan_v1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSubscriptionPlanDto'
+      responses:
+        '201':
+          description: Plan created
+      security:
+        - platform-jwt: []
+      summary: Create new subscription plan (Platform Super Admin).
+      tags:
+        - Platform Billing
+  /platform/subscription-plans/{id}:
+    patch:
+      operationId: PlatformBillingController_updatePlan_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSubscriptionPlanDto'
+      responses:
+        '200':
+          description: Plan updated
+      security:
+        - platform-jwt: []
+      summary: Update subscription plan pricing/quotas (Platform Super Admin).
+      tags:
+        - Platform Billing
 components:
   securitySchemes:
     jwt:
@@ -6301,3 +6576,138 @@ components:
         isDeleted:
           type: boolean
           example: false
+    SubscribeRequestDto:
+      type: object
+      properties:
+        planCode:
+          type: string
+          example: PRO_MONTHLY
+        billingCycle:
+          type: string
+          enum: [monthly, yearly]
+          example: monthly
+        gatewayCardId:
+          type: string
+          example: card_test_5xyz123
+      required:
+        - planCode
+        - billingCycle
+    CancelSubscriptionDto:
+      type: object
+      properties:
+        reason:
+          type: string
+          example: Moving to on-premise
+    CreateSubscriptionPlanDto:
+      type: object
+      properties:
+        code:
+          type: string
+          example: PRO_MONTHLY
+        name:
+          type: string
+          example: MatchStock Pro
+        type:
+          type: string
+          enum: [web, hardware]
+          example: web
+        billingCycle:
+          type: string
+          enum: [monthly, yearly]
+          example: monthly
+        priceMinor:
+          type: integer
+          example: 199000
+        currency:
+          type: string
+          example: THB
+        trialDays:
+          type: integer
+          example: 14
+        maxUsers:
+          type: integer
+          example: 10
+        maxWarehouses:
+          type: integer
+          example: 3
+        maxProducts:
+          type: integer
+          example: 10000
+        maxDevices:
+          type: integer
+          example: 0
+        features:
+          type: array
+          items:
+            type: string
+          example: [products.basic, warehouse.bins, stock.fefo]
+      required:
+        - code
+        - name
+        - type
+        - billingCycle
+        - priceMinor
+    UpdateSubscriptionPlanDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: MatchStock Pro Plus
+        priceMinor:
+          type: integer
+          example: 219000
+        maxUsers:
+          type: integer
+          example: 15
+        maxWarehouses:
+          type: integer
+          example: 5
+        maxProducts:
+          type: integer
+          example: 15000
+        maxDevices:
+          type: integer
+          example: 2
+        features:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+          example: true
+    FeatureNotIncludedError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: FEATURE_NOT_INCLUDED
+        feature:
+          type: string
+          example: stock.fefo
+        message:
+          type: string
+          example: Your current plan does not include this feature. Please upgrade to Pro or Ultra.
+    QuotaExceededError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: QUOTA_EXCEEDED
+        resource:
+          type: string
+          example: warehouses
+        currentUsage:
+          type: integer
+          example: 3
+        maxAllowed:
+          type: integer
+          example: 3
+        message:
+          type: string
+          example: Warehouse limit reached for current plan (3/3). Please upgrade your subscription.

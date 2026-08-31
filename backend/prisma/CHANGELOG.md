@@ -2,6 +2,20 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-08-31 — เพิ่ม Subscription Quotas, Menu Feature Gating, และ Company Scoping
+
+อัปเดต `schema.prisma`, `seed.ts`, และ `docs/openapi.yaml` เพื่อรองรับระบบ Subscription Packages (Free, Pro, Ultra) และ Multi-Company Scoping:
+
+1. **`SubscriptionPlan`**: เพิ่ม `maxWarehouses` (`max_warehouses`) และ `maxProducts` (`max_products`) สำหรับควบคุมโควตาคลังสินค้าและจำนวน SKU ตามแพ็กเกจ
+2. **`MenuItem`**: เพิ่ม `requiredFeature` (`required_feature`) เพื่อให้ Frontend ซ่อน/แสดงเมนูตามชุด `SubscriptionPlan.features` ของ Tenant ปัจจุบัน
+3. **Multi-Company Scoping**:
+   - `User`: เพิ่ม `companyId` (`company_id`) ผูกกับ `Company` เพื่อจำกัดสิทธิ์พนักงานระดับสาขา/บริษัทย่อย (`null` = เข้าถึงได้ทุกสาขาใน Tenant)
+   - `Warehouse` & `Supplier`: เพิ่ม `companyId` (`company_id`) ผูกกับ `Company` เพื่อรองรับคลังสินค้าและซัพพลายเออร์ประจำสาขา
+   - `Company`: เพิ่ม Reverse Relations (`warehouses`, `suppliers`, `users`)
+4. **`seed.ts`**: เพิ่มข้อมูล Default Subscription Plans 3 ระดับ (`FREE`, `PRO_MONTHLY`, `ULTRA_MONTHLY`) พร้อม Quotas และ Feature Codes
+5. **`docs/openapi.yaml`**: เพิ่ม Endpoints หมวด Billing ฝั่ง Tenant (`/billing/*`) และ Platform Admin (`/platform/billing/*`) พร้อม Error Response Models (`402`, `FeatureNotIncludedError`, `QuotaExceededError`)
+6. **เอกสารสถาปัตยกรรม**: เพิ่ม `docs/TENANT_USER_SUBSCRIPTION_PLAN.md` สรุปภาพรวมความสัมพันธ์และแผนผังทั้งหมด
+
 ## 2026-08-31 — เพิ่ม `isDeleted` ให้อีก 10 master-data model ตามที่ทีมออกแบบไว้ (PR #15)
 
 ต่อยอดจาก entry ด้านล่าง (Soft-Delete Policy) — schema.prisma + docs/openapi.yaml ของ repo นี้ถูกอัพเดทไปก่อนแล้ว (commit `3efb224`) เพิ่ม `isDeleted Boolean @default(false)` ให้ `Unit`, `Brand`, `Manufacturer`, `Supplier`, `Company`, `Category`, `BarcodeSymbology`, `Warehouse`, `BinLocation`, `TaxType` และเปิดให้แก้ผ่าน `UpdateXxxDto` (`PATCH .../{id}` ธรรมดา ไม่มี endpoint DELETE ใหม่)
