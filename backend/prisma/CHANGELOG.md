@@ -2,6 +2,16 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-02 (11) — แก้ `BillingController` (`/billing/*`) ถูก `@ApiExcludeController()` โดยไม่ตั้งใจ (บั๊กเดียวกับ Menu/Rentals ใน PR #19)
+
+**ปัญหาที่พบ**: user ถามว่าทำไม `docs/openapi.yaml` มี `/billing/plans`, `/billing/current-subscription`, `/billing/subscribe`, `/billing/cancel`, `/billing/invoices` แต่ Swagger จริงไม่โผล่ - endpoint ทำงานได้ปกติทุกตัว (ยืนยันแล้วก่อนหน้านี้) แค่ไม่ขึ้น `/api-docs`/`/api-docs-json` เท่านั้น
+
+**สาเหตุ**: `BillingController` ติด `@ApiExcludeController()` อยู่ ตรวจสอบเทียบกับ `PlatformBillingController` (ตัวที่ควรซ่อนจริง - มี comment อธิบายเหตุผลชัดเจนว่า "super_admin/billing only เพราะเห็นข้อมูลข้าม tenant") พบว่า `BillingController` **ไม่มี comment อธิบายเหตุผลการซ่อนเลย** และมีลักษณะเป็น tenant-facing self-service ชัดเจน (`GET /billing/plans` ติด `@Public()` ไว้สำหรับหน้า signup ก่อน login ด้วยซ้ำ) - ตรงกับรูปแบบเดียวกับ `MenuController`/`RentalsController` ที่เจอใน PR #19 (copy-paste มาจาก controller ฝั่ง admin ที่อยู่ในไฟล์เดียวกัน)
+
+**การแก้ไข**: เอา `@ApiExcludeController()` ออกจาก `BillingController` (`src/modules/billing/billing.controller.ts`) เพิ่ม doc comment อธิบายเหตุผล (เหมือนที่ `RentalsController` มี) - build/test บน local Docker แล้ว deploy ขึ้น production แล้ว sync `docs/openapi.yaml`: แทนที่ 5 path ที่เคยเป็น hand-written forward-spec (`/billing/plans`, `/billing/current-subscription`, `/billing/subscribe`, `/billing/cancel`, `/billing/invoices`) ด้วย spec จริงจาก live, เพิ่ม 6 path ใหม่ที่ไม่เคยมีในเอกสารเลย (`/billing/subscriptions`, `/billing/subscriptions/{id}/cancel`, `/billing/checkout`, `/billing/invoices/{id}`, `/billing/payments`, `/billing/_mock/complete/{chargeId}`) + schema `CreateSubscriptionDto`/`CheckoutDto` ใหม่
+
+**ยืนยันแล้ว**: live `/api-docs-json` มี path เพิ่มจาก 98 เป็น 109 จริง, `GET /billing/plans` ยัง public เข้าถึงได้แบบไม่ต้อง login เหมือนเดิม (ทดสอบแล้วบน production), `/platform/*` ยังคง `@ApiExcludeController()` ถูกต้องตามเดิม (ไม่ได้แตะ) - diff property/param ทุกจุดระหว่าง live กับ docs ที่แก้ไปแล้ว **เหลือ 0 จุดต่างกัน**
+
 ## 2026-09-01 (10) — Sync `docs/openapi.yaml` กลับ: 3 schema + 1 param ที่ merge script รอบ PR #28 พลาดไป
 
 ตรวจสอบ `docs/openapi.yaml` เทียบ live `/api-docs-json` แบบเจาะลึกทุก property/param อีกรอบ (ไม่ใช่แค่นับ path/schema เฉยๆ) เจอว่า merge script ที่ใช้ตอน sync Zone system (PR #28) มีบั๊ก: script เช็คแค่ "schema/path นี้มีอยู่แล้วหรือยัง" แล้วข้ามการอัปเดตถ้ามีอยู่แล้ว - ทำให้ schema/param ที่**มีอยู่ก่อนแล้วแต่เนื้อหาเปลี่ยน** (ไม่ใช่ของใหม่ทั้งหมด) ไม่ถูก sync ตาม:

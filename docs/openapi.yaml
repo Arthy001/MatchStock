@@ -5977,70 +5977,29 @@ paths:
         - Putaway
   /billing/plans:
     get:
-      operationId: BillingController_getPlans_v1
-      parameters: []
+      operationId: BillingController_listPlans_v1
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            example: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+            type: number
       responses:
         '200':
-          description: List of available subscription plans
-          content:
-            application/json:
-              schema:
-                example:
-                  success: true
-                  data:
-                    - id: 1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d
-                      code: FREE
-                      name: MatchStock Free
-                      type: web
-                      billingCycle: monthly
-                      priceMinor: 0
-                      currency: THB
-                      maxUsers: 2
-                      maxWarehouses: 1
-                      maxProducts: 500
-                      maxDevices: 0
-                      features:
-                        - products.basic
-                        - stock.gr_gi
-                        - barcode.scan
-                        - reports.stock_card
-                        - import_export.basic
-                    - id: 2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e
-                      code: PRO_MONTHLY
-                      name: MatchStock Pro
-                      type: web
-                      billingCycle: monthly
-                      priceMinor: 199000
-                      currency: THB
-                      maxUsers: 10
-                      maxWarehouses: 3
-                      maxProducts: 10000
-                      maxDevices: 0
-                      features:
-                        - products.basic
-                        - warehouse.bins
-                        - stock.lot_expiry
-                        - stock.fefo
-                        - cycle_count.barcode
-                        - sales_orders.manage
-                        - reports.valuation
-                    - id: 3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f
-                      code: ULTRA_MONTHLY
-                      name: MatchStock Ultra (RFID)
-                      type: web
-                      billingCycle: monthly
-                      priceMinor: 699000
-                      currency: THB
-                      maxUsers: 9999
-                      maxWarehouses: 9999
-                      maxProducts: 999999
-                      maxDevices: 10
-                      features:
-                        - '*'
-                  message: Operation completed successfully
-      security:
-        - jwt: []
-      summary: List all active public subscription plans.
+          description: ''
+      summary: List active subscription plans - public, needed by the signup page before a tenant/session exists.
       tags:
         - Billing
   /billing/current-subscription:
@@ -6049,45 +6008,10 @@ paths:
       parameters: []
       responses:
         '200':
-          description: Current tenant subscription details and quota usages
-          content:
-            application/json:
-              schema:
-                example:
-                  success: true
-                  data:
-                    id: 4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a
-                    planCode: PRO_MONTHLY
-                    planName: MatchStock Pro
-                    status: active
-                    billingCycle: monthly
-                    startsAt: '2026-08-01T00:00:00.000Z'
-                    currentPeriodEnd: '2026-09-01T00:00:00.000Z'
-                    cancelAtPeriodEnd: false
-                    quotas:
-                      users:
-                        used: 4
-                        max: 10
-                      warehouses:
-                        used: 2
-                        max: 3
-                      products:
-                        used: 1250
-                        max: 10000
-                      devices:
-                        used: 0
-                        max: 0
-                    features:
-                      - products.basic
-                      - warehouse.bins
-                      - stock.lot_expiry
-                      - stock.fefo
-                      - cycle_count.barcode
-                      - sales_orders.manage
-                  message: Operation completed successfully
+          description: ''
       security:
         - jwt: []
-      summary: Get active subscription and quota usage for current tenant.
+      summary: Active subscription and quota usage (users/warehouses/products/devices) for the signed-in tenant.
       tags:
         - Billing
   /billing/subscribe:
@@ -6101,23 +6025,11 @@ paths:
             schema:
               $ref: '#/components/schemas/SubscribeRequestDto'
       responses:
-        '200':
-          description: Subscription initiated or updated
-          content:
-            application/json:
-              schema:
-                example:
-                  success: true
-                  data:
-                    subscriptionId: 4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a
-                    planCode: PRO_MONTHLY
-                    status: active
-                  message: Subscribed successfully
-        '402':
-          description: Payment failed or card declined
+        '201':
+          description: ''
       security:
         - jwt: []
-      summary: Subscribe or upgrade to a new subscription plan (owner only).
+      summary: Subscribe or upgrade to a plan in one call (owner only) - shortcut over POST /subscriptions + POST /checkout for a tenant with a saved card. Omit gatewayCardId to leave it pending_payment and finish via POST /checkout instead (e.g. PromptPay).
       tags:
         - Billing
   /billing/cancel:
@@ -6125,54 +6037,46 @@ paths:
       operationId: BillingController_cancel_v1
       parameters: []
       requestBody:
-        required: false
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CancelSubscriptionDto'
       responses:
-        '200':
-          description: Subscription marked for cancellation
-          content:
-            application/json:
-              schema:
-                example:
-                  success: true
-                  data:
-                    status: active
-                    cancelAtPeriodEnd: true
-                    currentPeriodEnd: '2026-09-01T00:00:00.000Z'
-                  message: Subscription will end at current period
+        '201':
+          description: ''
       security:
         - jwt: []
-      summary: Cancel subscription renewal at period end (owner only).
+      summary: Cancel the signed-in tenant's current subscription at period end (owner only) - no immediate loss of access. Use POST /subscriptions/:id/cancel instead to target a specific subscription by id.
       tags:
         - Billing
   /billing/invoices:
     get:
-      operationId: BillingController_getInvoices_v1
-      parameters: []
+      operationId: BillingController_listInvoices_v1
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            example: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+            type: number
       responses:
         '200':
-          description: List of invoices and payment receipts for current tenant
-          content:
-            application/json:
-              schema:
-                example:
-                  success: true
-                  data:
-                    - id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
-                      invoiceNumber: INV-202608-0001
-                      status: paid
-                      totalMinor: 199000
-                      amountPaidMinor: 199000
-                      currency: THB
-                      issuedAt: '2026-08-01T00:00:00.000Z'
-                      paidAt: '2026-08-01T00:05:00.000Z'
-                  message: Operation completed successfully
+          description: ''
       security:
         - jwt: []
-      summary: List billing invoices for tenant (owner only).
+      summary: List the signed-in tenant's invoices.
       tags:
         - Billing
   /platform/billing/subscriptions:
@@ -6588,6 +6492,152 @@ paths:
         - jwt: []
       tags:
         - Zones
+  /billing/subscriptions:
+    get:
+      operationId: BillingController_listSubscriptions_v1
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            example: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+            type: number
+      responses:
+        '200':
+          description: ''
+      security:
+        - jwt: []
+      summary: List the signed-in tenant's subscriptions.
+      tags:
+        - Billing
+    post:
+      operationId: BillingController_createSubscription_v1
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSubscriptionDto'
+      responses:
+        '201':
+          description: ''
+      security:
+        - jwt: []
+      summary: Start a new subscription (status pending_payment, or trialing if the plan has a trial) for a plan.
+      tags:
+        - Billing
+  /billing/subscriptions/{id}/cancel:
+    post:
+      operationId: BillingController_cancelSubscription_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '201':
+          description: ''
+      security:
+        - jwt: []
+      summary: Cancel a subscription at the end of its current period - no immediate loss of access.
+      tags:
+        - Billing
+  /billing/checkout:
+    post:
+      operationId: BillingController_checkout_v1
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutDto'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+      security:
+        - jwt: []
+      summary: Charge an invoice for a pending_payment subscription. Returns authorizeUri if the customer must complete 3DS/scan a PromptPay QR.
+      tags:
+        - Billing
+  /billing/invoices/{id}:
+    get:
+      operationId: BillingController_getInvoice_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      security:
+        - jwt: []
+      summary: Get one invoice with its line items.
+      tags:
+        - Billing
+  /billing/payments:
+    get:
+      operationId: BillingController_listPayments_v1
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            example: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+            type: number
+      responses:
+        '200':
+          description: ''
+      security:
+        - jwt: []
+      summary: List the signed-in tenant's payments.
+      tags:
+        - Billing
+  /billing/_mock/complete/{chargeId}:
+    post:
+      operationId: BillingController_mockComplete_v1
+      parameters:
+        - name: chargeId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '201':
+          description: ''
+      summary: DEV ONLY - simulates a real gateway settling a charge. Marks the mock charge succeeded and returns a mock event id; POST that id to /webhooks/omise to simulate the webhook delivery a real provider would send. 404s unless PAYMENT_PROVIDER=mock and not production.
+      tags:
+        - Billing
 info:
   title: MatchStock API
   description: |-
@@ -8197,3 +8247,36 @@ components:
         isDeleted:
           type: boolean
           example: false
+    CreateSubscriptionDto:
+      type: object
+      properties:
+        planCode:
+          type: string
+          example: web_standard_monthly
+        quantity:
+          type: number
+          minimum: 1
+          example: 1
+          default: 1
+      required:
+        - planCode
+    CheckoutDto:
+      type: object
+      properties:
+        subscriptionId:
+          type: string
+          format: uuid
+          example: 9c6b1a2d-3e4f-4a5b-8c7d-1e2f3a4b5c6d
+        method:
+          enum:
+            - card
+            - promptpay
+          type: string
+          example: card
+        cardToken:
+          type: string
+          example: tokn_test_abc123
+          description: Client-side card token - required for method=card.
+      required:
+        - subscriptionId
+        - method
