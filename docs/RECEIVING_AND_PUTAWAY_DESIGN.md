@@ -1,4 +1,4 @@
-﻿# MatchStock — Goods Receiving & Flexible Putaway System Design
+# MatchStock — Goods Receiving & Flexible Putaway System Design
 
 เอกสารสถาปัตยกรรมและการออกแบบระบบ **การรับสินค้าเข้าคลัง (Goods Receiving)** และ **การจัดเก็บเข้าชั้นวาง (Flexible Putaway)** สำหรับระบบ MatchStock WMS & Inventory Management Platform
 
@@ -33,6 +33,7 @@ erDiagram
     GoodsReceipt ||--o{ GoodsReceiptLine : "1 ใบรับมีได้หลายรายการสินค้า"
     Product ||--o{ GoodsReceiptLine : "ระบุสินค้าที่รับ"
     BinLocation ||--o{ GoodsReceiptLine : "(Optional) ชั้นวางที่จัดเก็บ"
+    GoodsReceiptLine ..> StockBalance : "อัปเดตยอดคงเหลือ Real-time"
 
     GoodsReceipt {
         uuid id PK
@@ -60,6 +61,15 @@ erDiagram
         bigint unit_cost_minor "ราคาต้นทุนต่อหน่วย (สตางค์)"
         uuid bin_location_id FK "🔗 ชั้นวางที่เก็บ (null = อยู่จุด Staging)"
     }
+
+    StockBalance {
+        uuid id PK
+        uuid warehouse_id FK
+        uuid bin_location_id FK "null = Staging, ระบุค่า = บนชั้นวาง"
+        uuid product_id FK
+        string lot_number
+        int quantity_on_hand "ยอดคงเหลือจริง"
+    }
 ```
 
 ---
@@ -73,9 +83,9 @@ erDiagram
 2. เลือกคลังสินค้า (`warehouseId`), เลือกผู้ขาย (`supplierId` ถ้ามี), กรอกเลข PO/ใบส่งของ (ถ้ามี)
 3. สแกนบาร์โค้ดสินค้า $\rightarrow$ กรอกจำนวน $\rightarrow$ ระบุ **ชั้นวาง (Bin Location)** เช่น `A-01-01`
 4. กดยืนยัน:
-   - บันทึก `GoodsReceipt` และ `GoodsReceiptLine`
-   - สินค้ามีสถานะเป็น `in_stock` พร้อมขาย/พร้อมหยิบทันทีที่พิกัด `A-01-01`
-   - `putawayQuantity` = `quantity`
+   - บันทึก `GoodsReceipt` และ `GoodsReceiptLine` (`putawayQuantity = quantity`, `binLocationId = A-01-01`)
+   - **อัปเดต `StockBalance`**: เพิ่มยอด `quantityOnHand += quantity` ที่พิกัด `A-01-01` ทันที ($O(1)$)
+   - สินค้าพร้อมขาย/พร้อมเปิดบิลหยิบทันทีที่พิกัด `A-01-01`
 
 ---
 
@@ -91,8 +101,8 @@ sequenceDiagram
     actor Driver as พนักงานจัดเก็บ (Forklift)
 
     Staff->>App: 1. สร้างใบรับสินค้า (GR) ไม่ระบุ Bin (binLocationId = null)
-    App->>DB: บันทึก GoodsReceiptLine (putawayQuantity = 0)
-    Note over DB: สินค้าอยู่ในคลัง สถานะ Staged (ยังไม่เปิดให้หยิบขาย)
+    App->>DB: บันทึก GoodsReceiptLine (putawayQuantity = 0) + StockBalance(bin: null / Staging)
+    Note over DB: ยอดสินค้าอยู่ในคลังที่จุดพัก Staging (ยังไม่อนุญาตให้หยิบขายจากชั้นวาง)
     
     Driver->>App: 2. เปิดหน้าจอ "งานจัดเก็บเข้าชั้น (Putaway Screen)"
     App-->>Driver: แสดงรายการสินค้าที่รอจัดเก็บ (Staged Items Queue)
@@ -102,7 +112,7 @@ sequenceDiagram
     
     Driver->>App: 4. เข็นสินค้าไปที่ชั้นวาง -> สแกนบาร์โค้ดที่ชั้นวางจริง (เช่น B-02-01)
     Driver->>App: 5. กดยืนยันการจัดเก็บ (Confirm Putaway 50 ชิ้น)
-    App->>DB: อัปเดต GoodsReceiptLine.putawayQuantity = 50, binLocationId = B-02-01
+    App->>DB: อัปเดต GoodsReceiptLine + ย้าย StockBalance จาก Staging (bin: null) -> B-02-01
     Note over DB: สินค้าเปลี่ยนสถานะเป็น in_stock พร้อมขายทันทีที่ B-02-01
 ```
 
