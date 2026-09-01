@@ -1138,6 +1138,24 @@ model GoodsReceiptLine {
 // Stock Balances (Real-time Inventory Balance for Bulk & Serialized Items)
 // =============================================================================
 
+/// Real-time, materialized on-hand quantity per (warehouse, bin, product,
+/// lot) - Hybrid Inventory Architecture (docs/HYBRID_INVENTORY_ARCHITECTURE.md).
+/// O(1) reads for GET /stock/balances / GET /stock/lookup instead of
+/// summing GoodsReceiptLine.putawayQuantity on every request.
+///
+/// FIXED (2026-09-01, implementation): the original `@@unique([tenantId,
+/// warehouseId, binLocationId, productId, lotNumber])` never collapsed two
+/// rows into one when binLocationId/lotNumber were BOTH NULL (the Staging
+/// case, central to the whole Putaway flow) - Postgres never treats NULL =
+/// NULL as a uniqueness conflict, so every 2-Step receipt into Staging
+/// would INSERT a new row instead of accumulating. The real upsert-target
+/// uniqueness now lives as a raw-SQL expression index
+/// (stock_balances_upsert_key, migration
+/// 20260902100000_stock_balance_null_safe_unique_index) that COALESCEs
+/// binLocationId/lotNumber to sentinel values instead - same "Prisma can't
+/// express this, tracked as unmanaged drift by `prisma migrate diff`"
+/// pattern as Product's partial-unique-index soft-delete indexes elsewhere
+/// in this schema. No `@@unique` here on purpose - see that migration.
 model StockBalance {
   id            String    @id @default(uuid()) @db.Uuid
   tenantId      String    @map("tenant_id") @db.Uuid
@@ -1158,7 +1176,6 @@ model StockBalance {
   binLocation BinLocation? @relation(fields: [binLocationId], references: [id], onDelete: SetNull)
   product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@unique([tenantId, warehouseId, binLocationId, productId, lotNumber])
   @@index([tenantId, warehouseId])
   @@index([tenantId, productId])
   @@index([tenantId, warehouseId, binLocationId])
