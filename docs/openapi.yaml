@@ -3991,6 +3991,15 @@ paths:
           schema:
             example: '2026-08-31T23:59:59.000Z'
             type: string
+        - name: putawayStatus
+          required: false
+          in: query
+          description: staged = has at least one quantity-line still awaiting putaway (quantity > putawayQuantity, see GET /goods-receipts/staged-items for the line-level queue). complete = every quantity-line on the receipt is fully put away (or it has none). Omit to see everything, same as before this filter existed.
+          schema:
+            type: string
+            enum:
+              - staged
+              - complete
       responses:
         '200':
           description: ''
@@ -6320,6 +6329,257 @@ paths:
       summary: Pay this assignment's deposit (customer-initiated, like POST /billing/checkout). Returns authorizeUri if 3DS/PromptPay confirmation is needed.
       tags:
         - Rentals
+  /zones:
+    get:
+      operationId: ZonesController_list_v1
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            example: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+            type: number
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    - id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                      tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                      code: cold-storage
+                      name: Cold Storage
+                      isActive: true
+                      createdByType: user
+                      createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                      updatedByType: user
+                      updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                      deletedAt: null
+                      deletedByType: null
+                      deletedById: null
+                      createdAt: '2026-09-01T02:39:41.574Z'
+                      updatedAt: '2026-09-01T02:39:41.574Z'
+                  message: Operation completed successfully
+                  meta:
+                    page: 1
+                    limit: 20
+                    totalCount: 1
+                    totalPages: 1
+      security:
+        - jwt: []
+      summary: List the signed-in user's tenant storage zones (used by BinLocation.zoneId/Category.zoneId to drive GET /putaway/suggest-bin's category matching).
+      tags:
+        - Zones
+    post:
+      operationId: ZonesController_create_v1
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateZoneDto'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: cold-storage
+                    name: Cold Storage
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-09-01T02:39:41.574Z'
+                    updatedAt: '2026-09-01T02:39:41.574Z'
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: Create a storage zone.
+      tags:
+        - Zones
+  /zones/{id}:
+    get:
+      operationId: ZonesController_getById_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: cold-storage
+                    name: Cold Storage
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-09-01T02:39:41.574Z'
+                    updatedAt: '2026-09-01T02:39:41.574Z'
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      tags:
+        - Zones
+    patch:
+      operationId: ZonesController_update_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateZoneDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: cold-storage
+                    name: Cold Storage
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-09-01T02:39:41.574Z'
+                    updatedAt: '2026-09-01T02:39:41.574Z'
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      tags:
+        - Zones
+    delete:
+      operationId: ZonesController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: cold-storage
+                    name: Cold Storage
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-09-01T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-09-01T02:39:41.574Z'
+                    updatedAt: '2026-09-01T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a zone (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Bins/categories that referenced it keep their zoneId (FK is ON DELETE SET NULL only for a hard delete, which this is not) but it will no longer resolve via GET /zones/:id. Use PATCH { isActive:false } for a reversible suspend instead.'
+      tags:
+        - Zones
+  /zones/{id}/deactivate:
+    post:
+      operationId: ZonesController_deactivate_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: cold-storage
+                    name: Cold Storage
+                    isActive: false
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-09-01T02:39:41.574Z'
+                    updatedAt: '2026-09-01T02:39:41.574Z'
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      tags:
+        - Zones
 info:
   title: MatchStock API
   description: |-
@@ -7887,3 +8147,28 @@ components:
         - goodsReceiptLineId
         - binLocationId
         - quantity
+    CreateZoneDto:
+      type: object
+      properties:
+        code:
+          type: string
+          maxLength: 50
+          example: cold-storage
+          description: Auto-derived from name if omitted.
+        name:
+          type: string
+          maxLength: 255
+          example: Cold Storage
+      required:
+        - name
+    UpdateZoneDto:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        isActive:
+          type: boolean
+        isDeleted:
+          type: boolean
+          example: false

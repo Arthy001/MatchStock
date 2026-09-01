@@ -2,6 +2,19 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-01 (9) — Implement putawayStatus filter + Zone system (suggest-bin category matching) เข้า backend จริง
+
+ต่อยอดจากการตรวจสอบ+ทดสอบ `RECEIVING_AND_PUTAWAY_DESIGN.md` ที่พบ 2 gap ระหว่างเอกสารกับ backend จริง - หลังคุยเรื่อง impact กับ user แล้วให้ทำทั้งคู่ **implement เข้า backend จริงครบ ทดสอบ end-to-end บน local Docker และ production แล้ว**:
+
+1. **`putawayStatus` filter บน `GET /goods-receipts`** (§5 เอกสารระบุว่าควร filter ตามสถานะ putaway ได้ แต่ของจริงไม่มีมาก่อน): เพิ่ม query param `putawayStatus: staged|complete` - `staged` = มีอย่างน้อย 1 line ที่ `quantity > putawayQuantity`, `complete` = ทุก line ปิดงานแล้ว (หรือไม่มี line เลย) ใช้ raw SQL `EXISTS`/`NOT EXISTS` resolve id list ก่อน (ข้อจำกัดเดิม: Prisma query builder เทียบ 2 คอลัมน์ในแถวเดียวกันไม่ได้) ไม่ใส่ param นี้ก็ทำงานเหมือนเดิมทุกประการ
+2. **Zone system ใหม่** (§3.2 "Suggested Putaway Helper" เดิมเป็น capacity-only ล้วน ไม่มี zone/category ตามที่เอกสารอธิบาย): เพิ่ม `model Zone` (tenant-scoped master data, ไม่ผูก warehouse - ใช้ zone เดียวกันข้ามคลังได้ ตาม convention เดียวกับ Unit/Brand/Category) พร้อม CRUD เต็ม (`GET/POST/PATCH/DELETE /zones`, `/zones/:id/deactivate`) - เพิ่ม `BinLocation.zoneId` (ชั้นวางอยู่โซนไหน) และ `Category.zoneId` (หมวดหมู่นี้ควรเก็บโซนไหน) ทั้งคู่ nullable/optional
+3. **`GET /putaway/suggest-bin` ขยาย**: รับ `productId` เพิ่ม (optional) - ถ้าให้มาและ resolve ได้ถึง zone (Product.categoryId -> Category.zoneId) จะลองหา bin ในโซนนั้นก่อน (มี capacity พอ) **ถ้าไม่มี fallback กลับไป capacity-only ข้ามทุกโซนเหมือนเดิมทันที** (ไม่ block, ตรงกับ §4.2 "soft suggestion" - ไม่ส่ง productId มาก็ทำงานเหมือนเดิม 100%)
+4. **Migration ใหม่** (`20260901170000_zones`): สร้างตาราง `zones` + คอลัมน์ `zone_id` (nullable FK, `ON DELETE SET NULL`) บน `bin_locations`/`categories`
+
+**ทดสอบแล้วบน local Docker + production**: `putawayStatus=staged`/`complete` กรองถูกต้อง, `putawayStatus=bogus` โดน validation reject (400), Zone CRUD ครบ (create/update/deactivate/soft-delete/getById 404 หลังลบ), สร้าง category+bin ผูก zone เดียวกันแล้ว `suggest-bin?productId=...` คืน bin ในโซนที่ตรงกันจริง, ทดสอบ fallback ครบ 3 เคส (ไม่ส่ง productId, product ไม่มี category/zone, zone มีแต่ bin เต็มความจุ) กลับไป capacity-only ถูกต้องทุกเคส, สร้าง category/bin ด้วย zoneId ปลอมโดนบล็อก 404, soft-delete zone แล้ว category/bin ที่อ้างถึงไม่พังยังอ่านได้ปกติ (`zoneId` ไม่ถูก null เพราะ soft-delete ไม่ trigger `ON DELETE SET NULL`)
+
+**ยังไม่ทำรอบนี้ (นอกขอบเขตที่ user ขอ)**: `POST /warehouses/:id/bins`/`categories` ยังไม่บังคับต้องมี zone (ทั้งคู่ optional ตามที่ตกลง - migration ทีละน้อยไม่ต้อง backfill ของเดิม)
+
 ## 2026-09-01 (8) — Sync `StockBalance` กลับ: บั๊ก NULL-uniqueness ที่แก้ใน backend จริงแล้ว แต่ schema.prisma ที่นี่ยังไม่ตกลง
 
 ตรวจสอบ backend เทียบกับ `docs/openapi.yaml` + `schema.prisma` ทั้งคู่แบบเจาะลึกอีกรอบ (diff ทุกบรรทัดจริง ไม่ใช่แค่ high-level) เจอ 2 เรื่อง:
