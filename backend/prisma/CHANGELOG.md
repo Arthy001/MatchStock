@@ -2,6 +2,26 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-02 — Implement Hybrid Inventory (StockBalance + Outbound/Transfer/Adjust) เข้า backend จริงครบ
+
+ต่อยอดจาก entry ก่อนหน้า (`StockBalance`/`GoodsIssueLine`/`StockTransferLine`/`StockAdjustmentLine` ที่ DevOps เขียน schema ไว้ก่อน) - รอบนี้คือ **implement เข้า backend จริงครบทุกจุด ทดสอบ end-to-end บน local Docker และ production แล้ว**:
+
+1. **`StockBalanceService`** (`add`/`deduct`/`transfer`/`reserve`/`releaseReservation`) - atomic SQL ตาม `DATABASE_PERFORMANCE_OPTIMIZATION_GUIDE.md` §1 แต่แก้บั๊กสำคัญ: `ON CONFLICT` ตัวอย่างในเอกสารจะไม่ยุบแถว Staging (NULL bin/lot) เข้าด้วยกัน (Postgres ไม่ถือว่า NULL = NULL) - แก้เป็น raw-SQL expression unique index ที่ COALESCE ไปเป็น sentinel แทน (migration `20260902100000_stock_balance_null_safe_unique_index`)
+2. **Inbound**: `GoodsReceiptsService.createReceipt()`/`confirmPutaway()` อัปเดต `StockBalance` จริงแล้ว (1-Step ลง bin ทันที, 2-Step ลง Staging แล้วย้ายตอน confirm)
+3. **Outbound**: `POST /goods-issues` รับ `lines[]` (`CreateGoodsIssueItemDto`) เพิ่มเข้ามา - หัก `StockBalance` ทันทีในทรานแซกชันเดียวกับสร้าง header (ตรงข้ามกับ Inbound ที่มี Staging - ของออกต้องมีชั้นวางต้นทางเสมอ ไม่มีสถานะ "รอ")
+4. **Transfer**: `POST /stock-transfers` รับ `lines[]` (`CreateStockTransferItemDto`) - ประกาศ "pending" พร้อม header เหมือน `tagIds` เดิม **ยังไม่แตะ `StockBalance` จนกว่าจะ `POST /stock-transfers/:id/complete`** (จับเวลาให้ตรงกับฝั่ง Tag ที่มีอยู่แล้ว)
+5. **Adjustment**: `POST /stock-adjustments` รับ `quantityLines[]` (`CreateStockAdjustmentItemDto`, `adjustedQuantity` +/-) แยกจาก `lines[]` เดิม (Tag-based) - **ตั้งใจไม่ใช้ชื่อ "Line"** ให้ตรงกับ `StockAdjustmentLineDto` เดิมที่มีความหมายคนละอย่าง (tagId+newStatus) ใช้ชื่อ "Item" ตามที่ schema ที่ DevOps เคย draft ไว้ (orphaned, ไม่มี path ไหนอ้างถึง) แทน - ปิดความเสี่ยงชื่อชนกัน
+6. **`GET /stock/balances`, `GET /stock/lookup`** - ใหม่ทั้งคู่ ตามสเปกที่ตั้งใจไว้ใน `HYBRID_INVENTORY_ARCHITECTURE.md` §4 (`lookup` ค้นด้วย SKU/code/barcode ก่อน ถ้าไม่เจอ fallback ไปหา RFID `Tag.tagId`)
+7. **`.env`/`docker-compose.yml`**: เพิ่ม `connection_limit=15&pool_timeout=30` ตาม §2 ของ performance guide
+
+**บั๊กที่พบในเอกสารเอง (ยังไม่ได้แก้/ไม่ใช่ backend gap)**: `HYBRID_INVENTORY_ARCHITECTURE.md` §3 (Transaction Lifecycle Matrix) แถว "จ่ายออก (RFID)" เขียนว่า `tag_current_state.status = 'shipped'` - **ค่านี้ไม่มีอยู่จริงใน enum `TagCurrentStatus`** (มีแค่ `unknown/in_stock/exited/missing`, โค้ดจริงใช้ `exited`) ควรแก้ไขคำในเอกสาร
+
+**บั๊กที่พบซ้ำ (ของเดิมที่เคยแก้ใน PR #22 แต่ PR นั้นไม่เคย merge)**: `docs/openapi.yaml` มี duplicate mapping key ซ้ำอีกรอบ (`/goods-receipts/staged-items`, `/putaway/suggest-bin`, `/putaway/confirm` ถูกเขียนทับด้วย placeholder เก่าอีกครั้งจาก commit ที่ merge หลัง PR #22) - `js-yaml` throw error โหลดไฟล์ไม่ผ่านอีกรอบ แก้ไปพร้อมกับรอบนี้แล้ว (ดู PR #22 เดิม ปิดได้เลยเพราะซ้ำซ้อนกับ PR นี้)
+
+**ทดสอบแล้ว**: 1-step/2-step inbound เข้า StockBalance ถูกต้อง, dispatch เกินยอด block, over-dispatch ทำให้ header ไม่ถูกสร้าง (transaction rollback ถูกต้อง), transfer pending ไม่แตะยอดจนกว่าจะ complete, adjustment +/- คำนวณถูกต้องทั้งคู่, validation ทุกจุด (ต้องมีอย่างน้อย 1 ใน lines/quantityLines, quantityLines ต้องมี warehouseId) - ยืนยันบน production แล้ว ไม่ใช่แค่ local
+
+**Known limitation ที่ยังไม่ทำ (นอกขอบเขตรอบนี้)**: reservation ("จองบิล") ยังไม่ต่อเข้า endpoint `POST /goods-issues/:id/reserve`/`release` จริง (มีแค่ `StockBalanceService.reserve()`/`releaseReservation()` พร้อมใช้)
+
 ## 2026-09-01 — เพิ่ม Hybrid Inventory Architecture: StockBalance และ Transaction Lines
 
 อัปเดต `schema.prisma` และ `docs/openapi.yaml` เพื่อรองรับทั้งสินค้าบาร์โค้ดนับจำนวน (Bulk / Quantity-based) และสินค้าติดชิป RFID รายชิ้น (Serialized / RFID-based):
