@@ -54,7 +54,7 @@ erDiagram
 | **2. จัดเก็บ (Putaway)** | ย้ายยอดใน `StockBalance` จาก `bin: null` $\rightarrow$ `bin: A-01` | อัปเดต `tag_current_state.last_bin_location_id` |
 | **3. โอนย้าย (Transfer)** | `stock_transfer_lines` (ลดต้นทาง, เพิ่มปลายทางใน `StockBalance`) | `stock_transfer_tags` (เปลี่ยนพิกัด Tag) |
 | **4. ปรับยอด (Adjust)** | `stock_adjustment_lines` (ปรับ `quantity_on_hand` +/-) | `cycle_count_tags` (ตรวจนับ Tag หาย/พบใหม่) |
-| **5. จ่ายออก (Outbound)** | `goods_issue_lines` (ลด `StockBalance.quantity_on_hand`) | `goods_issue_tags` (`tag_current_state.status = 'shipped'`) |
+| **5. จ่ายออก (Outbound)** | `goods_issue_lines` (ลด `StockBalance.quantity_on_hand`) | `goods_issue_tags` (`tag_current_state.status = 'exited'`) |
 
 ---
 

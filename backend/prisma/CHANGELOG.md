@@ -2,6 +2,19 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-01 (6) — Reserve/Release quantity, Company Data Isolation, Feature-gating ขยาย, `maxCompanies`
+
+ทำ 4 เรื่องที่ user ขอเพิ่มพร้อมกัน หลังตัดสินใจเรื่อง risk แต่ละอย่างแล้ว:
+
+1. **Wire `reserve`/`release` เข้า `StockBalanceService`**: `POST /goods-issues/:id/reserve` และ `/release` รับ `lines[]` เพิ่ม (นอกจาก `tagIds` เดิม) - เพิ่ม/ลด `StockBalance.quantityReserved` โดยไม่แตะ `quantityOnHand` - **หมายเหตุ**: reserve ผ่านทางนี้กับ dispatch ตรงผ่าน `POST /goods-issues` (`lines[]`, implement ไปก่อนหน้า) เป็นคนละ bookkeeping กัน ยังไม่เชื่อมกัน (dispatch ตรงไม่ได้ไปลด quantityReserved ที่เคย reserve ไว้)
+2. **Company Data Isolation**: เพิ่ม `companyId` เข้า JWT payload (เหมือน `role` - เปลี่ยนแล้วมีผลตอน login/refresh ครั้งถัดไป) กรอง `Warehouse`/`Supplier`/`User` ตาม company ของผู้ใช้ที่ login อยู่ - `companyId: null` (HQ/tenant-wide) เห็นทุกอย่าง, `companyId` ระบุค่า เห็นเฉพาะของ company ตัวเอง + ของที่ยังไม่ผูก company (`null`) - บังคับใช้ที่ `getByIdInCompany()` ด้วยไม่ใช่แค่ list เพื่อกันการอ้างอิงข้าม company ตอนสร้างธุรกรรม (GoodsReceipt/GoodsIssue/ฯลฯ) ด้วย
+3. **ขยาย Feature-gating** (`@RequireFeature`) ไป 6 endpoint ใหม่ ตามที่ user ยืนยันว่า **บังคับกับทุก Tenant ทันทีไม่ grandfather**: `POST /warehouses/:id/bins` (`warehouse.bins`), `POST /stock-transfers` (`stock.transfer`), `POST /stock-adjustments` (`stock.adjustment`), `POST /cycle-counts` (`cycle_count.barcode`), `POST /webhook-subscriptions` (`integrations.webhooks`), `POST /companies` (`company.multi_branch`) - **ตั้งใจไม่แตะ** `rfid.tags`/`hardware.mqtt_devices` (เสี่ยงตัดขาดข้อมูลจากอุปกรณ์ที่เชื่อมต่ออยู่จริงแบบกู้คืนไม่ได้ ต่างจาก endpoint อื่นที่แค่ 403 หน้าจอ) และ `integrations.api_access`/`sales_orders.manage`/`reports.expiring_soon`/`stock.fefo`/`rbac.custom_roles` (ไม่มี endpoint ที่ map ตรงๆ ได้ - บาง feature ยังไม่ implement จริงด้วยซ้ำ เช่น FEFO ยังใช้ FIFO อยู่)
+4. **`SubscriptionPlan.maxCompanies`**: quota ใหม่สำหรับจำกัดจำนวน Company/branch ต่อ tenant - **ไม่ seed ค่าตายตัวต่อแพ็กเกจ** ตามที่ user บอกว่าอยากให้ Platform Admin กำหนดเองได้ (`null` = ไม่จำกัด ทุกแพ็กเกจเริ่มต้นแบบนี้จนกว่า admin จะตั้งค่า)
+
+**บั๊กเอกสารที่แก้ไปด้วย**: `HYBRID_INVENTORY_ARCHITECTURE.md` §3 `'shipped'` → `'exited'` (ตามที่แจ้งไว้ก่อนหน้า)
+
+**ทดสอบแล้วบน local Docker ทุกจุด**: feature-gate บล็อก FREE tenant จริง (403 FEATURE_NOT_INCLUDED) ปล่อยผ่าน PRO เหมือนเดิม, company isolation กรอง warehouse ถูกต้อง (user ที่ผูก Company A ไม่เห็น warehouse ของ Company B แต่เห็นของ Company A + ของที่ไม่ผูก company ใดเลย, 404 ตรงเมื่อพยายามเข้าถึงข้าม company), maxCompanies บล็อกถูกต้องเมื่อ admin ตั้ง quota ไว้ - ยืนยันบน production แล้ว (deploy + migrate สำเร็จ, health check + smoke test ผ่าน)
+
 ## 2026-09-01 (5) — Implement Hybrid Inventory (StockBalance + Outbound/Transfer/Adjust) เข้า backend จริงครบ
 
 ต่อยอดจาก entry ก่อนหน้า (`StockBalance`/`GoodsIssueLine`/`StockTransferLine`/`StockAdjustmentLine` ที่ DevOps เขียน schema ไว้ก่อน) - รอบนี้คือ **implement เข้า backend จริงครบทุกจุด ทดสอบ end-to-end บน local Docker และ production แล้ว**:

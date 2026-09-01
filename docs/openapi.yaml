@@ -7010,11 +7010,16 @@ components:
           minItems: 1
           example:
             - 686E14141E13194568471D7F
+          description: RFID tags (optional if `lines` is given instead - at least one of the two is required).
           type: array
           items:
             type: string
-      required:
-        - tagIds
+        lines:
+          maxItems: 500
+          description: Quantity-based line items (barcode/manual-count path) - only quantity/productId/binLocationId/lotNumber are used here (unitPriceMinor is ignored for reserve/release).
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateGoodsIssueItemDto'
     DispatchByQuantityDto:
       type: object
       properties:
@@ -7453,6 +7458,11 @@ components:
         maxDevices:
           type: integer
           example: 0
+        maxCompanies:
+          type: integer
+          nullable: true
+          description: Max Companies (branches) under one tenant. Omit/null = unlimited - no fixed per-tier default is seeded, Platform Admin sets this explicitly per plan.
+          example: 1
         features:
           type: array
           items:
@@ -7487,6 +7497,11 @@ components:
           example: 15000
         maxDevices:
           type: integer
+          example: 2
+        maxCompanies:
+          type: integer
+          nullable: true
+          description: Max Companies (branches) under one tenant. Omit/null = unlimited.
           example: 2
         features:
           type: array
