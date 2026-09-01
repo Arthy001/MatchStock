@@ -2,6 +2,15 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-01 (8) — Sync `StockBalance` กลับ: บั๊ก NULL-uniqueness ที่แก้ใน backend จริงแล้ว แต่ schema.prisma ที่นี่ยังไม่ตกลง
+
+ตรวจสอบ backend เทียบกับ `docs/openapi.yaml` + `schema.prisma` ทั้งคู่แบบเจาะลึกอีกรอบ (diff ทุกบรรทัดจริง ไม่ใช่แค่ high-level) เจอ 2 เรื่อง:
+
+1. **`StockBalance.@@unique(...)` บั๊กที่แก้ใน backend จริงไปแล้ว (migration `20260902100000_stock_balance_null_safe_unique_index`) แต่ไม่เคย sync กลับมาที่ schema.prisma repo นี้เลย** - ที่นี่ยังมี `@@unique([tenantId, warehouseId, binLocationId, productId, lotNumber])` ตัวเดิมที่มีปัญหา (Postgres ไม่ยุบ NULL=NULL ให้ ทำให้ 2-Step Staging รับซ้ำแล้วแตกแถวแทนที่จะรวมยอด) - ลบออกแล้ว อัปเดต comment อธิบายว่า unique constraint จริงอยู่ใน raw SQL expression index แทน (COALESCE bin/lot เป็น sentinel) ตรงกับที่ backend จริงใช้อยู่แล้ว
+2. **`/menu`, `/rentals`, `/rentals/{id}`, `/rentals/{id}/deposit-checkout` ยังหายไปจาก `docs/openapi.yaml`** - endpoint จริงมีบน production ครบ (ยืนยันจาก live `/api-docs-json`) แต่ PR #19 ที่แก้เรื่องนี้ไว้ตั้งแต่ 2026-08-31 **ยังไม่ถูก merge** - ไม่ใช่ backend gap แค่รอ merge PR เดิม
+
+**ที่เหลือ (relation choices บน GoodsReceipt/GoodsReceiptLine/GoodsIssue ที่ backend จริงไม่มี tenant/warehouse relation บน header ต่างจาก schema นี้)**: เป็น divergence ที่ตั้งใจและบันทึกไว้แล้วใน entry ก่อนหน้า ไม่ใช่เรื่องใหม่ ไม่แก้
+
 ## 2026-09-01 (7) — ตรวจสอบ + ทดสอบตาม `TENANT_USER_SUBSCRIPTION_PLAN.md` ครบ + ใส่ค่า `maxCompanies` จริง
 
 ตรวจสอบ backend เทียบกับ `docs/TENANT_USER_SUBSCRIPTION_PLAN.md` ทั้งฉบับ (เอกสารอัปเดตใหม่ มีตาราง `maxCompanies` เพิ่มมาที่ยังไม่เคยตรวจ) ด้วยการทดสอบจริงบน local Docker ไม่ใช่แค่อ่านโค้ด:
