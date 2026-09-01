@@ -2,6 +2,18 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-01 (10) — Sync `docs/openapi.yaml` กลับ: 3 schema + 1 param ที่ merge script รอบ PR #28 พลาดไป
+
+ตรวจสอบ `docs/openapi.yaml` เทียบ live `/api-docs-json` แบบเจาะลึกทุก property/param อีกรอบ (ไม่ใช่แค่นับ path/schema เฉยๆ) เจอว่า merge script ที่ใช้ตอน sync Zone system (PR #28) มีบั๊ก: script เช็คแค่ "schema/path นี้มีอยู่แล้วหรือยัง" แล้วข้ามการอัปเดตถ้ามีอยู่แล้ว - ทำให้ schema/param ที่**มีอยู่ก่อนแล้วแต่เนื้อหาเปลี่ยน** (ไม่ใช่ของใหม่ทั้งหมด) ไม่ถูก sync ตาม:
+
+1. **`CreateCategoryDto`/`UpdateCategoryDto`**: ขาด field `zoneId` (เพิ่มเข้า backend จริงพร้อม Zone system ใน PR #28 แต่ schema เดิมมีอยู่ก่อนแล้วเลยไม่ถูกแตะ)
+2. **`UpdateBinLocationDto`**: ขาด field `zoneId` เช่นกัน (เหตุผลเดียวกัน)
+3. **`GET /putaway/suggest-bin`**: ขาด query param `productId` (path นี้มีอยู่ก่อน PR #28 แล้ว merge script เดิมมีแค่ special-case merge param ให้ `/goods-receipts` GET ตัวเดียว ไม่ครอบคลุม endpoint นี้)
+
+**แก้ไข**: sync ทั้ง 3 schema (แทนที่ทั้งก้อนด้วยเวอร์ชันจาก live spec ตรงๆ) + เพิ่ม param `productId` ให้ `/putaway/suggest-bin` GET แล้ว ตรวจ property/required/param ของทุก schema/path ที่มีร่วมกันระหว่าง live กับ docs ทีละตัวอีกรอบ **เหลือ 0 จุดต่างกันแล้ว** (0 schema mismatch, 0 param mismatch, 0 path/method หาย) ไม่มี duplicate key
+
+**บทเรียน**: merge script แบบ "add-only" (เช็คแค่ exists/not-exists) ใช้ได้กับ schema/path ที่เป็นของใหม่ล้วนๆ แต่พลาดกรณี "ของเดิมมีอยู่แล้วแต่ backend แก้ content เพิ่ม" - ต้อง diff property-level ทุกครั้งหลัง sync ไม่ใช่แค่ diff จำนวน path/schema
+
 ## 2026-09-01 (9) — Implement putawayStatus filter + Zone system (suggest-bin category matching) เข้า backend จริง
 
 ต่อยอดจากการตรวจสอบ+ทดสอบ `RECEIVING_AND_PUTAWAY_DESIGN.md` ที่พบ 2 gap ระหว่างเอกสารกับ backend จริง - หลังคุยเรื่อง impact กับ user แล้วให้ทำทั้งคู่ **implement เข้า backend จริงครบ ทดสอบ end-to-end บน local Docker และ production แล้ว**:

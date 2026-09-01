@@ -5907,6 +5907,14 @@ paths:
             default: 1
             example: 40
             type: number
+        - name: productId
+          required: false
+          in: query
+          description: The product being put away - if given and it has a category with a zone set, only bins in that zone are suggested first. Falls back to the old capacity-only search (across every zone) when omitted, when the product has no category/zone, or when no bin in that zone currently has room - this stays a soft suggestion, never a hard requirement.
+          schema:
+            format: uuid
+            example: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+            type: string
       responses:
         '200':
           description: ''
@@ -6978,6 +6986,11 @@ components:
         description:
           type: string
           maxLength: 1000
+        zoneId:
+          type: string
+          format: uuid
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          description: Which storage zone this category's stock belongs in - drives GET /putaway/suggest-bin's category matching. Omit if this category has no particular zone.
       required:
         - name
     UpdateCategoryDto:
@@ -6994,6 +7007,12 @@ components:
         isDeleted:
           type: boolean
           example: false
+        zoneId:
+          type: string
+          nullable: true
+          format: uuid
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          description: Which storage zone this category's stock belongs in - drives GET /putaway/suggest-bin's category matching. Send null to clear it.
     CreateTaxTypeDto:
       type: object
       properties:
@@ -7103,6 +7122,12 @@ components:
           minimum: 0
           example: 100
           description: Total tag-count ceiling - GET /alerts flags this bin once the live count exceeds it.
+        zoneId:
+          type: string
+          nullable: true
+          format: uuid
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          description: Which storage zone this shelf physically sits in - drives GET /putaway/suggest-bin's category matching. Send null to clear it.
     CreateTagDto:
       type: object
       properties:
