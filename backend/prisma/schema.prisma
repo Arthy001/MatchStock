@@ -1154,6 +1154,7 @@ model StockBalance {
   @@unique([tenantId, warehouseId, binLocationId, productId, lotNumber])
   @@index([tenantId, warehouseId])
   @@index([tenantId, productId])
+  @@index([tenantId, warehouseId, binLocationId])
   @@map("stock_balances")
 }
 

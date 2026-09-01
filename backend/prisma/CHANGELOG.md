@@ -9,6 +9,7 @@
 1. **`StockBalance` (โมเดลใหม่)**:
    - ตารางบันทึกยอดสต็อกคงเหลือจริง Real-time: `[tenantId, warehouseId, binLocationId, productId, lotNumber]`
    - เก็บ `quantityOnHand` และ `quantityReserved` สำหรับการตรวจสอบยอดคงเหลือความเร็ว $O(1)$
+   - เพิ่ม Composite Index `@@index([tenantId, warehouseId, binLocationId])` เพื่อเร่งความเร็ว Query สินค้ารายชั้นวาง 1–3 ms
 2. **Transaction Line Items (โมเดลใหม่)**:
    - **`GoodsIssueLine` & `GoodsIssueTag`**: รองรับรายการสินค้าที่จ่ายออกทั้งแบบนับจำนวนและแบบระบุชิป RFID
    - **`StockTransferLine`**: รองรับการโอนย้ายสินค้าข้ามคลัง/ข้ามชั้นวางแบบนับจำนวน (คู่ขนานกับ `StockTransferTag`)
