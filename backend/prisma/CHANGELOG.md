@@ -9,7 +9,7 @@
 1. **`StockBalance.@@unique(...)` บั๊กที่แก้ใน backend จริงไปแล้ว (migration `20260902100000_stock_balance_null_safe_unique_index`) แต่ไม่เคย sync กลับมาที่ schema.prisma repo นี้เลย** - ที่นี่ยังมี `@@unique([tenantId, warehouseId, binLocationId, productId, lotNumber])` ตัวเดิมที่มีปัญหา (Postgres ไม่ยุบ NULL=NULL ให้ ทำให้ 2-Step Staging รับซ้ำแล้วแตกแถวแทนที่จะรวมยอด) - ลบออกแล้ว อัปเดต comment อธิบายว่า unique constraint จริงอยู่ใน raw SQL expression index แทน (COALESCE bin/lot เป็น sentinel) ตรงกับที่ backend จริงใช้อยู่แล้ว
 2. **`/menu`, `/rentals`, `/rentals/{id}`, `/rentals/{id}/deposit-checkout` ยังหายไปจาก `docs/openapi.yaml`** - endpoint จริงมีบน production ครบ (ยืนยันจาก live `/api-docs-json`) แต่ PR #19 ที่แก้เรื่องนี้ไว้ตั้งแต่ 2026-08-31 **ยังไม่ถูก merge** - ไม่ใช่ backend gap แค่รอ merge PR เดิม
 
-**ที่เหลือ (relation choices บน GoodsReceipt/GoodsReceiptLine/GoodsIssue ที่ backend จริงไม่มี tenant/warehouse relation บน header ต่างจาก schema นี้)**: เป็น divergence ที่ตั้งใจและบันทึกไว้แล้วใน entry ก่อนหน้า ไม่ใช่เรื่องใหม่ ไม่แก้
+**ที่เหลือ (relation choices บน GoodsReceipt/GoodsReceiptLine/GoodsIssue ที่backend จริงไม่มี tenant/warehouse relation บน header ต่างจาก schema นี้)**: เป็น divergence ที่ตั้งใจและบันทึกไว้แล้วใน entry ก่อนหน้า ไม่ใช่เรื่องใหม่ ไม่แก้
 
 ## 2026-09-01 (7) — ตรวจสอบ + ทดสอบตาม `TENANT_USER_SUBSCRIPTION_PLAN.md` ครบ + ใส่ค่า `maxCompanies` จริง
 
@@ -82,6 +82,72 @@
 4. **เอกสารสถาปัตยกรรม**: เพิ่ม `docs/HYBRID_INVENTORY_ARCHITECTURE.md` อธิบาย Dual-Engine Design ครบถ้วน
 
 ## 2026-09-01 (4) — Sync `schema.prisma` กลับ: 2 field ที่ backend มีอยู่แล้วแต่ docs ตกหล่น
+
+ตอนตรวจสอบ backend เทียบกับ `schema.prisma` บน develop (ก่อนหน้านี้) พบว่า backend จริง **มากกว่า** docs อยู่ 2 จุด (คนละทิศกับ gap ปกติ - ของจริง implement ไปแล้วแต่ schema.prisma repo นี้ไม่เคย sync ตาม):
+
+1. **`ReaderOpsOperator`**: ขาด `isActive`/`deletedAt`/`deletedByType`/`deletedById`/`updatedAt` (soft-delete + suspend, แพทเทิร์นเดียวกับ `User`/`PlatformAdmin` - login account ที่มี MFA)
+2. **`WebhookSubscription`**: ขาด `deletedAt`/`deletedByType`/`deletedById` (soft-delete ผ่าน `withSoftDelete` extension - ของจริงมีมาตั้งแต่รอบ isDeleted rollout ก่อนหน้านี้)
+
+เพิ่มกลับเข้า `schema.prisma` ให้ตรงกับ backend จริงทุกตัวอักษร แล้วรัน `npx prisma format` ทับ - format เก็บงานที่ตกหล่นให้เพิ่มอีกอย่าง: **`Tenant.goodsReceipts` reverse relation หายไป** ตั้งแต่ commit `ce4aa7b` (เพิ่ม `GoodsReceipt.tenant` relation แต่ไม่เพิ่ม back-relation ฝั่ง `Tenant` - ทำให้ schema จุดนี้ invalid มาตั้งแต่ commit นั้น) - `prisma format` เติมให้อัตโนมัติ ยืนยันด้วย `prisma validate` ผ่านแล้ว
+
+**ยืนยันแล้ว**: diff `schema.prisma` กับ backend จริงเหลือแค่ 2 จุดที่ต่างกันโดยตั้งใจ (บันทึกไว้ใน CHANGELOG entry ก่อนหน้า - `GoodsReceiptLine` ไม่มี `@relation`/FK ตาม convention ตระกูล stock-transactions, และ `Product` ใช้ partial-unique-index แทน plain `@@unique` สำหรับ soft-delete) นอกนั้นตรงกันทุกตัวอักษร ไม่มีการเปลี่ยนแปลงฝั่ง backend จริงเลยรอบนี้ (docs-only sync)
+
+## 2026-09-01 (3) — Implement Goods Receipt Lines + Flexible Putaway เข้า backend จริง
+
+ต่อยอดจาก commit `ce4aa7b` (rework goods receipt schema with lines and flexible putaway design) - ตอนตรวจสอบ backend เทียบกับ `schema.prisma` บน develop พบว่าฟีเจอร์นี้ยังไม่ได้ implement เข้า backend เลย รอบนี้คือ **implement เข้าจริงครบทุกจุดตาม `docs/RECEIVING_AND_PUTAWAY_DESIGN.md` ทดสอบ end-to-end บน local Docker และ production แล้ว**:
+
+1. **`GoodsReceipt`**: เพิ่ม `supplierId`/`poNumber`/`supplierInvoiceNo`/`photoUrls` จริง (FK constraint จริงสำหรับ `supplierId` -> `suppliers.id` ON DELETE SET NULL)
+2. **`GoodsReceiptLine` (โมเดลใหม่)**: `quantity`/`damagedQuantity`/`putawayQuantity`/lot-expiry/`unitCostMinor`/`binLocationId` ตาม spec เป๊ะ - **ตัดสินใจ implementation**: ไม่มี `@relation`/FK constraint ให้ `goodsReceiptId`/`productId`/`binLocationId` โดยตั้งใจ (ต่างจาก commit `ce4aa7b` ที่เขียนไว้) เพื่อให้ตรงกับ convention เดิมของทั้งตระกูล stock-transactions (`GoodsReceipt`/`GoodsIssue`/`StockTransfer` ทุกตัวเป็น plain UUID column ไม่มี FK มาตั้งแต่ต้น) - validate ที่ service layer ผ่าน `getByIdInCompany()` แทน
+3. **1-Step vs 2-Step Putaway**: `POST /goods-receipts` รับ `lines[]` พร้อม header ได้เลย - line ที่ระบุ `binLocationId` จะ `putawayQuantity = quantity` ทันที (1-Step), ถ้าไม่ระบุจะสร้างแบบ staged (`putawayQuantity: 0`) รอ 2-Step
+4. **`GET /goods-receipts/staged-items`**: คิวงาน Putaway ที่ยังไม่เสร็จ (`quantity > putawayQuantity`) - join กับ receipt/product ผ่าน `$queryRaw` (เทียบคอลัมน์สองตัวในแถวเดียวกัน Prisma query builder ทำไม่ได้ ต้อง raw SQL แบบเดียวกับ `ReportsService.getStockValuation()`)
+5. **`GET /putaway/suggest-bin`**: แนะนำ bin ตาม free capacity เท่านั้น (`maxCapacity` ลบยอด `putawayQuantity` ที่ลงไปแล้วในแต่ละ bin ผ่าน ledger นี้) - **ข้อจำกัดที่ทราบ**: schema ปัจจุบันไม่มี zone/category บน `BinLocation` เลย จับคู่ตาม "หมวดหมู่สินค้า" ตามที่ design doc อธิบายไว้ไม่ได้จริง เป็นแค่ soft suggestion ตาม capacity อย่างเดียว (design doc เองก็ระบุว่าไม่บังคับ override ได้เสมอ)
+6. **`POST /putaway/confirm`**: รองรับ partial/multi-bin putaway (design doc ยง4.1) - line หนึ่งมี `binLocationId` ได้แค่ช่องเดียว ดังนั้นการวางแบบแยกหลาย bin จะ **หด `quantity` ของ line เดิมที่ยัง staged อยู่ ลง และสร้าง line ใหม่ที่ปิดงานแล้ว (`putawayQuantity == quantity`) ชี้ไปที่ bin เป้าหมาย** แทนที่จะพยายามเก็บสอง bin ไว้ในแถวเดียว - ทดสอบ full close + partial split + over-confirm (400) + cross-tenant isolation (404) ผ่านหมดบน local Docker
+7. **`docs/openapi.yaml`**: แทนที่ placeholder ที่ทีมเขียนไว้ล่วงหน้า (`StagedItemDto`/`PutawaySuggestionResponseDto`/`PutawayConfirmDto`) ด้วย spec จริงจาก live `/api-docs-json` (`GoodsReceiptLine`/`CreateGoodsReceiptLineDto` จริง) เพราะฟีเจอร์นี้ implement เสร็จแล้ว ไม่ใช่ placeholder อีกต่อไป
+
+**ทดสอบแล้ว**: 1-Step direct putaway, 2-Step staged->confirm เต็มจำนวน, partial putaway แยก 2 bin (60+35), over-confirm เกินจำนวนคงเหลือ block ด้วย 400, cross-tenant เข้าถึง line คนอื่นไม่ได้ (404) - ยืนยันบน production (`match-stock.ddns.net`, path เพิ่มจาก 90 เป็น 93) แล้ว ไม่ใช่แค่ local
+
+**ยังไม่ทำรอบนี้ (นอกขอบเขต design doc)**: reconciliation ระหว่าง stock ที่นับผ่าน `GoodsReceiptLine` (barcode/manual) กับ stock ที่นับผ่าน Tag/RFID (`GET /warehouses/:id/stock` เดิม) - เป็นสองระบบนับสต็อกคู่ขนานที่ยังไม่เชื่อมกัน
+
+## 2026-09-01 (2) — แก้ `MenuController`/`RentalsController` ถูก `@ApiExcludeController()` โดยไม่ตั้งใจ
+
+**ปัญหาที่พบ**: หลังแก้ cache header รอบก่อนแล้ว ผู้ใช้ยังรายงานว่า Swagger endpoint ไม่ครบ — ตรวจ `@Controller()` ทุกตัวใน backend เทียบกับ live spec เจอว่า `GET /menu` (nav tree ที่กรองตาม `MenuItem.requiredFeature`/`SubscriptionPlan.features` — งาน Dynamic Menu จาก PR #17 เมื่อวาน) และทั้ง controller `/rentals` (list/get/deposit-checkout) **หายไปจาก live spec ทั้งคู่**
+
+**สาเหตุ**: ทั้งสองไฟล์เป็น controller ฝั่ง tenant (ไม่ใช่ platform-admin) แต่ติด `@ApiExcludeController()` อยู่ - ตรวจสอบทุก controller ที่มี decorator นี้แล้วพบว่าเป็นกลุ่ม `platform/*` (admin realm, ถูกต้อง), webhook/mqtt callback (ถูกต้อง), reader-ops/monitoring/reader-config (internal ops tool, ถูกต้อง) แต่ `MenuController` (`menu`) กับ `RentalsController` (`rentals`) ไม่มีเหตุผลทางสถาปัตยกรรมรองรับเลย - สันนิษฐานว่า copy-paste มาจาก controller ฝั่ง admin (`MenuItemsAdminController`/`RentalAssignmentsAdminController`) แล้วลืมเอาออก
+
+**การแก้ไข**: เอา `@ApiExcludeController()` ออกจากทั้งสองไฟล์ (`src/modules/menu/menu.controller.ts`, `src/modules/rentals/rentals.controller.ts`) - build/test บน local Docker แล้ว deploy ขึ้น production แล้ว sync `docs/openapi.yaml` เพิ่ม 4 path ใหม่ (`GET /menu`, `GET /rentals`, `GET /rentals/{id}`, `POST /rentals/{id}/deposit-checkout`) + schema `CollectDepositDto`
+
+**ยืนยันแล้ว**: live `/api-docs-json` มี path เพิ่มจาก 86 เป็น 90 จริง เช็คแล้วมี `GET /menu`, `/rentals` ครบทั้ง 3 endpoint
+
+## 2026-09-01 — Sync `docs/openapi.yaml` จาก live spec จริงอีกรอบ + แก้ Swagger cache
+
+**ปัญหาที่พบ**: หลังจากงาน isDeleted rollout เมื่อวาน (`DELETE /{id}` ใหม่ให้ 10 master-data model) เอกสาร `docs/openapi.yaml` **ไม่เคย sync ตามเลย** — ยัง"ไม่มี" `delete:` method ให้ endpoint พวกนี้แม้แต่ตัวเดียว (มีแค่ `get`/`patch`) และตัวอย่าง response ยังไม่มี field `isDeleted` เลยด้วย
+
+**สาเหตุที่ Swagger (live `/api-docs`) เองก็ดู "ไม่เปลี่ยน" ทั้งที่โค้ดจริงอัพเดทแล้ว**: `/api-docs`/`/api-docs-json` ไม่เคยส่ง `Cache-Control` header เลย ทำให้ browser ใช้ heuristic cache ของตัวเองได้ตามใจ (reload ธรรมดาอาจไม่ re-fetch จริง) — เพิ่ม `Cache-Control: no-store` ให้ทั้งสอง route แล้ว (`main.ts`) ตาม pattern เดียวกับ `platform.html`/`monitoring.js` ที่ทำไว้อยู่แล้วในแอปนี้
+
+**การแก้ไข `docs/openapi.yaml`**:
+- ดึงจาก `GET https://match-stock.ddns.net/api-docs-json` ตรงๆ อีกครั้ง (source เดียวกับ PR #13) — คราวนี้ **ไม่ได้ทับทั้งไฟล์แบบ PR #13** เพราะพบว่าไฟล์เดิมมี "hand-written forward-spec" ของทีมอยู่ 11 path (`/billing/*`, `/platform/billing/*`, `/platform/subscription-plans*`, `/goods-receipts/staged-items`, `/putaway/*`) ที่**ตั้งใจไม่โผล่ใน live spec** (controller เหล่านี้เป็น `@ApiExcludeController()` ทั้งหมด - Billing/Platform เป็น internal, ส่วน putaway/staged-items ยังไม่ implement จริง) — ทับทั้งไฟล์แบบเดิมจะ**ลบเอกสารพวกนี้ทิ้งโดยไม่ตั้งใจ**
+- แก้เป็น **merge**: sync ทุก path/schema ที่มีอยู่จริงใน live spec (รวม `delete:` ใหม่ทั้ง 10 model + example ที่มี `isDeleted` ถูกต้อง) แต่ยังคง 11 path + 10 schema (`SubscribeRequestDto`, `CreateSubscriptionPlanDto`, `StagedItemDto`, ฯลฯ) ที่ทีมเขียนไว้ล่วงหน้าไว้ครบ ไม่ลบทิ้ง
+
+**ยืนยันแล้ว**: `/api-docs` และ `/api-docs-json` มี `Cache-Control: no-store` จริงบน production, ไฟล์ที่ sync ใหม่มี 97 path (86 จาก live + 11 ที่เก็บไว้) ตรวจ `delete:` ของ Product/Category/Warehouse/Units ฯลฯ มีครบทุกตัว
+
+## 2026-08-31 — Implement Subscription Quotas, Feature Gating, Company Scoping และ Billing API เข้า backend จริง
+
+ต่อยอดจาก `docs/TENANT_USER_SUBSCRIPTION_PLAN.md` + ส่วน Backend ของ `docs/BACKEND_FRONTEND_IMPLEMENTATION_GUIDE.md` — schema.prisma/openapi.yaml ของ repo นี้ระบุ spec ไว้แล้ว (commit `2fa27ea`) รอบนี้คือ **implement เข้า backend จริงครบทุกจุด ทดสอบ end-to-end บน local Docker และ production แล้ว**:
+
+1. **Migration ใหม่** (`20260831150000_subscription_quotas_company_scoping_menu_gating`): `User.companyId`, `Supplier.companyId`, `Warehouse.companyId` (ทุกตัว nullable + FK ไป `Company`), `SubscriptionPlan.maxWarehouses`/`maxProducts`, `MenuItem.requiredFeature`
+2. **Feature Gating จริง**: `EntitlementGuard` เช็ค `@RequireFeature('code')` เทียบกับ `SubscriptionPlan.features` ของ tenant ปัจจุบัน หลังผ่านเช็ค active แล้ว — ติดตัวอย่างจริงที่ `GET /reports/stock-valuation` (`reports.valuation`) และ `GET /reports/moving-analysis` (`reports.moving_analysis`)
+3. **Quota Enforcement จริง**: `UsersService.createInCompany()`/`WarehousesService.createWarehouse()`/`ProductsService.createProduct()` เช็ค `COUNT < plan.maxXxx` ก่อนสร้างเสมอ throw `403 QUOTA_EXCEEDED` ตาม payload ที่ spec กำหนดเป๊ะ
+4. **Billing API ใหม่**: `GET /billing/current-subscription` (แพ็กเกจ+โควตาการใช้งานจริง), `POST /billing/subscribe` (ทางลัดขั้นตอนเดียว ครอบ `createSubscription()`+`checkout()` เดิม รองรับ upgrade แบบ swap แผนในที่), `POST /billing/cancel` (ยกเลิก subscription ปัจจุบันไม่ต้องส่ง id), `GET /platform/billing/subscriptions` (ภาพรวมข้าม tenant), `POST`/`PATCH /platform/subscription-plans` (Platform Admin จัดการแพ็กเกจ) — endpoint เดิม (`/billing/subscriptions`, `/checkout`) ยังอยู่ครบสำหรับ flow 3DS/PromptPay
+5. **Company Scoping (เก็บ field เท่านั้น รอบนี้)**: `companyId` เพิ่มเข้า Create/Update DTO ของ Warehouse/Supplier/User แล้ว บันทึกได้จริง — **ยังไม่กรอง data visibility ตาม company** (ส่วนต่อขยายที่ค้างไว้ตามที่ตกลงกัน)
+6. **Menu Feature Gating**: `MenuItemsService.getMenuForUser()` มองเห็นเมนูอัตโนมัติถ้า `MenuItem.requiredFeature` อยู่ใน `plan.features` ปัจจุบัน (หรือถูก grant มือไว้แล้วผ่าน `TenantMenuItem` เดิม) — `platform/menu-items` รับ `requiredFeature` ตอนสร้าง/แก้ได้แล้ว
+7. **Seed**: แทนที่ `STARTER`/`GROWTH`/`ENTERPRISE` ด้วย `FREE`/`PRO_MONTHLY`/`ULTRA_MONTHLY` ตาม spec เป๊ะ (ราคา/โควตา/ฟีเจอร์ครบ) — plan เก่าถูก deactivate ไม่ลบ (ยัง resolve ได้สำหรับ subscription เก่าที่ migrate ไม่ทัน) — **migrate `Subscription.planCode` ของทุก tenant ที่มีอยู่จริงจากโค้ดเก่าไปโค้ดใหม่แล้ว** ตาม tier เทียบเท่า (`STARTER`→`FREE`, `GROWTH`→`PRO_MONTHLY`, `ENTERPRISE`→`ULTRA_MONTHLY`)
+8. **บั๊กที่พบและแก้ระหว่างทำ**: global exception filter (`all-exceptions.filter.ts`) เดิมทิ้งฟิลด์ custom ของ HttpException payload (เช่น `error`/`resource`/`currentUsage`) เหลือแค่ `message`/`errors` — ทำให้ payload ของ `QUOTA_EXCEEDED`/`FEATURE_NOT_INCLUDED` ที่ spec กำหนดไว้ไม่ครบตอนตอบกลับจริง แก้ให้ spread field เพิ่มเติมผ่านแล้ว; `prisma/seed.ts` มีบั๊กเดิมค้างอยู่ (`tenantId_email` ไม่ใช่ unique key จริงหลัง migration email-unique-ทั้งระบบ) แก้เป็น `email` ตรงๆ ด้วยเพราะบล็อกการรัน seed ทั้งไฟล์
+
+**ทดสอบแล้ว**: quota block เมื่อเกิน, feature-gate บล็อก FREE tier ไม่ให้เข้า valuation/moving-analysis จริง, เมนูโชว์/ซ่อนอัตโนมัติตามแผน, upgrade/cancel subscription ทำงานถูกต้อง, platform billing overview เห็นข้าม tenant จริง — ทั้งหมดยืนยันบน production (`match-stock.ddns.net`) แล้ว ไม่ใช่แค่ local
+
+**ยังไม่ทำรอบนี้ (ตามที่ตกลง)**: กรอง data visibility ตาม `companyId` จริง (list/get ต่างๆ ยังไม่กรอง), ตัดสิทธิ์ `@RequireFeature` ให้ endpoint อื่นนอกจาก reports 2 ตัว (รอ business ตัดสินใจ mapping ที่เหลือ)
+
+## 2026-08-31 — Rework ระบบรับสินค้า (Goods Receiving) & จัดเก็บ (Flexible Putaway)
 
 อัปเดต `schema.prisma` เพื่อรองรับระบบรับสินค้าที่ยืดหยุ่นและการจัดเก็บเข้าชั้นวาง (1-Step / 2-Step Putaway):
 
