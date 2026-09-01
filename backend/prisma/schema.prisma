@@ -194,6 +194,7 @@ model Tenant {
   barcodeSymbologies   BarcodeSymbology[]
   goodsReceipts        GoodsReceipt[]
   stockBalances        StockBalance[]
+  goodsIssues          GoodsIssue[]
 
   @@map("tenants")
 }
@@ -363,6 +364,10 @@ model SubscriptionPlan {
   maxProducts   Int?                 @map("max_products")
   maxDevices    Int?                 @map("max_devices")
   maxTags       Int?                 @map("max_tags")
+  /// null = unlimited. No fixed per-tier value seeded on purpose
+  /// (2026-09-01) - admin-configurable per plan via PATCH
+  /// /platform/subscription-plans/:id rather than hardcoded.
+  maxCompanies  Int?                 @map("max_companies")
   isActive      Boolean              @default(true) @map("is_active")
   sortOrder     Int                  @default(0) @map("sort_order")
 
@@ -898,6 +903,7 @@ model Warehouse {
   bins          BinLocation[]
   goodsReceipts GoodsReceipt[]
   stockBalances StockBalance[]
+  goodsIssues   GoodsIssue[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -1132,19 +1138,19 @@ model GoodsReceiptLine {
 // =============================================================================
 
 model StockBalance {
-  id               String    @id @default(uuid()) @db.Uuid
-  tenantId         String    @map("tenant_id") @db.Uuid
-  warehouseId      String    @map("warehouse_id") @db.Uuid
-  binLocationId    String?   @map("bin_location_id") @db.Uuid // null = พักที่ Staging
-  productId        String    @map("product_id") @db.Uuid
-  lotNumber        String?   @map("lot_number") @db.VarChar(100)
-  expiryDate       DateTime? @map("expiry_date")
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  warehouseId   String    @map("warehouse_id") @db.Uuid
+  binLocationId String?   @map("bin_location_id") @db.Uuid // null = พักที่ Staging
+  productId     String    @map("product_id") @db.Uuid
+  lotNumber     String?   @map("lot_number") @db.VarChar(100)
+  expiryDate    DateTime? @map("expiry_date")
 
-  quantityOnHand   Int       @default(0) @map("quantity_on_hand")  // จำนวนคงเหลือจริงบนชั้นวาง
-  quantityReserved Int       @default(0) @map("quantity_reserved") // จำนวนที่ถูกจองรอจ่ายออก
+  quantityOnHand   Int @default(0) @map("quantity_on_hand") // จำนวนคงเหลือจริงบนชั้นวาง
+  quantityReserved Int @default(0) @map("quantity_reserved") // จำนวนที่ถูกจองรอจ่ายออก
 
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   warehouse   Warehouse    @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
@@ -1191,15 +1197,15 @@ model GoodsIssue {
 }
 
 model GoodsIssueLine {
-  id             String   @id @default(uuid()) @db.Uuid
-  goodsIssueId   String   @map("goods_issue_id") @db.Uuid
-  productId      String   @map("product_id") @db.Uuid
-  quantity       Int      // จำนวนที่จ่ายออก
-  lotNumber      String?  @map("lot_number") @db.VarChar(100)
-  binLocationId  String?  @map("bin_location_id") @db.Uuid
-  unitPriceMinor BigInt?  @map("unit_price_minor")
+  id             String  @id @default(uuid()) @db.Uuid
+  goodsIssueId   String  @map("goods_issue_id") @db.Uuid
+  productId      String  @map("product_id") @db.Uuid
+  quantity       Int // จำนวนที่จ่ายออก
+  lotNumber      String? @map("lot_number") @db.VarChar(100)
+  binLocationId  String? @map("bin_location_id") @db.Uuid
+  unitPriceMinor BigInt? @map("unit_price_minor")
 
-  createdAt      DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
   goodsIssue  GoodsIssue   @relation(fields: [goodsIssueId], references: [id], onDelete: Cascade)
   product     Product      @relation(fields: [productId], references: [id])
@@ -1268,15 +1274,15 @@ model StockTransferTag {
 }
 
 model StockTransferLine {
-  id                String   @id @default(uuid()) @db.Uuid
-  stockTransferId   String   @map("stock_transfer_id") @db.Uuid
-  productId         String   @map("product_id") @db.Uuid
-  quantity          Int      // จำนวนที่โอนย้าย
-  lotNumber         String?  @map("lot_number") @db.VarChar(100)
-  fromBinLocationId String?  @map("from_bin_location_id") @db.Uuid
-  toBinLocationId   String?  @map("to_bin_location_id") @db.Uuid
+  id                String  @id @default(uuid()) @db.Uuid
+  stockTransferId   String  @map("stock_transfer_id") @db.Uuid
+  productId         String  @map("product_id") @db.Uuid
+  quantity          Int // จำนวนที่โอนย้าย
+  lotNumber         String? @map("lot_number") @db.VarChar(100)
+  fromBinLocationId String? @map("from_bin_location_id") @db.Uuid
+  toBinLocationId   String? @map("to_bin_location_id") @db.Uuid
 
-  createdAt         DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
   stockTransfer   StockTransfer @relation(fields: [stockTransferId], references: [id], onDelete: Cascade)
   product         Product       @relation(fields: [productId], references: [id])
@@ -1317,14 +1323,14 @@ model StockAdjustment {
 }
 
 model StockAdjustmentLine {
-  id                String   @id @default(uuid()) @db.Uuid
-  stockAdjustmentId String   @map("stock_adjustment_id") @db.Uuid
-  productId         String   @map("product_id") @db.Uuid
-  binLocationId     String?  @map("bin_location_id") @db.Uuid
-  lotNumber         String?  @map("lot_number") @db.VarChar(100)
-  adjustedQuantity  Int      @map("adjusted_quantity") // ยอดปรับ (+ สำหรับนับพบเกิน, - สำหรับนับแล้วขาด)
+  id                String  @id @default(uuid()) @db.Uuid
+  stockAdjustmentId String  @map("stock_adjustment_id") @db.Uuid
+  productId         String  @map("product_id") @db.Uuid
+  binLocationId     String? @map("bin_location_id") @db.Uuid
+  lotNumber         String? @map("lot_number") @db.VarChar(100)
+  adjustedQuantity  Int     @map("adjusted_quantity") // ยอดปรับ (+ สำหรับนับพบเกิน, - สำหรับนับแล้วขาด)
 
-  createdAt         DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
   stockAdjustment StockAdjustment @relation(fields: [stockAdjustmentId], references: [id], onDelete: Cascade)
   product         Product         @relation(fields: [productId], references: [id])
