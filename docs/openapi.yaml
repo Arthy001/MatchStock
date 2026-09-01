@@ -4204,99 +4204,6 @@ paths:
       summary: Receive one or more tags under this receipt - pre-registers unseen tags, binds each to the product with this receipt's lot/production/expiry data.
       tags:
         - Goods Receipts
-  /goods-receipts/staged-items:
-    get:
-      operationId: GoodsReceiptsController_getStagedItems_v1
-      summary: List all goods receipt items currently held in receiving staging awaiting putaway.
-      tags:
-        - Goods Receipts
-        - Putaway
-      security:
-        - jwt: []
-      parameters:
-        - name: warehouseId
-          in: query
-          required: false
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Staged items pending putaway
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/StagedItemDto'
-  /putaway/suggest-bin:
-    get:
-      operationId: PutawayController_suggestBin_v1
-      summary: Get suggested bin locations for a product based on zone, category, and capacity.
-      tags:
-        - Putaway
-      security:
-        - jwt: []
-      parameters:
-        - name: warehouseId
-          in: query
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: productId
-          in: query
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: quantity
-          in: query
-          required: false
-          schema:
-            type: integer
-            default: 1
-      responses:
-        '200':
-          description: Suggested bin locations
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PutawaySuggestionResponseDto'
-  /putaway/confirm:
-    post:
-      operationId: PutawayController_confirmPutaway_v1
-      summary: Confirm items moved from receiving staging into target bin location.
-      tags:
-        - Putaway
-      security:
-        - jwt: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PutawayConfirmDto'
-      responses:
-        '200':
-          description: Putaway confirmed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: Putaway confirmed successfully
   /stock/balances:
     get:
       operationId: StockController_getBalances_v1
@@ -7607,6 +7514,28 @@ components:
           description: '1-Step Direct Putaway - the shelf this line is placed on immediately. Omit for 2-Step: the line is created staged (putawayQuantity: 0) and waits in GET /goods-receipts/staged-items for POST /putaway/confirm.'
       required:
         - productId
+        - quantity
+    ConfirmPutawayDto:
+      type: object
+      properties:
+        goodsReceiptLineId:
+          type: string
+          format: uuid
+          example: a1b2c3d4-e5f6-4a5b-8c7d-1e2f3a4b5c6d
+          description: The staged GoodsReceiptLine being put away (see GET /goods-receipts/staged-items).
+        binLocationId:
+          type: string
+          format: uuid
+          example: a1111111-2222-4333-8444-555566667777
+          description: The bin actually scanned on the floor - can differ from what GET /putaway/suggest-bin recommended (soft suggestion, never blocks).
+        quantity:
+          type: number
+          minimum: 1
+          example: 60
+          description: How many units are being placed in this bin right now - can be less than the line's remaining quantity (partial/multi-bin putaway); confirm again with the same goodsReceiptLineId for the rest.
+      required:
+        - goodsReceiptLineId
+        - binLocationId
         - quantity
     StockBalanceDto:
       type: object
