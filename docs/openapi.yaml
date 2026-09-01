@@ -4204,6 +4204,176 @@ paths:
       summary: Receive one or more tags under this receipt - pre-registers unseen tags, binds each to the product with this receipt's lot/production/expiry data.
       tags:
         - Goods Receipts
+  /goods-receipts/staged-items:
+    get:
+      operationId: GoodsReceiptsController_getStagedItems_v1
+      summary: List all goods receipt items currently held in receiving staging awaiting putaway.
+      tags:
+        - Goods Receipts
+        - Putaway
+      security:
+        - jwt: []
+      parameters:
+        - name: warehouseId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Staged items pending putaway
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StagedItemDto'
+  /putaway/suggest-bin:
+    get:
+      operationId: PutawayController_suggestBin_v1
+      summary: Get suggested bin locations for a product based on zone, category, and capacity.
+      tags:
+        - Putaway
+      security:
+        - jwt: []
+      parameters:
+        - name: warehouseId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: productId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: quantity
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Suggested bin locations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PutawaySuggestionResponseDto'
+  /putaway/confirm:
+    post:
+      operationId: PutawayController_confirmPutaway_v1
+      summary: Confirm items moved from receiving staging into target bin location.
+      tags:
+        - Putaway
+      security:
+        - jwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutawayConfirmDto'
+      responses:
+        '200':
+          description: Putaway confirmed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Putaway confirmed successfully
+  /stock/balances:
+    get:
+      operationId: StockController_getBalances_v1
+      summary: Query real-time stock balances filtered by warehouse, product, or bin location.
+      tags:
+        - Stock & Inventory
+      security:
+        - jwt: []
+      parameters:
+        - name: warehouseId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: productId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: binLocationId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Stock balances returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StockBalanceDto'
+  /stock/lookup:
+    get:
+      operationId: StockController_lookup_v1
+      summary: Universal stock lookup by Barcode, SKU, Serial, or RFID Tag ID.
+      tags:
+        - Stock & Inventory
+      security:
+        - jwt: []
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: Barcode, SKU, Serial No., or RFID Tag ID to search
+          schema:
+            type: string
+            example: 8851234567890
+      responses:
+        '200':
+          description: Stock lookup details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockLookupResponseDto'
   /goods-issues:
     get:
       operationId: GoodsIssuesController_list_v1
@@ -7438,3 +7608,171 @@ components:
       required:
         - productId
         - quantity
+    StockBalanceDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        warehouseId:
+          type: string
+          format: uuid
+        warehouseName:
+          type: string
+        binLocationId:
+          type: string
+          format: uuid
+          nullable: true
+        binCode:
+          type: string
+          nullable: true
+          example: A-01-01
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        sku:
+          type: string
+          example: LOGI-MX3S-GRY
+        lotNumber:
+          type: string
+          nullable: true
+          example: LOT-2026-08A
+        expiryDate:
+          type: string
+          nullable: true
+          example: '2028-08-31T00:00:00.000Z'
+        quantityOnHand:
+          type: integer
+          example: 1000
+        quantityReserved:
+          type: integer
+          example: 50
+        availableQuantity:
+          type: integer
+          example: 950
+    StockLookupResponseDto:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            productId:
+              type: string
+              format: uuid
+            sku:
+              type: string
+              example: LOGI-MX3S-GRY
+            name:
+              type: string
+              example: Logitech MX Master 3S
+            barcodeValue:
+              type: string
+              example: 8851234567890
+            totalOnHand:
+              type: integer
+              example: 1000
+            totalAvailable:
+              type: integer
+              example: 950
+            totalReserved:
+              type: integer
+              example: 50
+            locations:
+              type: array
+              items:
+                type: object
+                properties:
+                  warehouseId:
+                    type: string
+                    format: uuid
+                  warehouseName:
+                    type: string
+                  binLocationId:
+                    type: string
+                    format: uuid
+                    nullable: true
+                  binCode:
+                    type: string
+                    nullable: true
+                    example: A-01-01
+                  lotNumber:
+                    type: string
+                    nullable: true
+                  expiryDate:
+                    type: string
+                    nullable: true
+                  quantity:
+                    type: integer
+                    example: 600
+    CreateGoodsIssueItemDto:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+          example: 20
+        binLocationId:
+          type: string
+          format: uuid
+          nullable: true
+        lotNumber:
+          type: string
+          nullable: true
+        unitPriceMinor:
+          type: integer
+          nullable: true
+      required:
+        - productId
+        - quantity
+    CreateStockTransferItemDto:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+          example: 100
+        fromBinLocationId:
+          type: string
+          format: uuid
+          nullable: true
+        toBinLocationId:
+          type: string
+          format: uuid
+          nullable: true
+        lotNumber:
+          type: string
+          nullable: true
+      required:
+        - productId
+        - quantity
+    CreateStockAdjustmentItemDto:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        binLocationId:
+          type: string
+          format: uuid
+          nullable: true
+        lotNumber:
+          type: string
+          nullable: true
+        adjustedQuantity:
+          type: integer
+          description: Positive for surplus found, negative for shortage
+          example: -5
+      required:
+        - productId
+        - adjustedQuantity
