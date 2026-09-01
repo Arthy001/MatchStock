@@ -144,6 +144,7 @@ flowchart TD
     "maxWarehouses": 1,
     "maxProducts": 500,
     "maxDevices": 0,
+    "maxCompanies": 1,
     "features": [
       "products.basic",
       "stock.gr_gi",
@@ -162,6 +163,7 @@ flowchart TD
     "maxWarehouses": 3,
     "maxProducts": 10000,
     "maxDevices": 0,
+    "maxCompanies": 3,
     "features": [
       "products.basic",
       "stock.gr_gi",
@@ -191,6 +193,7 @@ flowchart TD
     "maxWarehouses": 9999,
     "maxProducts": 999999,
     "maxDevices": 10,
+    "maxCompanies": 9999,
     "features": [
       "products.basic",
       "stock.gr_gi",

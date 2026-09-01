@@ -364,9 +364,10 @@ model SubscriptionPlan {
   maxProducts   Int?                 @map("max_products")
   maxDevices    Int?                 @map("max_devices")
   maxTags       Int?                 @map("max_tags")
-  /// null = unlimited. No fixed per-tier value seeded on purpose
-  /// (2026-09-01) - admin-configurable per plan via PATCH
-  /// /platform/subscription-plans/:id rather than hardcoded.
+  /// null = unlimited. Seeded per docs/TENANT_USER_SUBSCRIPTION_PLAN.md
+  /// §3.1 (2026-09-01) - FREE:1, PRO:3, ULTRA:9999 "unlimited" - see
+  /// seed.ts. Still Platform-Admin-editable per plan via PATCH
+  /// /platform/subscription-plans/:id, same as every other quota.
   maxCompanies  Int?                 @map("max_companies")
   isActive      Boolean              @default(true) @map("is_active")
   sortOrder     Int                  @default(0) @map("sort_order")

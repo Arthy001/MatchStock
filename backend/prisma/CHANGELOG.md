@@ -2,6 +2,25 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-01 (7) — ตรวจสอบ + ทดสอบตาม `TENANT_USER_SUBSCRIPTION_PLAN.md` ครบ + ใส่ค่า `maxCompanies` จริง
+
+ตรวจสอบ backend เทียบกับ `docs/TENANT_USER_SUBSCRIPTION_PLAN.md` ทั้งฉบับ (เอกสารอัปเดตใหม่ มีตาราง `maxCompanies` เพิ่มมาที่ยังไม่เคยตรวจ) ด้วยการทดสอบจริงบน local Docker ไม่ใช่แค่อ่านโค้ด:
+
+**ตรงและยืนยันด้วยการทดสอบแล้ว**: Company Scope concept (§1) ตรงกับที่ implement ไว้เป๊ะ, ตัวเลขโควตา `maxUsers`/`maxWarehouses`/`maxProducts`/`maxDevices` และ `features[]` ทั้ง 3 แพ็กเกจตรงกับ production 100%, quota enforcement, EntitlementGuard, Dynamic Menu
+
+**เพิ่ม `maxCompanies` ค่าจริงตามเอกสาร** (ก่อนหน้านี้เป็น `null`/admin กำหนดเองตามที่ user เคยสั่งไว้ - ตอนนี้เอกสารระบุตัวเลขชัดแล้ว user เลยให้ใส่ตามนั้น): `FREE:1`, `PRO_MONTHLY:3`, `ULTRA_MONTHLY:9999` (unlimited ตาม convention เดียวกับ `maxWarehouses`/`maxProducts` ของ ULTRA) - เพิ่มใน `seed.ts` และใส่ค่าจริงลง production/local ตรงๆ ผ่าน script เดียวกับที่เคยใช้ตอน migrate plan (ไม่รัน seed.ts เต็มไฟล์ใส่ production) - ทดสอบแล้ว: FREE โดน `company.multi_branch` feature-gate บล็อกอยู่แล้วตั้งแต่ก่อนถึง quota, PRO ที่มี 3 companies อยู่แล้วสร้างที่ 4 โดน `QUOTA_EXCEEDED` ถูกต้อง
+
+**Gap ที่เจอจากการทดสอบจริง (แจ้งไว้ ยังไม่ได้แก้ - รอ business ตัดสินใจ/เป็นงานแยก)**:
+- `stock.lot_expiry` **ไม่ถูก enforce เลย** - tenant FREE ใส่ Lot/วันหมดอายุตอนรับสินค้าได้ปกติ ทดสอบยืนยันแล้ว
+- `stock.fefo` (FEFO Engine) **ไม่มี logic นี้อยู่จริง** - dispatch-by-quantity เป็น FIFO ไม่ใช่ FEFO
+- `sales_orders.manage` **ไม่มีโมดูล Sales Order อยู่จริงเลย** ทั้งที่ PRO อ้างว่ามี
+- `reports.expiring_soon` ไม่มี endpoint รายงานนี้ (มีแค่ stock-card/moving-analysis/stock-valuation)
+- `rbac.custom_roles` ไม่ตรงกับของจริง - `Role` เป็น catalog กลางระดับ platform ใช้ร่วมกันทุก tenant ไม่ใช่ custom เฉพาะ tenant
+- Barcode "สร้าง" บาร์โค้ด (CODE128/EAN13/QR) - มีแค่เก็บค่าที่สแกน/กรอกเอง ไม่มี logic สร้างภาพจริง
+- §2.2 ของเอกสารพูดถึงตาราง `zones` - ไม่มี model นี้อยู่จริง (มีแค่ `bin_locations`)
+
+**ตรวจสอบแล้วไม่แก้**: `POST /cycle-counts` ที่ gate ด้วย `cycle_count.barcode` (PR ก่อนหน้า) - ตรวจโค้ดจริงพบว่า mechanism เป็น RFID Tag-based ล้วน (`expectedTags`/`tagId`) ไม่ใช่บาร์โค้ดเลย ชื่อ feature ไม่ตรงกับ mechanism จริง แต่ user ยืนยันให้คงไว้เหมือนเดิม (ไม่เปลี่ยนเป็น `cycle_count.rfid_hybrid`) - บันทึกไว้เผื่อทีมอื่นสงสัยว่าทำไม feature ชื่อ "barcode" ถึง gate endpoint ที่เป็น RFID
+
 ## 2026-09-01 (6) — Reserve/Release quantity, Company Data Isolation, Feature-gating ขยาย, `maxCompanies`
 
 ทำ 4 เรื่องที่ user ขอเพิ่มพร้อมกัน หลังตัดสินใจเรื่อง risk แต่ละอย่างแล้ว:
