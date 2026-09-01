@@ -1,4 +1,4 @@
-﻿# MatchStock — Backend & Frontend Implementation Guide (Post Schema & OpenAPI Update)
+# MatchStock — Backend & Frontend Implementation Guide (Post Schema & OpenAPI Update)
 
 เอกสารแนะนำขั้นตอนการพัฒนา (Hand-off & Implementation Guide) สำหรับทีม **Backend** และ **Frontend** หลังจากที่มีการอัปเดต `schema.prisma` (Subscription Quotas, Menu Feature Gating, Company Scoping) และ `docs/openapi.yaml` (Billing API Contract)
 
@@ -70,6 +70,22 @@ flowchart LR
 - เพิ่มฟิลด์ `companyId` (Optional) ใน DTO และ Service ของ `Warehouse`, `Supplier`, `User`
 - ใน `MenuItemsService.getMenuForUser()`: คัดกรองเมนูตาม `MenuItem.requiredFeature` ที่ตรงกับ `SubscriptionPlan.features` ของ Tenant
 
+### 1.5 พัฒนา Hybrid Inventory Ledger & Stock Balance Engine
+- **Atomic Balance Updates (การบวกลบยอดสต็อกใน `StockBalance`)**:
+  - **Goods Receipt (Inbound)**:
+    - *1-Step*: เพิ่ม `StockBalance.quantityOnHand += qty` ที่ `binLocationId` ทันที
+    - *2-Step*: เพิ่ม `StockBalance.quantityOnHand += qty` ที่ `binLocationId: null` (Staging) $\rightarrow$ เมื่อ Putaway Confirm ให้ย้ายยอดไปที่ Bin ปลายทาง
+  - **Goods Issue (Outbound)**:
+    - เมื่อจองบิล: เพิ่ม `StockBalance.quantityReserved += qty`
+    - เมื่อตัดจ่ายสำเร็จ: ลด `quantityOnHand -= qty` และ `quantityReserved -= qty`
+  - **Stock Transfer**:
+    - ลด `quantityOnHand` ที่ Bin ต้นทาง และเพิ่ม `quantityOnHand` ที่ Bin ปลายทาง
+  - **Stock Adjustment**:
+    - ปรับแก้ `quantityOnHand` ตามค่า `adjustedQuantity` (+/-)
+- **พัฒนา Stock Controllers**:
+  - `GET /api/v1/stock/balances` — ดึงยอดคงเหลือแยกตาม Warehouse, Bin, Product, Lot
+  - `GET /api/v1/stock/lookup` — Universal Lookup สแกน Barcode / SKU / Serial / Tag ID แล้วส่งข้อมูลสต็อกและพิกัดกลับ
+
 ---
 
 ## 🎨 2. ทีม Frontend: สิ่งที่ต้องดำเนินการ (Frontend Implementation)
@@ -79,6 +95,7 @@ flowchart LR
     F1[1. Update API Types] --> F2[2. Dynamic Navigation]
     F2 --> F3[3. Error Upgrade Modal]
     F3 --> F4[4. Billing & Plans Page]
+    F4 --> F5[5. Stock Balance & Putaway UI]
 ```
 
 ### 2.1 อัปเดต TypeScript Types / API Client
@@ -102,14 +119,27 @@ flowchart LR
 - ในหน้าสร้าง/แก้ไข **Warehouse**, **Supplier**, และ **User**:
   - เพิ่ม Dropdown ให้เลือกสังกัดบริษัทย่อย (`Company`) หรือเลือกเป็น *"คลังกลาง / สำนักงานใหญ่"*
 
+### 2.6 สร้างหน้าจอ Stock Balance & Universal Lookup
+1. **หน้าตรวจสอบยอดสต็อกคงเหลือ (`/stock/balances`)**:
+   - ตารางแสดงยอดคงเหลือจริง (`quantityOnHand`), ยอดจอง (`quantityReserved`), ยอดพร้อมขาย (`availableQuantity`)
+   - ตัวกรอง: คลังสินค้า, ชั้นวาง (Bin), หมวดหมู่สินค้า, Lot Number
+2. **หน้าจอค้นหาด่วน Universal Scanner (`/stock/lookup`)**:
+   - ช่องรับ Input รองรับทั้งเครื่องยิง Barcode 1D/2D และ RFID Handheld Reader
+   - แสดงการ์ดสรุปข้อมูลสินค้าและตารางพิกัดชั้นวางที่สินค้านั้นวางอยู่ทั้งหมด
+3. **หน้าจอรับสินค้า & จัดเก็บ (`/goods-receipts` & `/putaway`)**:
+   - รองรับการรับเข้าแบบหลายรายการสินค้า (Lines)
+   - หน้าจองานจัดเก็บ (Putaway Staged Queue) พร้อมปุ่มช่วยแนะนำช่องว่าง (`/putaway/suggest-bin`)
+
 ---
 
 ## 🚀 3. ลำดับขั้นตอนการส่งมอบงาน (Hand-off Matrix)
 
 | เฟส | กิจกรรม | ผู้รับผิดชอบหลัก | ผลลัพธ์ที่ได้ |
 |---|---|---|---|
-| **Phase 1** | Run Migration DB & Seed Plans | **Backend** | ตารางใน DB อัปเดตพร้อมข้อมูล 3 Plans |
+| **Phase 1** | Run Migration DB & Seed Plans | **Backend** | ตารางใน DB อัปเดตพร้อม `StockBalance`, Lines, 3 Plans |
 | **Phase 2** | Implement Billing API & Quota Validation | **Backend** | API Billing & Guard พร้อมใช้งาน |
-| **Phase 3** | Implement Dynamic Sidebar & Upgrade Modal | **Frontend** | UI ซ่อนเมนูตาม Plan และเตือนเมื่อติดโควตา |
-| **Phase 4** | Build Billing & Pricing UI | **Frontend** | หน้าชำระเงินและดูประวัติใบเสร็จพร้อมใช้ |
-| **Phase 5** | End-to-End QA Testing | **QA / Tester** | ทดสอบตาม `docs/MASTER_DATA_TEST_PLAN.md` |
+| **Phase 3** | Implement Stock Balance & Putaway APIs | **Backend** | API Stock Balances, Lookup, Putaway พร้อมใช้งาน |
+| **Phase 4** | Implement Dynamic Sidebar & Billing UI | **Frontend** | UI ซ่อนเมนูตาม Plan และหน้าจัดการ Billing |
+| **Phase 5** | Build Stock Balances, Lookup & Putaway UI | **Frontend** | หน้าตรวจสต็อก, รับสินค้า และจัดเก็บเข้าชั้นวาง |
+| **Phase 6** | End-to-End QA Testing | **QA / Tester** | ทดสอบตาม `docs/MASTER_DATA_TEST_PLAN.md` และ Inbound Plan |
+

@@ -192,6 +192,9 @@ model Tenant {
   companies            Company[]
   categories           Category[]
   barcodeSymbologies   BarcodeSymbology[]
+  goodsReceipts        GoodsReceipt[]
+  stockBalances        StockBalance[]
+  goodsIssues          GoodsIssue[]
 
   @@map("tenants")
 }
@@ -346,23 +349,28 @@ model PlatformRefreshToken {
 // =============================================================================
 
 model SubscriptionPlan {
-  id           String               @id @default(uuid()) @db.Uuid
-  code         String               @unique @db.VarChar(50)
-  name         String               @db.VarChar(255)
-  type         SubscriptionPlanType
-  billingCycle BillingCycle         @map("billing_cycle")
-  priceMinor   BigInt               @map("price_minor")
-  currency     String               @default("THB") @db.VarChar(3)
-  trialDays    Int                  @default(0) @map("trial_days")
-  description  String?              @db.VarChar(1000)
-  features     Json?
-  maxUsers     Int?                 @map("max_users")
-  maxWarehouses Int?                @map("max_warehouses")
-  maxProducts  Int?                 @map("max_products")
-  maxDevices   Int?                 @map("max_devices")
-  maxTags      Int?                 @map("max_tags")
-  isActive     Boolean              @default(true) @map("is_active")
-  sortOrder    Int                  @default(0) @map("sort_order")
+  id            String               @id @default(uuid()) @db.Uuid
+  code          String               @unique @db.VarChar(50)
+  name          String               @db.VarChar(255)
+  type          SubscriptionPlanType
+  billingCycle  BillingCycle         @map("billing_cycle")
+  priceMinor    BigInt               @map("price_minor")
+  currency      String               @default("THB") @db.VarChar(3)
+  trialDays     Int                  @default(0) @map("trial_days")
+  description   String?              @db.VarChar(1000)
+  features      Json?
+  maxUsers      Int?                 @map("max_users")
+  maxWarehouses Int?                 @map("max_warehouses")
+  maxProducts   Int?                 @map("max_products")
+  maxDevices    Int?                 @map("max_devices")
+  maxTags       Int?                 @map("max_tags")
+  /// null = unlimited. Seeded per docs/TENANT_USER_SUBSCRIPTION_PLAN.md
+  /// §3.1 (2026-09-01) - FREE:1, PRO:3, ULTRA:9999 "unlimited" - see
+  /// seed.ts. Still Platform-Admin-editable per plan via PATCH
+  /// /platform/subscription-plans/:id, same as every other quota.
+  maxCompanies  Int?                 @map("max_companies")
+  isActive      Boolean              @default(true) @map("is_active")
+  sortOrder     Int                  @default(0) @map("sort_order")
 
   createdByType String?   @map("created_by_type") @db.VarChar(20)
   createdById   String?   @map("created_by_id") @db.Uuid
@@ -608,10 +616,14 @@ model Product {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  images            ProductImage[]
-  tags              Tag[]
-  goodsReceiptLines GoodsReceiptLine[]
+  tenant               Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  images               ProductImage[]
+  tags                 Tag[]
+  goodsReceiptLines    GoodsReceiptLine[]
+  goodsIssueLines      GoodsIssueLine[]
+  stockTransferLines   StockTransferLine[]
+  stockAdjustmentLines StockAdjustmentLine[]
+  stockBalances        StockBalance[]
 
   @@unique([tenantId, sku])
   @@unique([tenantId, code])
@@ -660,13 +672,13 @@ model ProductImage {
 // row), replacing ProductAttributeOptionCategory's dimension_unit/
 // weight_unit split.
 model Unit {
-  id       String   @id @default(uuid()) @db.Uuid
-  tenantId String   @map("tenant_id") @db.Uuid
-  code     String   @db.VarChar(50)
-  name     String   @db.VarChar(100)
-  type     UnitType @default(quantity)
-  isActive Boolean  @default(true) @map("is_active")
-  isDeleted Boolean @default(false) @map("is_deleted")
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  code      String   @db.VarChar(50)
+  name      String   @db.VarChar(100)
+  type      UnitType @default(quantity)
+  isActive  Boolean  @default(true) @map("is_active")
+  isDeleted Boolean  @default(false) @map("is_deleted")
 
   createdByType String?   @map("created_by_type") @db.VarChar(20)
   createdById   String?   @map("created_by_id") @db.Uuid
@@ -887,9 +899,12 @@ model Warehouse {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  tenant  Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  company Company?      @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  bins    BinLocation[]
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  company       Company?       @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  bins          BinLocation[]
+  goodsReceipts GoodsReceipt[]
+  stockBalances StockBalance[]
+  goodsIssues   GoodsIssue[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -917,8 +932,13 @@ model BinLocation {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  warehouse         Warehouse          @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
-  goodsReceiptLines GoodsReceiptLine[]
+  warehouse              Warehouse             @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  goodsReceiptLines      GoodsReceiptLine[]
+  goodsIssueLines        GoodsIssueLine[]
+  stockTransferLinesFrom StockTransferLine[]   @relation("StockTransferLinesFrom")
+  stockTransferLinesTo   StockTransferLine[]   @relation("StockTransferLinesTo")
+  stockAdjustmentLines   StockAdjustmentLine[]
+  stockBalances          StockBalance[]
 
   @@unique([warehouseId, code])
   @@index([tenantId])
@@ -1054,17 +1074,17 @@ model DeviceIngestionStat {
 // =============================================================================
 
 model GoodsReceipt {
-  id                String    @id @default(uuid()) @db.Uuid
-  tenantId          String    @map("tenant_id") @db.Uuid
-  supplierId        String?   @map("supplier_id") @db.Uuid
-  warehouseId       String    @map("warehouse_id") @db.Uuid
-  binLocationId     String?   @map("bin_location_id") @db.Uuid
-  receiptNumber     String    @map("receipt_number") @db.VarChar(100)
-  poNumber          String?   @map("po_number") @db.VarChar(100)
-  supplierInvoiceNo String?   @map("supplier_invoice_no") @db.VarChar(100)
-  photoUrls         String[]  @default([]) @map("photo_urls")
-  receivedAt        DateTime  @map("received_at")
-  notes             String?   @db.VarChar(1000)
+  id                String   @id @default(uuid()) @db.Uuid
+  tenantId          String   @map("tenant_id") @db.Uuid
+  supplierId        String?  @map("supplier_id") @db.Uuid
+  warehouseId       String   @map("warehouse_id") @db.Uuid
+  binLocationId     String?  @map("bin_location_id") @db.Uuid
+  receiptNumber     String   @map("receipt_number") @db.VarChar(100)
+  poNumber          String?  @map("po_number") @db.VarChar(100)
+  supplierInvoiceNo String?  @map("supplier_invoice_no") @db.VarChar(100)
+  photoUrls         String[] @default([]) @map("photo_urls")
+  receivedAt        DateTime @map("received_at")
+  notes             String?  @db.VarChar(1000)
 
   createdByType String?   @map("created_by_type") @db.VarChar(20)
   createdById   String?   @map("created_by_id") @db.Uuid
@@ -1093,7 +1113,7 @@ model GoodsReceiptLine {
   id              String    @id @default(uuid()) @db.Uuid
   goodsReceiptId  String    @map("goods_receipt_id") @db.Uuid
   productId       String    @map("product_id") @db.Uuid
-  quantity        Int       // จำนวนที่รับเข้าสมบูรณ์
+  quantity        Int // จำนวนที่รับเข้าสมบูรณ์
   damagedQuantity Int       @default(0) @map("damaged_quantity") // จำนวนที่ชำรุดตอนตรวจรับ
   putawayQuantity Int       @default(0) @map("putaway_quantity") // จำนวนที่จัดเก็บเข้า Bin แล้ว
   lotNumber       String?   @map("lot_number") @db.VarChar(100)
@@ -1102,7 +1122,7 @@ model GoodsReceiptLine {
   unitCostMinor   BigInt?   @map("unit_cost_minor") // ราคาต้นทุนต่อหน่วย (สตางค์)
   binLocationId   String?   @map("bin_location_id") @db.Uuid // null = พักที่ Staging
 
-  createdAt       DateTime  @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
   goodsReceipt GoodsReceipt @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
   product      Product      @relation(fields: [productId], references: [id])
@@ -1112,6 +1132,54 @@ model GoodsReceiptLine {
   @@index([productId])
   @@index([binLocationId])
   @@map("goods_receipt_lines")
+}
+
+// =============================================================================
+// Stock Balances (Real-time Inventory Balance for Bulk & Serialized Items)
+// =============================================================================
+
+/// Real-time, materialized on-hand quantity per (warehouse, bin, product,
+/// lot) - Hybrid Inventory Architecture (docs/HYBRID_INVENTORY_ARCHITECTURE.md).
+/// O(1) reads for GET /stock/balances / GET /stock/lookup instead of
+/// summing GoodsReceiptLine.putawayQuantity on every request.
+///
+/// FIXED (2026-09-01, implementation): the original `@@unique([tenantId,
+/// warehouseId, binLocationId, productId, lotNumber])` never collapsed two
+/// rows into one when binLocationId/lotNumber were BOTH NULL (the Staging
+/// case, central to the whole Putaway flow) - Postgres never treats NULL =
+/// NULL as a uniqueness conflict, so every 2-Step receipt into Staging
+/// would INSERT a new row instead of accumulating. The real upsert-target
+/// uniqueness now lives as a raw-SQL expression index
+/// (stock_balances_upsert_key, migration
+/// 20260902100000_stock_balance_null_safe_unique_index) that COALESCEs
+/// binLocationId/lotNumber to sentinel values instead - same "Prisma can't
+/// express this, tracked as unmanaged drift by `prisma migrate diff`"
+/// pattern as Product's partial-unique-index soft-delete indexes elsewhere
+/// in this schema. No `@@unique` here on purpose - see that migration.
+model StockBalance {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  warehouseId   String    @map("warehouse_id") @db.Uuid
+  binLocationId String?   @map("bin_location_id") @db.Uuid // null = พักที่ Staging
+  productId     String    @map("product_id") @db.Uuid
+  lotNumber     String?   @map("lot_number") @db.VarChar(100)
+  expiryDate    DateTime? @map("expiry_date")
+
+  quantityOnHand   Int @default(0) @map("quantity_on_hand") // จำนวนคงเหลือจริงบนชั้นวาง
+  quantityReserved Int @default(0) @map("quantity_reserved") // จำนวนที่ถูกจองรอจ่ายออก
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  warehouse   Warehouse    @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  binLocation BinLocation? @relation(fields: [binLocationId], references: [id], onDelete: SetNull)
+  product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, warehouseId])
+  @@index([tenantId, productId])
+  @@index([tenantId, warehouseId, binLocationId])
+  @@map("stock_balances")
 }
 
 model GoodsIssue {
@@ -1135,9 +1203,47 @@ model GoodsIssue {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  tenant    Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  warehouse Warehouse        @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  lines     GoodsIssueLine[]
+  tags      GoodsIssueTag[]
+
   @@unique([tenantId, issueNumber])
   @@index([tenantId])
+  @@index([warehouseId])
   @@map("goods_issues")
+}
+
+model GoodsIssueLine {
+  id             String  @id @default(uuid()) @db.Uuid
+  goodsIssueId   String  @map("goods_issue_id") @db.Uuid
+  productId      String  @map("product_id") @db.Uuid
+  quantity       Int // จำนวนที่จ่ายออก
+  lotNumber      String? @map("lot_number") @db.VarChar(100)
+  binLocationId  String? @map("bin_location_id") @db.Uuid
+  unitPriceMinor BigInt? @map("unit_price_minor")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  goodsIssue  GoodsIssue   @relation(fields: [goodsIssueId], references: [id], onDelete: Cascade)
+  product     Product      @relation(fields: [productId], references: [id])
+  binLocation BinLocation? @relation(fields: [binLocationId], references: [id], onDelete: SetNull)
+
+  @@index([goodsIssueId])
+  @@index([productId])
+  @@map("goods_issue_lines")
+}
+
+model GoodsIssueTag {
+  id           String @id @default(uuid()) @db.Uuid
+  goodsIssueId String @map("goods_issue_id") @db.Uuid
+  tagId        String @map("tag_id") @db.VarChar(64)
+
+  goodsIssue GoodsIssue @relation(fields: [goodsIssueId], references: [id], onDelete: Cascade)
+
+  @@unique([goodsIssueId, tagId])
+  @@index([tagId])
+  @@map("goods_issue_tags")
 }
 
 model StockTransfer {
@@ -1163,7 +1269,8 @@ model StockTransfer {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  tags StockTransferTag[]
+  tags  StockTransferTag[]
+  lines StockTransferLine[]
 
   @@unique([tenantId, transferNumber])
   @@index([tenantId])
@@ -1182,6 +1289,27 @@ model StockTransferTag {
   @@unique([stockTransferId, tagId])
   @@index([tagId])
   @@map("stock_transfer_tags")
+}
+
+model StockTransferLine {
+  id                String  @id @default(uuid()) @db.Uuid
+  stockTransferId   String  @map("stock_transfer_id") @db.Uuid
+  productId         String  @map("product_id") @db.Uuid
+  quantity          Int // จำนวนที่โอนย้าย
+  lotNumber         String? @map("lot_number") @db.VarChar(100)
+  fromBinLocationId String? @map("from_bin_location_id") @db.Uuid
+  toBinLocationId   String? @map("to_bin_location_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  stockTransfer   StockTransfer @relation(fields: [stockTransferId], references: [id], onDelete: Cascade)
+  product         Product       @relation(fields: [productId], references: [id])
+  fromBinLocation BinLocation?  @relation("StockTransferLinesFrom", fields: [fromBinLocationId], references: [id], onDelete: SetNull)
+  toBinLocation   BinLocation?  @relation("StockTransferLinesTo", fields: [toBinLocationId], references: [id], onDelete: SetNull)
+
+  @@index([stockTransferId])
+  @@index([productId])
+  @@map("stock_transfer_lines")
 }
 
 model StockAdjustment {
@@ -1205,9 +1333,30 @@ model StockAdjustment {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  lines StockAdjustmentLine[]
+
   @@unique([tenantId, adjustmentNumber])
   @@index([tenantId])
   @@map("stock_adjustments")
+}
+
+model StockAdjustmentLine {
+  id                String  @id @default(uuid()) @db.Uuid
+  stockAdjustmentId String  @map("stock_adjustment_id") @db.Uuid
+  productId         String  @map("product_id") @db.Uuid
+  binLocationId     String? @map("bin_location_id") @db.Uuid
+  lotNumber         String? @map("lot_number") @db.VarChar(100)
+  adjustedQuantity  Int     @map("adjusted_quantity") // ยอดปรับ (+ สำหรับนับพบเกิน, - สำหรับนับแล้วขาด)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  stockAdjustment StockAdjustment @relation(fields: [stockAdjustmentId], references: [id], onDelete: Cascade)
+  product         Product         @relation(fields: [productId], references: [id])
+  binLocation     BinLocation?    @relation(fields: [binLocationId], references: [id], onDelete: SetNull)
+
+  @@index([stockAdjustmentId])
+  @@index([productId])
+  @@map("stock_adjustment_lines")
 }
 
 model CycleCount {
@@ -1469,7 +1618,16 @@ model ReaderOpsOperator {
   mfaSecret        String?  @map("mfa_secret") @db.VarChar(255)
   mfaEnabled       Boolean  @default(false) @map("mfa_enabled")
   mfaRecoveryCodes String[] @map("mfa_recovery_codes")
-  createdAt        DateTime @default(now()) @map("created_at")
+
+  // isActive = reversible suspend; deletedAt trio = one-way delete. Same
+  // split as User / PlatformAdmin (this is a login account with MFA).
+  isActive      Boolean   @default(true) @map("is_active")
+  deletedAt     DateTime? @map("deleted_at")
+  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
+  deletedById   String?   @map("deleted_by_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("reader_ops_operators")
 }
@@ -1639,9 +1797,9 @@ model RentalShipment {
 // =============================================================================
 
 model MenuItem {
-  id           String  @id @default(uuid()) @db.Uuid
-  parentId     String? @map("parent_id") @db.Uuid
-  label        String  @db.VarChar(150)
+  id              String  @id @default(uuid()) @db.Uuid
+  parentId        String? @map("parent_id") @db.Uuid
+  label           String  @db.VarChar(150)
   icon            String? @db.VarChar(50)
   link            String? @db.VarChar(255)
   allowedRoles    String? @map("allowed_roles") @db.VarChar(100)
@@ -1711,8 +1869,14 @@ model WebhookSubscription {
   lastDeliveryAt     DateTime?                 @map("last_delivery_at")
   lastDeliveryStatus WebhookDeliveryStatus?    @map("last_delivery_status")
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  // A removed integration is tombstoned, not dropped - keeps the audit of
+  // who removed it and the meaning of its WebhookDeliveryLog rows. Reads
+  // are filtered by the withSoftDelete extension (this model is in its set).
+  deletedAt     DateTime? @map("deleted_at")
+  deletedByType String?   @map("deleted_by_type") @db.VarChar(20)
+  deletedById   String?   @map("deleted_by_id") @db.Uuid
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 

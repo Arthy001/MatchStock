@@ -3965,6 +3965,32 @@ paths:
             default: 20
             example: 20
             type: number
+        - name: supplierId
+          required: false
+          in: query
+          schema:
+            format: uuid
+            example: 9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d
+            type: string
+        - name: warehouseId
+          required: false
+          in: query
+          schema:
+            format: uuid
+            example: 362fecaa-d3d7-4f42-b979-756fb8444d57
+            type: string
+        - name: receivedFrom
+          required: false
+          in: query
+          schema:
+            example: '2026-08-01T00:00:00.000Z'
+            type: string
+        - name: receivedTo
+          required: false
+          in: query
+          schema:
+            example: '2026-08-31T23:59:59.000Z'
+            type: string
       responses:
         '200':
           description: ''
@@ -3979,6 +4005,10 @@ paths:
                       receiptNumber: GR-202608-001
                       warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
                       binLocationId: null
+                      supplierId: 9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d
+                      poNumber: PO-2026-0088
+                      supplierInvoiceNo: INV-88213
+                      photoUrls: []
                       receivedAt: '2026-08-18T02:39:41.574Z'
                       notes: null
                       createdByType: user
@@ -3990,6 +4020,20 @@ paths:
                       deletedById: null
                       createdAt: '2026-08-18T02:39:41.574Z'
                       updatedAt: '2026-08-18T02:39:41.574Z'
+                      lines:
+                        - id: a2c3d4e5-6f70-4a8b-9c1d-2e3f4a5b6c7d
+                          goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                          productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                          quantity: 95
+                          damagedQuantity: 5
+                          putawayQuantity: 0
+                          lotNumber: LOT-2026-08-A
+                          productionDate: '2026-08-01T00:00:00.000Z'
+                          expiryDate: '2027-08-01T00:00:00.000Z'
+                          unitCostMinor: 10000
+                          binLocationId: null
+                          createdAt: '2026-08-18T02:39:41.574Z'
+                          updatedAt: '2026-08-18T02:39:41.574Z'
                   message: Operation completed successfully
                   meta:
                     page: 1
@@ -4023,6 +4067,10 @@ paths:
                     receiptNumber: GR-202608-001
                     warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
                     binLocationId: null
+                    supplierId: 9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d
+                    poNumber: PO-2026-0088
+                    supplierInvoiceNo: INV-88213
+                    photoUrls: []
                     receivedAt: '2026-08-18T02:39:41.574Z'
                     notes: null
                     createdByType: user
@@ -4034,6 +4082,20 @@ paths:
                     deletedById: null
                     createdAt: '2026-08-18T02:39:41.574Z'
                     updatedAt: '2026-08-18T02:39:41.574Z'
+                    lines:
+                      - id: a2c3d4e5-6f70-4a8b-9c1d-2e3f4a5b6c7d
+                        goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                        productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                        quantity: 95
+                        damagedQuantity: 5
+                        putawayQuantity: 0
+                        lotNumber: LOT-2026-08-A
+                        productionDate: '2026-08-01T00:00:00.000Z'
+                        expiryDate: '2027-08-01T00:00:00.000Z'
+                        unitCostMinor: 10000
+                        binLocationId: null
+                        createdAt: '2026-08-18T02:39:41.574Z'
+                        updatedAt: '2026-08-18T02:39:41.574Z'
                   message: Operation completed successfully
       security:
         - jwt: []
@@ -4064,6 +4126,10 @@ paths:
                     receiptNumber: GR-202608-001
                     warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
                     binLocationId: null
+                    supplierId: 9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d
+                    poNumber: PO-2026-0088
+                    supplierInvoiceNo: INV-88213
+                    photoUrls: []
                     receivedAt: '2026-08-18T02:39:41.574Z'
                     notes: null
                     createdByType: user
@@ -4075,6 +4141,20 @@ paths:
                     deletedById: null
                     createdAt: '2026-08-18T02:39:41.574Z'
                     updatedAt: '2026-08-18T02:39:41.574Z'
+                    lines:
+                      - id: a2c3d4e5-6f70-4a8b-9c1d-2e3f4a5b6c7d
+                        goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                        productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                        quantity: 95
+                        damagedQuantity: 5
+                        putawayQuantity: 0
+                        lotNumber: LOT-2026-08-A
+                        productionDate: '2026-08-01T00:00:00.000Z'
+                        expiryDate: '2027-08-01T00:00:00.000Z'
+                        unitCostMinor: 10000
+                        binLocationId: null
+                        createdAt: '2026-08-18T02:39:41.574Z'
+                        updatedAt: '2026-08-18T02:39:41.574Z'
                   message: Operation completed successfully
       security:
         - jwt: []
@@ -4124,6 +4204,122 @@ paths:
       summary: Receive one or more tags under this receipt - pre-registers unseen tags, binds each to the product with this receipt's lot/production/expiry data.
       tags:
         - Goods Receipts
+  /stock/balances:
+    get:
+      operationId: StockController_getBalances_v1
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            example: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+            type: number
+        - name: warehouseId
+          required: false
+          in: query
+          schema:
+            format: uuid
+            example: 362fecaa-d3d7-4f42-b979-756fb8444d57
+            type: string
+        - name: binLocationId
+          required: false
+          in: query
+          schema:
+            format: uuid
+            type: string
+        - name: productId
+          required: false
+          in: query
+          schema:
+            format: uuid
+            example: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    - id: a1b2c3d4-e5f6-4a5b-8c7d-1e2f3a4b5c6d
+                      warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                      warehouseName: Main Warehouse
+                      binLocationId: a1111111-2222-4333-8444-555566667777
+                      binCode: A-02-01
+                      productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                      productName: Cardboard Box 30x30x30
+                      sku: DEMO-SKU-001
+                      lotNumber: LOT-2026-08-A
+                      expiryDate: '2027-08-01T00:00:00.000Z'
+                      quantityOnHand: 1000
+                      quantityReserved: 50
+                      availableQuantity: 950
+                  message: Operation completed successfully
+                  meta:
+                    page: 1
+                    limit: 50
+                    totalCount: 1
+                    totalPages: 1
+      security:
+        - jwt: []
+      summary: Query real-time stock balances, filtered by warehouse, product, or bin location.
+      tags:
+        - Stock & Inventory
+  /stock/lookup:
+    get:
+      operationId: StockController_lookup_v1
+      parameters:
+        - name: code
+          required: true
+          in: query
+          description: Barcode, SKU, product code, or RFID Tag ID to search.
+          schema:
+            maxLength: 255
+            example: '8851234567890'
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                    sku: DEMO-SKU-001
+                    name: Cardboard Box 30x30x30
+                    barcodeValue: '8851234567890'
+                    totalOnHand: 1000
+                    totalAvailable: 950
+                    totalReserved: 50
+                    locations:
+                      - warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                        warehouseName: Main Warehouse
+                        binLocationId: a1111111-2222-4333-8444-555566667777
+                        binCode: A-02-01
+                        lotNumber: LOT-2026-08-A
+                        expiryDate: '2027-08-01T00:00:00.000Z'
+                        quantity: 1000
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: Universal stock lookup by barcode, SKU, product code, or RFID Tag ID.
+      tags:
+        - Stock & Inventory
   /goods-issues:
     get:
       operationId: GoodsIssuesController_list_v1
@@ -5626,97 +5822,142 @@ paths:
         - Companies
   /goods-receipts/staged-items:
     get:
-      operationId: GoodsReceiptsController_getStagedItems_v1
-      summary: List all goods receipt items currently held in receiving staging awaiting putaway.
-      tags:
-        - Goods Receipts
-        - Putaway
-      security:
-        - jwt: []
+      operationId: GoodsReceiptsController_listStagedItems_v1
       parameters:
-        - name: warehouseId
-          in: query
+        - name: page
           required: false
+          in: query
           schema:
-            type: string
+            minimum: 1
+            default: 1
+            example: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+            type: number
+        - name: warehouseId
+          required: false
+          in: query
+          schema:
             format: uuid
+            example: 362fecaa-d3d7-4f42-b979-756fb8444d57
+            type: string
       responses:
         '200':
-          description: Staged items pending putaway
+          description: ''
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
+                example:
+                  success: true
                   data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/StagedItemDto'
+                    - goodsReceiptLineId: a2c3d4e5-6f70-4a8b-9c1d-2e3f4a5b6c7d
+                      goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                      receiptNumber: GR-202608-001
+                      productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                      sku: DEMO-SKU-001
+                      productName: Cardboard Box 30x30x30
+                      remainingQuantity: 95
+                      lotNumber: LOT-2026-08-A
+                      expiryDate: '2027-08-01T00:00:00.000Z'
+                      suggestedBinLocationId: null
+                  message: Operation completed successfully
+                  meta:
+                    page: 1
+                    limit: 20
+                    totalCount: 1
+                    totalPages: 1
+      security:
+        - jwt: []
+      summary: List goods receipt lines still waiting for Putaway (2-Step flow) - the queue GET /putaway/suggest-bin + POST /putaway/confirm work against.
+      tags:
+        - Goods Receipts
   /putaway/suggest-bin:
     get:
       operationId: PutawayController_suggestBin_v1
-      summary: Get suggested bin locations for a product based on zone, category, and capacity.
-      tags:
-        - Putaway
-      security:
-        - jwt: []
       parameters:
         - name: warehouseId
-          in: query
           required: true
-          schema:
-            type: string
-            format: uuid
-        - name: productId
           in: query
-          required: true
           schema:
-            type: string
             format: uuid
+            example: 362fecaa-d3d7-4f42-b979-756fb8444d57
+            type: string
         - name: quantity
-          in: query
           required: false
+          in: query
+          description: How many units need a home - only bins with this much free capacity (maxCapacity minus what is already put away there) are suggested. Bins with no maxCapacity set are always considered to have room.
           schema:
-            type: integer
+            minimum: 1
             default: 1
+            example: 40
+            type: number
       responses:
         '200':
-          description: Suggested bin locations
+          description: ''
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PutawaySuggestionResponseDto'
-  /putaway/confirm:
-    post:
-      operationId: PutawayController_confirmPutaway_v1
-      summary: Confirm items moved from receiving staging into target bin location.
-      tags:
-        - Putaway
+                example:
+                  success: true
+                  data:
+                    id: a1111111-2222-4333-8444-555566667777
+                    code: B-02-01
+                    maxCapacity: 200
+                    remainingCapacity: 140
+                  message: Operation completed successfully
       security:
         - jwt: []
+      summary: Suggest a bin with enough free capacity in this warehouse (soft suggestion - confirm accepts any bin regardless).
+      tags:
+        - Putaway
+  /putaway/confirm:
+    post:
+      operationId: PutawayController_confirm_v1
+      parameters: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PutawayConfirmDto'
+              $ref: '#/components/schemas/ConfirmPutawayDto'
       responses:
-        '200':
-          description: Putaway confirmed successfully
+        '201':
+          description: ''
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: Putaway confirmed successfully
+                example:
+                  success: true
+                  data:
+                    placed:
+                      id: a2c3d4e5-6f70-4a8b-9c1d-2e3f4a5b6c7d
+                      goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                      productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                      quantity: 60
+                      damagedQuantity: 0
+                      putawayQuantity: 60
+                      binLocationId: a1111111-2222-4333-8444-555566667777
+                    remaining:
+                      id: c4d5e6f7-8091-4a2b-9c3d-4e5f6a7b8c9d
+                      goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                      productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                      quantity: 35
+                      damagedQuantity: 0
+                      putawayQuantity: 0
+                      binLocationId: null
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Scan-to-confirm: place `quantity` units of a staged line into a bin. `remaining` is non-null only on a partial (multi-bin) confirm - repeat the call with that line''s id for the rest.'
+      tags:
+        - Putaway
   /billing/plans:
     get:
       operationId: BillingController_getPlans_v1
@@ -6747,12 +6988,40 @@ components:
           type: string
           format: uuid
           description: Default putaway bin for this receipt.
+        supplierId:
+          type: string
+          format: uuid
+          example: 9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d
+          description: Supplier this shipment came from. Omit for a customer return, free sample, or opening-stock count that has no supplier.
+        poNumber:
+          type: string
+          maxLength: 100
+          example: PO-2026-0088
+          description: Purchase order number this receipt fulfills, if any.
+        supplierInvoiceNo:
+          type: string
+          maxLength: 100
+          example: INV-88213
+          description: Supplier's delivery note / invoice number, if any.
+        photoUrls:
+          example:
+            - /uploads/products/gr-88213-1.jpg
+          description: Photos of the delivery note or box condition.
+          type: array
+          items:
+            type: string
         receivedAt:
           type: string
           example: '2026-08-17T00:00:00.000Z'
         notes:
           type: string
           maxLength: 1000
+        lines:
+          maxItems: 500
+          description: Quantity-based line items (barcode/manual-count path) - optional, independent of POST /goods-receipts/:id/lines (the RFID tag-binding path). A line with binLocationId set is placed immediately (1-Step); one without is created staged, awaiting POST /putaway/confirm (2-Step).
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateGoodsReceiptLineDto'
       required:
         - receiptNumber
         - warehouseId
@@ -6812,6 +7081,12 @@ components:
         notes:
           type: string
           maxLength: 1000
+        lines:
+          maxItems: 500
+          description: Quantity-based line items (barcode/manual-count path) - deducts StockBalance at the given bin immediately, independent of POST /goods-issues/:id/dispatch (the RFID tag-exit path).
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateGoodsIssueItemDto'
       required:
         - issueNumber
         - warehouseId
@@ -6822,11 +7097,16 @@ components:
           minItems: 1
           example:
             - 686E14141E13194568471D7F
+          description: RFID tags (optional if `lines` is given instead - at least one of the two is required).
           type: array
           items:
             type: string
-      required:
-        - tagIds
+        lines:
+          maxItems: 500
+          description: Quantity-based line items (barcode/manual-count path) - only quantity/productId/binLocationId/lotNumber are used here (unitPriceMinor is ignored for reserve/release).
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateGoodsIssueItemDto'
     DispatchByQuantityDto:
       type: object
       properties:
@@ -6870,17 +7150,23 @@ components:
           minItems: 1
           example:
             - 686E14141E13194568471D7F
+          description: RFID tags to move (optional if `lines` is given instead - at least one of the two is required, checked at the service layer since class-validator can't express "either A or B" across two sibling arrays cleanly).
           type: array
           items:
             type: string
         notes:
           type: string
           maxLength: 1000
+        lines:
+          maxItems: 500
+          description: Quantity-based line items (barcode/manual-count path) - declared "pending" alongside the header like tagIds are, StockBalance only moves once POST /stock-transfers/:id/complete confirms it (matching the existing Tag path's timing).
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateStockTransferItemDto'
       required:
         - transferNumber
         - fromWarehouseId
         - toWarehouseId
-        - tagIds
     StockAdjustmentLineDto:
       type: object
       properties:
@@ -6923,13 +7209,19 @@ components:
           maxLength: 1000
         lines:
           minItems: 1
+          description: RFID tag reconciliation (optional if `quantityLines` is given instead - at least one of the two is required, checked at the service layer).
           type: array
           items:
             $ref: '#/components/schemas/StockAdjustmentLineDto'
+        quantityLines:
+          maxItems: 500
+          description: Quantity-based reconciliation (barcode/manual-count path) - applied to StockBalance immediately, same one-shot timing as `lines` above.
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateStockAdjustmentItemDto'
       required:
         - adjustmentNumber
         - reason
-        - lines
     CreateCycleCountDto:
       type: object
       properties:
@@ -7187,82 +7479,6 @@ components:
       required:
         - productId
         - quantity
-    StagedItemDto:
-      type: object
-      properties:
-        receiptId:
-          type: string
-          format: uuid
-        receiptNumber:
-          type: string
-        productId:
-          type: string
-          format: uuid
-        productName:
-          type: string
-        sku:
-          type: string
-        stagedQuantity:
-          type: integer
-          example: 50
-        lotNumber:
-          type: string
-          nullable: true
-        receivedAt:
-          type: string
-    PutawaySuggestionResponseDto:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          type: object
-          properties:
-            suggestedBins:
-              type: array
-              items:
-                type: object
-                properties:
-                  binId:
-                    type: string
-                    format: uuid
-                  binCode:
-                    type: string
-                    example: A-01-01
-                  zone:
-                    type: string
-                    example: Zone A
-                  currentOccupancy:
-                    type: integer
-                    example: 20
-                  maxCapacity:
-                    type: integer
-                    example: 100
-                  reason:
-                    type: string
-                    example: Matching category zone and available capacity
-    PutawayConfirmDto:
-      type: object
-      properties:
-        receiptId:
-          type: string
-          format: uuid
-        productId:
-          type: string
-          format: uuid
-        targetBinCode:
-          type: string
-          example: A-01-01
-        quantity:
-          type: integer
-          minimum: 1
-          example: 50
-      required:
-        - receiptId
-        - productId
-        - targetBinCode
-        - quantity
     SubscribeRequestDto:
       type: object
       properties:
@@ -7329,6 +7545,11 @@ components:
         maxDevices:
           type: integer
           example: 0
+        maxCompanies:
+          type: integer
+          nullable: true
+          description: Max Companies (branches) under one tenant. Omit/null = unlimited - no fixed per-tier default is seeded, Platform Admin sets this explicitly per plan.
+          example: 1
         features:
           type: array
           items:
@@ -7363,6 +7584,11 @@ components:
           example: 15000
         maxDevices:
           type: integer
+          example: 2
+        maxCompanies:
+          type: integer
+          nullable: true
+          description: Max Companies (branches) under one tenant. Omit/null = unlimited.
           example: 2
         features:
           type: array
@@ -7421,3 +7647,243 @@ components:
           example: tokn_test_abc123
       required:
         - method
+    CreateGoodsReceiptLineDto:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+          example: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+        quantity:
+          type: number
+          minimum: 1
+          example: 95
+          description: 'Good (sellable) quantity received - already net of damagedQuantity, matching the design doc worked example (100 received, 5 damaged -> quantity: 95).'
+        damagedQuantity:
+          type: number
+          minimum: 0
+          example: 0
+          default: 0
+          description: Units found damaged during inspection - tracked for supplier claims, never enters stock/putaway.
+        lotNumber:
+          type: string
+          maxLength: 100
+          example: LOT-2026-08-A
+        productionDate:
+          type: string
+          example: '2026-08-01T00:00:00.000Z'
+        expiryDate:
+          type: string
+          example: '2027-08-01T00:00:00.000Z'
+        unitCostMinor:
+          type: number
+          minimum: 0
+          example: 10000
+          description: Actual unit cost paid, minor units (satang).
+        binLocationId:
+          type: string
+          format: uuid
+          example: a1111111-2222-4333-8444-555566667777
+          description: '1-Step Direct Putaway - the shelf this line is placed on immediately. Omit for 2-Step: the line is created staged (putawayQuantity: 0) and waits in GET /goods-receipts/staged-items for POST /putaway/confirm.'
+      required:
+        - productId
+        - quantity
+    StockBalanceDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        warehouseId:
+          type: string
+          format: uuid
+        warehouseName:
+          type: string
+        binLocationId:
+          type: string
+          format: uuid
+          nullable: true
+        binCode:
+          type: string
+          nullable: true
+          example: A-01-01
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        sku:
+          type: string
+          example: LOGI-MX3S-GRY
+        lotNumber:
+          type: string
+          nullable: true
+          example: LOT-2026-08A
+        expiryDate:
+          type: string
+          nullable: true
+          example: '2028-08-31T00:00:00.000Z'
+        quantityOnHand:
+          type: integer
+          example: 1000
+        quantityReserved:
+          type: integer
+          example: 50
+        availableQuantity:
+          type: integer
+          example: 950
+    StockLookupResponseDto:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            productId:
+              type: string
+              format: uuid
+            sku:
+              type: string
+              example: LOGI-MX3S-GRY
+            name:
+              type: string
+              example: Logitech MX Master 3S
+            barcodeValue:
+              type: string
+              example: 8851234567890
+            totalOnHand:
+              type: integer
+              example: 1000
+            totalAvailable:
+              type: integer
+              example: 950
+            totalReserved:
+              type: integer
+              example: 50
+            locations:
+              type: array
+              items:
+                type: object
+                properties:
+                  warehouseId:
+                    type: string
+                    format: uuid
+                  warehouseName:
+                    type: string
+                  binLocationId:
+                    type: string
+                    format: uuid
+                    nullable: true
+                  binCode:
+                    type: string
+                    nullable: true
+                    example: A-01-01
+                  lotNumber:
+                    type: string
+                    nullable: true
+                  expiryDate:
+                    type: string
+                    nullable: true
+                  quantity:
+                    type: integer
+                    example: 600
+    CreateGoodsIssueItemDto:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+          example: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+        quantity:
+          type: number
+          minimum: 1
+          example: 20
+        binLocationId:
+          type: string
+          format: uuid
+          example: a1111111-2222-4333-8444-555566667777
+          description: The shelf being picked from - required in practice (deducting StockBalance needs an exact location) even though the draft schema marked this nullable; no "reserve against no particular bin" semantics exist yet.
+        lotNumber:
+          type: string
+          maxLength: 100
+          example: LOT-2026-08-A
+        unitPriceMinor:
+          type: number
+          minimum: 0
+          example: 15000
+          description: Selling price at time of dispatch, minor units (satang) - informational, not used for any calculation here.
+      required:
+        - productId
+        - quantity
+        - binLocationId
+    CreateStockTransferItemDto:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+          example: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+        quantity:
+          type: number
+          minimum: 1
+          example: 100
+        fromBinLocationId:
+          type: string
+          format: uuid
+          description: Defaults to the transfer header's fromBinLocationId if omitted.
+        toBinLocationId:
+          type: string
+          format: uuid
+          description: Defaults to the transfer header's toBinLocationId if omitted.
+        lotNumber:
+          type: string
+          maxLength: 100
+          example: LOT-2026-08-A
+      required:
+        - productId
+        - quantity
+    CreateStockAdjustmentItemDto:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+          example: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+        binLocationId:
+          type: string
+          format: uuid
+        lotNumber:
+          type: string
+          maxLength: 100
+          example: LOT-2026-08-A
+        adjustedQuantity:
+          type: number
+          example: -5
+          description: Positive for surplus found, negative for shortage - never zero.
+      required:
+        - productId
+        - adjustedQuantity
+    ConfirmPutawayDto:
+      type: object
+      properties:
+        goodsReceiptLineId:
+          type: string
+          format: uuid
+          example: a1b2c3d4-e5f6-4a5b-8c7d-1e2f3a4b5c6d
+          description: The staged GoodsReceiptLine being put away (see GET /goods-receipts/staged-items).
+        binLocationId:
+          type: string
+          format: uuid
+          example: a1111111-2222-4333-8444-555566667777
+          description: The bin actually scanned on the floor - can differ from what GET /putaway/suggest-bin recommended (soft suggestion, never blocks).
+        quantity:
+          type: number
+          minimum: 1
+          example: 60
+          description: How many units are being placed in this bin right now - can be less than the line's remaining quantity (partial/multi-bin putaway); confirm again with the same goodsReceiptLineId for the rest.
+      required:
+        - goodsReceiptLineId
+        - binLocationId
+        - quantity

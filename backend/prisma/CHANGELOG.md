@@ -2,6 +2,112 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-01 (8) — Sync `StockBalance` กลับ: บั๊ก NULL-uniqueness ที่แก้ใน backend จริงแล้ว แต่ schema.prisma ที่นี่ยังไม่ตกลง
+
+ตรวจสอบ backend เทียบกับ `docs/openapi.yaml` + `schema.prisma` ทั้งคู่แบบเจาะลึกอีกรอบ (diff ทุกบรรทัดจริง ไม่ใช่แค่ high-level) เจอ 2 เรื่อง:
+
+1. **`StockBalance.@@unique(...)` บั๊กที่แก้ใน backend จริงไปแล้ว (migration `20260902100000_stock_balance_null_safe_unique_index`) แต่ไม่เคย sync กลับมาที่ schema.prisma repo นี้เลย** - ที่นี่ยังมี `@@unique([tenantId, warehouseId, binLocationId, productId, lotNumber])` ตัวเดิมที่มีปัญหา (Postgres ไม่ยุบ NULL=NULL ให้ ทำให้ 2-Step Staging รับซ้ำแล้วแตกแถวแทนที่จะรวมยอด) - ลบออกแล้ว อัปเดต comment อธิบายว่า unique constraint จริงอยู่ใน raw SQL expression index แทน (COALESCE bin/lot เป็น sentinel) ตรงกับที่ backend จริงใช้อยู่แล้ว
+2. **`/menu`, `/rentals`, `/rentals/{id}`, `/rentals/{id}/deposit-checkout` ยังหายไปจาก `docs/openapi.yaml`** - endpoint จริงมีบน production ครบ (ยืนยันจาก live `/api-docs-json`) แต่ PR #19 ที่แก้เรื่องนี้ไว้ตั้งแต่ 2026-08-31 **ยังไม่ถูก merge** - ไม่ใช่ backend gap แค่รอ merge PR เดิม
+
+**ที่เหลือ (relation choices บน GoodsReceipt/GoodsReceiptLine/GoodsIssue ที่backend จริงไม่มี tenant/warehouse relation บน header ต่างจาก schema นี้)**: เป็น divergence ที่ตั้งใจและบันทึกไว้แล้วใน entry ก่อนหน้า ไม่ใช่เรื่องใหม่ ไม่แก้
+
+## 2026-09-01 (7) — ตรวจสอบ + ทดสอบตาม `TENANT_USER_SUBSCRIPTION_PLAN.md` ครบ + ใส่ค่า `maxCompanies` จริง
+
+ตรวจสอบ backend เทียบกับ `docs/TENANT_USER_SUBSCRIPTION_PLAN.md` ทั้งฉบับ (เอกสารอัปเดตใหม่ มีตาราง `maxCompanies` เพิ่มมาที่ยังไม่เคยตรวจ) ด้วยการทดสอบจริงบน local Docker ไม่ใช่แค่อ่านโค้ด:
+
+**ตรงและยืนยันด้วยการทดสอบแล้ว**: Company Scope concept (§1) ตรงกับที่ implement ไว้เป๊ะ, ตัวเลขโควตา `maxUsers`/`maxWarehouses`/`maxProducts`/`maxDevices` และ `features[]` ทั้ง 3 แพ็กเกจตรงกับ production 100%, quota enforcement, EntitlementGuard, Dynamic Menu
+
+**เพิ่ม `maxCompanies` ค่าจริงตามเอกสาร** (ก่อนหน้านี้เป็น `null`/admin กำหนดเองตามที่ user เคยสั่งไว้ - ตอนนี้เอกสารระบุตัวเลขชัดแล้ว user เลยให้ใส่ตามนั้น): `FREE:1`, `PRO_MONTHLY:3`, `ULTRA_MONTHLY:9999` (unlimited ตาม convention เดียวกับ `maxWarehouses`/`maxProducts` ของ ULTRA) - เพิ่มใน `seed.ts` และใส่ค่าจริงลง production/local ตรงๆ ผ่าน script เดียวกับที่เคยใช้ตอน migrate plan (ไม่รัน seed.ts เต็มไฟล์ใส่ production) - ทดสอบแล้ว: FREE โดน `company.multi_branch` feature-gate บล็อกอยู่แล้วตั้งแต่ก่อนถึง quota, PRO ที่มี 3 companies อยู่แล้วสร้างที่ 4 โดน `QUOTA_EXCEEDED` ถูกต้อง
+
+**Gap ที่เจอจากการทดสอบจริง (แจ้งไว้ ยังไม่ได้แก้ - รอ business ตัดสินใจ/เป็นงานแยก)**:
+- `stock.lot_expiry` **ไม่ถูก enforce เลย** - tenant FREE ใส่ Lot/วันหมดอายุตอนรับสินค้าได้ปกติ ทดสอบยืนยันแล้ว
+- `stock.fefo` (FEFO Engine) **ไม่มี logic นี้อยู่จริง** - dispatch-by-quantity เป็น FIFO ไม่ใช่ FEFO
+- `sales_orders.manage` **ไม่มีโมดูล Sales Order อยู่จริงเลย** ทั้งที่ PRO อ้างว่ามี
+- `reports.expiring_soon` ไม่มี endpoint รายงานนี้ (มีแค่ stock-card/moving-analysis/stock-valuation)
+- `rbac.custom_roles` ไม่ตรงกับของจริง - `Role` เป็น catalog กลางระดับ platform ใช้ร่วมกันทุก tenant ไม่ใช่ custom เฉพาะ tenant
+- Barcode "สร้าง" บาร์โค้ด (CODE128/EAN13/QR) - มีแค่เก็บค่าที่สแกน/กรอกเอง ไม่มี logic สร้างภาพจริง
+- §2.2 ของเอกสารพูดถึงตาราง `zones` - ไม่มี model นี้อยู่จริง (มีแค่ `bin_locations`)
+
+**ตรวจสอบแล้วไม่แก้**: `POST /cycle-counts` ที่ gate ด้วย `cycle_count.barcode` (PR ก่อนหน้า) - ตรวจโค้ดจริงพบว่า mechanism เป็น RFID Tag-based ล้วน (`expectedTags`/`tagId`) ไม่ใช่บาร์โค้ดเลย ชื่อ feature ไม่ตรงกับ mechanism จริง แต่ user ยืนยันให้คงไว้เหมือนเดิม (ไม่เปลี่ยนเป็น `cycle_count.rfid_hybrid`) - บันทึกไว้เผื่อทีมอื่นสงสัยว่าทำไม feature ชื่อ "barcode" ถึง gate endpoint ที่เป็น RFID
+
+## 2026-09-01 (6) — Reserve/Release quantity, Company Data Isolation, Feature-gating ขยาย, `maxCompanies`
+
+ทำ 4 เรื่องที่ user ขอเพิ่มพร้อมกัน หลังตัดสินใจเรื่อง risk แต่ละอย่างแล้ว:
+
+1. **Wire `reserve`/`release` เข้า `StockBalanceService`**: `POST /goods-issues/:id/reserve` และ `/release` รับ `lines[]` เพิ่ม (นอกจาก `tagIds` เดิม) - เพิ่ม/ลด `StockBalance.quantityReserved` โดยไม่แตะ `quantityOnHand` - **หมายเหตุ**: reserve ผ่านทางนี้กับ dispatch ตรงผ่าน `POST /goods-issues` (`lines[]`, implement ไปก่อนหน้า) เป็นคนละ bookkeeping กัน ยังไม่เชื่อมกัน (dispatch ตรงไม่ได้ไปลด quantityReserved ที่เคย reserve ไว้)
+2. **Company Data Isolation**: เพิ่ม `companyId` เข้า JWT payload (เหมือน `role` - เปลี่ยนแล้วมีผลตอน login/refresh ครั้งถัดไป) กรอง `Warehouse`/`Supplier`/`User` ตาม company ของผู้ใช้ที่ login อยู่ - `companyId: null` (HQ/tenant-wide) เห็นทุกอย่าง, `companyId` ระบุค่า เห็นเฉพาะของ company ตัวเอง + ของที่ยังไม่ผูก company (`null`) - บังคับใช้ที่ `getByIdInCompany()` ด้วยไม่ใช่แค่ list เพื่อกันการอ้างอิงข้าม company ตอนสร้างธุรกรรม (GoodsReceipt/GoodsIssue/ฯลฯ) ด้วย
+3. **ขยาย Feature-gating** (`@RequireFeature`) ไป 6 endpoint ใหม่ ตามที่ user ยืนยันว่า **บังคับกับทุก Tenant ทันทีไม่ grandfather**: `POST /warehouses/:id/bins` (`warehouse.bins`), `POST /stock-transfers` (`stock.transfer`), `POST /stock-adjustments` (`stock.adjustment`), `POST /cycle-counts` (`cycle_count.barcode`), `POST /webhook-subscriptions` (`integrations.webhooks`), `POST /companies` (`company.multi_branch`) - **ตั้งใจไม่แตะ** `rfid.tags`/`hardware.mqtt_devices` (เสี่ยงตัดขาดข้อมูลจากอุปกรณ์ที่เชื่อมต่ออยู่จริงแบบกู้คืนไม่ได้ ต่างจาก endpoint อื่นที่แค่ 403 หน้าจอ) และ `integrations.api_access`/`sales_orders.manage`/`reports.expiring_soon`/`stock.fefo`/`rbac.custom_roles` (ไม่มี endpoint ที่ map ตรงๆ ได้ - บาง feature ยังไม่ implement จริงด้วยซ้ำ เช่น FEFO ยังใช้ FIFO อยู่)
+4. **`SubscriptionPlan.maxCompanies`**: quota ใหม่สำหรับจำกัดจำนวน Company/branch ต่อ tenant - **ไม่ seed ค่าตายตัวต่อแพ็กเกจ** ตามที่ user บอกว่าอยากให้ Platform Admin กำหนดเองได้ (`null` = ไม่จำกัด ทุกแพ็กเกจเริ่มต้นแบบนี้จนกว่า admin จะตั้งค่า)
+
+**บั๊กเอกสารที่แก้ไปด้วย**: `HYBRID_INVENTORY_ARCHITECTURE.md` §3 `'shipped'` → `'exited'` (ตามที่แจ้งไว้ก่อนหน้า)
+
+**ทดสอบแล้วบน local Docker ทุกจุด**: feature-gate บล็อก FREE tenant จริง (403 FEATURE_NOT_INCLUDED) ปล่อยผ่าน PRO เหมือนเดิม, company isolation กรอง warehouse ถูกต้อง (user ที่ผูก Company A ไม่เห็น warehouse ของ Company B แต่เห็นของ Company A + ของที่ไม่ผูก company ใดเลย, 404 ตรงเมื่อพยายามเข้าถึงข้าม company), maxCompanies บล็อกถูกต้องเมื่อ admin ตั้ง quota ไว้ - ยืนยันบน production แล้ว (deploy + migrate สำเร็จ, health check + smoke test ผ่าน)
+
+## 2026-09-01 (5) — Implement Hybrid Inventory (StockBalance + Outbound/Transfer/Adjust) เข้า backend จริงครบ
+
+ต่อยอดจาก entry ก่อนหน้า (`StockBalance`/`GoodsIssueLine`/`StockTransferLine`/`StockAdjustmentLine` ที่ DevOps เขียน schema ไว้ก่อน) - รอบนี้คือ **implement เข้า backend จริงครบทุกจุด ทดสอบ end-to-end บน local Docker และ production แล้ว**:
+
+1. **`StockBalanceService`** (`add`/`deduct`/`transfer`/`reserve`/`releaseReservation`) - atomic SQL ตาม `DATABASE_PERFORMANCE_OPTIMIZATION_GUIDE.md` §1 แต่แก้บั๊กสำคัญ: `ON CONFLICT` ตัวอย่างในเอกสารจะไม่ยุบแถว Staging (NULL bin/lot) เข้าด้วยกัน (Postgres ไม่ถือว่า NULL = NULL) - แก้เป็น raw-SQL expression unique index ที่ COALESCE ไปเป็น sentinel แทน (migration `20260902100000_stock_balance_null_safe_unique_index`)
+2. **Inbound**: `GoodsReceiptsService.createReceipt()`/`confirmPutaway()` อัปเดต `StockBalance` จริงแล้ว (1-Step ลง bin ทันที, 2-Step ลง Staging แล้วย้ายตอน confirm)
+3. **Outbound**: `POST /goods-issues` รับ `lines[]` (`CreateGoodsIssueItemDto`) เพิ่มเข้ามา - หัก `StockBalance` ทันทีในทรานแซกชันเดียวกับสร้าง header (ตรงข้ามกับ Inbound ที่มี Staging - ของออกต้องมีชั้นวางต้นทางเสมอ ไม่มีสถานะ "รอ")
+4. **Transfer**: `POST /stock-transfers` รับ `lines[]` (`CreateStockTransferItemDto`) - ประกาศ "pending" พร้อม header เหมือน `tagIds` เดิม **ยังไม่แตะ `StockBalance` จนกว่าจะ `POST /stock-transfers/:id/complete`** (จับเวลาให้ตรงกับฝั่ง Tag ที่มีอยู่แล้ว)
+5. **Adjustment**: `POST /stock-adjustments` รับ `quantityLines[]` (`CreateStockAdjustmentItemDto`, `adjustedQuantity` +/-) แยกจาก `lines[]` เดิม (Tag-based) - **ตั้งใจไม่ใช้ชื่อ "Line"** ให้ตรงกับ `StockAdjustmentLineDto` เดิมที่มีความหมายคนละอย่าง (tagId+newStatus) ใช้ชื่อ "Item" ตามที่ schema ที่ DevOps เคย draft ไว้ (orphaned, ไม่มี path ไหนอ้างถึง) แทน - ปิดความเสี่ยงชื่อชนกัน
+6. **`GET /stock/balances`, `GET /stock/lookup`** - ใหม่ทั้งคู่ ตามสเปกที่ตั้งใจไว้ใน `HYBRID_INVENTORY_ARCHITECTURE.md` §4 (`lookup` ค้นด้วย SKU/code/barcode ก่อน ถ้าไม่เจอ fallback ไปหา RFID `Tag.tagId`)
+7. **`.env`/`docker-compose.yml`**: เพิ่ม `connection_limit=15&pool_timeout=30` ตาม §2 ของ performance guide
+
+**บั๊กที่พบในเอกสารเอง (ยังไม่ได้แก้/ไม่ใช่ backend gap)**: `HYBRID_INVENTORY_ARCHITECTURE.md` §3 (Transaction Lifecycle Matrix) แถว "จ่ายออก (RFID)" เขียนว่า `tag_current_state.status = 'shipped'` - **ค่านี้ไม่มีอยู่จริงใน enum `TagCurrentStatus`** (มีแค่ `unknown/in_stock/exited/missing`, โค้ดจริงใช้ `exited`) ควรแก้ไขคำในเอกสาร
+
+**บั๊กที่พบซ้ำ (ของเดิมที่เคยแก้ใน PR #22 แต่ PR นั้นไม่เคย merge)**: `docs/openapi.yaml` มี duplicate mapping key ซ้ำอีกรอบ (`/goods-receipts/staged-items`, `/putaway/suggest-bin`, `/putaway/confirm` ถูกเขียนทับด้วย placeholder เก่าอีกครั้งจาก commit ที่ merge หลัง PR #22) - `js-yaml` throw error โหลดไฟล์ไม่ผ่านอีกรอบ แก้ไปพร้อมกับรอบนี้แล้ว (ดู PR #22 เดิม ปิดได้เลยเพราะซ้ำซ้อนกับ PR นี้)
+
+**ทดสอบแล้ว**: 1-step/2-step inbound เข้า StockBalance ถูกต้อง, dispatch เกินยอด block, over-dispatch ทำให้ header ไม่ถูกสร้าง (transaction rollback ถูกต้อง), transfer pending ไม่แตะยอดจนกว่าจะ complete, adjustment +/- คำนวณถูกต้องทั้งคู่, validation ทุกจุด (ต้องมีอย่างน้อย 1 ใน lines/quantityLines, quantityLines ต้องมี warehouseId) - ยืนยันบน production แล้ว ไม่ใช่แค่ local
+
+**Known limitation ที่ยังไม่ทำ (นอกขอบเขตรอบนี้)**: reservation ("จองบิล") ยังไม่ต่อเข้า endpoint `POST /goods-issues/:id/reserve`/`release` จริง (มีแค่ `StockBalanceService.reserve()`/`releaseReservation()` พร้อมใช้)
+
+## 2026-09-01 — เพิ่ม Hybrid Inventory Architecture: StockBalance และ Transaction Lines
+
+อัปเดต `schema.prisma` และ `docs/openapi.yaml` เพื่อรองรับทั้งสินค้าบาร์โค้ดนับจำนวน (Bulk / Quantity-based) และสินค้าติดชิป RFID รายชิ้น (Serialized / RFID-based):
+
+1. **`StockBalance` (โมเดลใหม่)**:
+   - ตารางบันทึกยอดสต็อกคงเหลือจริง Real-time: `[tenantId, warehouseId, binLocationId, productId, lotNumber]`
+   - เก็บ `quantityOnHand` และ `quantityReserved` สำหรับการตรวจสอบยอดคงเหลือความเร็ว $O(1)$
+   - เพิ่ม Composite Index `@@index([tenantId, warehouseId, binLocationId])` เพื่อเร่งความเร็ว Query สินค้ารายชั้นวาง 1–3 ms
+2. **Transaction Line Items (โมเดลใหม่)**:
+   - **`GoodsIssueLine` & `GoodsIssueTag`**: รองรับรายการสินค้าที่จ่ายออกทั้งแบบนับจำนวนและแบบระบุชิป RFID
+   - **`StockTransferLine`**: รองรับการโอนย้ายสินค้าข้ามคลัง/ข้ามชั้นวางแบบนับจำนวน (คู่ขนานกับ `StockTransferTag`)
+   - **`StockAdjustmentLine`**: รองรับการปรับยอดสต็อกจากการนับของขาด-เกิน
+3. **OpenAPI Specs (`docs/openapi.yaml`)**:
+   - เพิ่ม `GET /stock/balances` สำหรับดูยอดสต็อกแยกตามคลัง/ชั้นวาง/Lot
+   - เพิ่ม `GET /stock/lookup` สำหรับค้นหาตำแหน่งและยอดสินค้าด้วย Barcode/SKU/Tag
+   - ปรับ DTOs ของ Goods Issue, Transfer, และ Adjustment ให้รองรับทั้งแบบ `items` (บาร์โค้ด) และ `tagIds` (RFID)
+4. **เอกสารสถาปัตยกรรม**: เพิ่ม `docs/HYBRID_INVENTORY_ARCHITECTURE.md` อธิบาย Dual-Engine Design ครบถ้วน
+
+## 2026-09-01 (4) — Sync `schema.prisma` กลับ: 2 field ที่ backend มีอยู่แล้วแต่ docs ตกหล่น
+
+ตอนตรวจสอบ backend เทียบกับ `schema.prisma` บน develop (ก่อนหน้านี้) พบว่า backend จริง **มากกว่า** docs อยู่ 2 จุด (คนละทิศกับ gap ปกติ - ของจริง implement ไปแล้วแต่ schema.prisma repo นี้ไม่เคย sync ตาม):
+
+1. **`ReaderOpsOperator`**: ขาด `isActive`/`deletedAt`/`deletedByType`/`deletedById`/`updatedAt` (soft-delete + suspend, แพทเทิร์นเดียวกับ `User`/`PlatformAdmin` - login account ที่มี MFA)
+2. **`WebhookSubscription`**: ขาด `deletedAt`/`deletedByType`/`deletedById` (soft-delete ผ่าน `withSoftDelete` extension - ของจริงมีมาตั้งแต่รอบ isDeleted rollout ก่อนหน้านี้)
+
+เพิ่มกลับเข้า `schema.prisma` ให้ตรงกับ backend จริงทุกตัวอักษร แล้วรัน `npx prisma format` ทับ - format เก็บงานที่ตกหล่นให้เพิ่มอีกอย่าง: **`Tenant.goodsReceipts` reverse relation หายไป** ตั้งแต่ commit `ce4aa7b` (เพิ่ม `GoodsReceipt.tenant` relation แต่ไม่เพิ่ม back-relation ฝั่ง `Tenant` - ทำให้ schema จุดนี้ invalid มาตั้งแต่ commit นั้น) - `prisma format` เติมให้อัตโนมัติ ยืนยันด้วย `prisma validate` ผ่านแล้ว
+
+**ยืนยันแล้ว**: diff `schema.prisma` กับ backend จริงเหลือแค่ 2 จุดที่ต่างกันโดยตั้งใจ (บันทึกไว้ใน CHANGELOG entry ก่อนหน้า - `GoodsReceiptLine` ไม่มี `@relation`/FK ตาม convention ตระกูล stock-transactions, และ `Product` ใช้ partial-unique-index แทน plain `@@unique` สำหรับ soft-delete) นอกนั้นตรงกันทุกตัวอักษร ไม่มีการเปลี่ยนแปลงฝั่ง backend จริงเลยรอบนี้ (docs-only sync)
+
+## 2026-09-01 (3) — Implement Goods Receipt Lines + Flexible Putaway เข้า backend จริง
+
+ต่อยอดจาก commit `ce4aa7b` (rework goods receipt schema with lines and flexible putaway design) - ตอนตรวจสอบ backend เทียบกับ `schema.prisma` บน develop พบว่าฟีเจอร์นี้ยังไม่ได้ implement เข้า backend เลย รอบนี้คือ **implement เข้าจริงครบทุกจุดตาม `docs/RECEIVING_AND_PUTAWAY_DESIGN.md` ทดสอบ end-to-end บน local Docker และ production แล้ว**:
+
+1. **`GoodsReceipt`**: เพิ่ม `supplierId`/`poNumber`/`supplierInvoiceNo`/`photoUrls` จริง (FK constraint จริงสำหรับ `supplierId` -> `suppliers.id` ON DELETE SET NULL)
+2. **`GoodsReceiptLine` (โมเดลใหม่)**: `quantity`/`damagedQuantity`/`putawayQuantity`/lot-expiry/`unitCostMinor`/`binLocationId` ตาม spec เป๊ะ - **ตัดสินใจ implementation**: ไม่มี `@relation`/FK constraint ให้ `goodsReceiptId`/`productId`/`binLocationId` โดยตั้งใจ (ต่างจาก commit `ce4aa7b` ที่เขียนไว้) เพื่อให้ตรงกับ convention เดิมของทั้งตระกูล stock-transactions (`GoodsReceipt`/`GoodsIssue`/`StockTransfer` ทุกตัวเป็น plain UUID column ไม่มี FK มาตั้งแต่ต้น) - validate ที่ service layer ผ่าน `getByIdInCompany()` แทน
+3. **1-Step vs 2-Step Putaway**: `POST /goods-receipts` รับ `lines[]` พร้อม header ได้เลย - line ที่ระบุ `binLocationId` จะ `putawayQuantity = quantity` ทันที (1-Step), ถ้าไม่ระบุจะสร้างแบบ staged (`putawayQuantity: 0`) รอ 2-Step
+4. **`GET /goods-receipts/staged-items`**: คิวงาน Putaway ที่ยังไม่เสร็จ (`quantity > putawayQuantity`) - join กับ receipt/product ผ่าน `$queryRaw` (เทียบคอลัมน์สองตัวในแถวเดียวกัน Prisma query builder ทำไม่ได้ ต้อง raw SQL แบบเดียวกับ `ReportsService.getStockValuation()`)
+5. **`GET /putaway/suggest-bin`**: แนะนำ bin ตาม free capacity เท่านั้น (`maxCapacity` ลบยอด `putawayQuantity` ที่ลงไปแล้วในแต่ละ bin ผ่าน ledger นี้) - **ข้อจำกัดที่ทราบ**: schema ปัจจุบันไม่มี zone/category บน `BinLocation` เลย จับคู่ตาม "หมวดหมู่สินค้า" ตามที่ design doc อธิบายไว้ไม่ได้จริง เป็นแค่ soft suggestion ตาม capacity อย่างเดียว (design doc เองก็ระบุว่าไม่บังคับ override ได้เสมอ)
+6. **`POST /putaway/confirm`**: รองรับ partial/multi-bin putaway (design doc ยง4.1) - line หนึ่งมี `binLocationId` ได้แค่ช่องเดียว ดังนั้นการวางแบบแยกหลาย bin จะ **หด `quantity` ของ line เดิมที่ยัง staged อยู่ ลง และสร้าง line ใหม่ที่ปิดงานแล้ว (`putawayQuantity == quantity`) ชี้ไปที่ bin เป้าหมาย** แทนที่จะพยายามเก็บสอง bin ไว้ในแถวเดียว - ทดสอบ full close + partial split + over-confirm (400) + cross-tenant isolation (404) ผ่านหมดบน local Docker
+7. **`docs/openapi.yaml`**: แทนที่ placeholder ที่ทีมเขียนไว้ล่วงหน้า (`StagedItemDto`/`PutawaySuggestionResponseDto`/`PutawayConfirmDto`) ด้วย spec จริงจาก live `/api-docs-json` (`GoodsReceiptLine`/`CreateGoodsReceiptLineDto` จริง) เพราะฟีเจอร์นี้ implement เสร็จแล้ว ไม่ใช่ placeholder อีกต่อไป
+
+**ทดสอบแล้ว**: 1-Step direct putaway, 2-Step staged->confirm เต็มจำนวน, partial putaway แยก 2 bin (60+35), over-confirm เกินจำนวนคงเหลือ block ด้วย 400, cross-tenant เข้าถึง line คนอื่นไม่ได้ (404) - ยืนยันบน production (`match-stock.ddns.net`, path เพิ่มจาก 90 เป็น 93) แล้ว ไม่ใช่แค่ local
+
+**ยังไม่ทำรอบนี้ (นอกขอบเขต design doc)**: reconciliation ระหว่าง stock ที่นับผ่าน `GoodsReceiptLine` (barcode/manual) กับ stock ที่นับผ่าน Tag/RFID (`GET /warehouses/:id/stock` เดิม) - เป็นสองระบบนับสต็อกคู่ขนานที่ยังไม่เชื่อมกัน
+
 ## 2026-09-01 (2) — แก้ `MenuController`/`RentalsController` ถูก `@ApiExcludeController()` โดยไม่ตั้งใจ
 
 **ปัญหาที่พบ**: หลังแก้ cache header รอบก่อนแล้ว ผู้ใช้ยังรายงานว่า Swagger endpoint ไม่ครบ — ตรวจ `@Controller()` ทุกตัวใน backend เทียบกับ live spec เจอว่า `GET /menu` (nav tree ที่กรองตาม `MenuItem.requiredFeature`/`SubscriptionPlan.features` — งาน Dynamic Menu จาก PR #17 เมื่อวาน) และทั้ง controller `/rentals` (list/get/deposit-checkout) **หายไปจาก live spec ทั้งคู่**
