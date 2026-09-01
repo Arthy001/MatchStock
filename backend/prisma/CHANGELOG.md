@@ -2,7 +2,7 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
-## 2026-09-02 — Implement Hybrid Inventory (StockBalance + Outbound/Transfer/Adjust) เข้า backend จริงครบ
+## 2026-09-01 (5) — Implement Hybrid Inventory (StockBalance + Outbound/Transfer/Adjust) เข้า backend จริงครบ
 
 ต่อยอดจาก entry ก่อนหน้า (`StockBalance`/`GoodsIssueLine`/`StockTransferLine`/`StockAdjustmentLine` ที่ DevOps เขียน schema ไว้ก่อน) - รอบนี้คือ **implement เข้า backend จริงครบทุกจุด ทดสอบ end-to-end บน local Docker และ production แล้ว**:
 
