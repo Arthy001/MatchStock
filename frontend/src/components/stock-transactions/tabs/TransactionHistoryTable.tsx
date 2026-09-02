@@ -163,17 +163,17 @@ export const TransactionHistoryTable: React.FC<TransactionHistoryTableProps> = (
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-950/40 text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                <th className="py-3.5 px-4">{t.docNo}</th>
-                <th className="py-3.5 px-4">{t.transType}</th>
-                <th className="py-3.5 px-4">{t.productName}</th>
-                <th className="py-3.5 px-4">{t.lotBatch}</th>
-                <th className="py-3.5 px-4">
+                <th className="py-3.5 px-4 whitespace-nowrap min-w-[160px]">{t.docNo}</th>
+                <th className="py-3.5 px-4 whitespace-nowrap min-w-[130px]">{t.transType}</th>
+                <th className="py-3.5 px-4 min-w-[180px]">{t.productName}</th>
+                <th className="py-3.5 px-4 whitespace-nowrap min-w-[120px]">{t.lotBatch}</th>
+                <th className="py-3.5 px-4 min-w-[160px]">
                   {t.sourceLocation} / {t.destLocation}
                 </th>
-                <th className="py-3.5 px-4 text-right">{t.quantity}</th>
-                <th className="py-3.5 px-4 text-right">{t.totalValue}</th>
-                <th className="py-3.5 px-4 text-center">{t.status}</th>
-                <th className="py-3.5 px-4 text-center">{t.actions}</th>
+                <th className="py-3.5 px-4 text-right whitespace-nowrap min-w-[90px]">{t.quantity}</th>
+                <th className="py-3.5 px-4 text-right whitespace-nowrap min-w-[100px]">{t.totalValue}</th>
+                <th className="py-3.5 px-4 text-center whitespace-nowrap min-w-[100px]">{t.status}</th>
+                <th className="py-3.5 px-4 text-center whitespace-nowrap min-w-[100px]">{t.actions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
@@ -194,12 +194,12 @@ export const TransactionHistoryTable: React.FC<TransactionHistoryTableProps> = (
                       onClick={() => onOpenDetail(tx)}
                     >
                       {/* Document No & Date */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-mono font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
-                          <FileText className="w-3.5 h-3.5 text-slate-400" />
-                          {tx.documentNo}
+                      <td className="py-3.5 px-4 whitespace-nowrap min-w-[160px]">
+                        <div className="font-mono font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5 whitespace-nowrap">
+                          <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span className="truncate">{tx.documentNo}</span>
                         </div>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 whitespace-nowrap font-mono">
                           {tx.createdAt}
                         </div>
                       </td>

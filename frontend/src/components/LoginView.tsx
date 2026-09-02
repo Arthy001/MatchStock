@@ -35,32 +35,58 @@ interface DemoAccount {
   email: string;
   role: string;
   badge: string;
+  password?: string;
 }
 
 const DEMO_ACCOUNTS: DemoAccount[] = [
+  {
+    tenantName: 'Siam Foods (Free Plan)',
+    email: 'owner@siamfoods.demo',
+    role: 'Siam Foods',
+    badge: 'Free Plan',
+    password: 'Demo1234!',
+  },
+  {
+    tenantName: 'Thai Electronics (Pro Plan)',
+    email: 'owner@thaielec.demo',
+    role: 'Thai Electronics',
+    badge: 'Pro Plan',
+    password: 'Demo1234!',
+  },
+  {
+    tenantName: 'Green Farm (Ultra Plan)',
+    email: 'owner@greenfarm.demo',
+    role: 'Green Farm',
+    badge: 'Ultra Plan',
+    password: 'Demo1234!',
+  },
   {
     tenantName: 'MatchStock Demo (Enterprise)',
     email: 'admin@matchstock.com',
     role: 'Admin',
     badge: 'Enterprise',
+    password: 'Passw0rd!',
   },
   {
     tenantName: 'MatchStock Demo (Enterprise)',
     email: 'manager@matchstock.com',
     role: 'Manager',
     badge: 'Operations',
+    password: 'Passw0rd!',
   },
   {
     tenantName: 'MatchStock Demo (Enterprise)',
     email: 'whstaff@matchstock.com',
     role: 'Warehouse Staff',
     badge: 'Inventory',
+    password: 'Passw0rd!',
   },
   {
     tenantName: 'MatchStock Demo (Enterprise)',
     email: 'purchasing@matchstock.com',
     role: 'Purchasing Staff',
     badge: 'Procurement',
+    password: 'Passw0rd!',
   },
 ];
 
@@ -73,8 +99,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
   onLoginSuccess,
 }) => {
   const t = getTranslation(lang);
-  const [email, setEmail] = useState('admin@matchstock.com');
-  const [password, setPassword] = useState('Passw0rd!');
+  const [email, setEmail] = useState('owner@siamfoods.demo');
+  const [password, setPassword] = useState('Demo1234!');
   const [showPassword, setShowPassword] = useState(false);
   const [keepConnected, setKeepConnected] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -86,7 +112,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
   const handleSelectDemo = (account: DemoAccount, index: number) => {
     setSelectedDemoIndex(index);
     setEmail(account.email);
-    setPassword('Passw0rd!');
+    setPassword(account.password || 'Demo1234!');
     setErrorMsg('');
   };
 
@@ -674,8 +700,23 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   }`}
                 >
                   <div className="min-w-0 pr-1">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                       <span className="text-[13px] font-bold truncate">{acc.role}</span>
+                      {acc.badge && (
+                        <span
+                          className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded shrink-0 ${
+                            acc.badge.includes('Free')
+                              ? 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
+                              : acc.badge.includes('Pro')
+                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                              : acc.badge.includes('Ultra')
+                              ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                              : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                          }`}
+                        >
+                          {acc.badge}
+                        </span>
+                      )}
                     </div>
                     <p className="text-[11px] text-slate-400 truncate font-mono mt-0.5">
                       {acc.email}

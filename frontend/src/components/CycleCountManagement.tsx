@@ -55,6 +55,7 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
   onNavigateToAdjustment,
 }) => {
   const t = getTranslation(lang);
+  const isEn = lang === 'en';
 
   // States
   const [plans, setPlans] = useState<CycleCountPlan[]>([]);
@@ -129,9 +130,11 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
           const samplePlan1: CycleCountPlan = {
             id: 'plan-001',
             planNo: 'CC-2026-0801',
-            title: 'ตรวจนับสต็อกประจำสัปดาห์ คลังสินค้าหลัก (Weekly Cycle Count)',
+            title: isEn
+              ? 'Weekly Cycle Count (Bangkok Main Hub)'
+              : 'ตรวจนับสต็อกประจำสัปดาห์ คลังสินค้าหลัก (Weekly Cycle Count)',
             warehouseId: whList[0]?.id || 'wh-001',
-            warehouseName: whList[0]?.name || 'WH-Bangkok Main Logistics Center',
+            warehouseName: whList[0]?.name || (isEn ? 'Bangkok Main Logistics Hub' : 'คลังสินค้าหลักกรุงเทพ (Bangkok Main Hub)'),
             zone: 'Zone A (High-Velocity Items)',
             cutoffDate: '2026-08-21',
             assignedTo: 'usr-002',
@@ -176,7 +179,7 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
                 uom: p.uom,
                 category: p.category,
                 warehouseId: whList[0]?.id || 'wh-001',
-                warehouseName: whList[0]?.name || 'WH-Bangkok Center',
+                warehouseName: whList[0]?.name || (isEn ? 'Bangkok Main Logistics Hub' : 'คลังสินค้าหลักกรุงเทพ (Bangkok Main Hub)'),
                 binCode: `A-0${idx + 1}-01`,
                 unitPrice: p.price,
                 systemQty: p.stockOnHand,
@@ -191,9 +194,11 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
           const samplePlan2: CycleCountPlan = {
             id: 'plan-002',
             planNo: 'CC-2026-0730',
-            title: 'ตรวจนับสต็อกสิ้นเดือน กรกฎาคม 2026 (Monthly Reconciliation)',
+            title: isEn
+              ? 'Monthly Inventory Reconciliation July 2026'
+              : 'ตรวจนับสต็อกสิ้นเดือน กรกฎาคม 2026 (Monthly Reconciliation)',
             warehouseId: whList[0]?.id || 'wh-001',
-            warehouseName: whList[0]?.name || 'WH-Bangkok Main Logistics Center',
+            warehouseName: whList[0]?.name || (isEn ? 'Bangkok Main Logistics Hub' : 'คลังสินค้าหลักกรุงเทพ (Bangkok Main Hub)'),
             zone: 'Zone B & C',
             cutoffDate: '2026-07-31',
             assignedTo: 'usr-001',
@@ -437,7 +442,7 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-[14px] font-semibold shadow-xs shadow-blue-600/30 transition cursor-pointer active:scale-[0.99]"
           >
             <Plus className="w-4 h-4" />
-            <span>สร้างแผนตรวจนับใหม่ (New Audit Plan)</span>
+            <span>{isEn ? 'New Audit Plan' : 'สร้างแผนตรวจนับใหม่ (New Audit Plan)'}</span>
           </button>
         </div>
       </div>
@@ -450,12 +455,16 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">แผนตรวจนับทั้งหมด</span>
+            <span className="text-xs font-bold text-slate-500">
+              {isEn ? 'Total Count Plans' : 'แผนตรวจนับทั้งหมด'}
+            </span>
             <FileSpreadsheet className="w-4 h-4 text-blue-500" />
           </div>
           <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-50 mt-1">
             {plans.length}{' '}
-            <span className="text-xs font-medium text-slate-500">แผน</span>
+            <span className="text-xs font-medium text-slate-500">
+              {isEn ? 'plans' : 'แผน'}
+            </span>
           </p>
         </div>
 
@@ -465,7 +474,9 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">ความแม่นยำสต็อกเฉลี่ย (Accuracy)</span>
+            <span className="text-xs font-bold text-slate-500">
+              {isEn ? 'Avg Stock Accuracy' : 'ความแม่นยำสต็อกเฉลี่ย (Accuracy)'}
+            </span>
             <Percent className="w-4 h-4 text-emerald-500" />
           </div>
           <p className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
@@ -479,7 +490,9 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">ผลต่างจำนวนสินค้า (Qty Variance)</span>
+            <span className="text-xs font-bold text-slate-500">
+              {isEn ? 'Qty Variance' : 'ผลต่างจำนวนสินค้า (Qty Variance)'}
+            </span>
             <ArrowUpDown className="w-4 h-4 text-amber-500" />
           </div>
           <p
@@ -492,7 +505,9 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
             }`}
           >
             {selectedPlan ? (selectedPlan.totalVarianceQty > 0 ? `+${selectedPlan.totalVarianceQty}` : selectedPlan.totalVarianceQty) : 0}{' '}
-            <span className="text-xs font-medium text-slate-500">ชิ้น</span>
+            <span className="text-xs font-medium text-slate-500">
+              {isEn ? 'pcs' : 'ชิ้น'}
+            </span>
           </p>
         </div>
 
@@ -502,7 +517,9 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">มูลค่าผลต่างรวม (Variance Value)</span>
+            <span className="text-xs font-bold text-slate-500">
+              {isEn ? 'Total Variance Value' : 'มูลค่าผลต่างรวม (Variance Value)'}
+            </span>
             <ShieldAlert className="w-4 h-4 text-rose-500" />
           </div>
           <p
@@ -530,9 +547,11 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                รายการแผนตรวจนับสต็อก
+                {isEn ? 'Cycle Count Plans' : 'รายการแผนตรวจนับสต็อก'}
               </h3>
-              <span className="text-xs text-slate-400">{filteredPlans.length} รายการ</span>
+              <span className="text-xs text-slate-400">
+                {filteredPlans.length} {isEn ? 'plans' : 'รายการ'}
+              </span>
             </div>
 
             {/* Status Filter Pills */}
@@ -548,12 +567,12 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
                   }`}
                 >
                   {st === 'ALL'
-                    ? 'ทั้งหมด'
+                    ? (isEn ? 'All' : 'ทั้งหมด')
                     : st === 'IN_PROGRESS'
-                    ? 'กำลังนับ'
+                    ? (isEn ? 'Counting' : 'กำลังนับ')
                     : st === 'COUNTED'
-                    ? 'นับเสร็จแล้ว'
-                    : 'ปรับยอดแล้ว'}
+                    ? (isEn ? 'Counted' : 'นับเสร็จแล้ว')
+                    : (isEn ? 'Reconciled' : 'ปรับยอดแล้ว')}
                 </button>
               ))}
             </div>
@@ -586,10 +605,10 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
                         }`}
                       >
                         {plan.status === 'RECONCILED'
-                          ? 'กระทบยอดแล้ว'
+                          ? (isEn ? 'Reconciled' : 'กระทบยอดแล้ว')
                           : plan.status === 'COUNTED'
-                          ? 'นับครบแล้ว'
-                          : 'กำลังนับ'}
+                          ? (isEn ? 'Counted' : 'นับครบแล้ว')
+                          : (isEn ? 'Counting' : 'กำลังนับ')}
                       </span>
                     </div>
 
@@ -604,7 +623,7 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
 
                     <div className="flex items-center justify-between text-[11px] text-slate-500 mt-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
                       <span>
-                        นับแล้ว: <strong>{plan.countedSkus}</strong>/{plan.totalSkus} SKUs
+                        {isEn ? 'Counted:' : 'นับแล้ว:'} <strong>{plan.countedSkus}</strong>/{plan.totalSkus} SKUs
                       </span>
                       <span className="font-bold text-emerald-600">
                         Acc: {plan.accuracyRate}%
@@ -637,8 +656,8 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-1">
-                    คลัง: <strong>{selectedPlan.warehouseName}</strong> | ผู้ตรวจนับ:{' '}
-                    <strong>{selectedPlan.assignedStaffName}</strong> | วันตัดยอด:{' '}
+                    {isEn ? 'Warehouse:' : 'คลัง:'} <strong>{selectedPlan.warehouseName}</strong> | {isEn ? 'Auditor:' : 'ผู้ตรวจนับ:'}{' '}
+                    <strong>{selectedPlan.assignedStaffName}</strong> | {isEn ? 'Cut-off Date:' : 'วันตัดยอด:'}{' '}
                     {selectedPlan.cutoffDate}
                   </p>
                 </div>
@@ -647,16 +666,16 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
                   {selectedPlan.status !== 'RECONCILED' && (
                     <button
                       onClick={handleReconcilePlan}
-                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition"
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
                     >
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>กระทบยอด & ปรับสต็อก (Reconcile)</span>
+                      <span>{isEn ? 'Reconcile & Adjust Stock' : 'กระทบยอด & ปรับสต็อก (Reconcile)'}</span>
                     </button>
                   )}
                   {selectedPlan.status === 'RECONCILED' && (
                     <span className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold flex items-center gap-1">
                       <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                      ปรับยอดเสร็จสิ้นแล้ว
+                      {isEn ? 'Reconciliation Completed' : 'ปรับยอดเสร็จสิ้นแล้ว'}
                     </span>
                   )}
                 </div>
@@ -671,7 +690,7 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
                       type="text"
                       value={quickBarcode}
                       onChange={(e) => setQuickBarcode(e.target.value)}
-                      placeholder="ยิงบาร์โค้ดสินค้าที่นี่เพื่อนับ (+1 ชิ้น อัตโนมัติ)..."
+                      placeholder={isEn ? 'Scan barcode here to count (+1 Auto)...' : 'ยิงบาร์โค้ดสินค้าที่นี่เพื่อนับ (+1 ชิ้น อัตโนมัติ)...'}
                       className={`w-full pl-9 pr-3 py-2 rounded-xl border text-xs font-mono font-medium focus:ring-2 focus:ring-blue-500 transition ${
                         theme === 'dark'
                           ? 'bg-slate-800 border-slate-700 text-slate-100'
@@ -681,10 +700,10 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
                   </div>
                   <button
                     type="submit"
-                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shrink-0"
+                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shrink-0 cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>นับเพิ่ม +1</span>
+                    <span>{isEn ? 'Count +1' : 'นับเพิ่ม +1'}</span>
                   </button>
                 </form>
 
@@ -708,28 +727,28 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
               <div className="flex flex-wrap items-center justify-between gap-3 mt-5">
                 <div className="flex flex-wrap gap-1.5">
                   {[
-                    { key: 'ALL', label: `ทั้งหมด (${selectedPlan.items.length})` },
+                    { key: 'ALL', label: `${isEn ? 'All' : 'ทั้งหมด'} (${selectedPlan.items.length})` },
                     {
                       key: 'MATCH',
-                      label: `ตรงเป๊ะ (${selectedPlan.items.filter((i) => i.status === 'MATCH').length})`,
+                      label: `${isEn ? 'Matched' : 'ตรงเป๊ะ'} (${selectedPlan.items.filter((i) => i.status === 'MATCH').length})`,
                     },
                     {
                       key: 'SHORTAGE',
-                      label: `ขาด (${selectedPlan.items.filter((i) => i.status === 'SHORTAGE').length})`,
+                      label: `${isEn ? 'Shortage' : 'ขาด'} (${selectedPlan.items.filter((i) => i.status === 'SHORTAGE').length})`,
                     },
                     {
                       key: 'SURPLUS',
-                      label: `เกิน (${selectedPlan.items.filter((i) => i.status === 'SURPLUS').length})`,
+                      label: `${isEn ? 'Surplus' : 'เกิน'} (${selectedPlan.items.filter((i) => i.status === 'SURPLUS').length})`,
                     },
                     {
                       key: 'UNCOUNTED',
-                      label: `ยังไม่นับ (${selectedPlan.items.filter((i) => i.status === 'UNCOUNTED').length})`,
+                      label: `${isEn ? 'Uncounted' : 'ยังไม่นับ'} (${selectedPlan.items.filter((i) => i.status === 'UNCOUNTED').length})`,
                     },
                   ].map((tab) => (
                     <button
                       key={tab.key}
                       onClick={() => setItemStatusFilter(tab.key as any)}
-                      className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition ${
+                      className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition cursor-pointer ${
                         itemStatusFilter === tab.key
                           ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
@@ -741,7 +760,7 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
                 </div>
 
                 <div className="text-xs text-slate-500 font-medium">
-                  แสดง {filteredItems.length} รายการ
+                  {isEn ? 'Showing' : 'แสดง'} {filteredItems.length} {isEn ? 'items' : 'รายการ'}
                 </div>
               </div>
 
@@ -754,13 +773,13 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
                     }`}
                   >
                     <tr>
-                      <th className="py-3 px-3.5 font-semibold">สินค้า / SKU</th>
-                      <th className="py-3 px-3 font-semibold">Bin</th>
-                      <th className="py-3 px-3 font-semibold text-right">ยอดในระบบ</th>
-                      <th className="py-3 px-3 font-semibold text-center w-36">ยอดตรวจนับจริง</th>
-                      <th className="py-3 px-3 font-semibold text-right">ผลต่าง (Variance)</th>
-                      <th className="py-3 px-3 font-semibold text-right">มูลค่าผลต่าง</th>
-                      <th className="py-3 px-3.5 font-semibold text-center">สถานะ</th>
+                      <th className="py-3 px-3.5 font-semibold">{isEn ? 'Product / SKU' : 'สินค้า / SKU'}</th>
+                      <th className="py-3 px-3 font-semibold">{isEn ? 'Bin' : 'Bin'}</th>
+                      <th className="py-3 px-3 font-semibold text-right">{isEn ? 'System Qty' : 'ยอดในระบบ'}</th>
+                      <th className="py-3 px-3 font-semibold text-center w-36">{isEn ? 'Counted Qty' : 'ยอดตรวจนับจริง'}</th>
+                      <th className="py-3 px-3 font-semibold text-right">{isEn ? 'Variance (Qty)' : 'ผลต่าง (Variance)'}</th>
+                      <th className="py-3 px-3 font-semibold text-right">{isEn ? 'Variance (Value)' : 'มูลค่าผลต่าง'}</th>
+                      <th className="py-3 px-3.5 font-semibold text-center">{isEn ? 'Status' : 'สถานะ'}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -794,7 +813,7 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
                                 const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
                                 handleUpdateItemCount(item.id, isNaN(val) ? 0 : val);
                               }}
-                              placeholder="ระบุจำนวน"
+                              placeholder={isEn ? 'Enter qty' : 'ระบุจำนวน'}
                               className={`w-20 text-center py-1.5 px-2 rounded-lg border font-mono text-xs font-bold focus:ring-2 focus:ring-blue-500 transition ${
                                 theme === 'dark'
                                   ? 'bg-slate-800 border-slate-700 text-slate-100'
@@ -853,12 +872,12 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
                             {item.status === 'SHORTAGE' && <TrendingDown className="w-3 h-3 text-rose-500" />}
                             {item.status === 'SURPLUS' && <TrendingUp className="w-3 h-3 text-blue-500" />}
                             {item.status === 'MATCH'
-                              ? 'ตรงเป๊ะ'
+                              ? (isEn ? 'Matched' : 'ตรงเป๊ะ')
                               : item.status === 'SHORTAGE'
-                              ? 'สต็อกขาด'
+                              ? (isEn ? 'Shortage' : 'สต็อกขาด')
                               : item.status === 'SURPLUS'
-                              ? 'สต็อกเกิน'
-                              : 'ยังไม่นับ'}
+                              ? (isEn ? 'Surplus' : 'สต็อกเกิน')
+                              : (isEn ? 'Uncounted' : 'ยังไม่นับ')}
                           </span>
                         </td>
                       </tr>
@@ -869,7 +888,7 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
             </div>
           ) : (
             <div className="p-12 text-center border rounded-2xl">
-              <p className="text-xs text-slate-400">กรุณาเลือกแผนตรวจนับสต็อกทางซ้ายมือ</p>
+              <p className="text-xs text-slate-400">{isEn ? 'Please select a cycle count plan from the left.' : 'กรุณาเลือกแผนตรวจนับสต็อกทางซ้ายมือ'}</p>
             </div>
           )}
         </div>
@@ -884,10 +903,12 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
             }`}
           >
             <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
-              <h3 className="text-base font-bold">สร้างแผนตรวจนับสต็อกใหม่ (New Cycle Count Plan)</h3>
+              <h3 className="text-base font-bold">
+                {isEn ? 'Create New Cycle Count Plan' : 'สร้างแผนตรวจนับสต็อกใหม่ (New Cycle Count Plan)'}
+              </h3>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -896,14 +917,14 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
             <form onSubmit={handleCreatePlan} className="mt-5 space-y-4 text-xs">
               <div>
                 <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                  ชื่อแผนตรวจนับ:
+                  {isEn ? 'Plan Name / Title:' : 'ชื่อแผนตรวจนับ:'}
                 </label>
                 <input
                   type="text"
                   required
                   value={newPlanTitle}
                   onChange={(e) => setNewPlanTitle(e.target.value)}
-                  placeholder="เช่น ตรวจนับสต็อกประจำสัปดาห์ โซน A..."
+                  placeholder={isEn ? 'e.g. Weekly Cycle Count Zone A...' : 'เช่น ตรวจนับสต็อกประจำสัปดาห์ โซน A...'}
                   className={`w-full px-3 py-2.5 rounded-xl border font-medium focus:ring-2 focus:ring-blue-500 transition ${
                     theme === 'dark'
                       ? 'bg-slate-800 border-slate-700 text-slate-100'
@@ -915,7 +936,7 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    คลังสินค้าเป้าหมาย:
+                    {isEn ? 'Target Warehouse:' : 'คลังสินค้าเป้าหมาย:'}
                   </label>
                   <select
                     value={newPlanWarehouseId}
@@ -936,7 +957,7 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
 
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    วันตัดยอดสต็อก (Cutoff):
+                    {isEn ? 'Stock Cut-off Date:' : 'วันตัดยอดสต็อก (Cutoff):'}
                   </label>
                   <input
                     type="date"
@@ -954,14 +975,14 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
 
               <div>
                 <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                  ผู้รับผิดชอบการนับ (Assigned Staff):
+                  {isEn ? 'Assigned Auditor / Staff:' : 'ผู้รับผิดชอบการนับ (Assigned Staff):'}
                 </label>
                 <input
                   type="text"
                   required
                   value={newPlanAssignedStaff}
                   onChange={(e) => setNewPlanAssignedStaff(e.target.value)}
-                  placeholder="ระบุชื่อเจ้าหน้าที่คลัง"
+                  placeholder={isEn ? 'Enter auditor name' : 'ระบุชื่อเจ้าหน้าที่คลัง'}
                   className={`w-full px-3 py-2.5 rounded-xl border font-medium focus:ring-2 focus:ring-blue-500 transition ${
                     theme === 'dark'
                       ? 'bg-slate-800 border-slate-700 text-slate-100'
@@ -974,15 +995,15 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold transition"
+                  className="px-4 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold transition cursor-pointer"
                 >
-                  ยกเลิก
+                  {isEn ? 'Cancel' : 'ยกเลิก'}
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md shadow-blue-600/20 transition"
+                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md shadow-blue-600/20 transition cursor-pointer"
                 >
-                  ยืนยันสร้างแผนตรวจนับ
+                  {isEn ? 'Create Audit Plan' : 'ยืนยันสร้างแผนตรวจนับ'}
                 </button>
               </div>
             </form>
