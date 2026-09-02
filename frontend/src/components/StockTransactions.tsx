@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { Language, ThemeMode } from '../types';
 import { getTranslation } from '../i18n';
@@ -9,6 +9,7 @@ import { TransactionMetricsCards } from './stock-transactions/tabs/TransactionMe
 import { TransactionHistoryTable } from './stock-transactions/tabs/TransactionHistoryTable';
 import { TransactionDetailDrawer } from './stock-transactions/modals/TransactionDetailDrawer';
 import { CreateTransactionModal } from './stock-transactions/modals/CreateTransactionModal';
+import { CreateGoodsReceiptModal } from './stock-transactions/modals/CreateGoodsReceiptModal';
 
 interface StockTransactionsProps {
   lang: Language;
@@ -86,6 +87,8 @@ export const StockTransactions: React.FC<StockTransactionsProps> = ({
     handleCreateTransaction,
   } = useStockTransactions(searchQuery, activeSubTab);
 
+  const [isGrModalOpen, setIsGrModalOpen] = useState<boolean>(false);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Feedback Alert Banner */}
@@ -116,7 +119,13 @@ export const StockTransactions: React.FC<StockTransactionsProps> = ({
         totalIssues={totalIssues}
         activeTransfers={activeTransfers}
         totalAdjustments={totalAdjustments}
-        onOpenCreateModal={() => handleOpenCreateModal()}
+        onOpenCreateModal={() => {
+          if (activeSubTab === 'receive') {
+            setIsGrModalOpen(true);
+          } else {
+            handleOpenCreateModal();
+          }
+        }}
       />
 
       {/* Transactions Data Table & Filters */}
@@ -143,7 +152,25 @@ export const StockTransactions: React.FC<StockTransactionsProps> = ({
         onClose={() => setIsDrawerOpen(false)}
       />
 
-      {/* Creation Modal for New Stock Transaction */}
+      {/* Phase 5 Multi-line Goods Receipt Modal */}
+      <CreateGoodsReceiptModal
+        theme={theme}
+        lang={lang}
+        t={t}
+        isOpen={isGrModalOpen}
+        onClose={() => setIsGrModalOpen(false)}
+        onSuccess={(receipt) => {
+          setFeedback({
+            type: 'success',
+            message: lang === 'th' ? `สร้างใบรับสินค้า ${receipt?.receiptNumber || ''} เรียบร้อยแล้ว` : 'Goods Receipt created successfully',
+          });
+        }}
+        productsList={productsList}
+        warehousesList={warehousesList}
+        suppliersList={suppliersList}
+      />
+
+      {/* Creation Modal for Other Stock Transactions (GI, TR, ADJ) */}
       <CreateTransactionModal
         theme={theme}
         t={t}

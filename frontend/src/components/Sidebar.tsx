@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Database,
@@ -15,6 +15,9 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   X,
+  Crown,
+  Layers,
+  Sparkles,
 } from 'lucide-react';
 import { Language, ThemeMode, User, SubscriptionFeatures } from '../types';
 import { getTranslation } from '../i18n';
@@ -62,8 +65,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onMobileClose,
 }) => {
   const t = getTranslation(lang);
-  const [isMasterDataOpen, setIsMasterDataOpen] = useState(true);
-  const [isInventoryOpen, setIsInventoryOpen] = useState(true);
+  const [isMasterDataOpen, setIsMasterDataOpen] = useState(activeTab === 'masterData');
+  const [isInventoryOpen, setIsInventoryOpen] = useState(activeTab === 'inventory');
+
+  useEffect(() => {
+    if (activeTab === 'inventory') {
+      setIsInventoryOpen(true);
+    }
+    if (activeTab === 'masterData') {
+      setIsMasterDataOpen(true);
+    }
+  }, [activeTab]);
 
   const handleMenuItemClick = (tabKey: string) => {
     onTabChange(tabKey);
@@ -265,6 +277,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       {[
                         { key: 'all', label: t.tabAllTransactions },
                         { key: 'receive', label: t.tabGoodsReceive },
+                        { key: 'putaway', label: t.tabPutaway, badge: 'NEW' },
+                        { key: 'balances', label: t.tabBalances, badge: 'LIVE' },
                         { key: 'issue', label: t.tabGoodsIssue },
                         { key: 'transfer', label: t.tabStockTransfer },
                         { key: 'adjustment', label: t.tabStockAdjustment },
@@ -285,13 +299,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               }
                               if (onMobileClose) onMobileClose();
                             }}
-                            className={`w-full text-left text-[13px] py-1 px-2.5 rounded-lg transition truncate block font-medium ${
+                            className={`w-full text-left text-[13px] py-1 px-2.5 rounded-lg transition flex items-center justify-between font-medium ${
                               isSubActive
                                 ? 'text-blue-400 font-bold bg-blue-500/15'
                                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                             }`}
                           >
-                            {item.label}
+                            <span className="truncate">{item.label}</span>
+                            {item.badge && (
+                              <span
+                                className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded shrink-0 ${
+                                  item.badge === 'NEW'
+                                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
+                                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                }`}
+                              >
+                                {item.badge}
+                              </span>
+                            )}
                           </button>
                         );
                       })}
@@ -341,6 +366,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   {!collapsed && <span className="truncate">{t.reports}</span>}
                 </button>
               )}
+
+              {/* Subscription & Billing (Phase 4) */}
+              <button
+                onClick={() => handleMenuItemClick('billing')}
+                title={t.tabBilling || 'Subscription & Billing'}
+                className={`flex items-center ${
+                  collapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full justify-between px-3 py-2'
+                } rounded-xl text-[16px] font-medium transition ${
+                  activeTab === 'billing' || (activeTab === 'settings' && activeSubTab === 'billing')
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                }`}
+              >
+                <div className={`flex items-center ${collapsed ? 'justify-center' : 'flex-1 min-w-0 gap-3 mr-1'}`}>
+                  <Crown className="w-5 h-5 text-amber-400 shrink-0" />
+                  {!collapsed && <span className="truncate">{t.tabBilling || 'แผนแพ็กเกจ & บิล (Billing)'}</span>}
+                </div>
+                {!collapsed && (
+                  <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    PRO
+                  </span>
+                )}
+              </button>
 
               {/* Settings */}
               {features.settings && (

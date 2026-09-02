@@ -12,6 +12,9 @@ import { OrdersManagement } from './components/OrdersManagement';
 import { ReportsAnalytics } from './components/ReportsAnalytics';
 import { DashboardOverview } from './components/DashboardOverview';
 import { SettingsView } from './components/SettingsView';
+import { PutawayManagement } from './components/PutawayManagement';
+import { StockBalancesView } from './components/StockBalancesView';
+import { UpgradePromptModal } from './components/common/UpgradePromptModal';
 import { getTranslation } from './i18n';
 import { LayoutDashboard, Boxes, ShoppingCart, ShoppingBag, BarChart3, Settings, Database, Menu, QrCode } from 'lucide-react';
 
@@ -38,7 +41,7 @@ const getInitialNavState = (pathname: string) => {
   const path = pathname.toLowerCase();
   let tab = 'masterData';
   let masterSub: MasterDataSubTab = 'products';
-  let inventorySub: 'all' | 'receive' | 'issue' | 'transfer' | 'adjustment' | 'scanner' | 'cycleCount' = 'all';
+  let inventorySub: 'all' | 'receive' | 'issue' | 'transfer' | 'adjustment' | 'scanner' | 'cycleCount' | 'putaway' | 'balances' = 'all';
 
   if (path.startsWith('/companies')) {
     tab = 'masterData';
@@ -81,12 +84,20 @@ const getInitialNavState = (pathname: string) => {
   } else if (path.startsWith('/inventory')) {
     tab = 'inventory';
     if (path.includes('/receive')) inventorySub = 'receive';
+    else if (path.includes('/putaway')) inventorySub = 'putaway';
+    else if (path.includes('/balances') || path.includes('/stock-balances')) inventorySub = 'balances';
     else if (path.includes('/issue')) inventorySub = 'issue';
     else if (path.includes('/transfer')) inventorySub = 'transfer';
     else if (path.includes('/adjustment')) inventorySub = 'adjustment';
     else if (path.includes('/scanner')) inventorySub = 'scanner';
     else if (path.includes('/cycle-count')) inventorySub = 'cycleCount';
     else inventorySub = 'all';
+  } else if (path.startsWith('/putaway')) {
+    tab = 'inventory';
+    inventorySub = 'putaway';
+  } else if (path.startsWith('/balances') || path.startsWith('/stock-balances')) {
+    tab = 'inventory';
+    inventorySub = 'balances';
   } else if (path.startsWith('/receive') || path.startsWith('/goods-receive')) {
     tab = 'inventory';
     inventorySub = 'receive';
@@ -114,7 +125,7 @@ const getInitialNavState = (pathname: string) => {
     tab = 'purchases';
   } else if (path.startsWith('/reports')) {
     tab = 'reports';
-  } else if (path.startsWith('/settings')) {
+  } else if (path.startsWith('/settings') || path.startsWith('/billing')) {
     tab = 'settings';
   } else if (path.startsWith('/dashboard')) {
     tab = 'dashboard';
@@ -123,7 +134,7 @@ const getInitialNavState = (pathname: string) => {
   return { tab, masterSub, inventorySub };
 };
 
-export function App() {
+export const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -144,7 +155,7 @@ export function App() {
 
   const [activeTab, setActiveTab] = useState<string>(() => getInitialNavState(location.pathname).tab);
   const [activeMasterSubTab, setActiveMasterSubTab] = useState<MasterDataSubTab>(() => getInitialNavState(location.pathname).masterSub);
-  const [activeInventorySubTab, setActiveInventorySubTab] = useState<'all' | 'receive' | 'issue' | 'transfer' | 'adjustment' | 'scanner' | 'cycleCount'>(() => getInitialNavState(location.pathname).inventorySub);
+  const [activeInventorySubTab, setActiveInventorySubTab] = useState<'all' | 'receive' | 'issue' | 'transfer' | 'adjustment' | 'scanner' | 'cycleCount' | 'putaway' | 'balances'>(() => getInitialNavState(location.pathname).inventorySub);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
@@ -175,6 +186,17 @@ export function App() {
     else if (tab === 'inventory') {
       const invPath = activeInventorySubTab === 'all' ? '' : `/${activeInventorySubTab === 'cycleCount' ? 'cycle-count' : activeInventorySubTab}`;
       navigate(`/inventory${invPath}`);
+    } else if (tab === 'putaway') {
+      setActiveTab('inventory');
+      setActiveInventorySubTab('putaway');
+      navigate('/inventory/putaway');
+    } else if (tab === 'balances') {
+      setActiveTab('inventory');
+      setActiveInventorySubTab('balances');
+      navigate('/inventory/balances');
+    } else if (tab === 'billing') {
+      setActiveTab('settings');
+      navigate('/billing');
     } else if (tab === 'sales') navigate('/orders');
     else if (tab === 'purchases') navigate('/purchases');
     else if (tab === 'reports') navigate('/reports');
@@ -190,10 +212,15 @@ export function App() {
   };
 
   // Navigate when Inventory Subtab changes
-  const handleInventorySubTabChange = (subTab: 'all' | 'receive' | 'issue' | 'transfer' | 'adjustment' | 'scanner' | 'cycleCount') => {
+  const handleInventorySubTabChange = (
+    subTab: 'all' | 'receive' | 'issue' | 'transfer' | 'adjustment' | 'scanner' | 'cycleCount' | 'putaway' | 'balances'
+  ) => {
     setActiveTab('inventory');
     setActiveInventorySubTab(subTab);
-    const subPath = subTab === 'all' ? '' : `/${subTab === 'cycleCount' ? 'cycle-count' : subTab}`;
+    const subPath =
+      subTab === 'all'
+        ? ''
+        : `/${subTab === 'cycleCount' ? 'cycle-count' : subTab}`;
     navigate(`/inventory${subPath}`);
   };
 
@@ -235,6 +262,35 @@ export function App() {
     window.addEventListener('auth:unauthorized', handleUnauthorized);
     return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
   }, [navigate]);
+
+  // Handle 403 Feature Gating & Quota Exceeded globally
+  const [upgradePrompt, setUpgradePrompt] = useState<{
+    isOpen: boolean;
+    type: 'FEATURE_NOT_INCLUDED' | 'QUOTA_EXCEEDED';
+    featureCode?: string;
+    resourceName?: string;
+    currentUsage?: number;
+    maxAllowed?: number;
+    message?: string;
+  }>({ isOpen: false, type: 'FEATURE_NOT_INCLUDED' });
+
+  useEffect(() => {
+    const handleUpgradeRequired = (e: any) => {
+      const detail = e.detail || {};
+      setUpgradePrompt({
+        isOpen: true,
+        type: detail.type || (detail.error === 'QUOTA_EXCEEDED' ? 'QUOTA_EXCEEDED' : 'FEATURE_NOT_INCLUDED'),
+        featureCode: detail.feature,
+        resourceName: detail.resource,
+        currentUsage: detail.currentUsage,
+        maxAllowed: detail.maxAllowed,
+        message: detail.message,
+      });
+    };
+
+    window.addEventListener('billing:upgrade-required', handleUpgradeRequired);
+    return () => window.removeEventListener('billing:upgrade-required', handleUpgradeRequired);
+  }, []);
 
   // Sync language setting with localStorage
   useEffect(() => {
@@ -304,7 +360,13 @@ export function App() {
           user={user}
           features={LIVE_TENANTS.find((t) => t.id === selectedTenantId)?.features}
           activeTab={activeTab}
-          activeSubTab={activeTab === 'inventory' ? activeInventorySubTab : activeMasterSubTab}
+          activeSubTab={
+            activeTab === 'inventory'
+              ? activeInventorySubTab
+              : activeTab === 'settings'
+              ? (location.pathname.includes('/billing') ? 'billing' : 'profile')
+              : activeMasterSubTab
+          }
           onTabChange={handleTabChange}
           onMasterSubTabChange={handleMasterSubTabChange}
           onInventorySubTabChange={handleInventorySubTabChange}
@@ -369,9 +431,27 @@ export function App() {
               />
             )}
 
+            {activeTab === 'inventory' && activeInventorySubTab === 'putaway' && (
+              <PutawayManagement
+                lang={lang}
+                theme={theme}
+                searchQuery={searchQuery}
+              />
+            )}
+
+            {activeTab === 'inventory' && activeInventorySubTab === 'balances' && (
+              <StockBalancesView
+                lang={lang}
+                theme={theme}
+                searchQuery={searchQuery}
+              />
+            )}
+
             {activeTab === 'inventory' &&
               activeInventorySubTab !== 'scanner' &&
-              activeInventorySubTab !== 'cycleCount' && (
+              activeInventorySubTab !== 'cycleCount' &&
+              activeInventorySubTab !== 'putaway' &&
+              activeInventorySubTab !== 'balances' && (
                 <StockTransactions
                   lang={lang}
                   theme={theme}
@@ -435,9 +515,11 @@ export function App() {
 
             {activeTab === 'settings' && (
               <SettingsView
+                key={location.pathname}
                 lang={lang}
                 theme={theme}
                 searchQuery={searchQuery}
+                initialSubTab={location.pathname.includes('/billing') ? 'billing' : 'profile'}
               />
             )}
 
@@ -534,6 +616,23 @@ export function App() {
           </button>
         </nav>
       </div>
+
+      {/* Global Upgrade Prompt Modal (403 Gating / Quota Exceeded) */}
+      <UpgradePromptModal
+        theme={theme}
+        isOpen={upgradePrompt.isOpen}
+        onClose={() => setUpgradePrompt((prev) => ({ ...prev, isOpen: false }))}
+        type={upgradePrompt.type}
+        featureCode={upgradePrompt.featureCode}
+        resourceName={upgradePrompt.resourceName}
+        currentUsage={upgradePrompt.currentUsage}
+        maxAllowed={upgradePrompt.maxAllowed}
+        customMessage={upgradePrompt.message}
+        onNavigateToBilling={() => {
+          setActiveTab('settings');
+          navigate('/billing');
+        }}
+      />
     </div>
   );
-}
+};

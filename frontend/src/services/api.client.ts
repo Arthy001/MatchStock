@@ -146,6 +146,14 @@ apiClient.interceptors.response.use(
       }
     }
 
+    // จัดการ 403 Forbidden (Quota Exceeded หรือ Feature Not Included ในแพ็กเกจปัจจุบัน)
+    if (error.response?.status === 403 && typeof window !== 'undefined') {
+      const data: any = error.response.data;
+      if (data && (data.error === 'FEATURE_NOT_INCLUDED' || data.error === 'QUOTA_EXCEEDED')) {
+        window.dispatchEvent(new CustomEvent('billing:upgrade-required', { detail: data }));
+      }
+    }
+
     return Promise.reject(error);
   }
 );

@@ -54,6 +54,9 @@ export const translations = {
     tabGoodsIssue: 'เบิก/จ่ายสินค้าออกจากคลัง',
     tabStockTransfer: 'โอนย้ายสินค้าระหว่างคลัง',
     tabStockAdjustment: 'ปรับยอดสต็อกสินค้า',
+    tabPutaway: 'งานจัดเก็บสินค้า (Putaway)',
+    tabBalances: 'ยอดคงเหลือจริง (Balances)',
+    tabBilling: 'แผนแพ็กเกจ & บิลชำระเงิน',
     tabMobileScanner: 'สแกนเนอร์บาร์โค้ด & มือถือ',
     tabCycleCount: 'ตรวจนับสต็อก & กระทบยอด',
 
@@ -223,6 +226,24 @@ export const translations = {
     expiryAlertDays: 'ระยะเวลาเตือนสินค้าใกล้หมดอายุ (วัน)',
     saveSettingsSuccess: 'บันทึกการตั้งค่าระบบเรียบร้อยแล้ว',
 
+    // Phase 4 & 5 Titles & Actions
+    putawayTitle: 'ระบบงานจัดเก็บสินค้าเข้าชั้นวาง (Putaway System)',
+    putawaySubtitle: 'จัดการคิวสินค้าที่พักอยู่จุดรับ (Staging Dock) แนะนำช่องว่าง (Suggest Bin) และสแกนยืนยันนำขึ้นชั้นวางจริง',
+    balancesTitle: 'ยอดคงเหลือสินค้าคงคลังแบบ Real-time',
+    balancesSubtitle: 'ตรวจสอบยอดคงเหลือจริง (On Hand), ยอดจอง (Reserved), ยอดพร้อมใช้ (Available) แยกตามคลังและชั้นวาง',
+    billingTitle: 'จัดการแพ็กเกจการใช้งาน & บิลชำระเงิน (Subscription & Billing)',
+    billingSubtitle: 'ตรวจสอบสถานะแพ็กเกจ, โควตาการใช้งานคลังและผู้ใช้, อัปเกรดความสามารถระบบ และดาวน์โหลดใบแจ้งหนี้',
+    featureNotIncluded: 'ฟีเจอร์นี้สำหรับแพ็กเกจ Pro และ Ultra เท่านั้น',
+    quotaExceeded: 'คุณใช้งานโควตาเต็มขีดจำกัดแล้ว',
+    upgradeNow: 'ดูแพ็กเกจเพื่ออัปเกรด',
+    oneStepPutaway: '1-Step (วางบนชั้นทันที)',
+    twoStepPutaway: '2-Step (พักที่จุดรับ Staging รอจัดเก็บ)',
+    damagedQuantity: 'จำนวนชำรุด (เพื่อทำเรื่องเคลม)',
+    suggestBin: 'แนะนำช่องวาง (Suggest Bin)',
+    confirmPutaway: 'ยืนยันนำขึ้นชั้นวาง',
+    stagedQty: 'ยอดรอจัดเก็บ (Staged)',
+    placedQty: 'จัดเก็บแล้ว (Put Away)',
+
     // Modal & Drawer
     modalAddTitle: 'เพิ่มรายการ Master Data ใหม่',
     modalEditTitle: 'แก้ไขข้อมูล Master Data',
@@ -285,10 +306,13 @@ export const translations = {
 
     // Core Stock Transactions Sub-tabs
     tabAllTransactions: 'All Transactions',
-    tabGoodsReceive: 'Goods Receipt (GR)',
+    tabGoodsReceive: 'Goods Receive (GR)',
     tabGoodsIssue: 'Goods Issue (GI)',
-    tabStockTransfer: 'Stock Transfer',
-    tabStockAdjustment: 'Stock Adjustment',
+    tabStockTransfer: 'Stock Transfer (TR)',
+    tabStockAdjustment: 'Stock Adjustment (ADJ)',
+    tabPutaway: 'Putaway Queue',
+    tabBalances: 'Stock Balances',
+    tabBilling: 'Subscription & Billing',
     tabMobileScanner: 'Barcode Scanner',
     tabCycleCount: 'Cycle Count',
 
@@ -457,6 +481,24 @@ export const translations = {
     stockPolicy: 'Stock Dispatch Policy',
     expiryAlertDays: 'Expiry Warning Threshold (Days)',
     saveSettingsSuccess: 'System settings saved successfully.',
+
+    // Phase 4 & 5 Titles & Actions
+    putawayTitle: 'Flexible Putaway & Staging Management',
+    putawaySubtitle: 'Manage items staged at receiving docks, get intelligent bin suggestions, and scan-to-confirm placement.',
+    balancesTitle: 'Real-time Stock Balances & Universal Lookup',
+    balancesSubtitle: 'Query exact stock levels across warehouses, bins, and lot numbers with instant universal barcode/RFID lookup.',
+    billingTitle: 'Subscription Plans & Quota Management',
+    billingSubtitle: 'Monitor plan tier, resource quota usage, upgrade platform features, and review billing invoices.',
+    featureNotIncluded: 'Feature Available on Pro & Ultra Plans Only',
+    quotaExceeded: 'Resource Quota Limit Reached',
+    upgradeNow: 'Upgrade Subscription',
+    oneStepPutaway: '1-Step Direct Putaway',
+    twoStepPutaway: '2-Step Staged Putaway',
+    damagedQuantity: 'Damaged Qty (Claim Only)',
+    suggestBin: 'Suggest Bin',
+    confirmPutaway: 'Confirm Putaway',
+    stagedQty: 'Staged Qty',
+    placedQty: 'Put Away Qty',
 
     // Modal & Drawer
     modalAddTitle: 'Add New Master Data Record',

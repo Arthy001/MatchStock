@@ -16,17 +16,20 @@ import {
   RefreshCw,
   Lock,
   Sparkles,
+  CreditCard,
 } from 'lucide-react';
 import { Language, ThemeMode, TenantSettings } from '../types';
 import { getTranslation } from '../i18n';
 import { productService } from '../services/product.service';
 import { warehouseService } from '../services/warehouse.service';
 import { masterDataService } from '../services/masterData.service';
+import { BillingTab } from './settings/tabs/BillingTab';
 
 interface SettingsViewProps {
   lang: Language;
   theme: ThemeMode;
   searchQuery?: string;
+  initialSubTab?: 'profile' | 'inventory' | 'alerts' | 'security' | 'billing';
 }
 
 const DEFAULT_SETTINGS: TenantSettings = {
@@ -49,11 +52,21 @@ const DEFAULT_SETTINGS: TenantSettings = {
 export const SettingsView: React.FC<SettingsViewProps> = ({
   lang,
   theme,
+  initialSubTab,
 }) => {
   const t = getTranslation(lang);
   const isDark = theme === 'dark';
 
-  const [activeTab, setActiveTab] = useState<'profile' | 'inventory' | 'alerts' | 'security'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'inventory' | 'alerts' | 'security' | 'billing'>(
+    initialSubTab || 'profile'
+  );
+
+  useEffect(() => {
+    if (initialSubTab) {
+      setActiveTab(initialSubTab);
+    }
+  }, [initialSubTab]);
+
   const [settings, setSettings] = useState<TenantSettings>(DEFAULT_SETTINGS);
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -196,6 +209,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         >
           <ShieldCheck className="w-4 h-4" />
           <span>{t.tabSecurityBackup}</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('billing')}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shrink-0 cursor-pointer ${
+            activeTab === 'billing'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <CreditCard className="w-4 h-4" />
+          <span>{t.tabBilling || (isEn ? 'Subscription & Billing' : 'แผนแพ็กเกจ & บิลชำระเงิน')}</span>
         </button>
       </div>
 
@@ -553,6 +578,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* TAB 5: Subscription & Billing Management */}
+      {activeTab === 'billing' && (
+        <BillingTab theme={theme} lang={lang} t={t} />
       )}
     </div>
   );

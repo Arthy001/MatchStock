@@ -375,3 +375,178 @@ export interface TenantSettings {
   apiWebhookUrl?: string;
 }
 
+// --- Section 7: Phase 4 — Subscription, Billing & Quota Types ---
+export interface SubscriptionPlanItem {
+  id: string;
+  code: string;
+  name: string;
+  type?: string;
+  billingCycle: 'monthly' | 'yearly';
+  priceMinor: number;
+  currency: string;
+  maxUsers: number;
+  maxWarehouses: number;
+  maxProducts: number;
+  maxDevices: number;
+  features: string[];
+}
+
+export interface CurrentSubscriptionData {
+  id: string;
+  planCode: string;
+  planName: string;
+  status: 'active' | 'canceled' | 'past_due' | 'trialing';
+  billingCycle: 'monthly' | 'yearly';
+  startsAt?: string;
+  currentPeriodEnd?: string;
+  cancelAtPeriodEnd?: boolean;
+  quotas: {
+    users: { used: number; max: number };
+    warehouses: { used: number; max: number };
+    products: { used: number; max: number };
+    devices: { used: number; max: number };
+  };
+  features: string[];
+}
+
+export interface BillingInvoice {
+  id: string;
+  invoiceNumber: string;
+  status: 'paid' | 'pending' | 'failed';
+  totalMinor: number;
+  amountPaidMinor: number;
+  currency: string;
+  issuedAt: string;
+  paidAt?: string;
+}
+
+export interface FeatureNotIncludedErrorPayload {
+  success: false;
+  error: 'FEATURE_NOT_INCLUDED';
+  feature: string;
+  message: string;
+}
+
+export interface QuotaExceededErrorPayload {
+  success: false;
+  error: 'QUOTA_EXCEEDED';
+  resource: string;
+  currentUsage: number;
+  maxAllowed: number;
+  message: string;
+}
+
+// --- Section 8: Phase 5 — Goods Receiving Lines & Flexible Putaway Types ---
+export interface CreateGoodsReceiptLineDto {
+  productId: string;
+  quantity: number;
+  damagedQuantity?: number;
+  lotNumber?: string;
+  productionDate?: string;
+  expiryDate?: string;
+  unitCostMinor?: number;
+  binLocationId?: string;
+}
+
+export interface CreateGoodsReceiptDto {
+  receiptNumber?: string;
+  warehouseId: string;
+  binLocationId?: string;
+  supplierId?: string;
+  poNumber?: string;
+  supplierInvoiceNo?: string;
+  photoUrls?: string[];
+  receivedAt?: string;
+  notes?: string;
+  lines?: CreateGoodsReceiptLineDto[];
+}
+
+export interface StagedGoodsReceiptItem {
+  goodsReceiptLineId: string;
+  goodsReceiptId: string;
+  receiptNumber: string;
+  productId: string;
+  sku: string;
+  productName: string;
+  remainingQuantity: number;
+  lotNumber?: string;
+  expiryDate?: string;
+  suggestedBinLocationId?: string;
+  warehouseId?: string;
+  warehouseName?: string;
+  receivedAt?: string;
+}
+
+export interface SuggestedBin {
+  id: string;
+  code: string;
+  maxCapacity?: number;
+  remainingCapacity?: number;
+}
+
+export interface ConfirmPutawayDto {
+  goodsReceiptLineId: string;
+  binLocationId: string;
+  quantity: number;
+}
+
+export interface ConfirmPutawayResult {
+  placed: {
+    id: string;
+    goodsReceiptId: string;
+    productId: string;
+    quantity: number;
+    damagedQuantity: number;
+    putawayQuantity: number;
+    binLocationId: string;
+  };
+  remaining: {
+    id: string;
+    goodsReceiptId: string;
+    productId: string;
+    quantity: number;
+    damagedQuantity: number;
+    putawayQuantity: number;
+    binLocationId: string | null;
+  } | null;
+}
+
+// --- Section 9: Phase 5 — Real-time Stock Balances & Universal Lookup Types ---
+export interface StockBalanceItem {
+  id: string;
+  warehouseId: string;
+  warehouseName: string;
+  binLocationId: string | null;
+  binCode: string | null;
+  productId: string;
+  productName: string;
+  sku: string;
+  lotNumber: string | null;
+  expiryDate: string | null;
+  quantityOnHand: number;
+  quantityReserved: number;
+  availableQuantity: number;
+}
+
+export interface StockLookupLocation {
+  warehouseId: string;
+  warehouseName: string;
+  binLocationId: string | null;
+  binCode: string | null;
+  lotNumber: string | null;
+  expiryDate: string | null;
+  quantity: number;
+}
+
+export interface StockLookupResponse {
+  productId: string;
+  sku: string;
+  name: string;
+  barcodeValue?: string;
+  totalOnHand: number;
+  totalAvailable: number;
+  totalReserved: number;
+  locations: StockLookupLocation[];
+}
+
+
