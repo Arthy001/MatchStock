@@ -224,6 +224,74 @@ export const App: React.FC = () => {
     navigate(`/inventory${subPath}`);
   };
 
+  // Global Navigator for Command Palette and Quick Jump
+  const handleGlobalNavigate = (tab: string, subTab?: string, targetId?: string) => {
+    if (tab === 'masterData') {
+      setActiveTab('masterData');
+      if (subTab) {
+        setActiveMasterSubTab(subTab as MasterDataSubTab);
+        navigate(`/${subTab}${targetId ? `?id=${targetId}` : ''}`);
+      } else {
+        navigate(`/${activeMasterSubTab}`);
+      }
+    } else if (tab === 'inventory') {
+      setActiveTab('inventory');
+      if (subTab) {
+        setActiveInventorySubTab(subTab as any);
+        const subPath = subTab === 'all' ? '' : `/${subTab === 'cycleCount' ? 'cycle-count' : subTab}`;
+        navigate(`/inventory${subPath}`);
+      } else {
+        navigate('/inventory');
+      }
+    } else if (tab === 'settings') {
+      setActiveTab('settings');
+      navigate(subTab === 'billing' ? '/billing' : '/settings');
+    } else {
+      handleTabChange(tab);
+    }
+  };
+
+  // Global Smart Keyboard Left/Right Table Scroll Listener
+  // Automatically detects horizontal table on current screen and scrolls on ArrowLeft/ArrowRight without needing to click first!
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is currently typing in an input, textarea, select, or contentEditable element
+      const activeEl = document.activeElement;
+      const isInput =
+        activeEl &&
+        (activeEl.tagName === 'INPUT' ||
+          activeEl.tagName === 'TEXTAREA' ||
+          activeEl.tagName === 'SELECT' ||
+          (activeEl as HTMLElement).isContentEditable);
+
+      if (isInput) return;
+
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        // Find visible horizontal scroll containers in the main content area
+        const scrollContainers = Array.from(
+          document.querySelectorAll<HTMLElement>('main .overflow-x-auto')
+        );
+
+        // Find the active/visible container that actually has horizontal overflow
+        const activeContainer = scrollContainers.find(
+          (el) => el.scrollWidth > el.clientWidth && el.offsetParent !== null
+        );
+
+        if (activeContainer) {
+          e.preventDefault();
+          const scrollStep = 180;
+          activeContainer.scrollBy({
+            left: e.key === 'ArrowRight' ? scrollStep : -scrollStep,
+            behavior: 'smooth',
+          });
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Restore live session from localStorage on initial load
   useEffect(() => {
     const savedToken = localStorage.getItem('matchstock_token');
@@ -392,6 +460,7 @@ export const App: React.FC = () => {
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             onMobileMenuToggle={() => setIsMobileSidebarOpen(true)}
+            onNavigate={handleGlobalNavigate}
           />
 
           {/* Content Body Container */}

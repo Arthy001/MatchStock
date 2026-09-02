@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Search, Bell, Sun, Moon, Building2, Command, Menu } from 'lucide-react';
 import { Language, ThemeMode, Tenant, User } from '../types';
 import { getTranslation } from '../i18n';
+import { GlobalSearchPalette } from './common/GlobalSearchPalette';
 
 interface HeaderProps {
   lang: Language;
@@ -15,6 +16,7 @@ interface HeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onMobileMenuToggle?: () => void;
+  onNavigate?: (tab: string, subTab?: string, targetId?: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -29,10 +31,12 @@ export const Header: React.FC<HeaderProps> = ({
   searchQuery,
   onSearchChange,
   onMobileMenuToggle,
+  onNavigate,
 }) => {
   const t = getTranslation(lang);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [isMac, setIsMac] = useState(false);
+  const [isPaletteOpen, setIsPaletteOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -89,12 +93,17 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Center Search Input */}
       <div className="hidden md:flex items-center w-72 lg:w-96 relative">
-        <Search className={`w-4 h-4 absolute left-3 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`} />
+        <Search className={`w-4 h-4 absolute left-3 z-10 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`} />
         <input
           ref={searchInputRef}
           type="text"
           value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onFocus={() => setIsPaletteOpen(true)}
+          onClick={() => setIsPaletteOpen(true)}
+          onChange={(e) => {
+            onSearchChange(e.target.value);
+            if (!isPaletteOpen) setIsPaletteOpen(true);
+          }}
           placeholder={t.searchPlaceholder}
           className={`w-full pl-9 pr-16 py-1.5 rounded-lg text-xs font-semibold border focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition ${
             theme === 'dark'
@@ -106,6 +115,7 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={() => {
             searchInputRef.current?.focus();
             searchInputRef.current?.select();
+            setIsPaletteOpen(true);
           }}
           className={`absolute right-2.5 flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded border font-mono cursor-pointer select-none ${
             theme === 'dark' ? 'text-slate-400 bg-slate-700/80 border-slate-600' : 'text-slate-600 bg-slate-200/80 border-slate-300'
@@ -115,6 +125,21 @@ export const Header: React.FC<HeaderProps> = ({
           {isMac ? <Command className="w-3 h-3 inline" /> : <span>Ctrl</span>}
           <span>F</span>
         </div>
+
+        {/* Floating Global Command Palette Dropdown */}
+        <GlobalSearchPalette
+          query={searchQuery}
+          isOpen={isPaletteOpen}
+          onClose={() => setIsPaletteOpen(false)}
+          theme={theme}
+          lang={lang}
+          onNavigate={(tab, subTab, targetId) => {
+            setIsPaletteOpen(false);
+            if (onNavigate) {
+              onNavigate(tab, subTab, targetId);
+            }
+          }}
+        />
       </div>
 
       {/* Right Controls & Tools */}

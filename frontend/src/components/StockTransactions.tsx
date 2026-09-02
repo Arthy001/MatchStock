@@ -173,6 +173,7 @@ export const StockTransactions: React.FC<StockTransactionsProps> = ({
       {/* Creation Modal for Other Stock Transactions (GI, TR, ADJ) */}
       <CreateTransactionModal
         theme={theme}
+        lang={lang}
         t={t}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

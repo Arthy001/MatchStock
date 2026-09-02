@@ -220,7 +220,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
 
       {/* High-Density Data Grid */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full min-w-[1200px] text-left border-collapse">
           <thead>
             <tr
               className={`text-[13px] font-semibold tracking-wider uppercase border-b select-none ${

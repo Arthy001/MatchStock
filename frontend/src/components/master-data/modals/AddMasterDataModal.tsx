@@ -44,6 +44,7 @@ interface AddMasterDataModalProps {
   onClose: () => void;
   activeSubTab: MasterDataSubTab;
   onSubmit: (e: React.FormEvent) => void;
+  onWarpToTab?: (tab: MasterDataSubTab, label: string) => void;
 
   // Master Data Dropdown options
   categoriesList?: CategoryItem[];
@@ -186,6 +187,7 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
   onClose,
   activeSubTab,
   onSubmit,
+  onWarpToTab,
   categoriesList = [],
   brandsList = [],
   unitsList = [],
@@ -478,6 +480,7 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
             {activeSubTab === 'units' && (
               <AddUnitFormFields
                 theme={theme}
+                lang={lang}
                 addCode={addCode}
                 setAddCode={setAddCode}
                 addName={addName}
@@ -489,6 +492,7 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
             {activeSubTab === 'categories' && (
               <AddCategoryFormFields
                 theme={theme}
+                lang={lang}
                 addCatCode={addCatCode}
                 setAddCatCode={setAddCatCode}
                 addCatName={addCatName}
@@ -504,6 +508,7 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
             {activeSubTab === 'brands' && (
               <AddBrandFormFields
                 theme={theme}
+                lang={lang}
                 addBrdCode={addBrdCode}
                 setAddBrdCode={setAddBrdCode}
                 addBrdName={addBrdName}
@@ -517,7 +522,9 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
             {(activeSubTab === 'products' || activeSubTab === 'barcodes') && (
               <AddProductFormFields
                 theme={theme}
+                lang={lang}
                 t={t}
+                onWarpToTab={onWarpToTab}
                 addProductImagePreview={addProductImagePreview || undefined}
                 setAddProductImagePreview={setAddProductImagePreview}
                 setAddProductImageFile={setAddProductImageFile}
@@ -584,6 +591,7 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
             {activeSubTab === 'rbac' && (
               <AddRbacFormFields
                 theme={theme}
+                lang={lang}
                 addName={addName}
                 setAddName={setAddName}
                 addEmail={addEmail}
@@ -597,6 +605,7 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
             {activeSubTab === 'warehouses' && (
               <AddWarehouseFormFields
                 theme={theme}
+                lang={lang}
                 t={t}
                 addWarehouseName={addWarehouseName}
                 setAddWarehouseName={setAddWarehouseName}
@@ -615,6 +624,7 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
             {activeSubTab === 'suppliers' && (
               <AddSupplierFormFields
                 theme={theme}
+                lang={lang}
                 t={t}
                 addSupplierName={addSupplierName}
                 setAddSupplierName={setAddSupplierName}
@@ -637,14 +647,14 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 font-semibold text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
             >
-              {t.cancel}
+              {isEn ? 'Cancel' : (t.cancel || 'ยกเลิก')}
             </button>
             <button
               type="submit"
               className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-xs shadow-md shadow-blue-600/30 transition flex items-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>{t.save}</span>
+              <span>{isEn ? 'Save Changes' : (t.save || 'บันทึกข้อมูล')}</span>
             </button>
           </div>
         </form>

@@ -17,6 +17,9 @@ import {
   Lock,
   Sparkles,
   CreditCard,
+  Printer,
+  Volume2,
+  BellRing,
 } from 'lucide-react';
 import { Language, ThemeMode, TenantSettings } from '../types';
 import { getTranslation } from '../i18n';
@@ -425,25 +428,63 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </select>
               </div>
 
-              <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.autoPrintBarcodeOnReceive}
-                    onChange={(e) => setSettings({ ...settings, autoPrintBarcodeOnReceive: e.target.checked })}
-                    className="rounded text-blue-600 focus:ring-blue-500"
+              {/* Auto Print Barcode Toggle Card */}
+              <div
+                onClick={() => setSettings({ ...settings, autoPrintBarcodeOnReceive: !settings.autoPrintBarcodeOnReceive })}
+                className={`p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer select-none flex items-center justify-between gap-3 ${
+                  settings.autoPrintBarcodeOnReceive
+                    ? isDark
+                      ? 'bg-blue-950/40 border-blue-500/60 shadow-xs shadow-blue-500/10'
+                      : 'bg-blue-50/80 border-blue-400 shadow-xs shadow-blue-500/10'
+                    : isDark
+                    ? 'bg-slate-800/40 border-slate-700/80 hover:bg-slate-800/70 hover:border-slate-600'
+                    : 'bg-slate-50/80 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${
+                      settings.autoPrintBarcodeOnReceive
+                        ? 'bg-blue-600 text-white shadow-xs shadow-blue-600/30'
+                        : isDark
+                        ? 'bg-slate-800 text-slate-400 border border-slate-700'
+                        : 'bg-slate-200 text-slate-500'
+                    }`}
+                  >
+                    <Printer className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <span
+                      className={`block text-xs font-bold leading-tight ${
+                        settings.autoPrintBarcodeOnReceive
+                          ? isDark ? 'text-blue-300' : 'text-blue-900'
+                          : isDark ? 'text-slate-200' : 'text-slate-800'
+                      }`}
+                    >
+                      {isEn
+                        ? 'Auto-Print Barcode on Goods Receipt'
+                        : 'พิมพ์สติกเกอร์บาร์โค้ดอัตโนมัติเมื่อรับสินค้า (GR)'}
+                    </span>
+                    <span className="block text-[11px] text-slate-400 mt-0.5 truncate">
+                      {isEn
+                        ? 'Open barcode print modal immediately after receiving confirmation'
+                        : 'เปิดหน้าต่างพิมพ์บาร์โค้ดทันทีที่บันทึกรับเข้าคลังสำเร็จ'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Smooth Toggle Switch Knob */}
+                <div
+                  className={`w-11 h-6 rounded-full transition-colors duration-200 p-0.5 shrink-0 flex items-center ${
+                    settings.autoPrintBarcodeOnReceive ? 'bg-blue-600' : isDark ? 'bg-slate-700' : 'bg-slate-300'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+                      settings.autoPrintBarcodeOnReceive ? 'translate-x-5' : 'translate-x-0'
+                    }`}
                   />
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">
-                    {isEn
-                      ? 'Automatically print barcode labels upon Goods Receipt (GR)'
-                      : 'สั่งพิมพ์สติกเกอร์บาร์โค้ดอัตโนมัติเมื่อทำรับสินค้า (GR)'}
-                  </span>
-                </label>
-                <p className="text-[11px] text-slate-400 pl-6 font-normal">
-                  {isEn
-                    ? 'Open barcode print modal immediately after receiving confirmation'
-                    : 'เปิดหน้าต่างพิมพ์บาร์โค้ดทันทีที่บันทึกรับเข้าคลังสำเร็จ'}
-                </p>
+                </div>
               </div>
             </div>
           </div>
@@ -485,34 +526,124 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-3">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.enableRopAlerts}
-                    onChange={(e) => setSettings({ ...settings, enableRopAlerts: e.target.checked })}
-                    className="rounded text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">
-                    {isEn
-                      ? 'Enable Reorder Point (ROP) Alerts on Dashboard'
-                      : 'เปิดใช้งาน Reorder Point (ROP) Alerts บน Dashboard'}
-                  </span>
-                </label>
+              <div className="space-y-3">
+                {/* ROP Alerts Toggle Card */}
+                <div
+                  onClick={() => setSettings({ ...settings, enableRopAlerts: !settings.enableRopAlerts })}
+                  className={`p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer select-none flex items-center justify-between gap-3 ${
+                    settings.enableRopAlerts
+                      ? isDark
+                        ? 'bg-blue-950/40 border-blue-500/60 shadow-xs shadow-blue-500/10'
+                        : 'bg-blue-50/80 border-blue-400 shadow-xs shadow-blue-500/10'
+                      : isDark
+                      ? 'bg-slate-800/40 border-slate-700/80 hover:bg-slate-800/70 hover:border-slate-600'
+                      : 'bg-slate-50/80 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${
+                        settings.enableRopAlerts
+                          ? 'bg-blue-600 text-white shadow-xs shadow-blue-600/30'
+                          : isDark
+                          ? 'bg-slate-800 text-slate-400 border border-slate-700'
+                          : 'bg-slate-200 text-slate-500'
+                      }`}
+                    >
+                      <BellRing className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <span
+                        className={`block text-xs font-bold leading-tight ${
+                          settings.enableRopAlerts
+                            ? isDark ? 'text-blue-300' : 'text-blue-900'
+                            : isDark ? 'text-slate-200' : 'text-slate-800'
+                        }`}
+                      >
+                        {isEn
+                          ? 'Reorder Point (ROP) Alerts on Dashboard'
+                          : 'เปิดใช้งานการแจ้งเตือนจุดสั่งซื้อซ้ำ (ROP) บน Dashboard'}
+                      </span>
+                      <span className="block text-[11px] text-slate-400 mt-0.5 truncate">
+                        {isEn
+                          ? 'Display critical low stock badges when inventory drops below ROP'
+                          : 'แสดงป้ายเตือนสต็อกวิกฤตเมื่อสินค้าลดต่ำกว่าระดับสั่งซื้อซ้ำ'}
+                      </span>
+                    </div>
+                  </div>
 
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.enableSoundFeedback}
-                    onChange={(e) => setSettings({ ...settings, enableSoundFeedback: e.target.checked })}
-                    className="rounded text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">
-                    {isEn
-                      ? 'Enable synthetic audio beep on barcode scan success/error'
-                      : 'เปิดเสียง Beep สังเคราะห์เมื่อสแกนบาร์โค้ดผ่าน/ผิดพลาด'}
-                  </span>
-                </label>
+                  {/* Smooth Toggle Switch Knob */}
+                  <div
+                    className={`w-11 h-6 rounded-full transition-colors duration-200 p-0.5 shrink-0 flex items-center ${
+                      settings.enableRopAlerts ? 'bg-blue-600' : isDark ? 'bg-slate-700' : 'bg-slate-300'
+                    }`}
+                  >
+                    <div
+                      className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+                        settings.enableRopAlerts ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {/* Sound Feedback Toggle Card */}
+                <div
+                  onClick={() => setSettings({ ...settings, enableSoundFeedback: !settings.enableSoundFeedback })}
+                  className={`p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer select-none flex items-center justify-between gap-3 ${
+                    settings.enableSoundFeedback
+                      ? isDark
+                        ? 'bg-blue-950/40 border-blue-500/60 shadow-xs shadow-blue-500/10'
+                        : 'bg-blue-50/80 border-blue-400 shadow-xs shadow-blue-500/10'
+                      : isDark
+                      ? 'bg-slate-800/40 border-slate-700/80 hover:bg-slate-800/70 hover:border-slate-600'
+                      : 'bg-slate-50/80 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${
+                        settings.enableSoundFeedback
+                          ? 'bg-blue-600 text-white shadow-xs shadow-blue-600/30'
+                          : isDark
+                          ? 'bg-slate-800 text-slate-400 border border-slate-700'
+                          : 'bg-slate-200 text-slate-500'
+                      }`}
+                    >
+                      <Volume2 className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <span
+                        className={`block text-xs font-bold leading-tight ${
+                          settings.enableSoundFeedback
+                            ? isDark ? 'text-blue-300' : 'text-blue-900'
+                            : isDark ? 'text-slate-200' : 'text-slate-800'
+                        }`}
+                      >
+                        {isEn
+                          ? 'Audio Beep Feedback on Barcode Scan'
+                          : 'เปิดเสียงสังเคราะห์เมื่อสแกนบาร์โค้ด'}
+                      </span>
+                      <span className="block text-[11px] text-slate-400 mt-0.5 truncate">
+                        {isEn
+                          ? 'Synthesize audio beeps upon barcode scan success or error'
+                          : 'ส่งเสียง Beep แจ้งสถานะเมื่อยิงสแกนบาร์โค้ดสำเร็จหรือล้มเหลว'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Smooth Toggle Switch Knob */}
+                  <div
+                    className={`w-11 h-6 rounded-full transition-colors duration-200 p-0.5 shrink-0 flex items-center ${
+                      settings.enableSoundFeedback ? 'bg-blue-600' : isDark ? 'bg-slate-700' : 'bg-slate-300'
+                    }`}
+                  >
+                    <div
+                      className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+                        settings.enableSoundFeedback ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

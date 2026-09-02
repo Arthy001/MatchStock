@@ -226,7 +226,7 @@ export const StockBalancesView: React.FC<StockBalancesViewProps> = ({
             }`}
           >
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
+              <table className="w-full min-w-[1000px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-slate-200/80 dark:border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/40">
                     <th className="py-3.5 px-4">{isEn ? 'Product & SKU' : 'สินค้า / รหัส SKU'}</th>

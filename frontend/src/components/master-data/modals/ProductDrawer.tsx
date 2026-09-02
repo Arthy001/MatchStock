@@ -14,9 +14,12 @@ import {
   Copy,
   Check,
   Link2,
+  Layers,
+  RotateCcw,
 } from 'lucide-react';
 import { ThemeMode, Language, ProductItem, CategoryItem, BrandItem, BarcodeSymbologyItem, TaxTypeItem, Supplier } from '../../../types';
 import { productService, resolveImageUrl } from '../../../services/product.service';
+import { CustomSelect } from '../../common/CustomSelect';
 
 interface UnitItem {
   id: string;
@@ -172,6 +175,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
   }, [product]);
 
   if (!product) return null;
+  const isEn = lang === 'en';
 
   const rawImageUrl = previewImageUrl || product.imageUrl;
   const currentImageUrl = rawImageUrl
@@ -435,55 +439,43 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                 <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
                   หมวดหมู่ (Category) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
                 </label>
-                <select
-                  value={editCategoryId}
-                  onChange={(e) => setEditCategoryId && setEditCategoryId(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
-                    theme === 'dark'
-                      ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
-                      : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
-                  }`}
-                >
-                  <option value="">-- ไม่ระบุหมวดหมู่ --</option>
-                  {categoriesList.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                <CustomSelect
+                  theme={theme}
+                  value={editCategoryId || ''}
+                  onChange={(val) => setEditCategoryId && setEditCategoryId(val)}
+                  placeholder="-- ไม่ระบุหมวดหมู่ --"
+                  options={[
+                    { value: '', label: '-- ไม่ระบุหมวดหมู่ --' },
+                    ...categoriesList.map((c) => ({ value: c.id, label: c.name })),
+                  ]}
+                />
               </div>
               <div>
                 <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
                   {t.brand} (Brand) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
                 </label>
                 {brandsList.length > 0 ? (
-                  <select
+                  <CustomSelect
+                    theme={theme}
                     value={editBrandId || editBrand}
-                    onChange={(e) => {
-                      const selected = brandsList.find((b) => b.id === e.target.value || b.name === e.target.value);
-                      if (setEditBrandId) setEditBrandId(selected ? selected.id : e.target.value);
-                      setEditBrand(selected ? selected.name : e.target.value);
+                    onChange={(val) => {
+                      const selected = brandsList.find((b) => b.id === val || b.name === val);
+                      if (setEditBrandId) setEditBrandId(selected ? selected.id : val);
+                      setEditBrand(selected ? selected.name : val);
                     }}
-                    className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
-                      theme === 'dark'
-                        ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
-                        : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
-                    }`}
-                  >
-                    <option value="">-- เลือกแบรนด์ --</option>
-                    {brandsList.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="-- เลือกแบรนด์ --"
+                    options={[
+                      { value: '', label: '-- เลือกแบรนด์ --' },
+                      ...brandsList.map((b) => ({ value: b.id, label: b.name })),
+                    ]}
+                  />
                 ) : (
                   <input
                     type="text"
                     value={editBrand}
                     onChange={(e) => setEditBrand(e.target.value)}
                     placeholder="เช่น Nike, Apple..."
-                    className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
+                    className={`w-full h-[42px] px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
                       theme === 'dark'
                         ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
                         : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
@@ -499,43 +491,31 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                 <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
                   หน่วยนับ (UOM) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
                 </label>
-                <select
-                  value={editUnitId}
-                  onChange={(e) => setEditUnitId && setEditUnitId(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
-                    theme === 'dark'
-                      ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
-                      : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
-                  }`}
-                >
-                  <option value="">-- ไม่ระบุหน่วยนับ --</option>
-                  {unitsList.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.code} - {u.name}
-                    </option>
-                  ))}
-                </select>
+                <CustomSelect
+                  theme={theme}
+                  value={editUnitId || ''}
+                  onChange={(val) => setEditUnitId && setEditUnitId(val)}
+                  placeholder="-- ไม่ระบุหน่วยนับ --"
+                  options={[
+                    { value: '', label: '-- ไม่ระบุหน่วยนับ --' },
+                    ...unitsList.map((u) => ({ value: u.id, label: `${u.code} - ${u.name}` })),
+                  ]}
+                />
               </div>
               <div>
                 <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
                   ผู้จัดจำหน่าย (Supplier) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
                 </label>
-                <select
-                  value={editSupplierId}
-                  onChange={(e) => setEditSupplierId && setEditSupplierId(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
-                    theme === 'dark'
-                      ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
-                      : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
-                  }`}
-                >
-                  <option value="">-- ไม่ระบุผู้จัดจำหน่าย --</option>
-                  {suppliersList.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                <CustomSelect
+                  theme={theme}
+                  value={editSupplierId || ''}
+                  onChange={(val) => setEditSupplierId && setEditSupplierId(val)}
+                  placeholder="-- ไม่ระบุผู้จัดจำหน่าย --"
+                  options={[
+                    { value: '', label: '-- ไม่ระบุผู้จัดจำหน่าย --' },
+                    ...suppliersList.map((s) => ({ value: s.id, label: s.name })),
+                  ]}
+                />
               </div>
             </div>
 
@@ -561,22 +541,19 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                 <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
                   ประเภทบาร์โค้ด (Symbology) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
                 </label>
-                <select
-                  value={editBarcodeSymbologyId}
-                  onChange={(e) => setEditBarcodeSymbologyId && setEditBarcodeSymbologyId(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
-                    theme === 'dark'
-                      ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
-                      : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
-                  }`}
-                >
-                  <option value="">-- Auto / CODE-128 --</option>
-                  {barcodeSymbologiesList.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.code || b.name}
-                    </option>
-                  ))}
-                </select>
+                <CustomSelect
+                  theme={theme}
+                  value={editBarcodeSymbologyId || ''}
+                  onChange={(val) => setEditBarcodeSymbologyId && setEditBarcodeSymbologyId(val)}
+                  placeholder="-- Auto / CODE-128 --"
+                  options={[
+                    { value: '', label: '-- Auto / CODE-128 --' },
+                    ...barcodeSymbologiesList.map((b) => ({
+                      value: b.id,
+                      label: b.code || b.name,
+                    })),
+                  ]}
+                />
               </div>
             </div>
 
@@ -591,7 +568,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                   step="0.01"
                   value={editPrice}
                   onChange={(e) => setEditPrice(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-xl border font-bold text-blue-600 dark:text-blue-400 outline-hidden transition ${
+                  className={`w-full h-[42px] px-3 py-2 rounded-xl border font-bold text-blue-600 dark:text-blue-400 outline-hidden transition ${
                     theme === 'dark'
                       ? 'bg-slate-800 border-slate-700 focus:border-blue-500'
                       : 'bg-blue-50/50 border-slate-300 focus:border-blue-500'
@@ -607,7 +584,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                   step="0.01"
                   value={editCostPrice}
                   onChange={(e) => setEditCostPrice && setEditCostPrice(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-xl border font-semibold outline-hidden transition ${
+                  className={`w-full h-[42px] px-3 py-2 rounded-xl border font-semibold outline-hidden transition ${
                     theme === 'dark'
                       ? 'bg-slate-800 border-slate-700 text-slate-200 focus:border-blue-500'
                       : 'bg-white border-slate-300 text-slate-800 focus:border-blue-500'
@@ -618,22 +595,19 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                 <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
                   ภาษี (Tax) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
                 </label>
-                <select
-                  value={editTaxTypeId}
-                  onChange={(e) => setEditTaxTypeId && setEditTaxTypeId(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
-                    theme === 'dark'
-                      ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
-                      : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
-                  }`}
-                >
-                  <option value="">-- ไม่ระบุ / Non-VAT --</option>
-                  {taxTypesList.map((tax) => (
-                    <option key={tax.id} value={tax.id}>
-                      {tax.name} {tax.ratePercent !== undefined ? `(${tax.ratePercent}%)` : ''}
-                    </option>
-                  ))}
-                </select>
+                <CustomSelect
+                  theme={theme}
+                  value={editTaxTypeId || ''}
+                  onChange={(val) => setEditTaxTypeId && setEditTaxTypeId(val)}
+                  placeholder="-- ไม่ระบุ / Non-VAT --"
+                  options={[
+                    { value: '', label: '-- ไม่ระบุ / Non-VAT --' },
+                    ...taxTypesList.map((tax) => ({
+                      value: tax.id,
+                      label: `${tax.name} ${tax.ratePercent !== undefined ? `(${tax.ratePercent}%)` : ''}`,
+                    })),
+                  ]}
+                />
               </div>
             </div>
 
@@ -791,36 +765,116 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5">
-                <div className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
-                  <input
-                    type="checkbox"
-                    id="editLotControlCheckbox"
-                    checked={editIsLotControl}
-                    onChange={(e) => setEditIsLotControl(e.target.checked)}
-                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-                  />
-                  <label
-                    htmlFor="editLotControlCheckbox"
-                    className="text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
+              {/* Control Switches (Enterprise Interactive Toggle Cards) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Lot / Batch Control Card */}
+                <div
+                  onClick={() => setEditIsLotControl(!editIsLotControl)}
+                  className={`p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer select-none flex items-center justify-between gap-3 ${
+                    editIsLotControl
+                      ? theme === 'dark'
+                        ? 'bg-blue-950/40 border-blue-500/60 shadow-xs shadow-blue-500/10'
+                        : 'bg-blue-50/80 border-blue-400 shadow-xs shadow-blue-500/10'
+                      : theme === 'dark'
+                      ? 'bg-slate-800/40 border-slate-700/80 hover:bg-slate-800/70 hover:border-slate-600'
+                      : 'bg-slate-50/80 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${
+                        editIsLotControl
+                          ? 'bg-blue-600 text-white shadow-xs shadow-blue-600/30'
+                          : theme === 'dark'
+                          ? 'bg-slate-800 text-slate-400 border border-slate-700'
+                          : 'bg-slate-200 text-slate-500'
+                      }`}
+                    >
+                      <Layers className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <span
+                        className={`block text-xs font-bold leading-tight ${
+                          editIsLotControl
+                            ? theme === 'dark' ? 'text-blue-300' : 'text-blue-900'
+                            : theme === 'dark' ? 'text-slate-200' : 'text-slate-800'
+                        }`}
+                      >
+                        {isEn ? 'Lot & Batch Control' : 'คุมล็อต & วันหมดอายุ'}
+                      </span>
+                      <span className="block text-[11px] text-slate-400 mt-0.5 truncate">
+                        {isEn ? 'Track lot batch & expiry' : 'ติดตามล็อตและวันหมดอายุ'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Smooth Toggle Switch Knob */}
+                  <div
+                    className={`w-11 h-6 rounded-full transition-colors duration-200 p-0.5 shrink-0 flex items-center ${
+                      editIsLotControl ? 'bg-blue-600' : theme === 'dark' ? 'bg-slate-700' : 'bg-slate-300'
+                    }`}
                   >
-                    Lot / Batch Control
-                  </label>
+                    <div
+                      className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+                        editIsLotControl ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
-                  <input
-                    type="checkbox"
-                    id="editReturnableCheckbox"
-                    checked={editIsReturnable}
-                    onChange={(e) => setEditIsReturnable && setEditIsReturnable(e.target.checked)}
-                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-                  />
-                  <label
-                    htmlFor="editReturnableCheckbox"
-                    className="text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
+
+                {/* Returnable Item Card */}
+                <div
+                  onClick={() => setEditIsReturnable && setEditIsReturnable(!editIsReturnable)}
+                  className={`p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer select-none flex items-center justify-between gap-3 ${
+                    editIsReturnable
+                      ? theme === 'dark'
+                        ? 'bg-blue-950/40 border-blue-500/60 shadow-xs shadow-blue-500/10'
+                        : 'bg-blue-50/80 border-blue-400 shadow-xs shadow-blue-500/10'
+                      : theme === 'dark'
+                      ? 'bg-slate-800/40 border-slate-700/80 hover:bg-slate-800/70 hover:border-slate-600'
+                      : 'bg-slate-50/80 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${
+                        editIsReturnable
+                          ? 'bg-blue-600 text-white shadow-xs shadow-blue-600/30'
+                          : theme === 'dark'
+                          ? 'bg-slate-800 text-slate-400 border border-slate-700'
+                          : 'bg-slate-200 text-slate-500'
+                      }`}
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <span
+                        className={`block text-xs font-bold leading-tight ${
+                          editIsReturnable
+                            ? theme === 'dark' ? 'text-blue-300' : 'text-blue-900'
+                            : theme === 'dark' ? 'text-slate-200' : 'text-slate-800'
+                        }`}
+                      >
+                        {isEn ? 'Returnable Product' : 'รับคืนสินค้าได้'}
+                      </span>
+                      <span className="block text-[11px] text-slate-400 mt-0.5 truncate">
+                        {isEn ? 'Allow returns & restock' : 'อนุญาตให้รับคืนเข้าสต็อก'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Smooth Toggle Switch Knob */}
+                  <div
+                    className={`w-11 h-6 rounded-full transition-colors duration-200 p-0.5 shrink-0 flex items-center ${
+                      editIsReturnable ? 'bg-blue-600' : theme === 'dark' ? 'bg-slate-700' : 'bg-slate-300'
+                    }`}
                   >
-                    รับคืนสินค้าได้ (Returnable)
-                  </label>
+                    <div
+                      className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+                        editIsReturnable ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

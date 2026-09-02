@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Plus, Download, CheckCircle2, AlertCircle, RefreshCw, Command } from 'lucide-react';
+import { Search, Plus, Download, CheckCircle2, AlertCircle, RefreshCw, Command, ArrowLeft, Sparkles, Undo2 } from 'lucide-react';
 import { ThemeMode, Language, MasterDataSubTab } from '../types';
 
 // Custom Master Data Hooks (Clean Architecture)
@@ -155,6 +155,62 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
     showToast,
   });
 
+  // 5. Warp & Return State (Warp from form to Category/Brand/Unit setup and return with draft intact)
+  interface WarpState {
+    isWarped: boolean;
+    returnTab: MasterDataSubTab;
+    targetName: string;
+    draftTitle: string;
+  }
+  const [warpState, setWarpState] = useState<WarpState | null>(null);
+
+  const handleWarpToSubTab = (targetTab: MasterDataSubTab, targetLabel: string) => {
+    setWarpState({
+      isWarped: true,
+      returnTab: activeSubTab,
+      targetName: targetLabel,
+      draftTitle: addForm.addName.trim() || addForm.addSku.trim() || (lang === 'en' ? 'New Product Draft' : 'แบบร่างสินค้าใหม่'),
+    });
+    // Temporarily hide modal; React state in addForm retains 100% of the input values!
+    addForm.setIsAddModalOpen(false);
+    // Switch to target subtab (e.g. categories, brands, suppliers, units)
+    onSubTabChange?.(targetTab);
+    // Load the target tab's data
+    loadTabData(targetTab, true);
+    showToast(
+      lang === 'en'
+        ? `Warped to ${targetLabel}. Your product draft is saved. Click return banner when finished.`
+        : `วาปไปหน้าจัดการ ${targetLabel} เรียบร้อย ข้อมูลสินค้าถูกพักไว้ เมื่อเสร็จแล้วกดปุ่มกลับที่แถบด้านบนได้ทันที`
+    );
+  };
+
+  const handleReturnFromWarp = async () => {
+    if (!warpState) return;
+    const returnTo = warpState.returnTab;
+    setWarpState(null);
+    // Switch back to product catalog tab
+    onSubTabChange?.(returnTo);
+    // Refresh all master data dropdowns so newly created items appear immediately
+    await Promise.all([
+      loadTabData('categories', true),
+      loadTabData('brands', true),
+      loadTabData('suppliers', true),
+      loadTabData('units', true),
+    ]);
+    // Reopen modal with all draft data intact
+    addForm.setIsAddModalOpen(true);
+    showToast(
+      lang === 'en'
+        ? 'Welcome back! Your product draft is restored with updated dropdowns.'
+        : 'ยินดีต้อนรับกลับ! ข้อมูลสินค้าเดิมกลับมาครบ พร้อมอัปเดตรายการตัวเลือกล่าสุดแล้ว'
+    );
+  };
+
+  const handleDiscardWarp = () => {
+    setWarpState(null);
+    showToast(lang === 'en' ? 'Product draft discarded' : 'ยกเลิกการพักข้อมูลสินค้าแล้ว');
+  };
+
   // UI Localized Titles
   const t = {
     title: lang === 'en' ? 'Master Data Management' : 'การจัดการข้อมูลหลัก (Master Data)',
@@ -242,6 +298,27 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
     }
   };
 
+  const shouldShowSearchBar = ['products', 'categories', 'brands', 'companies', 'units', 'suppliers'].includes(activeSubTab);
+
+  const getSearchPlaceholder = () => {
+    switch (activeSubTab) {
+      case 'products':
+        return lang === 'en' ? 'Search products by name, SKU, barcode, brand...' : 'ค้นหาชื่อสินค้า, รหัส SKU, บาร์โค้ด, แบรนด์...';
+      case 'categories':
+        return lang === 'en' ? 'Search categories by name or code...' : 'ค้นหาชื่อหมวดหมู่สินค้า หรือรหัสหมวดหมู่...';
+      case 'brands':
+        return lang === 'en' ? 'Search brands by name or code...' : 'ค้นหาชื่อแบรนด์, ยี่ห้อ หรือรหัสแบรนด์...';
+      case 'companies':
+        return lang === 'en' ? 'Search companies by name, Tax ID, branch...' : 'ค้นหาชื่อบริษัทในเครือ, เลขผู้เสียภาษี, สาขา...';
+      case 'units':
+        return lang === 'en' ? 'Search units of measure (e.g. Piece, Box, Kg)...' : 'ค้นหาชื่อหน่วยนับ (เช่น ชิ้น, ลัง, กิโลกรัม)...';
+      case 'suppliers':
+        return lang === 'en' ? 'Search suppliers by vendor name, tax ID, phone...' : 'ค้นหาชื่อผู้จัดจำหน่าย, เลขผู้เสียภาษี, เบอร์โทร...';
+      default:
+        return t.searchPlaceholder;
+    }
+  };
+
   const filteredProducts = productsList.filter(
     (p) =>
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -249,6 +326,32 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
       p.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.brand.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const filteredCategories = categoriesList.filter((c) => {
+    const q = searchQuery.toLowerCase();
+    return !q || (c.name && c.name.toLowerCase().includes(q)) || (c.code && c.code.toLowerCase().includes(q));
+  });
+
+  const filteredBrands = brandsList.filter((b) => {
+    const q = searchQuery.toLowerCase();
+    return !q || (b.name && b.name.toLowerCase().includes(q)) || (b.code && b.code.toLowerCase().includes(q));
+  });
+
+  const filteredSuppliers = suppliersList.filter((s) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      !q ||
+      (s.name && s.name.toLowerCase().includes(q)) ||
+      (s.taxId && s.taxId.toLowerCase().includes(q)) ||
+      (s.phone && s.phone.includes(q)) ||
+      (s.contactPerson && s.contactPerson.toLowerCase().includes(q))
+    );
+  });
+
+  const filteredUnits = unitsList.filter((u) => {
+    const q = searchQuery.toLowerCase();
+    return !q || (u.name && u.name.toLowerCase().includes(q)) || (u.code && u.code.toLowerCase().includes(q));
+  });
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -280,6 +383,54 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         );
       })()}
 
+      {/* Warp & Return Floating Banner (Preserved Product Draft) */}
+      {warpState && (
+        <div className="p-4 rounded-2xl border border-blue-500/50 bg-gradient-to-r from-blue-950/95 via-slate-900/95 to-blue-950/95 text-white shadow-2xl backdrop-blur-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-in slide-in-from-top duration-300 ring-2 ring-blue-500/20">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-11 h-11 rounded-2xl bg-blue-600/25 border border-blue-400/40 text-blue-400 flex items-center justify-center shrink-0 shadow-inner">
+              <Sparkles className="w-5 h-5 animate-pulse" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-400">
+                  {lang === 'en' ? 'Warp Setup Mode' : 'โหมดวาปจัดการข้อมูลหลักชั่วคราว'}
+                </span>
+                <span className="text-[11px] bg-blue-500/25 text-blue-200 border border-blue-400/30 px-2 py-0.5 rounded-full font-semibold">
+                  {warpState.targetName}
+                </span>
+                <span className="text-[11px] text-slate-400 hidden sm:inline">•</span>
+                <span className="text-[11px] text-slate-300 font-mono truncate max-w-[200px]">
+                  {warpState.draftTitle}
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-0.5">
+                {lang === 'en'
+                  ? 'Your draft inputs are safely preserved in memory. Add or edit items here, then click return to continue.'
+                  : 'ข้อมูลสินค้าที่กรอกไว้ถูกพักไว้อย่างปลอดภัย จัดการข้อมูลในหน้านี้เสร็จแล้ว กดปุ่มกลับไปกรอกต่อได้ทันที'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 w-full md:w-auto justify-end shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800">
+            <button
+              type="button"
+              onClick={handleDiscardWarp}
+              className="px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition cursor-pointer"
+            >
+              {lang === 'en' ? 'Discard Draft' : 'ยกเลิกแบบร่าง'}
+            </button>
+            <button
+              type="button"
+              onClick={handleReturnFromWarp}
+              className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold text-xs shadow-lg shadow-blue-600/40 flex items-center gap-2 transition transform hover:scale-[1.02] cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>{lang === 'en' ? 'Return to Add Product ↵' : 'กลับไปกรอกสินค้าต่อ ↵'}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Enterprise Title & Actions Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-zinc-200/60 dark:border-zinc-800/60">
         <div>
@@ -291,13 +442,13 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {getAddButtonLabel() && (
             <button
               onClick={() => addForm.setIsAddModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-[14px] font-semibold shadow-xs shadow-blue-600/30 transition cursor-pointer active:scale-[0.99]"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-semibold shadow-xs shadow-blue-600/30 transition cursor-pointer active:scale-[0.99] whitespace-nowrap shrink-0"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
               <span>{getAddButtonLabel()}</span>
             </button>
           )}
@@ -306,56 +457,60 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
           <button
             onClick={() => loadTabData(activeSubTab, true)}
             disabled={isLoading}
-            className={`px-3 py-1.5 rounded-md border text-[14px] font-medium flex items-center gap-1.5 transition cursor-pointer ${theme === 'dark'
-                ? 'border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700 disabled:opacity-50'
+            className={`px-3 py-1.5 rounded-lg border text-xs sm:text-sm font-medium flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap shrink-0 ${
+              theme === 'dark'
+                ? 'border-zinc-700 bg-zinc-800/90 text-zinc-200 hover:bg-zinc-700 disabled:opacity-50'
                 : 'border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 shadow-xs disabled:opacity-50'
-              }`}
+            }`}
             title={lang === 'en' ? 'Refresh current tab data from server' : 'รีเฟรชข้อมูลแท็บนี้จากเซิร์ฟเวอร์'}
           >
-            <RefreshCw className={`w-4 h-4 text-zinc-500 ${isLoading ? 'animate-spin text-blue-500' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-zinc-400 ${isLoading ? 'animate-spin text-blue-500' : ''}`} />
             <span className="hidden sm:inline">{lang === 'en' ? 'Refresh' : 'รีเฟรช'}</span>
           </button>
 
           <button
-            className={`px-3 py-1.5 rounded-md border text-[14px] font-medium flex items-center gap-1.5 transition ${theme === 'dark'
-                ? 'border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700'
+            className={`px-3 py-1.5 rounded-lg border text-xs sm:text-sm font-medium flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap shrink-0 ${
+              theme === 'dark'
+                ? 'border-zinc-700 bg-zinc-800/90 text-zinc-200 hover:bg-zinc-700'
                 : 'border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 shadow-xs'
-              }`}
+            }`}
             title="Export CSV"
           >
-            <Download className="w-4 h-4 text-zinc-500" />
+            <Download className="w-3.5 h-3.5 text-zinc-400" />
             <span className="hidden sm:inline">Export</span>
           </button>
         </div>
       </div>
 
 
-      {/* Enterprise Fast Search Toolbar */}
-      <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-        <input
-          ref={fastSearchInputRef}
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder={t.searchPlaceholder}
-          className={`w-full pl-10 pr-16 py-2.5 rounded-md border text-[15px] font-normal transition outline-hidden ${theme === 'dark'
-              ? 'bg-zinc-900 border-zinc-800 text-zinc-100 placeholder-zinc-500 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500'
-              : 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 shadow-xs'
-            }`}
-        />
-        <div
-          onClick={() => {
-            fastSearchInputRef.current?.focus();
-            fastSearchInputRef.current?.select();
-          }}
-          className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[11px] text-zinc-400 border border-zinc-200 dark:border-zinc-700 px-1.5 py-0.5 rounded cursor-pointer select-none flex items-center gap-0.5 hover:text-zinc-600 dark:hover:text-zinc-200 transition"
-          title={isMac ? 'Command + K' : 'Ctrl + K'}
-        >
-          {isMac ? <Command className="w-3 h-3 inline" /> : <span>Ctrl</span>}
-          <span>K</span>
+      {/* Enterprise Fast Search Toolbar (Only displayed on relevant Master Data tabs) */}
+      {shouldShowSearchBar && (
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+          <input
+            ref={fastSearchInputRef}
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={getSearchPlaceholder()}
+            className={`w-full pl-10 pr-16 py-2.5 rounded-md border text-[15px] font-normal transition outline-hidden ${theme === 'dark'
+                ? 'bg-zinc-900 border-zinc-800 text-zinc-100 placeholder-zinc-500 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500'
+                : 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 shadow-xs'
+              }`}
+          />
+          <div
+            onClick={() => {
+              fastSearchInputRef.current?.focus();
+              fastSearchInputRef.current?.select();
+            }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[11px] text-zinc-400 border border-zinc-200 dark:border-zinc-700 px-1.5 py-0.5 rounded cursor-pointer select-none flex items-center gap-0.5 hover:text-zinc-600 dark:hover:text-zinc-200 transition"
+            title={isMac ? 'Command + K' : 'Ctrl + K'}
+          >
+            {isMac ? <Command className="w-3 h-3 inline" /> : <span>Ctrl</span>}
+            <span>K</span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* TAB CONTENT ROUTING */}
       {activeSubTab === 'products' && (
@@ -375,7 +530,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
           theme={theme}
           lang={lang}
           t={t}
-          categoriesList={categoriesList}
+          categoriesList={filteredCategories}
           onOpenAddModal={() => addForm.setIsAddModalOpen(true)}
           onOpenEditCategory={modals.openEditCategory}
           onDeleteCategory={modals.handleDeleteCategory}
@@ -387,7 +542,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
           theme={theme}
           lang={lang}
           t={t}
-          brandsList={brandsList}
+          brandsList={filteredBrands}
           onOpenAddModal={() => addForm.setIsAddModalOpen(true)}
           onOpenEditBrand={modals.openEditBrand}
           onDeleteBrand={modals.handleDeleteBrand}
@@ -421,7 +576,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
           theme={theme}
           lang={lang}
           t={t}
-          unitsList={unitsList}
+          unitsList={filteredUnits}
           onOpenAddModal={() => addForm.setIsAddModalOpen(true)}
           onOpenEditUnit={modals.openEditUnit}
           onDeleteUnit={modals.handleDeleteUnit}
@@ -446,7 +601,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
           theme={theme}
           lang={lang}
           t={t}
-          suppliersList={suppliersList}
+          suppliersList={filteredSuppliers}
           onOpenEditSupplier={modals.openEditSupplier}
           onDeleteSupplier={modals.handleDeleteSupplier}
         />
@@ -673,6 +828,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         onClose={() => addForm.setIsAddModalOpen(false)}
         activeSubTab={activeSubTab}
         onSubmit={addForm.handleCreateNewItem}
+        onWarpToTab={handleWarpToSubTab}
         errors={addForm.formErrors}
         clearError={addForm.clearError}
         categoriesList={categoriesList}

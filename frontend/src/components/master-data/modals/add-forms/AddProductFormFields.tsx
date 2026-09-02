@@ -1,7 +1,9 @@
 import React from 'react';
-import { Camera, Upload, ImageIcon, Link2, CheckCircle2, Trash2 } from 'lucide-react';
+import { Camera, Upload, ImageIcon, Link2, CheckCircle2, Trash2, RotateCcw, Layers, ExternalLink } from 'lucide-react';
 import {
   ThemeMode,
+  Language,
+  MasterDataSubTab,
   UnitItem,
   BrandItem,
   CategoryItem,
@@ -9,10 +11,13 @@ import {
   BarcodeSymbologyItem,
   TaxTypeItem,
 } from '../../../../types';
+import { CustomSelect } from '../../../common/CustomSelect';
 
 interface AddProductFormFieldsProps {
   theme: ThemeMode;
+  lang?: Language;
   t: Record<string, string>;
+  onWarpToTab?: (tab: MasterDataSubTab, label: string) => void;
   // Image
   addProductImagePreview?: string;
   setAddProductImagePreview?: (val: string) => void;
@@ -88,7 +93,9 @@ interface AddProductFormFieldsProps {
 
 export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
   theme,
+  lang = 'th',
   t,
+  onWarpToTab,
   addProductImagePreview,
   setAddProductImagePreview,
   setAddProductImageFile,
@@ -149,6 +156,8 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
   addDescription,
   setAddDescription,
 }) => {
+  const isEn = lang === 'en';
+
   return (
     <>
       {/* Product Image & Basic Info */}
@@ -191,23 +200,23 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
             type="button"
             onClick={() => imageInputRef.current?.click()}
             className="absolute inset-0 rounded-2xl bg-black/50 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition duration-150 cursor-pointer text-[10px] font-semibold"
-            title="เลือกรูปภาพสินค้า (Select Image)"
+            title={isEn ? 'Select Product Image' : 'เลือกรูปภาพสินค้า (Select Image)'}
           >
             <Camera className="w-4 h-4 mb-0.5" />
-            <span>เลือกรูป</span>
+            <span>{isEn ? 'Select' : 'เลือกรูป'}</span>
           </button>
         </div>
 
         <div className="flex-1">
           <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-            {t.productName} <span className="text-rose-500 font-bold">*</span>
+            {isEn ? 'Product Name' : t.productName} <span className="text-rose-500 font-bold">*</span>
           </label>
           <input
             type="text"
             required
             value={addName}
             onChange={(e) => setAddName(e.target.value)}
-            placeholder="เช่น กล่องกระดาษลูกฟูก 30x30x30 ซม."
+            placeholder={isEn ? 'e.g. Corrugated Box 30x30x30 cm.' : 'เช่น กล่องกระดาษลูกฟูก 30x30x30 ซม.'}
             className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
               theme === 'dark'
                 ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
@@ -221,7 +230,9 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
               className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-medium cursor-pointer"
             >
               <Upload className="w-3 h-3" />
-              {addProductImagePreview ? 'เปลี่ยนรูปภาพที่เลือก' : 'เลือกรูปภาพสินค้า (JPG, PNG, WebP)'}
+              {addProductImagePreview
+                ? isEn ? 'Change Selected Image' : 'เปลี่ยนรูปภาพที่เลือก'
+                : isEn ? 'Upload Image (JPG, PNG, WebP)' : 'เลือกรูปภาพสินค้า (JPG, PNG, WebP)'}
             </button>
             {addProductImagePreview && (
               <button
@@ -234,7 +245,7 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
                 className="text-[11px] text-rose-500 hover:underline flex items-center gap-0.5 font-medium cursor-pointer ml-1"
               >
                 <Trash2 className="w-3 h-3" />
-                ลบรูป
+                {isEn ? 'Remove' : 'ลบรูป'}
               </button>
             )}
           </div>
@@ -254,7 +265,7 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
             <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
             <div className="min-w-0 flex-1">
               <span className="font-semibold block text-[11px] text-slate-500 dark:text-slate-400">
-                พร้อมอัปโหลดเมื่อกดบันทึก (Ready to upload):
+                {isEn ? 'Ready to upload on save:' : 'พร้อมอัปโหลดเมื่อกดบันทึก (Ready to upload):'}
               </span>
               <span className="font-mono text-[10px] truncate block text-emerald-600 dark:text-emerald-400">
                 {addProductImagePreview}
@@ -267,13 +278,16 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
       {/* Product Code */}
       <div>
         <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-          {t.code} / รหัสสินค้า <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ - สร้างอัตโนมัติถ้าว่าง)</span>
+          {isEn ? 'Product Code' : `${t.code} / รหัสสินค้า`}{' '}
+          <span className="text-slate-400 font-normal text-xs">
+            {isEn ? '(Optional - Auto if blank)' : '(ไม่บังคับ - สร้างอัตโนมัติถ้าว่าง)'}
+          </span>
         </label>
         <input
           type="text"
           value={addCode}
           onChange={(e) => setAddCode(e.target.value)}
-          placeholder="PRD-1005 (สร้างอัตโนมัติถ้าว่าง)"
+          placeholder={isEn ? 'PRD-1005 (Auto generated if blank)' : 'PRD-1005 (สร้างอัตโนมัติถ้าว่าง)'}
           className={`w-full px-3 py-2 rounded-xl border font-mono font-medium outline-hidden transition ${
             theme === 'dark'
               ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
@@ -285,13 +299,16 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-            {t.sku} (Stock Keeping Unit) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+            {isEn ? 'SKU (Stock Keeping Unit)' : `${t.sku} (Stock Keeping Unit)`}{' '}
+            <span className="text-slate-400 font-normal text-xs">
+              {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+            </span>
           </label>
           <input
             type="text"
             value={addSku}
             onChange={(e) => setAddSku(e.target.value)}
-            placeholder="SKU-889911 (สร้างอัตโนมัติถ้าว่าง)"
+            placeholder={isEn ? 'SKU-889911 (Auto if blank)' : 'SKU-889911 (สร้างอัตโนมัติถ้าว่าง)'}
             className={`w-full px-3 py-2 rounded-xl border font-mono font-medium outline-hidden transition ${
               theme === 'dark'
                 ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
@@ -300,37 +317,59 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
           />
         </div>
         <div>
-          <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-            {t.brand} (Brand) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
-          </label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px]">
+              {isEn ? 'Brand' : `${t.brand} (Brand)`}{' '}
+              <span className="text-slate-400 font-normal text-xs">
+                {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+              </span>
+            </label>
+            {onWarpToTab && (
+              <button
+                type="button"
+                onClick={() => onWarpToTab('brands', isEn ? 'Brands' : 'แบรนด์สินค้า')}
+                className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 hover:underline cursor-pointer flex items-center gap-0.5"
+                title={isEn ? 'Warp to Brands tab to manage' : 'วาปไปจัดการแบรนด์สินค้า'}
+              >
+                <span>{isEn ? 'Manage ↗' : 'จัดการ ↗'}</span>
+              </button>
+            )}
+          </div>
           {brandsList.length > 0 ? (
-            <select
+            <CustomSelect
+              theme={theme}
               value={addBrandId || addBrand}
-              onChange={(e) => {
-                const sel = brandsList.find((b) => b.id === e.target.value || b.name === e.target.value);
-                if (setAddBrandId) setAddBrandId(sel ? sel.id : e.target.value);
-                setAddBrand(sel ? sel.name : e.target.value);
+              onChange={(val) => {
+                if (val === '__WARP_BRANDS__') {
+                  onWarpToTab && onWarpToTab('brands', isEn ? 'Brands' : 'แบรนด์สินค้า');
+                  return;
+                }
+                const sel = brandsList.find((b) => b.id === val || b.name === val);
+                if (setAddBrandId) setAddBrandId(sel ? sel.id : val);
+                setAddBrand(sel ? sel.name : val);
               }}
-              className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
-                theme === 'dark'
-                  ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
-                  : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
-              }`}
-            >
-              <option value="">-- เลือกแบรนด์ --</option>
-              {brandsList.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
+              placeholder={isEn ? '-- Select Brand --' : '-- เลือกแบรนด์ --'}
+              options={[
+                { value: '', label: isEn ? '-- Select Brand --' : '-- เลือกแบรนด์ --' },
+                ...brandsList.map((b) => ({ value: b.id, label: b.name })),
+                ...(onWarpToTab
+                  ? [
+                      {
+                        value: '__WARP_BRANDS__',
+                        label: isEn ? '⚡ + Manage / Create New Brand...' : '⚡ + จัดการ / เพิ่มแบรนด์ใหม่...',
+                        isAction: true,
+                      },
+                    ]
+                  : []),
+              ]}
+            />
           ) : (
             <input
               type="text"
               value={addBrand}
               onChange={(e) => setAddBrand(e.target.value)}
-              placeholder="Nike, Adidas, Apple..."
-              className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
+              placeholder={isEn ? 'Nike, Adidas, Apple...' : 'Nike, Adidas, Apple...'}
+              className={`w-full h-[42px] px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
                 theme === 'dark'
                   ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
                   : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
@@ -343,46 +382,94 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
       {/* Master Data Dropdowns: Category & Supplier */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-            หมวดหมู่ (Category) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
-          </label>
-          <select
-            value={addCategoryId}
-            onChange={(e) => setAddCategoryId && setAddCategoryId(e.target.value)}
-            className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
-              theme === 'dark'
-                ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
-                : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
-            }`}
-          >
-            <option value="">-- ไม่ระบุหมวดหมู่ --</option>
-            {categoriesList.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px]">
+              {isEn ? 'Category' : 'หมวดหมู่ (Category)'}{' '}
+              <span className="text-slate-400 font-normal text-xs">
+                {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+              </span>
+            </label>
+            {onWarpToTab && (
+              <button
+                type="button"
+                onClick={() => onWarpToTab('categories', isEn ? 'Categories' : 'หมวดหมู่สินค้า')}
+                className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 hover:underline cursor-pointer flex items-center gap-0.5"
+                title={isEn ? 'Warp to Categories tab to manage' : 'วาปไปจัดการหมวดหมู่สินค้า'}
+              >
+                <span>{isEn ? 'Manage ↗' : 'จัดการ ↗'}</span>
+              </button>
+            )}
+          </div>
+          <CustomSelect
+            theme={theme}
+            value={addCategoryId || ''}
+            onChange={(val) => {
+              if (val === '__WARP_CATEGORIES__') {
+                onWarpToTab && onWarpToTab('categories', isEn ? 'Categories' : 'หมวดหมู่สินค้า');
+                return;
+              }
+              setAddCategoryId && setAddCategoryId(val);
+            }}
+            placeholder={isEn ? '-- Uncategorized --' : '-- ไม่ระบุหมวดหมู่ --'}
+            options={[
+              { value: '', label: isEn ? '-- Uncategorized --' : '-- ไม่ระบุหมวดหมู่ --' },
+              ...categoriesList.map((c) => ({ value: c.id, label: c.name })),
+              ...(onWarpToTab
+                ? [
+                    {
+                      value: '__WARP_CATEGORIES__',
+                      label: isEn ? '⚡ + Manage / Create New Category...' : '⚡ + จัดการ / เพิ่มหมวดหมู่ใหม่...',
+                      isAction: true,
+                    },
+                  ]
+                : []),
+            ]}
+          />
         </div>
         <div>
-          <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-            ผู้จัดจำหน่าย (Supplier) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
-          </label>
-          <select
-            value={addSupplierId}
-            onChange={(e) => setAddSupplierId && setAddSupplierId(e.target.value)}
-            className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
-              theme === 'dark'
-                ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
-                : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
-            }`}
-          >
-            <option value="">-- ไม่ระบุผู้จัดจำหน่าย --</option>
-            {suppliersList.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px]">
+              {isEn ? 'Supplier / Vendor' : 'ผู้จัดจำหน่าย (Supplier)'}{' '}
+              <span className="text-slate-400 font-normal text-xs">
+                {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+              </span>
+            </label>
+            {onWarpToTab && (
+              <button
+                type="button"
+                onClick={() => onWarpToTab('suppliers', isEn ? 'Suppliers' : 'ผู้จัดจำหน่าย')}
+                className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 hover:underline cursor-pointer flex items-center gap-0.5"
+                title={isEn ? 'Warp to Suppliers tab to manage' : 'วาปไปจัดการผู้จัดจำหน่าย'}
+              >
+                <span>{isEn ? 'Manage ↗' : 'จัดการ ↗'}</span>
+              </button>
+            )}
+          </div>
+          <CustomSelect
+            theme={theme}
+            value={addSupplierId || ''}
+            onChange={(val) => {
+              if (val === '__WARP_SUPPLIERS__') {
+                onWarpToTab && onWarpToTab('suppliers', isEn ? 'Suppliers' : 'ผู้จัดจำหน่าย');
+                return;
+              }
+              setAddSupplierId && setAddSupplierId(val);
+            }}
+            placeholder={isEn ? '-- No Supplier --' : '-- ไม่ระบุผู้จัดจำหน่าย --'}
+            options={[
+              { value: '', label: isEn ? '-- No Supplier --' : '-- ไม่ระบุผู้จัดจำหน่าย --' },
+              ...suppliersList.map((s) => ({ value: s.id, label: s.name })),
+              ...(onWarpToTab
+                ? [
+                    {
+                      value: '__WARP_SUPPLIERS__',
+                      label: isEn ? '⚡ + Manage / Create New Supplier...' : '⚡ + จัดการ / เพิ่มผู้จัดจำหน่ายใหม่...',
+                      isAction: true,
+                    },
+                  ]
+                : []),
+            ]}
+          />
         </div>
       </div>
 
@@ -390,13 +477,16 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-            รหัสบาร์โค้ด (Barcode Value) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+            {isEn ? 'Barcode Value' : 'รหัสบาร์โค้ด (Barcode Value)'}{' '}
+            <span className="text-slate-400 font-normal text-xs">
+              {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+            </span>
           </label>
           <input
             type="text"
             value={addBarcode}
             onChange={(e) => setAddBarcode(e.target.value)}
-            placeholder="8851234567890 (สร้างอัตโนมัติถ้าว่าง)"
+            placeholder={isEn ? '8851234567890 (Auto if blank)' : '8851234567890 (สร้างอัตโนมัติถ้าว่าง)'}
             className={`w-full px-3 py-2 rounded-xl border font-mono font-medium outline-hidden transition ${
               theme === 'dark'
                 ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
@@ -406,39 +496,41 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
         </div>
         <div>
           <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-            ประเภทบาร์โค้ด (Symbology) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+            {isEn ? 'Barcode Symbology' : 'ประเภทบาร์โค้ด (Symbology)'}{' '}
+            <span className="text-slate-400 font-normal text-xs">
+              {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+            </span>
           </label>
-          <select
-            value={addBarcodeSymbologyId}
-            onChange={(e) => setAddBarcodeSymbologyId && setAddBarcodeSymbologyId(e.target.value)}
-            className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
-              theme === 'dark'
-                ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
-                : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
-            }`}
-          >
-            <option value="">-- Auto / CODE-128 --</option>
-            {barcodeSymbologiesList.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.code || b.name}
-              </option>
-            ))}
-          </select>
+          <CustomSelect
+            theme={theme}
+            value={addBarcodeSymbologyId || ''}
+            onChange={(val) => setAddBarcodeSymbologyId && setAddBarcodeSymbologyId(val)}
+            placeholder={isEn ? '-- Auto / CODE-128 --' : '-- Auto / CODE-128 --'}
+            options={[
+              { value: '', label: isEn ? '-- Auto / CODE-128 --' : '-- Auto / CODE-128 --' },
+              ...barcodeSymbologiesList.map((b) => ({
+                value: b.id,
+                label: b.code || b.name,
+              })),
+            ]}
+          />
         </div>
       </div>
 
-      {/* Price, Cost Price, Tax & UOM */}
-      <div className="grid grid-cols-4 gap-3">
+      {/* Price, Cost Price, Stock & UOM (4-Column Balanced Grid) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div>
-          <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-            {t.price} (฿) <span className="text-rose-500 font-bold">*</span>
-          </label>
+          <div className="h-6 flex items-center justify-between mb-1.5">
+            <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] truncate">
+              {isEn ? 'Selling Price' : t.price} (฿) <span className="text-rose-500 font-bold">*</span>
+            </label>
+          </div>
           <input
             type="number"
             step="0.01"
             value={addPrice}
             onChange={(e) => setAddPrice(e.target.value)}
-            className={`w-full px-3 py-2 rounded-xl border font-bold text-blue-600 dark:text-blue-400 outline-hidden transition ${
+            className={`w-full h-[42px] px-3 py-2 rounded-xl border font-bold text-blue-600 dark:text-blue-400 outline-hidden transition ${
               theme === 'dark'
                 ? 'bg-slate-800 border-slate-700 focus:border-blue-500'
                 : 'bg-blue-50/50 border-slate-300 focus:border-blue-500'
@@ -446,15 +538,20 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
           />
         </div>
         <div>
-          <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-            ราคาทุน (Cost) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
-          </label>
+          <div className="h-6 flex items-center justify-between mb-1.5">
+            <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] truncate">
+              {isEn ? 'Cost Price (฿)' : 'ราคาทุน (Cost)'}{' '}
+              <span className="text-slate-400 font-normal text-xs">
+                {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+              </span>
+            </label>
+          </div>
           <input
             type="number"
             step="0.01"
             value={addCostPrice}
             onChange={(e) => setAddCostPrice && setAddCostPrice(e.target.value)}
-            className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
+            className={`w-full h-[42px] px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
               theme === 'dark'
                 ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
                 : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
@@ -462,14 +559,19 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
           />
         </div>
         <div>
-          <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-            {t.stockOnHand} <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
-          </label>
+          <div className="h-6 flex items-center justify-between mb-1.5">
+            <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] truncate">
+              {isEn ? 'Initial Stock' : t.stockOnHand}{' '}
+              <span className="text-slate-400 font-normal text-xs">
+                {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+              </span>
+            </label>
+          </div>
           <input
             type="number"
             value={addStock}
             onChange={(e) => setAddStock(e.target.value)}
-            className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
+            className={`w-full h-[42px] px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
               theme === 'dark'
                 ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
                 : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
@@ -477,74 +579,97 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
           />
         </div>
         <div>
-          <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-            หน่วยนับ (UOM) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
-          </label>
-          <select
-            value={addUnitId}
-            onChange={(e) => {
-              const sel = unitsList.find((u) => u.id === e.target.value || u.code === e.target.value);
-              if (setAddUnitId) setAddUnitId(sel ? sel.id : e.target.value);
-              setAddUom(sel ? sel.code : (e.target.value || ''));
-            }}
-            className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
-              theme === 'dark'
-                ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
-                : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
-            }`}
-          >
-            <option value="">-- ไม่ระบุหน่วยนับ --</option>
-            {unitsList.length > 0 ? (
-              unitsList.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.code} - {u.name}
-                </option>
-              ))
-            ) : (
-              <>
-                <option value="PCS">PCS (ชิ้น)</option>
-                <option value="PAIR">PAIR (คู่)</option>
-                <option value="BOX">BOX (กล่อง)</option>
-                <option value="PACK">PACK (แพ็ค)</option>
-                <option value="SET">SET (ชุด)</option>
-              </>
+          <div className="h-6 flex items-center justify-between mb-1.5">
+            <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] truncate">
+              {isEn ? 'Unit (UOM)' : 'หน่วยนับ (UOM)'}{' '}
+              <span className="text-slate-400 font-normal text-xs">
+                {isEn ? '(Opt)' : '(ไม่บังคับ)'}
+              </span>
+            </label>
+            {onWarpToTab && (
+              <button
+                type="button"
+                onClick={() => onWarpToTab('units', isEn ? 'Units of Measure' : 'หน่วยนับ')}
+                className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 hover:underline cursor-pointer flex items-center gap-0.5 whitespace-nowrap shrink-0 ml-1"
+                title={isEn ? 'Warp to Units tab to manage' : 'วาปไปจัดการหน่วยนับ'}
+              >
+                <span>{isEn ? 'Manage ↗' : 'จัดการ ↗'}</span>
+              </button>
             )}
-          </select>
+          </div>
+          <CustomSelect
+            theme={theme}
+            value={addUnitId || ''}
+            onChange={(val) => {
+              if (val === '__WARP_UNITS__') {
+                onWarpToTab && onWarpToTab('units', isEn ? 'Units of Measure' : 'หน่วยนับ');
+                return;
+              }
+              const sel = unitsList.find((u) => u.id === val || u.code === val);
+              if (setAddUnitId) setAddUnitId(sel ? sel.id : val);
+              setAddUom(sel ? sel.code : val);
+            }}
+            placeholder={isEn ? '-- Select Unit --' : '-- ไม่ระบุหน่วยนับ --'}
+            options={[
+              { value: '', label: isEn ? '-- Select Unit --' : '-- ไม่ระบุหน่วยนับ --' },
+              ...(unitsList.length > 0
+                ? unitsList.map((u) => ({ value: u.id, label: `${u.code} - ${u.name}` }))
+                : [
+                    { value: 'PCS', label: isEn ? 'PCS (Piece)' : 'PCS (ชิ้น)' },
+                    { value: 'PAIR', label: isEn ? 'PAIR (Pair)' : 'PAIR (คู่)' },
+                    { value: 'BOX', label: isEn ? 'BOX (Box)' : 'BOX (กล่อง)' },
+                    { value: 'PACK', label: isEn ? 'PACK (Pack)' : 'PACK (แพ็ค)' },
+                    { value: 'SET', label: isEn ? 'SET (Set)' : 'SET (ชุด)' },
+                  ]),
+              ...(onWarpToTab
+                ? [
+                    {
+                      value: '__WARP_UNITS__',
+                      label: isEn ? '⚡ + Manage / Create New Unit...' : '⚡ + จัดการ / เพิ่มหน่วยนับใหม่...',
+                      isAction: true,
+                    },
+                  ]
+                : []),
+            ]}
+          />
         </div>
       </div>
 
       {/* Tax Type */}
       <div>
         <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-          ประเภทภาษี (Tax Type) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+          {isEn ? 'Tax Type' : 'ประเภทภาษี (Tax Type)'}{' '}
+          <span className="text-slate-400 font-normal text-xs">
+            {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+          </span>
         </label>
-        <select
-          value={addTaxTypeId}
-          onChange={(e) => setAddTaxTypeId && setAddTaxTypeId(e.target.value)}
-          className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
-            theme === 'dark'
-              ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
-              : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
-          }`}
-        >
-          <option value="">-- ไม่ระบุ / Non-VAT --</option>
-          {taxTypesList.map((tax) => (
-            <option key={tax.id} value={tax.id}>
-              {tax.name} {tax.ratePercent !== undefined ? `(${tax.ratePercent}%)` : ''}
-            </option>
-          ))}
-        </select>
+        <CustomSelect
+          theme={theme}
+          value={addTaxTypeId || ''}
+          onChange={(val) => setAddTaxTypeId && setAddTaxTypeId(val)}
+          placeholder={isEn ? '-- Non-VAT / Default --' : '-- ไม่ระบุ / Non-VAT --'}
+          options={[
+            { value: '', label: isEn ? '-- Non-VAT / Default --' : '-- ไม่ระบุ / Non-VAT --' },
+            ...taxTypesList.map((tax) => ({
+              value: tax.id,
+              label: `${tax.name} ${tax.ratePercent !== undefined ? `(${tax.ratePercent}%)` : ''}`,
+            })),
+          ]}
+        />
       </div>
 
       {/* Weight & Dimensions */}
       <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 space-y-2.5">
         <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider block">
-          มิติขนาด & น้ำหนัก (Dimensions & Weight) <span className="text-slate-400 font-normal text-xs normal-case">(ไม่บังคับ)</span>
+          {isEn ? 'Dimensions & Weight' : 'มิติขนาด & น้ำหนัก (Dimensions & Weight)'}{' '}
+          <span className="text-slate-400 font-normal text-xs normal-case">
+            {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+          </span>
         </span>
         <div className="grid grid-cols-4 gap-2.5">
           <div>
             <label className="block text-slate-500 dark:text-slate-400 font-medium text-[11px] mb-1">
-              น้ำหนัก (kg)
+              {isEn ? 'Weight (kg)' : 'น้ำหนัก (kg)'}
             </label>
             <input
               type="number"
@@ -560,7 +685,7 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
           </div>
           <div>
             <label className="block text-slate-500 dark:text-slate-400 font-medium text-[11px] mb-1">
-              กว้าง (cm)
+              {isEn ? 'Width (cm)' : 'กว้าง (cm)'}
             </label>
             <input
               type="number"
@@ -576,7 +701,7 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
           </div>
           <div>
             <label className="block text-slate-500 dark:text-slate-400 font-medium text-[11px] mb-1">
-              ยาว (cm)
+              {isEn ? 'Length (cm)' : 'ยาว (cm)'}
             </label>
             <input
               type="number"
@@ -592,7 +717,7 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
           </div>
           <div>
             <label className="block text-slate-500 dark:text-slate-400 font-medium text-[11px] mb-1">
-              สูง (cm)
+              {isEn ? 'Height (cm)' : 'สูง (cm)'}
             </label>
             <input
               type="number"
@@ -613,7 +738,10 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
       <div className="grid grid-cols-3 gap-3">
         <div>
           <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-            จุดสั่งซื้อซ้ำ (ROP) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+            {isEn ? 'Reorder Point (ROP)' : 'จุดสั่งซื้อซ้ำ (ROP)'}{' '}
+            <span className="text-slate-400 font-normal text-xs">
+              {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+            </span>
           </label>
           <input
             type="number"
@@ -628,7 +756,10 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
         </div>
         <div>
           <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-            Min Reorder Qty <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+            {isEn ? 'Min Reorder Qty' : 'ยอดสั่งซื้อขั้นต่ำ (Min Qty)'}{' '}
+            <span className="text-slate-400 font-normal text-xs">
+              {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+            </span>
           </label>
           <input
             type="number"
@@ -643,7 +774,10 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
         </div>
         <div>
           <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-            รับประกัน (วัน) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+            {isEn ? 'Warranty (Days)' : 'รับประกัน (วัน)'}{' '}
+            <span className="text-slate-400 font-normal text-xs">
+              {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+            </span>
           </label>
           <input
             type="number"
@@ -658,49 +792,135 @@ export const AddProductFormFields: React.FC<AddProductFormFieldsProps> = ({
         </div>
       </div>
 
-      {/* Control Switches */}
-      <div className="grid grid-cols-2 gap-2.5">
-        <div className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
-          <input
-            type="checkbox"
-            id="lotControlCheckboxModal"
-            checked={addIsLotControl}
-            onChange={(e) => setAddIsLotControl(e.target.checked)}
-            className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-          />
-          <label
-            htmlFor="lotControlCheckboxModal"
-            className="text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
+      {/* Control Switches (Enterprise Interactive Toggle Cards) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Lot / Batch Control Card */}
+        <div
+          onClick={() => setAddIsLotControl(!addIsLotControl)}
+          className={`p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer select-none flex items-center justify-between gap-3 ${
+            addIsLotControl
+              ? theme === 'dark'
+                ? 'bg-blue-950/40 border-blue-500/60 shadow-xs shadow-blue-500/10'
+                : 'bg-blue-50/80 border-blue-400 shadow-xs shadow-blue-500/10'
+              : theme === 'dark'
+              ? 'bg-slate-800/40 border-slate-700/80 hover:bg-slate-800/70 hover:border-slate-600'
+              : 'bg-slate-50/80 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+          }`}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${
+                addIsLotControl
+                  ? 'bg-blue-600 text-white shadow-xs shadow-blue-600/30'
+                  : theme === 'dark'
+                  ? 'bg-slate-800 text-slate-400 border border-slate-700'
+                  : 'bg-slate-200 text-slate-500'
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <span
+                className={`block text-xs font-bold leading-tight ${
+                  addIsLotControl
+                    ? theme === 'dark' ? 'text-blue-300' : 'text-blue-900'
+                    : theme === 'dark' ? 'text-slate-200' : 'text-slate-800'
+                }`}
+              >
+                {isEn ? 'Lot & Batch Control' : 'คุมล็อต & วันหมดอายุ'}
+              </span>
+              <span className="block text-[11px] text-slate-400 mt-0.5 truncate">
+                {isEn ? 'Track lot batch & expiry' : 'ติดตามล็อตและวันหมดอายุ'}
+              </span>
+            </div>
+          </div>
+
+          {/* Smooth Toggle Switch Knob */}
+          <div
+            className={`w-11 h-6 rounded-full transition-colors duration-200 p-0.5 shrink-0 flex items-center ${
+              addIsLotControl ? 'bg-blue-600' : theme === 'dark' ? 'bg-slate-700' : 'bg-slate-300'
+            }`}
           >
-            Lot / Batch Control
-          </label>
+            <div
+              className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+                addIsLotControl ? 'translate-x-5' : 'translate-x-0'
+              }`}
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
-          <input
-            type="checkbox"
-            id="returnableCheckboxModal"
-            checked={addIsReturnable}
-            onChange={(e) => setAddIsReturnable && setAddIsReturnable(e.target.checked)}
-            className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-          />
-          <label
-            htmlFor="returnableCheckboxModal"
-            className="text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
+
+        {/* Returnable Item Card */}
+        <div
+          onClick={() => setAddIsReturnable && setAddIsReturnable(!addIsReturnable)}
+          className={`p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer select-none flex items-center justify-between gap-3 ${
+            addIsReturnable
+              ? theme === 'dark'
+                ? 'bg-blue-950/40 border-blue-500/60 shadow-xs shadow-blue-500/10'
+                : 'bg-blue-50/80 border-blue-400 shadow-xs shadow-blue-500/10'
+              : theme === 'dark'
+              ? 'bg-slate-800/40 border-slate-700/80 hover:bg-slate-800/70 hover:border-slate-600'
+              : 'bg-slate-50/80 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+          }`}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${
+                addIsReturnable
+                  ? 'bg-blue-600 text-white shadow-xs shadow-blue-600/30'
+                  : theme === 'dark'
+                  ? 'bg-slate-800 text-slate-400 border border-slate-700'
+                  : 'bg-slate-200 text-slate-500'
+              }`}
+            >
+              <RotateCcw className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <span
+                className={`block text-xs font-bold leading-tight ${
+                  addIsReturnable
+                    ? theme === 'dark' ? 'text-blue-300' : 'text-blue-900'
+                    : theme === 'dark' ? 'text-slate-200' : 'text-slate-800'
+                }`}
+              >
+                {isEn ? 'Returnable Product' : 'รับคืนสินค้าได้'}
+              </span>
+              <span className="block text-[11px] text-slate-400 mt-0.5 truncate">
+                {isEn ? 'Allow returns & restock' : 'อนุญาตให้รับคืนเข้าสต็อก'}
+              </span>
+            </div>
+          </div>
+
+          {/* Smooth Toggle Switch Knob */}
+          <div
+            className={`w-11 h-6 rounded-full transition-colors duration-200 p-0.5 shrink-0 flex items-center ${
+              addIsReturnable ? 'bg-blue-600' : theme === 'dark' ? 'bg-slate-700' : 'bg-slate-300'
+            }`}
           >
-            รับคืนสินค้าได้ (Returnable)
-          </label>
+            <div
+              className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+                addIsReturnable ? 'translate-x-5' : 'translate-x-0'
+              }`}
+            />
+          </div>
         </div>
       </div>
 
       <div>
         <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-          รายละเอียดสินค้า (Description) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+          {isEn ? 'Product Description' : 'รายละเอียดสินค้า (Description)'}{' '}
+          <span className="text-slate-400 font-normal text-xs">
+            {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+          </span>
         </label>
         <textarea
           rows={2}
           value={addDescription}
           onChange={(e) => setAddDescription(e.target.value)}
-          placeholder="ระบุคุณสมบัติหรือรายละเอียดเพิ่มเติมของสินค้า..."
+          placeholder={
+            isEn
+              ? 'Enter product specifications or additional details...'
+              : 'ระบุคุณสมบัติหรือรายละเอียดเพิ่มเติมของสินค้า...'
+          }
           className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden transition ${
             theme === 'dark'
               ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'

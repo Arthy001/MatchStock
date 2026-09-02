@@ -17,10 +17,12 @@ import {
   ProductItem,
   WarehouseBin,
   Supplier,
+  Language,
 } from '../../../types';
 
 interface CreateTransactionModalProps {
   theme: ThemeMode;
+  lang?: Language;
   t: any;
   isOpen: boolean;
   onClose: () => void;
@@ -65,6 +67,7 @@ interface CreateTransactionModalProps {
 
 export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
   theme,
+  lang = 'th',
   t,
   isOpen,
   onClose,
@@ -107,6 +110,7 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
   suppliersList,
 }) => {
   if (!isOpen) return null;
+  const isEn = lang === 'en';
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] overflow-hidden bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
@@ -114,14 +118,16 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
       <div className="fixed inset-0 -z-10" onClick={onClose} />
 
       <div
-        className={`w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl shadow-2xl border overflow-hidden relative z-10 transition animate-in zoom-in-95 duration-200 ${
-          theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
+        className={`w-full max-w-3xl max-h-[90vh] flex flex-col rounded-2xl border shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-200 ${
+          theme === 'dark'
+            ? 'bg-slate-900 border-slate-800 text-white'
+            : 'bg-white border-slate-200 text-slate-900'
         }`}
       >
         {/* Enterprise Pro Modal Header */}
-        <div className="p-5 sm:p-6 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between shrink-0 bg-slate-50/75 dark:bg-slate-900/90 z-10">
+        <div className="p-5 sm:p-6 flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 shrink-0 bg-slate-50/75 dark:bg-slate-900/90 z-10">
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-11 h-11 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs shrink-0">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center border shadow-xs shrink-0 text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20">
               <Boxes className="w-5 h-5" />
             </div>
             <div className="min-w-0">
@@ -130,11 +136,17 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
                   {t.modalNewTransaction}
                 </h3>
                 <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full border shadow-2xs bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800">
-                  {formType === 'RECEIVE' ? 'รับเข้า GR' : formType === 'ISSUE' ? 'เบิกจ่าย GI' : formType === 'TRANSFER' ? 'โอนย้าย TR' : 'ปรับปรุง ADJ'}
+                  {formType === 'RECEIVE'
+                    ? isEn ? 'Receive GR' : 'รับเข้า GR'
+                    : formType === 'ISSUE'
+                    ? isEn ? 'Issue GI' : 'เบิกจ่าย GI'
+                    : formType === 'TRANSFER'
+                    ? isEn ? 'Transfer TR' : 'โอนย้าย TR'
+                    : isEn ? 'Adjustment ADJ' : 'ปรับปรุง ADJ'}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5 truncate">
-                บันทึกรายการเคลื่อนไหวและธุรกรรมสินค้าคงคลัง (Stock Movement)
+                {isEn ? 'Record stock movements and inventory ledger transactions' : 'บันทึกรายการเคลื่อนไหวและธุรกรรมสินค้าคงคลัง (Stock Movement)'}
               </p>
             </div>
           </div>
@@ -142,7 +154,7 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
             type="button"
             onClick={onClose}
             className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center transition shrink-0 cursor-pointer"
-            title="ปิดหน้าต่าง (Close)"
+            title={isEn ? 'Close Window' : 'ปิดหน้าต่าง (Close)'}
           >
             <X className="w-5 h-5" />
           </button>
@@ -271,7 +283,7 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
                 <>
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      รูปแบบการปรับยอด *
+                      {isEn ? 'Adjustment Direction *' : 'รูปแบบการปรับยอด *'}
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                       <button
@@ -283,7 +295,7 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
                             : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
                         }`}
                       >
-                        + ปรับเพิ่ม (Surplus)
+                        {isEn ? '+ Increase (Surplus)' : '+ ปรับเพิ่ม (Surplus)'}
                       </button>
                       <button
                         type="button"
@@ -294,7 +306,7 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
                             : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
                         }`}
                       >
-                        - ปรับลด (Deficit)
+                        {isEn ? '- Decrease (Deficit)' : '- ปรับลด (Deficit)'}
                       </button>
                     </div>
                   </div>

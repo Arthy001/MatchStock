@@ -1,8 +1,9 @@
 import React from 'react';
-import { ThemeMode } from '../../../../types';
+import { ThemeMode, Language } from '../../../../types';
 
 interface AddSupplierFormFieldsProps {
   theme: ThemeMode;
+  lang?: Language;
   t: Record<string, string>;
   addSupplierName: string;
   setAddSupplierName: (val: string) => void;
@@ -18,6 +19,7 @@ interface AddSupplierFormFieldsProps {
 
 export const AddSupplierFormFields: React.FC<AddSupplierFormFieldsProps> = ({
   theme,
+  lang = 'th',
   t,
   addSupplierName,
   setAddSupplierName,
@@ -30,18 +32,20 @@ export const AddSupplierFormFields: React.FC<AddSupplierFormFieldsProps> = ({
   addTaxId,
   setAddTaxId,
 }) => {
+  const isEn = lang === 'en';
+
   return (
     <>
       <div>
         <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-          {t.supplierName} <span className="text-rose-500 font-bold">*</span>
+          {isEn ? 'Supplier Name' : t.supplierName} <span className="text-rose-500 font-bold">*</span>
         </label>
         <input
           type="text"
           required
           value={addSupplierName}
           onChange={(e) => setAddSupplierName(e.target.value)}
-          placeholder="เช่น Siam Logistics & Supply Co., Ltd."
+          placeholder={isEn ? 'e.g. Siam Logistics & Supply Co., Ltd.' : 'เช่น Siam Logistics & Supply Co., Ltd.'}
           className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
             theme === 'dark'
               ? 'bg-slate-800 border-slate-700 text-white'
@@ -52,13 +56,16 @@ export const AddSupplierFormFields: React.FC<AddSupplierFormFieldsProps> = ({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-            ผู้ติดต่อ (Contact Person) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+            {isEn ? 'Contact Person' : 'ผู้ติดต่อ (Contact Person)'}{' '}
+            <span className="text-slate-400 font-normal text-xs">
+              {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+            </span>
           </label>
           <input
             type="text"
             value={addContactPerson}
             onChange={(e) => setAddContactPerson(e.target.value)}
-            placeholder="คุณวิชัย ฝ่ายขาย"
+            placeholder={isEn ? 'e.g. John Doe, Sales Manager' : 'คุณวิชัย ฝ่ายขาย'}
             className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
               theme === 'dark'
                 ? 'bg-slate-800 border-slate-700 text-white'
@@ -68,7 +75,10 @@ export const AddSupplierFormFields: React.FC<AddSupplierFormFieldsProps> = ({
         </div>
         <div>
           <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-            เบอร์โทรศัพท์ <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+            {isEn ? 'Phone Number' : 'เบอร์โทรศัพท์'}{' '}
+            <span className="text-slate-400 font-normal text-xs">
+              {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+            </span>
           </label>
           <input
             type="text"
@@ -86,7 +96,10 @@ export const AddSupplierFormFields: React.FC<AddSupplierFormFieldsProps> = ({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-            อีเมลติดต่อ <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+            {isEn ? 'Contact Email' : 'อีเมลติดต่อ'}{' '}
+            <span className="text-slate-400 font-normal text-xs">
+              {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+            </span>
           </label>
           <input
             type="email"
@@ -102,7 +115,10 @@ export const AddSupplierFormFields: React.FC<AddSupplierFormFieldsProps> = ({
         </div>
         <div>
           <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-            เลขประจำตัวผู้เสียภาษี (Tax ID) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+            {isEn ? 'Tax ID' : 'เลขประจำตัวผู้เสียภาษี (Tax ID)'}{' '}
+            <span className="text-slate-400 font-normal text-xs">
+              {isEn ? '(Optional)' : '(ไม่บังคับ)'}
+            </span>
           </label>
           <input
             type="text"

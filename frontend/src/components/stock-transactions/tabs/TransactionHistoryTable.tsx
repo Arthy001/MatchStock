@@ -160,7 +160,7 @@ export const TransactionHistoryTable: React.FC<TransactionHistoryTableProps> = (
         }`}
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full min-w-[1200px] text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-950/40 text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                 <th className="py-3.5 px-4 whitespace-nowrap min-w-[160px]">{t.docNo}</th>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Building2 } from 'lucide-react';
 import { ThemeMode, Language } from '../../../../types';
 import { FieldErrorTooltip } from '../../../common/FieldErrorTooltip';
 
@@ -210,20 +211,61 @@ export const AddCompanyFormFields: React.FC<AddCompanyFormFieldsProps> = ({
         />
       </div>
 
-      <div className="flex items-center gap-2 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
-        <input
-          type="checkbox"
-          id="companyIsHqCheckboxModal"
-          checked={addCompanyIsHq}
-          onChange={(e) => setAddCompanyIsHq(e.target.checked)}
-          className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-        />
-        <label
-          htmlFor="companyIsHqCheckboxModal"
-          className="text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
+      {/* Headquarters Toggle Card */}
+      <div
+        onClick={() => setAddCompanyIsHq(!addCompanyIsHq)}
+        className={`p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer select-none flex items-center justify-between gap-3 ${
+          addCompanyIsHq
+            ? theme === 'dark'
+              ? 'bg-blue-950/40 border-blue-500/60 shadow-xs shadow-blue-500/10'
+              : 'bg-blue-50/80 border-blue-400 shadow-xs shadow-blue-500/10'
+            : theme === 'dark'
+            ? 'bg-slate-800/40 border-slate-700/80 hover:bg-slate-800/70 hover:border-slate-600'
+            : 'bg-slate-50/80 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+        }`}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div
+            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${
+              addCompanyIsHq
+                ? 'bg-blue-600 text-white shadow-xs shadow-blue-600/30'
+                : theme === 'dark'
+                ? 'bg-slate-800 text-slate-400 border border-slate-700'
+                : 'bg-slate-200 text-slate-500'
+            }`}
+          >
+            <Building2 className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <span
+              className={`block text-xs font-bold leading-tight ${
+                addCompanyIsHq
+                  ? theme === 'dark' ? 'text-blue-300' : 'text-blue-900'
+                  : theme === 'dark' ? 'text-slate-200' : 'text-slate-800'
+              }`}
+            >
+              {isEn ? 'Headquarters Entity (HQ)' : 'กำหนดเป็นสำนักงานใหญ่ (Headquarters Entity)'}
+            </span>
+            <span className="block text-[11px] text-slate-400 mt-0.5 truncate">
+              {isEn
+                ? 'Primary corporate parent entity for consolidated reports'
+                : 'กำหนดให้เป็นนิติบุคคลหลักของกลุ่มบริษัทสำหรับงบการเงินรวม'}
+            </span>
+          </div>
+        </div>
+
+        {/* Smooth Toggle Switch Knob */}
+        <div
+          className={`w-11 h-6 rounded-full transition-colors duration-200 p-0.5 shrink-0 flex items-center ${
+            addCompanyIsHq ? 'bg-blue-600' : theme === 'dark' ? 'bg-slate-700' : 'bg-slate-300'
+          }`}
         >
-          {isEn ? 'Set as Headquarters Entity' : 'กำหนดเป็นสำนักงานใหญ่ (Headquarters Entity)'}
-        </label>
+          <div
+            className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+              addCompanyIsHq ? 'translate-x-5' : 'translate-x-0'
+            }`}
+          />
+        </div>
       </div>
     </>
   );
