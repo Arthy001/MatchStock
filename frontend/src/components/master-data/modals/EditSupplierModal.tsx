@@ -122,15 +122,16 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                {t.code} <span className="text-rose-500 font-bold">*</span>
+                {t.code}
+                <span className="ml-1.5 text-[11px] font-normal text-slate-400">
+                  {isEn ? '(Cannot be changed after creation)' : '(ไม่สามารถแก้ไขได้หลังสร้าง)'}
+                </span>
               </label>
               <input
                 type="text"
-                required
-                disabled={isViewOnly}
+                disabled
                 value={editSupCode}
-                onChange={(e) => setEditSupCode(e.target.value)}
-                className={`w-full px-3 py-2 rounded-xl border font-mono font-medium outline-hidden ${disabledCls}`}
+                className="w-full px-3 py-2 rounded-xl border font-mono font-medium outline-hidden bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed"
               />
             </div>
             <div>

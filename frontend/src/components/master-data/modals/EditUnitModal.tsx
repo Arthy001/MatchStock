@@ -98,21 +98,16 @@ export const EditUnitModal: React.FC<EditUnitModalProps> = ({
         <form onSubmit={onSave} className="p-5 space-y-4 text-sm">
           <div>
             <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-              {isEn ? 'UOM Code' : 'รหัสหน่วยนับ (UOM Code)'} <span className="text-rose-500 font-bold">*</span>
+              {isEn ? 'UOM Code' : 'รหัสหน่วยนับ (UOM Code)'}
+              <span className="ml-1.5 text-[11px] font-normal text-slate-400">
+                {isEn ? '(Cannot be changed after creation)' : '(ไม่สามารถแก้ไขได้หลังสร้าง)'}
+              </span>
             </label>
             <input
               type="text"
-              required
-              disabled={isViewOnly}
+              disabled
               value={editUnitCode}
-              onChange={(e) => setEditUnitCode(e.target.value)}
-              className={`w-full px-3 py-2 rounded-xl border font-mono font-bold outline-hidden ${
-                isViewOnly
-                  ? 'bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 cursor-not-allowed'
-                  : theme === 'dark'
-                  ? 'bg-slate-800 border-slate-700 text-white'
-                  : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
-              }`}
+              className="w-full px-3 py-2 rounded-xl border font-mono font-bold outline-hidden bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed"
             />
           </div>
 
