@@ -1,18 +1,4 @@
 openapi: 3.0.0
-info:
-  title: MatchStock API Contract
-  description: |-
-    RFID inventory ingestion + management API. Every route below is shown at its real /api/v1/... path. Most endpoints require a user JWT (sign in via POST /api/v1/auth/login, then click "Authorize" below and paste the accessToken). POST /api/v1/ingestion/readings is authenticated differently: each request is signed with the device secret rather than carrying a bearer token - see that endpoint's description for the X-Device-Key-Id/X-Signature headers.
-
-    Response envelope: every successful response is wrapped as `{ "success": true, "data": <shown below>, "message": string, "meta"?: {page,limit,totalCount,totalPages} }` (`meta` only on paginated list endpoints) - the schemas documented per endpoint below describe the `data` field only, not the outer envelope. Every error response is `{ "success": false, "message": string, "errors": string[] }` - `message` is a fixed category label (e.g. "Validation failed", "Not found"), the actual reason(s) are always in `errors` (the real HTTP status code is on the response line, not duplicated in the body). A handful of non-JSON endpoints (file downloads, the RFID ingestion endpoint, the payment webhook) are exempt and return their body unwrapped - each says so in its own description.
-  version: '1.0'
-servers:
-  - url: https://match-stock.ddns.net/api/v1
-    description: Production (OCI VM)
-  - url: http://localhost:3010/api/v1
-    description: Local Development Server
-security:
-  - jwt: []
 paths:
   /auth/login:
     post:
@@ -301,6 +287,7 @@ paths:
                       categoryId: f870ae79-783c-40d9-92cf-2676ddcfdf64
                       unitOfMeasure: null
                       isActive: true
+                      isDeleted: false
                       isReturnable: false
                       unitId: null
                       brandId: null
@@ -387,6 +374,7 @@ paths:
                     categoryId: f870ae79-783c-40d9-92cf-2676ddcfdf64
                     unitOfMeasure: null
                     isActive: true
+                    isDeleted: false
                     isReturnable: false
                     unitId: null
                     brandId: null
@@ -455,6 +443,7 @@ paths:
                     categoryId: f870ae79-783c-40d9-92cf-2676ddcfdf64
                     unitOfMeasure: null
                     isActive: true
+                    isDeleted: false
                     isReturnable: false
                     unitId: null
                     brandId: null
@@ -548,6 +537,7 @@ paths:
                     categoryId: f870ae79-783c-40d9-92cf-2676ddcfdf64
                     unitOfMeasure: null
                     isActive: true
+                    isDeleted: false
                     isReturnable: false
                     unitId: null
                     brandId: null
@@ -588,7 +578,7 @@ paths:
       tags:
         - Products
     delete:
-      operationId: ProductsController_deactivate_v1
+      operationId: ProductsController_softDelete_v1
       parameters:
         - name: id
           required: true
@@ -614,7 +604,8 @@ paths:
                     description: null
                     categoryId: f870ae79-783c-40d9-92cf-2676ddcfdf64
                     unitOfMeasure: null
-                    isActive: false
+                    isActive: true
+                    isDeleted: true
                     isReturnable: false
                     unitId: null
                     brandId: null
@@ -643,15 +634,15 @@ paths:
                     createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
                     updatedByType: user
                     updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
-                    deletedAt: null
-                    deletedByType: null
-                    deletedById: null
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
                     createdAt: '2026-08-18T02:39:41.690Z'
                     updatedAt: '2026-08-18T02:39:41.690Z'
                   message: Operation completed successfully
       security:
         - jwt: []
-      summary: Deactivate a product (soft-delete - isActive:false).
+      summary: 'Delete a product (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/search/import-export response, but the row is kept for history and its sku/code/slug is freed for reuse. Use PATCH { isActive:false } for a reversible suspend instead.'
       tags:
         - Products
   /products/{id}/images:
@@ -933,6 +924,47 @@ paths:
         - jwt: []
       tags:
         - Units
+    delete:
+      operationId: UnitsController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: pcs
+                    name: Pieces
+                    type: quantity
+                    description: null
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a unit (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
+      tags:
+        - Units
   /units/{id}/deactivate:
     post:
       operationId: UnitsController_deactivate_v1
@@ -1149,6 +1181,46 @@ paths:
                   message: Operation completed successfully
       security:
         - jwt: []
+      tags:
+        - Brands
+    delete:
+      operationId: BrandsController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: acme
+                    name: Acme
+                    description: null
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a brand (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
       tags:
         - Brands
   /brands/{id}/deactivate:
@@ -1376,6 +1448,48 @@ paths:
         - jwt: []
       tags:
         - Manufacturers
+    delete:
+      operationId: ManufacturersController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: globex-mfg
+                    name: Globex Manufacturing
+                    contactPerson: Somchai Owner
+                    phone: +66-2-123-4567
+                    email: contact@globex-mfg.example
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a manufacturer (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
+      tags:
+        - Manufacturers
   /manufacturers/{id}/deactivate:
     post:
       operationId: ManufacturersController_deactivate_v1
@@ -1599,6 +1713,47 @@ paths:
         - jwt: []
       tags:
         - Suppliers
+    delete:
+      operationId: SuppliersController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: thai-packaging-co
+                    name: Thai Packaging Co., Ltd.
+                    contactPerson: Somchai Owner
+                    phone: +66-2-123-4567
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a supplier (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
+      tags:
+        - Suppliers
   /suppliers/{id}/deactivate:
     post:
       operationId: SuppliersController_deactivate_v1
@@ -1817,6 +1972,46 @@ paths:
         - jwt: []
       tags:
         - Categories
+    delete:
+      operationId: CategoriesController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: packaging
+                    name: Packaging
+                    description: null
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a category (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
+      tags:
+        - Categories
   /categories/{id}/deactivate:
     post:
       operationId: CategoriesController_deactivate_v1
@@ -2028,6 +2223,45 @@ paths:
                   message: Operation completed successfully
       security:
         - jwt: []
+      tags:
+        - Tax Types
+    delete:
+      operationId: TaxTypesController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    name: VAT
+                    ratePercent: 7
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a tax type (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
       tags:
         - Tax Types
   /tax-types/{id}/deactivate:
@@ -2246,6 +2480,46 @@ paths:
         - jwt: []
       tags:
         - Barcode Symbologies
+    delete:
+      operationId: BarcodeSymbologiesController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: ean-13
+                    name: EAN-13
+                    description: null
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a barcode symbology (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
+      tags:
+        - Barcode Symbologies
   /barcode-symbologies/{id}/deactivate:
     post:
       operationId: BarcodeSymbologiesController_deactivate_v1
@@ -2443,6 +2717,47 @@ paths:
       security:
         - jwt: []
       summary: Update a warehouse.
+      tags:
+        - Warehouses
+    delete:
+      operationId: WarehousesController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    name: Main Warehouse
+                    code: WH-MAIN
+                    address: null
+                    isActive: true
+                    maxCapacity: null
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a warehouse (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
       tags:
         - Warehouses
   /warehouses/{id}/stock:
@@ -2687,6 +3002,52 @@ paths:
                   message: Operation completed successfully
       security:
         - jwt: []
+      tags:
+        - Warehouses
+    delete:
+      operationId: WarehousesController_removeBin_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+        - name: binId
+          required: true
+          in: path
+          schema:
+            example: c4f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6c
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: c4f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6c
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                    code: A-01
+                    isActive: true
+                    maxCapacity: null
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-08-31T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a bin location (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
       tags:
         - Warehouses
   /warehouses/{id}/bins/{binId}/deactivate:
@@ -3604,6 +3965,41 @@ paths:
             default: 20
             example: 20
             type: number
+        - name: supplierId
+          required: false
+          in: query
+          schema:
+            format: uuid
+            example: 9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d
+            type: string
+        - name: warehouseId
+          required: false
+          in: query
+          schema:
+            format: uuid
+            example: 362fecaa-d3d7-4f42-b979-756fb8444d57
+            type: string
+        - name: receivedFrom
+          required: false
+          in: query
+          schema:
+            example: '2026-08-01T00:00:00.000Z'
+            type: string
+        - name: receivedTo
+          required: false
+          in: query
+          schema:
+            example: '2026-08-31T23:59:59.000Z'
+            type: string
+        - name: putawayStatus
+          required: false
+          in: query
+          description: staged = has at least one quantity-line still awaiting putaway (quantity > putawayQuantity, see GET /goods-receipts/staged-items for the line-level queue). complete = every quantity-line on the receipt is fully put away (or it has none). Omit to see everything, same as before this filter existed.
+          schema:
+            type: string
+            enum:
+              - staged
+              - complete
       responses:
         '200':
           description: ''
@@ -3618,6 +4014,10 @@ paths:
                       receiptNumber: GR-202608-001
                       warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
                       binLocationId: null
+                      supplierId: 9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d
+                      poNumber: PO-2026-0088
+                      supplierInvoiceNo: INV-88213
+                      photoUrls: []
                       receivedAt: '2026-08-18T02:39:41.574Z'
                       notes: null
                       createdByType: user
@@ -3629,6 +4029,20 @@ paths:
                       deletedById: null
                       createdAt: '2026-08-18T02:39:41.574Z'
                       updatedAt: '2026-08-18T02:39:41.574Z'
+                      lines:
+                        - id: a2c3d4e5-6f70-4a8b-9c1d-2e3f4a5b6c7d
+                          goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                          productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                          quantity: 95
+                          damagedQuantity: 5
+                          putawayQuantity: 0
+                          lotNumber: LOT-2026-08-A
+                          productionDate: '2026-08-01T00:00:00.000Z'
+                          expiryDate: '2027-08-01T00:00:00.000Z'
+                          unitCostMinor: 10000
+                          binLocationId: null
+                          createdAt: '2026-08-18T02:39:41.574Z'
+                          updatedAt: '2026-08-18T02:39:41.574Z'
                   message: Operation completed successfully
                   meta:
                     page: 1
@@ -3662,6 +4076,10 @@ paths:
                     receiptNumber: GR-202608-001
                     warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
                     binLocationId: null
+                    supplierId: 9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d
+                    poNumber: PO-2026-0088
+                    supplierInvoiceNo: INV-88213
+                    photoUrls: []
                     receivedAt: '2026-08-18T02:39:41.574Z'
                     notes: null
                     createdByType: user
@@ -3673,6 +4091,20 @@ paths:
                     deletedById: null
                     createdAt: '2026-08-18T02:39:41.574Z'
                     updatedAt: '2026-08-18T02:39:41.574Z'
+                    lines:
+                      - id: a2c3d4e5-6f70-4a8b-9c1d-2e3f4a5b6c7d
+                        goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                        productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                        quantity: 95
+                        damagedQuantity: 5
+                        putawayQuantity: 0
+                        lotNumber: LOT-2026-08-A
+                        productionDate: '2026-08-01T00:00:00.000Z'
+                        expiryDate: '2027-08-01T00:00:00.000Z'
+                        unitCostMinor: 10000
+                        binLocationId: null
+                        createdAt: '2026-08-18T02:39:41.574Z'
+                        updatedAt: '2026-08-18T02:39:41.574Z'
                   message: Operation completed successfully
       security:
         - jwt: []
@@ -3703,6 +4135,10 @@ paths:
                     receiptNumber: GR-202608-001
                     warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
                     binLocationId: null
+                    supplierId: 9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d
+                    poNumber: PO-2026-0088
+                    supplierInvoiceNo: INV-88213
+                    photoUrls: []
                     receivedAt: '2026-08-18T02:39:41.574Z'
                     notes: null
                     createdByType: user
@@ -3714,6 +4150,20 @@ paths:
                     deletedById: null
                     createdAt: '2026-08-18T02:39:41.574Z'
                     updatedAt: '2026-08-18T02:39:41.574Z'
+                    lines:
+                      - id: a2c3d4e5-6f70-4a8b-9c1d-2e3f4a5b6c7d
+                        goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                        productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                        quantity: 95
+                        damagedQuantity: 5
+                        putawayQuantity: 0
+                        lotNumber: LOT-2026-08-A
+                        productionDate: '2026-08-01T00:00:00.000Z'
+                        expiryDate: '2027-08-01T00:00:00.000Z'
+                        unitCostMinor: 10000
+                        binLocationId: null
+                        createdAt: '2026-08-18T02:39:41.574Z'
+                        updatedAt: '2026-08-18T02:39:41.574Z'
                   message: Operation completed successfully
       security:
         - jwt: []
@@ -3763,6 +4213,122 @@ paths:
       summary: Receive one or more tags under this receipt - pre-registers unseen tags, binds each to the product with this receipt's lot/production/expiry data.
       tags:
         - Goods Receipts
+  /stock/balances:
+    get:
+      operationId: StockController_getBalances_v1
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            example: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+            type: number
+        - name: warehouseId
+          required: false
+          in: query
+          schema:
+            format: uuid
+            example: 362fecaa-d3d7-4f42-b979-756fb8444d57
+            type: string
+        - name: binLocationId
+          required: false
+          in: query
+          schema:
+            format: uuid
+            type: string
+        - name: productId
+          required: false
+          in: query
+          schema:
+            format: uuid
+            example: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    - id: a1b2c3d4-e5f6-4a5b-8c7d-1e2f3a4b5c6d
+                      warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                      warehouseName: Main Warehouse
+                      binLocationId: a1111111-2222-4333-8444-555566667777
+                      binCode: A-02-01
+                      productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                      productName: Cardboard Box 30x30x30
+                      sku: DEMO-SKU-001
+                      lotNumber: LOT-2026-08-A
+                      expiryDate: '2027-08-01T00:00:00.000Z'
+                      quantityOnHand: 1000
+                      quantityReserved: 50
+                      availableQuantity: 950
+                  message: Operation completed successfully
+                  meta:
+                    page: 1
+                    limit: 50
+                    totalCount: 1
+                    totalPages: 1
+      security:
+        - jwt: []
+      summary: Query real-time stock balances, filtered by warehouse, product, or bin location.
+      tags:
+        - Stock & Inventory
+  /stock/lookup:
+    get:
+      operationId: StockController_lookup_v1
+      parameters:
+        - name: code
+          required: true
+          in: query
+          description: Barcode, SKU, product code, or RFID Tag ID to search.
+          schema:
+            maxLength: 255
+            example: '8851234567890'
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                    sku: DEMO-SKU-001
+                    name: Cardboard Box 30x30x30
+                    barcodeValue: '8851234567890'
+                    totalOnHand: 1000
+                    totalAvailable: 950
+                    totalReserved: 50
+                    locations:
+                      - warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                        warehouseName: Main Warehouse
+                        binLocationId: a1111111-2222-4333-8444-555566667777
+                        binCode: A-02-01
+                        lotNumber: LOT-2026-08-A
+                        expiryDate: '2027-08-01T00:00:00.000Z'
+                        quantity: 1000
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: Universal stock lookup by barcode, SKU, product code, or RFID Tag ID.
+      tags:
+        - Stock & Inventory
   /goods-issues:
     get:
       operationId: GoodsIssuesController_list_v1
@@ -5263,6 +5829,771 @@ paths:
       summary: Delete a company/branch.
       tags:
         - Companies
+  /goods-receipts/staged-items:
+    get:
+      operationId: GoodsReceiptsController_listStagedItems_v1
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            example: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+            type: number
+        - name: warehouseId
+          required: false
+          in: query
+          schema:
+            format: uuid
+            example: 362fecaa-d3d7-4f42-b979-756fb8444d57
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    - goodsReceiptLineId: a2c3d4e5-6f70-4a8b-9c1d-2e3f4a5b6c7d
+                      goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                      receiptNumber: GR-202608-001
+                      productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                      sku: DEMO-SKU-001
+                      productName: Cardboard Box 30x30x30
+                      remainingQuantity: 95
+                      lotNumber: LOT-2026-08-A
+                      expiryDate: '2027-08-01T00:00:00.000Z'
+                      suggestedBinLocationId: null
+                  message: Operation completed successfully
+                  meta:
+                    page: 1
+                    limit: 20
+                    totalCount: 1
+                    totalPages: 1
+      security:
+        - jwt: []
+      summary: List goods receipt lines still waiting for Putaway (2-Step flow) - the queue GET /putaway/suggest-bin + POST /putaway/confirm work against.
+      tags:
+        - Goods Receipts
+  /putaway/suggest-bin:
+    get:
+      operationId: PutawayController_suggestBin_v1
+      parameters:
+        - name: warehouseId
+          required: true
+          in: query
+          schema:
+            format: uuid
+            example: 362fecaa-d3d7-4f42-b979-756fb8444d57
+            type: string
+        - name: quantity
+          required: false
+          in: query
+          description: How many units need a home - only bins with this much free capacity (maxCapacity minus what is already put away there) are suggested. Bins with no maxCapacity set are always considered to have room.
+          schema:
+            minimum: 1
+            default: 1
+            example: 40
+            type: number
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: a1111111-2222-4333-8444-555566667777
+                    code: B-02-01
+                    maxCapacity: 200
+                    remainingCapacity: 140
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: Suggest a bin with enough free capacity in this warehouse (soft suggestion - confirm accepts any bin regardless).
+      tags:
+        - Putaway
+  /putaway/confirm:
+    post:
+      operationId: PutawayController_confirm_v1
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmPutawayDto'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    placed:
+                      id: a2c3d4e5-6f70-4a8b-9c1d-2e3f4a5b6c7d
+                      goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                      productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                      quantity: 60
+                      damagedQuantity: 0
+                      putawayQuantity: 60
+                      binLocationId: a1111111-2222-4333-8444-555566667777
+                    remaining:
+                      id: c4d5e6f7-8091-4a2b-9c3d-4e5f6a7b8c9d
+                      goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                      productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                      quantity: 35
+                      damagedQuantity: 0
+                      putawayQuantity: 0
+                      binLocationId: null
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Scan-to-confirm: place `quantity` units of a staged line into a bin. `remaining` is non-null only on a partial (multi-bin) confirm - repeat the call with that line''s id for the rest.'
+      tags:
+        - Putaway
+  /billing/plans:
+    get:
+      operationId: BillingController_getPlans_v1
+      parameters: []
+      responses:
+        '200':
+          description: List of available subscription plans
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    - id: 1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d
+                      code: FREE
+                      name: MatchStock Free
+                      type: web
+                      billingCycle: monthly
+                      priceMinor: 0
+                      currency: THB
+                      maxUsers: 2
+                      maxWarehouses: 1
+                      maxProducts: 500
+                      maxDevices: 0
+                      features:
+                        - products.basic
+                        - stock.gr_gi
+                        - barcode.scan
+                        - reports.stock_card
+                        - import_export.basic
+                    - id: 2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e
+                      code: PRO_MONTHLY
+                      name: MatchStock Pro
+                      type: web
+                      billingCycle: monthly
+                      priceMinor: 199000
+                      currency: THB
+                      maxUsers: 10
+                      maxWarehouses: 3
+                      maxProducts: 10000
+                      maxDevices: 0
+                      features:
+                        - products.basic
+                        - warehouse.bins
+                        - stock.lot_expiry
+                        - stock.fefo
+                        - cycle_count.barcode
+                        - sales_orders.manage
+                        - reports.valuation
+                    - id: 3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f
+                      code: ULTRA_MONTHLY
+                      name: MatchStock Ultra (RFID)
+                      type: web
+                      billingCycle: monthly
+                      priceMinor: 699000
+                      currency: THB
+                      maxUsers: 9999
+                      maxWarehouses: 9999
+                      maxProducts: 999999
+                      maxDevices: 10
+                      features:
+                        - '*'
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: List all active public subscription plans.
+      tags:
+        - Billing
+  /billing/current-subscription:
+    get:
+      operationId: BillingController_getCurrentSubscription_v1
+      parameters: []
+      responses:
+        '200':
+          description: Current tenant subscription details and quota usages
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: 4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a
+                    planCode: PRO_MONTHLY
+                    planName: MatchStock Pro
+                    status: active
+                    billingCycle: monthly
+                    startsAt: '2026-08-01T00:00:00.000Z'
+                    currentPeriodEnd: '2026-09-01T00:00:00.000Z'
+                    cancelAtPeriodEnd: false
+                    quotas:
+                      users:
+                        used: 4
+                        max: 10
+                      warehouses:
+                        used: 2
+                        max: 3
+                      products:
+                        used: 1250
+                        max: 10000
+                      devices:
+                        used: 0
+                        max: 0
+                    features:
+                      - products.basic
+                      - warehouse.bins
+                      - stock.lot_expiry
+                      - stock.fefo
+                      - cycle_count.barcode
+                      - sales_orders.manage
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: Get active subscription and quota usage for current tenant.
+      tags:
+        - Billing
+  /billing/subscribe:
+    post:
+      operationId: BillingController_subscribe_v1
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscribeRequestDto'
+      responses:
+        '200':
+          description: Subscription initiated or updated
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    subscriptionId: 4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a
+                    planCode: PRO_MONTHLY
+                    status: active
+                  message: Subscribed successfully
+        '402':
+          description: Payment failed or card declined
+      security:
+        - jwt: []
+      summary: Subscribe or upgrade to a new subscription plan (owner only).
+      tags:
+        - Billing
+  /billing/cancel:
+    post:
+      operationId: BillingController_cancel_v1
+      parameters: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelSubscriptionDto'
+      responses:
+        '200':
+          description: Subscription marked for cancellation
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    status: active
+                    cancelAtPeriodEnd: true
+                    currentPeriodEnd: '2026-09-01T00:00:00.000Z'
+                  message: Subscription will end at current period
+      security:
+        - jwt: []
+      summary: Cancel subscription renewal at period end (owner only).
+      tags:
+        - Billing
+  /billing/invoices:
+    get:
+      operationId: BillingController_getInvoices_v1
+      parameters: []
+      responses:
+        '200':
+          description: List of invoices and payment receipts for current tenant
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    - id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
+                      invoiceNumber: INV-202608-0001
+                      status: paid
+                      totalMinor: 199000
+                      amountPaidMinor: 199000
+                      currency: THB
+                      issuedAt: '2026-08-01T00:00:00.000Z'
+                      paidAt: '2026-08-01T00:05:00.000Z'
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: List billing invoices for tenant (owner only).
+      tags:
+        - Billing
+  /platform/billing/subscriptions:
+    get:
+      operationId: PlatformBillingController_listSubscriptions_v1
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            example: active
+        - name: planCode
+          in: query
+          schema:
+            type: string
+            example: PRO_MONTHLY
+      responses:
+        '200':
+          description: Cross-tenant subscriptions list
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    - id: 4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a
+                      tenantId: e5e91151-2499-4a6a-be28-3433f4afdba0
+                      tenantName: Acme Logistics
+                      planCode: PRO_MONTHLY
+                      status: active
+                      currentPeriodEnd: '2026-09-01T00:00:00.000Z'
+                  message: Operation completed successfully
+      security:
+        - platform-jwt: []
+      summary: Cross-tenant subscriptions overview (Platform Admin).
+      tags:
+        - Platform Billing
+  /platform/subscription-plans:
+    post:
+      operationId: PlatformBillingController_createPlan_v1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSubscriptionPlanDto'
+      responses:
+        '201':
+          description: Plan created
+      security:
+        - platform-jwt: []
+      summary: Create new subscription plan (Platform Super Admin).
+      tags:
+        - Platform Billing
+  /platform/subscription-plans/{id}:
+    patch:
+      operationId: PlatformBillingController_updatePlan_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSubscriptionPlanDto'
+      responses:
+        '200':
+          description: Plan updated
+      security:
+        - platform-jwt: []
+      summary: Update subscription plan pricing/quotas (Platform Super Admin).
+      tags:
+        - Platform Billing
+  /menu:
+    get:
+      operationId: MenuController_getMenu_v1
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+      security:
+        - jwt: []
+      summary: Nested nav tree of menu items granted to the signed-in user's tenant and visible to their role.
+      tags:
+        - Menu
+  /rentals:
+    get:
+      operationId: RentalsController_list_v1
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            example: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+            type: number
+      responses:
+        '200':
+          description: ''
+      security:
+        - jwt: []
+      summary: List the signed-in tenant's rental assignments.
+      tags:
+        - Rentals
+  /rentals/{id}:
+    get:
+      operationId: RentalsController_get_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      security:
+        - jwt: []
+      summary: Get one rental assignment with its shipment legs.
+      tags:
+        - Rentals
+  /rentals/{id}/deposit-checkout:
+    post:
+      operationId: RentalsController_payDeposit_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CollectDepositDto'
+      responses:
+        '201':
+          description: ''
+      security:
+        - jwt: []
+      summary: Pay this assignment's deposit (customer-initiated, like POST /billing/checkout). Returns authorizeUri if 3DS/PromptPay confirmation is needed.
+      tags:
+        - Rentals
+  /zones:
+    get:
+      operationId: ZonesController_list_v1
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            example: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+            type: number
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    - id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                      tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                      code: cold-storage
+                      name: Cold Storage
+                      isActive: true
+                      createdByType: user
+                      createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                      updatedByType: user
+                      updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                      deletedAt: null
+                      deletedByType: null
+                      deletedById: null
+                      createdAt: '2026-09-01T02:39:41.574Z'
+                      updatedAt: '2026-09-01T02:39:41.574Z'
+                  message: Operation completed successfully
+                  meta:
+                    page: 1
+                    limit: 20
+                    totalCount: 1
+                    totalPages: 1
+      security:
+        - jwt: []
+      summary: List the signed-in user's tenant storage zones (used by BinLocation.zoneId/Category.zoneId to drive GET /putaway/suggest-bin's category matching).
+      tags:
+        - Zones
+    post:
+      operationId: ZonesController_create_v1
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateZoneDto'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: cold-storage
+                    name: Cold Storage
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-09-01T02:39:41.574Z'
+                    updatedAt: '2026-09-01T02:39:41.574Z'
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: Create a storage zone.
+      tags:
+        - Zones
+  /zones/{id}:
+    get:
+      operationId: ZonesController_getById_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: cold-storage
+                    name: Cold Storage
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-09-01T02:39:41.574Z'
+                    updatedAt: '2026-09-01T02:39:41.574Z'
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      tags:
+        - Zones
+    patch:
+      operationId: ZonesController_update_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateZoneDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: cold-storage
+                    name: Cold Storage
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-09-01T02:39:41.574Z'
+                    updatedAt: '2026-09-01T02:39:41.574Z'
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      tags:
+        - Zones
+    delete:
+      operationId: ZonesController_remove_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: cold-storage
+                    name: Cold Storage
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: '2026-09-01T00:00:00.000Z'
+                    deletedByType: user
+                    deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    createdAt: '2026-09-01T02:39:41.574Z'
+                    updatedAt: '2026-09-01T02:39:41.574Z'
+                    isDeleted: true
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      summary: 'Delete a zone (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Bins/categories that referenced it keep their zoneId (FK is ON DELETE SET NULL only for a hard delete, which this is not) but it will no longer resolve via GET /zones/:id. Use PATCH { isActive:false } for a reversible suspend instead.'
+      tags:
+        - Zones
+  /zones/{id}/deactivate:
+    post:
+      operationId: ZonesController_deactivate_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: cold-storage
+                    name: Cold Storage
+                    isActive: false
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-09-01T02:39:41.574Z'
+                    updatedAt: '2026-09-01T02:39:41.574Z'
+                  message: Operation completed successfully
+      security:
+        - jwt: []
+      tags:
+        - Zones
+info:
+  title: MatchStock API
+  description: |-
+    RFID inventory ingestion + management API. Every route below is shown at its real /api/v1/... path. Most endpoints require a user JWT (sign in via POST /api/v1/auth/login, then click "Authorize" below and paste the accessToken). POST /api/v1/ingestion/readings is authenticated differently: each request is signed with the device secret rather than carrying a bearer token - see that endpoint's description for the X-Device-Key-Id/X-Signature headers.
+
+    Response envelope: every successful response is wrapped as `{ "success": true, "data": <shown below>, "message": string, "meta"?: {page,limit,totalCount,totalPages} }` (`meta` only on paginated list endpoints) - the schemas documented per endpoint below describe the `data` field only, not the outer envelope. Every error response is `{ "success": false, "message": string, "errors": string[] }` - `message` is a fixed category label (e.g. "Validation failed", "Not found"), the actual reason(s) are always in `errors` (the real HTTP status code is on the response line, not duplicated in the body). A handful of non-JSON endpoints (file downloads, the RFID ingestion endpoint, the payment webhook) are exempt and return their body unwrapped - each says so in its own description.
+  version: '1.0'
+  contact: {}
+tags: []
+servers:
+  - url: https://match-stock.ddns.net/api/v1
+    description: Production (OCI VM)
+  - url: http://localhost:3010/api/v1
+    description: Local Development Server
 components:
   securitySchemes:
     jwt:
@@ -5312,6 +6643,10 @@ components:
             - warehouse_staff
             - purchasing_staff
           example: operator
+        companyId:
+          type: string
+          format: uuid
+          description: Restrict this user to one Company (branch/subsidiary) - omit/null to see every company in the tenant.
       required:
         - email
         - password
@@ -5332,6 +6667,11 @@ components:
         isActive:
           type: boolean
           example: true
+        companyId:
+          type: string
+          nullable: true
+          format: uuid
+          description: Restrict this user to one Company (branch/subsidiary) - null clears the restriction (sees every company in the tenant).
     UpdateProductDto:
       type: object
       properties:
@@ -5498,6 +6838,9 @@ components:
           maxLength: 100
         isActive:
           type: boolean
+        isDeleted:
+          type: boolean
+          example: false
     CreateBrandDto:
       type: object
       properties:
@@ -5526,6 +6869,9 @@ components:
           maxLength: 1000
         isActive:
           type: boolean
+        isDeleted:
+          type: boolean
+          example: false
     CreateManufacturerDto:
       type: object
       properties:
@@ -5568,6 +6914,9 @@ components:
           format: email
         isActive:
           type: boolean
+        isDeleted:
+          type: boolean
+          example: false
     CreateSupplierDto:
       type: object
       properties:
@@ -5586,6 +6935,10 @@ components:
         phone:
           type: string
           maxLength: 50
+        companyId:
+          type: string
+          format: uuid
+          description: Set only if this supplier is really an inter-company subsidiary in the same tenant, not an outside vendor.
       required:
         - name
     UpdateSupplierDto:
@@ -5602,6 +6955,14 @@ components:
           maxLength: 50
         isActive:
           type: boolean
+        isDeleted:
+          type: boolean
+          example: false
+        companyId:
+          type: string
+          nullable: true
+          format: uuid
+          description: Set only if this supplier is really an inter-company subsidiary in the same tenant, not an outside vendor. null clears it back to an outside vendor.
     CreateCategoryDto:
       type: object
       properties:
@@ -5630,6 +6991,9 @@ components:
           maxLength: 1000
         isActive:
           type: boolean
+        isDeleted:
+          type: boolean
+          example: false
     CreateTaxTypeDto:
       type: object
       properties:
@@ -5660,6 +7024,9 @@ components:
         isActive:
           type: boolean
           example: true
+        isDeleted:
+          type: boolean
+          example: false
     CreateBarcodeSymbologyDto:
       type: object
       properties:
@@ -5688,6 +7055,9 @@ components:
           maxLength: 1000
         isActive:
           type: boolean
+        isDeleted:
+          type: boolean
+          example: false
     UpdateWarehouseDto:
       type: object
       properties:
@@ -5702,11 +7072,19 @@ components:
         isActive:
           type: boolean
           example: true
+        isDeleted:
+          type: boolean
+          example: false
         maxCapacity:
           type: number
           minimum: 0
           example: 1000
           description: Total tag-count ceiling - GET /alerts flags this warehouse once the live count exceeds it.
+        companyId:
+          type: string
+          nullable: true
+          format: uuid
+          description: Scope this warehouse to one Company (branch/subsidiary) - null = shared/tenant-wide warehouse.
     UpdateBinLocationDto:
       type: object
       properties:
@@ -5717,6 +7095,9 @@ components:
         isActive:
           type: boolean
           example: true
+        isDeleted:
+          type: boolean
+          example: false
         maxCapacity:
           type: number
           minimum: 0
@@ -5867,12 +7248,40 @@ components:
           type: string
           format: uuid
           description: Default putaway bin for this receipt.
+        supplierId:
+          type: string
+          format: uuid
+          example: 9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d
+          description: Supplier this shipment came from. Omit for a customer return, free sample, or opening-stock count that has no supplier.
+        poNumber:
+          type: string
+          maxLength: 100
+          example: PO-2026-0088
+          description: Purchase order number this receipt fulfills, if any.
+        supplierInvoiceNo:
+          type: string
+          maxLength: 100
+          example: INV-88213
+          description: Supplier's delivery note / invoice number, if any.
+        photoUrls:
+          example:
+            - /uploads/products/gr-88213-1.jpg
+          description: Photos of the delivery note or box condition.
+          type: array
+          items:
+            type: string
         receivedAt:
           type: string
           example: '2026-08-17T00:00:00.000Z'
         notes:
           type: string
           maxLength: 1000
+        lines:
+          maxItems: 500
+          description: Quantity-based line items (barcode/manual-count path) - optional, independent of POST /goods-receipts/:id/lines (the RFID tag-binding path). A line with binLocationId set is placed immediately (1-Step); one without is created staged, awaiting POST /putaway/confirm (2-Step).
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateGoodsReceiptLineDto'
       required:
         - receiptNumber
         - warehouseId
@@ -5932,6 +7341,12 @@ components:
         notes:
           type: string
           maxLength: 1000
+        lines:
+          maxItems: 500
+          description: Quantity-based line items (barcode/manual-count path) - deducts StockBalance at the given bin immediately, independent of POST /goods-issues/:id/dispatch (the RFID tag-exit path).
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateGoodsIssueItemDto'
       required:
         - issueNumber
         - warehouseId
@@ -5942,11 +7357,16 @@ components:
           minItems: 1
           example:
             - 686E14141E13194568471D7F
+          description: RFID tags (optional if `lines` is given instead - at least one of the two is required).
           type: array
           items:
             type: string
-      required:
-        - tagIds
+        lines:
+          maxItems: 500
+          description: Quantity-based line items (barcode/manual-count path) - only quantity/productId/binLocationId/lotNumber are used here (unitPriceMinor is ignored for reserve/release).
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateGoodsIssueItemDto'
     DispatchByQuantityDto:
       type: object
       properties:
@@ -5990,17 +7410,23 @@ components:
           minItems: 1
           example:
             - 686E14141E13194568471D7F
+          description: RFID tags to move (optional if `lines` is given instead - at least one of the two is required, checked at the service layer since class-validator can't express "either A or B" across two sibling arrays cleanly).
           type: array
           items:
             type: string
         notes:
           type: string
           maxLength: 1000
+        lines:
+          maxItems: 500
+          description: Quantity-based line items (barcode/manual-count path) - declared "pending" alongside the header like tagIds are, StockBalance only moves once POST /stock-transfers/:id/complete confirms it (matching the existing Tag path's timing).
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateStockTransferItemDto'
       required:
         - transferNumber
         - fromWarehouseId
         - toWarehouseId
-        - tagIds
     StockAdjustmentLineDto:
       type: object
       properties:
@@ -6043,13 +7469,19 @@ components:
           maxLength: 1000
         lines:
           minItems: 1
+          description: RFID tag reconciliation (optional if `quantityLines` is given instead - at least one of the two is required, checked at the service layer).
           type: array
           items:
             $ref: '#/components/schemas/StockAdjustmentLineDto'
+        quantityLines:
+          maxItems: 500
+          description: Quantity-based reconciliation (barcode/manual-count path) - applied to StockBalance immediately, same one-shot timing as `lines` above.
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateStockAdjustmentItemDto'
       required:
         - adjustmentNumber
         - reason
-        - lines
     CreateCycleCountDto:
       type: object
       properties:
@@ -6263,3 +7695,480 @@ components:
         isHeadquarter:
           type: boolean
           example: true
+        isDeleted:
+          type: boolean
+          example: false
+    CreateGoodsReceiptItemDto:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+          example: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+        quantity:
+          type: integer
+          minimum: 1
+          example: 50
+        damagedQuantity:
+          type: integer
+          minimum: 0
+          default: 0
+          example: 0
+        lotNumber:
+          type: string
+          nullable: true
+          example: LOT-2026-08A
+        productionDate:
+          type: string
+          nullable: true
+          example: '2026-08-01T00:00:00.000Z'
+        expiryDate:
+          type: string
+          nullable: true
+          example: '2028-08-01T00:00:00.000Z'
+        unitCostMinor:
+          type: integer
+          nullable: true
+          description: Cost price in minor units (satangs)
+          example: 120000
+        binLocationId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Target bin for direct receiving. If null, remains in staging.
+      required:
+        - productId
+        - quantity
+    SubscribeRequestDto:
+      type: object
+      properties:
+        planCode:
+          type: string
+          example: PRO_MONTHLY
+        billingCycle:
+          type: string
+          enum:
+            - monthly
+            - yearly
+          example: monthly
+        gatewayCardId:
+          type: string
+          example: card_test_5xyz123
+      required:
+        - planCode
+        - billingCycle
+    CancelSubscriptionDto:
+      type: object
+      properties:
+        reason:
+          type: string
+          example: Moving to on-premise
+    CreateSubscriptionPlanDto:
+      type: object
+      properties:
+        code:
+          type: string
+          example: PRO_MONTHLY
+        name:
+          type: string
+          example: MatchStock Pro
+        type:
+          type: string
+          enum:
+            - web
+            - hardware
+          example: web
+        billingCycle:
+          type: string
+          enum:
+            - monthly
+            - yearly
+          example: monthly
+        priceMinor:
+          type: integer
+          example: 199000
+        currency:
+          type: string
+          example: THB
+        trialDays:
+          type: integer
+          example: 14
+        maxUsers:
+          type: integer
+          example: 10
+        maxWarehouses:
+          type: integer
+          example: 3
+        maxProducts:
+          type: integer
+          example: 10000
+        maxDevices:
+          type: integer
+          example: 0
+        maxCompanies:
+          type: integer
+          nullable: true
+          description: Max Companies (branches) under one tenant. Omit/null = unlimited - no fixed per-tier default is seeded, Platform Admin sets this explicitly per plan.
+          example: 1
+        features:
+          type: array
+          items:
+            type: string
+          example:
+            - products.basic
+            - warehouse.bins
+            - stock.fefo
+      required:
+        - code
+        - name
+        - type
+        - billingCycle
+        - priceMinor
+    UpdateSubscriptionPlanDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: MatchStock Pro Plus
+        priceMinor:
+          type: integer
+          example: 219000
+        maxUsers:
+          type: integer
+          example: 15
+        maxWarehouses:
+          type: integer
+          example: 5
+        maxProducts:
+          type: integer
+          example: 15000
+        maxDevices:
+          type: integer
+          example: 2
+        maxCompanies:
+          type: integer
+          nullable: true
+          description: Max Companies (branches) under one tenant. Omit/null = unlimited.
+          example: 2
+        features:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+          example: true
+    FeatureNotIncludedError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: FEATURE_NOT_INCLUDED
+        feature:
+          type: string
+          example: stock.fefo
+        message:
+          type: string
+          example: Your current plan does not include this feature. Please upgrade to Pro or Ultra.
+    QuotaExceededError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: QUOTA_EXCEEDED
+        resource:
+          type: string
+          example: warehouses
+        currentUsage:
+          type: integer
+          example: 3
+        maxAllowed:
+          type: integer
+          example: 3
+        message:
+          type: string
+          example: Warehouse limit reached for current plan (3/3). Please upgrade your subscription.
+    CollectDepositDto:
+      type: object
+      properties:
+        method:
+          enum:
+            - card
+            - promptpay
+          type: string
+          example: card
+        cardToken:
+          type: string
+          example: tokn_test_abc123
+      required:
+        - method
+    CreateGoodsReceiptLineDto:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+          example: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+        quantity:
+          type: number
+          minimum: 1
+          example: 95
+          description: 'Good (sellable) quantity received - already net of damagedQuantity, matching the design doc worked example (100 received, 5 damaged -> quantity: 95).'
+        damagedQuantity:
+          type: number
+          minimum: 0
+          example: 0
+          default: 0
+          description: Units found damaged during inspection - tracked for supplier claims, never enters stock/putaway.
+        lotNumber:
+          type: string
+          maxLength: 100
+          example: LOT-2026-08-A
+        productionDate:
+          type: string
+          example: '2026-08-01T00:00:00.000Z'
+        expiryDate:
+          type: string
+          example: '2027-08-01T00:00:00.000Z'
+        unitCostMinor:
+          type: number
+          minimum: 0
+          example: 10000
+          description: Actual unit cost paid, minor units (satang).
+        binLocationId:
+          type: string
+          format: uuid
+          example: a1111111-2222-4333-8444-555566667777
+          description: '1-Step Direct Putaway - the shelf this line is placed on immediately. Omit for 2-Step: the line is created staged (putawayQuantity: 0) and waits in GET /goods-receipts/staged-items for POST /putaway/confirm.'
+      required:
+        - productId
+        - quantity
+    StockBalanceDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        warehouseId:
+          type: string
+          format: uuid
+        warehouseName:
+          type: string
+        binLocationId:
+          type: string
+          format: uuid
+          nullable: true
+        binCode:
+          type: string
+          nullable: true
+          example: A-01-01
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        sku:
+          type: string
+          example: LOGI-MX3S-GRY
+        lotNumber:
+          type: string
+          nullable: true
+          example: LOT-2026-08A
+        expiryDate:
+          type: string
+          nullable: true
+          example: '2028-08-31T00:00:00.000Z'
+        quantityOnHand:
+          type: integer
+          example: 1000
+        quantityReserved:
+          type: integer
+          example: 50
+        availableQuantity:
+          type: integer
+          example: 950
+    StockLookupResponseDto:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            productId:
+              type: string
+              format: uuid
+            sku:
+              type: string
+              example: LOGI-MX3S-GRY
+            name:
+              type: string
+              example: Logitech MX Master 3S
+            barcodeValue:
+              type: string
+              example: 8851234567890
+            totalOnHand:
+              type: integer
+              example: 1000
+            totalAvailable:
+              type: integer
+              example: 950
+            totalReserved:
+              type: integer
+              example: 50
+            locations:
+              type: array
+              items:
+                type: object
+                properties:
+                  warehouseId:
+                    type: string
+                    format: uuid
+                  warehouseName:
+                    type: string
+                  binLocationId:
+                    type: string
+                    format: uuid
+                    nullable: true
+                  binCode:
+                    type: string
+                    nullable: true
+                    example: A-01-01
+                  lotNumber:
+                    type: string
+                    nullable: true
+                  expiryDate:
+                    type: string
+                    nullable: true
+                  quantity:
+                    type: integer
+                    example: 600
+    CreateGoodsIssueItemDto:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+          example: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+        quantity:
+          type: number
+          minimum: 1
+          example: 20
+        binLocationId:
+          type: string
+          format: uuid
+          example: a1111111-2222-4333-8444-555566667777
+          description: The shelf being picked from - required in practice (deducting StockBalance needs an exact location) even though the draft schema marked this nullable; no "reserve against no particular bin" semantics exist yet.
+        lotNumber:
+          type: string
+          maxLength: 100
+          example: LOT-2026-08-A
+        unitPriceMinor:
+          type: number
+          minimum: 0
+          example: 15000
+          description: Selling price at time of dispatch, minor units (satang) - informational, not used for any calculation here.
+      required:
+        - productId
+        - quantity
+        - binLocationId
+    CreateStockTransferItemDto:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+          example: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+        quantity:
+          type: number
+          minimum: 1
+          example: 100
+        fromBinLocationId:
+          type: string
+          format: uuid
+          description: Defaults to the transfer header's fromBinLocationId if omitted.
+        toBinLocationId:
+          type: string
+          format: uuid
+          description: Defaults to the transfer header's toBinLocationId if omitted.
+        lotNumber:
+          type: string
+          maxLength: 100
+          example: LOT-2026-08-A
+      required:
+        - productId
+        - quantity
+    CreateStockAdjustmentItemDto:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+          example: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+        binLocationId:
+          type: string
+          format: uuid
+        lotNumber:
+          type: string
+          maxLength: 100
+          example: LOT-2026-08-A
+        adjustedQuantity:
+          type: number
+          example: -5
+          description: Positive for surplus found, negative for shortage - never zero.
+      required:
+        - productId
+        - adjustedQuantity
+    ConfirmPutawayDto:
+      type: object
+      properties:
+        goodsReceiptLineId:
+          type: string
+          format: uuid
+          example: a1b2c3d4-e5f6-4a5b-8c7d-1e2f3a4b5c6d
+          description: The staged GoodsReceiptLine being put away (see GET /goods-receipts/staged-items).
+        binLocationId:
+          type: string
+          format: uuid
+          example: a1111111-2222-4333-8444-555566667777
+          description: The bin actually scanned on the floor - can differ from what GET /putaway/suggest-bin recommended (soft suggestion, never blocks).
+        quantity:
+          type: number
+          minimum: 1
+          example: 60
+          description: How many units are being placed in this bin right now - can be less than the line's remaining quantity (partial/multi-bin putaway); confirm again with the same goodsReceiptLineId for the rest.
+      required:
+        - goodsReceiptLineId
+        - binLocationId
+        - quantity
+    CreateZoneDto:
+      type: object
+      properties:
+        code:
+          type: string
+          maxLength: 50
+          example: cold-storage
+          description: Auto-derived from name if omitted.
+        name:
+          type: string
+          maxLength: 255
+          example: Cold Storage
+      required:
+        - name
+    UpdateZoneDto:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        isActive:
+          type: boolean
+        isDeleted:
+          type: boolean
+          example: false
