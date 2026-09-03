@@ -2,6 +2,15 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-03 (14) — Sync 2 จุดที่ backend จริงมีอยู่แล้วแต่ยังไม่เคยแก้เอกสาร (ตรวจสอบ backend เทียบ schema.prisma/openapi.yaml เต็มไฟล์)
+
+ตรวจสอบ backend จริงเทียบกับ `schema.prisma`/`docs/openapi.yaml` ของ repo นี้แบบเต็มไฟล์ (diff ทุกบรรทัด ไม่ใช่แค่ high-level) เจอ 2 จุดที่ backend จริง implement ไปแล้วตั้งแต่รอบก่อนหน้า (สอดคล้องกับ standing preference ที่หยุด sync เอกสารไว้ชั่วคราว) แต่ยังไม่เคย sync กลับมาที่นี่เลย:
+
+1. **`Supplier.email`** และ **`TaxType.code`/`isInclusive`** (จาก entry (11) MASTER_DATA_TEST_PLAN.md SUP-01/SUP-03/TAX-01) — เพิ่มเข้า `schema.prisma` ของ repo นี้ให้ตรงกับ backend จริงแล้ว
+2. **7 endpoint ของ `BillingController` ที่หายไปจาก `docs/openapi.yaml`** ตั้งแต่ตอนแก้บั๊ก `@ApiExcludeController()` ใน entry (10) — ตอนนั้นเพิ่มแค่ 5 path ที่ถูกถามถึงตรงๆ (`/billing/plans`, `/billing/current-subscription`, `/billing/subscribe`, `/billing/cancel`, `/billing/invoices`) ไม่ได้ sync ทั้ง controller: เพิ่ม `GET /billing/subscriptions`, `POST /billing/subscriptions`, `POST /billing/subscriptions/{id}/cancel`, `POST /billing/checkout`, `GET /billing/invoices/{id}`, `GET /billing/payments`, `POST /billing/_mock/complete/{chargeId}` (endpoint dev-only จริง ยังโผล่ใน Swagger spec ตามปกติเพราะ NestJS ไม่ได้ซ่อน route ระดับ decorator ตาม runtime env - แค่ throw 404 เมื่อเรียกใช้นอกโหมด mock) พร้อม schema `CreateSubscriptionDto`/`CheckoutDto` ที่ยังไม่เคยมีอยู่ใน `components/schemas`
+
+**ยืนยันแล้ว**: `npx prisma validate` ผ่านทั้งไฟล์, YAML parse ผ่านไม่มี duplicate key, diff path ระหว่าง `docs/openapi.yaml` กับ live `/api-docs-json` (normalize `/api/v1` prefix ออกแล้ว) เหลือ 0 จุดต่างกันทั้ง 170 endpoint, request/response field ของ Outbound Fulfillment (`pick`/`pack`/`stage-load`) ที่เพิ่มไปใน entry (13) ตรงกับ backend จริง 100% อยู่แล้วตั้งแต่ก่อนรอบนี้
+
 ## 2026-09-03 (13) — Implement Outbound Fulfillment feature เข้า backend จริง (ตามที่ DevOps ร่าง spec ไว้ใน `OUTBOUND_FULFILLMENT_GUIDE.md`)
 
 ตรวจสอบตาม `docs/OUTBOUND_FULFILLMENT_GUIDE.md` (§5. Action Items เฉพาะ Backend) พบว่า DevOps ร่าง spec ฉบับเต็มไว้แล้ว (schema + endpoint ใหม่ 3 ตัว) สำหรับ flow เบิกสินค้าออกแบบหลายขั้นตอน (1/2/3/4-Step Pick→Pack→Load→Ship ตามระดับแพ็กเกจ) **แต่ backend ยังไม่มี implementation เลย** (ยิงจริง 404 ทั้ง 3 endpoint บน production ก่อนแก้ ไม่มี field ใหม่ในสคีมาเลย) — user ให้ทำก่อนโดยตั้งใจ (แจ้งว่า "ยังไม่ต้อง" ก่อนหน้านี้ในวันเดียวกัน แล้วกลับมาสั่งให้ "implement ตอนนี้" ในภายหลัง) **implement เข้า backend จริงครบ ทดสอบ end-to-end บน local Docker และ production แล้ว**:
