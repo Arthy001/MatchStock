@@ -2,6 +2,44 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-03 (12) — Implement 3D Warehouse Blueprint feature เข้า backend จริง (ตามที่ DevOps ร่าง spec ไว้)
+
+ตรวจสอบ `schema.prisma`/`docs/openapi.yaml` เทียบ backend จริงหลัง DevOps push ของใหม่ (commit `6d8efd3`/`7ca0b14`) พบว่า DevOps ร่าง schema + API spec ของฟีเจอร์ **"3D Warehouse Blueprint"** ไว้แล้ว พร้อม frontend ที่สร้างไปเยอะมาก (`Warehouse3DCanvas.tsx` 540 บรรทัด, `WarehouseControlsHUD.tsx`, `BinDetailDrawer.tsx`, `warehouse-layout.calculator.ts`) **แต่ backend ยังไม่มี implementation เลย** (ยิงจริง 404 ทั้งคู่บน production ก่อนแก้) - หลังคุยกับ user แล้ว **implement เข้า backend จริงครบ ทดสอบ end-to-end บน local Docker และ production แล้ว**:
+
+1. **`Warehouse.blueprintUrl`/`blueprintCfg`**: URL รูปแปลน CAD/2D + JSON config การ calibrate โมเดล 3D (opacity, dimensions, zonesConfig, walls, doors) - รวมเป็น JSON blob เดียวตามที่ DevOps ออกแบบ `UpdateBlueprintDto` ไว้
+2. **`BinLocation.zoneName`/`rack`/`shelf`/`capacityKg`/`status`**: label แบบ free-text ที่ได้จากการสแกน 3D - **ตั้งใจแยกจาก `zoneId`** (ระบบ Zone ที่ implement ไปก่อนหน้านี้สำหรับ suggest-bin) เพราะ batch import จากการสแกนไม่ควรบังคับให้ต้องมี Zone entity จริงรองรับก่อน
+3. **`PUT /warehouses/:id/blueprint`**: อัปเดตรูปแปลน + ค่า calibration 3D
+4. **`POST /warehouses/:id/bins/batch`**: bulk สร้าง/แทนที่/merge bin จากการสแกน - `mode: overwrite` จะถูกบล็อกด้วย `400 CANNOT_OVERWRITE_ACTIVE_STOCK` ถ้ามี bin ไหนมีสต็อกอยู่จริง (`StockBalance.quantityOnHand > 0`) ใช้หลักการเดียวกับ WH-07 fix (ดู entry ก่อนหน้า) แค่เช็คก่อนแทนที่ layout แทนที่จะเช็คก่อนลบคลัง - `mode: merge` upsert ตาม `binCode` ไม่ลบอะไรเลยจึงไม่ต้องเช็ค stock lock - บล็อก duplicate `binCode` ภายในคำขอเดียวกันไว้ก่อนถึง DB ด้วย
+5. **Migration ใหม่** (`20260902120000_warehouse_3d_blueprint`)
+
+**ทดสอบแล้วบน local Docker + production**: อัปเดต blueprint สำเร็จ, batch overwrite สร้าง/แทนที่ bin ถูกต้อง, duplicate binCode ในคำขอเดียวกันโดนบล็อก, **stock lock protection ทำงานถูกต้อง** (มีสต็อกอยู่ → overwrite โดน 400, merge ยังทำงานได้ปกติ), merge mode upsert (สร้างใหม่/อัปเดตของเดิม) ถูกต้อง, RBAC (`owner`/`admin`/`manager` เท่านั้น) บล็อก `operator` ถูกต้องทั้ง 2 endpoint
+
+## 2026-09-02 (11) — แก้ 8 gap ที่เจอจากการทดสอบ `MASTER_DATA_TEST_PLAN.md` จริง
+
+ทดสอบ backend เทียบ `docs/MASTER_DATA_TEST_PLAN.md` ทั้งฉบับด้วยการยิง API จริง (ไม่ใช่แค่อ่านโค้ด) เจอ 8 จุดที่ไม่ตรงตามเงื่อนไข - หลังคุยกับ user แล้วให้แก้ทั้งหมด **implement เข้า backend จริงครบ ทดสอบ end-to-end บน local Docker และ production แล้ว**:
+
+1. **FREE plan quota ไม่เคยถูกบังคับใช้เลยในทางปฏิบัติ** (พบระหว่างทดสอบ PRD-08/WH-06): tenant ที่สมัคร FREE plan (ราคา 0 บาท ไม่มี trial) ผ่าน flow ปกติจะ**ค้างสถานะ `pending_payment` ตลอดไป** เพราะไม่มีอะไรให้ "จ่าย" - `EntitlementsService.getPlanForTenant()` resolve plan เฉพาะ subscription ที่ active/trialing/past_due เท่านั้น ทำให้โควตาทุกอย่างไม่ถูกเช็คเลยจนกว่าจะ active ด้วยมือ - **แก้**: `SubscriptionsService.createPending()` ให้ plan ราคา 0 บาท (ไม่มี trial) **active ทันที** เหมือน trial (พิสูจน์แล้วว่าพอ flip เป็น active โควตาทำงานถูกต้องทันที)
+2. **RBAC ไม่มีเลยในโมดูล Master Data เกือบทั้งหมด** (SEC-02): เพิ่ม `@Roles('owner','admin','manager')` ให้ครบทุก endpoint สร้าง/แก้/ลบใน `Products`, `Categories`, `Brands`, `Units`, `Suppliers`, `Manufacturers`, `TaxTypes`, `BarcodeSymbologies`, `Zones`, `Companies` (ก่อนแก้ role `operator` สร้าง/ลบ master data ได้อย่างไม่มีข้อจำกัดเลย ทดสอบจริงพบว่าลบ category ที่สินค้าอื่นผูกอยู่สำเร็จ)
+3. **WH-07**: บล็อกลบคลังสินค้าที่มีสต็อกค้างอยู่จริง (`StockBalance.quantityOnHand > 0`) ก่อนหน้านี้ลบสำเร็จไม่มีการป้องกันเลย
+4. **UNT-04**: บล็อกลบหน่วยนับ (`Unit`) ที่สินค้าอื่นผูกอยู่จริง (`unitId`/`dimensionUnitId`/`weightUnitId`) - ก่อนหน้านี้ลบสำเร็จไม่มี FK-restrict
+5. **COMP-04**: ตั้ง `isHeadquarter: true` ให้บริษัท/สาขาใหม่จะ**สลับ HQ เดิมออกให้อัตโนมัติ**ในทรานแซกชันเดียวกัน (ก่อนหน้านี้มี 2 HQ พร้อมกันได้ ไม่มีการป้องกัน/แจ้งเตือนเลย)
+6. **COMP-02**: validate `taxId` ต้องเป็นตัวเลข 13 หลักเป๊ะ (`Matches(/^\d{13}$/)`) - ก่อนหน้านี้รับ string อะไรก็ได้ไม่เกิน 20 ตัวอักษร
+7. **SUP-01/03**: เพิ่ม field `email` ให้ `Supplier` จริง (ไม่เคยมีมาก่อนเลยทั้งที่เอกสารอ้างถึง) พร้อม validate รูปแบบอีเมล
+8. **TAX-01**: เพิ่ม field `code` (auto-derive จาก name ถ้าไม่ระบุ ตาม convention เดียวกับ Category/Brand/Unit) และ `isInclusive` ให้ `TaxType` จริง (ไม่เคยมีมาก่อนเลยทั้งที่เอกสารอ้างถึง)
+9. **Migration ใหม่** (`20260902110000_master_data_test_plan_fixes`): เพิ่ม `suppliers.email`, `tax_types.code`+`is_inclusive` - ของเดิมที่มีอยู่ก่อน migration ได้ `code` แบบ auto-backfill (`tax-<8 หลักแรกของ id>`) อัตโนมัติ ไม่พัง
+
+**ทดสอบแล้วบน local Docker + production**: ครบทุกจุดข้างต้น ยืนยัน regression ผ่าน (owner/admin ยังสร้าง/แก้/ลบได้ปกติ, คลัง/หน่วยนับที่ไม่มีการอ้างอิงยังลบได้ปกติ, tax type/supplier เดิมที่ backfill ไม่พัง)
+
+## 2026-09-02 (10) — แก้ `BillingController` (`/billing/*`) ถูก `@ApiExcludeController()` โดยไม่ตั้งใจ (บั๊กเดียวกับ Menu/Rentals ใน PR #19)
+
+**ปัญหาที่พบ**: user ถามว่าทำไม `docs/openapi.yaml` มี `/billing/plans`, `/billing/current-subscription`, `/billing/subscribe`, `/billing/cancel`, `/billing/invoices` แต่ Swagger จริงไม่โผล่ - endpoint ทำงานได้ปกติทุกตัว แค่ไม่ขึ้น `/api-docs`/`/api-docs-json` เท่านั้น
+
+**สาเหตุ**: `BillingController` ติด `@ApiExcludeController()` อยู่ ตรวจสอบเทียบกับ `PlatformBillingController` (ตัวที่ควรซ่อนจริง - มี comment อธิบายเหตุผลชัดเจนว่า "super_admin/billing only เพราะเห็นข้อมูลข้าม tenant") พบว่า `BillingController` **ไม่มี comment อธิบายเหตุผลการซ่อนเลย** และมีลักษณะเป็น tenant-facing self-service ชัดเจน (`GET /billing/plans` ติด `@Public()` ไว้สำหรับหน้า signup ก่อน login ด้วยซ้ำ) - ตรงกับรูปแบบเดียวกับ `MenuController`/`RentalsController` ที่เจอใน PR #19 (copy-paste มาจาก controller ฝั่ง admin ที่อยู่ในไฟล์เดียวกัน)
+
+**การแก้ไข**: เอา `@ApiExcludeController()` ออกจาก `BillingController` เพิ่ม doc comment อธิบายเหตุผล (เหมือนที่ `RentalsController` มี) - หลัง user ยืนยันเพิ่มเติมให้เปิด `PlatformBillingController` (`/platform/billing/*`, `/platform/subscription-plans*`) ด้วยเช่นกัน แม้จะเป็นข้อมูลข้าม tenant จริง (ยอมรับ trade-off ที่ endpoint ของ platform admin จะโผล่ใน public Swagger)
+
+**ยืนยันแล้ว**: live `/api-docs-json` มี path เพิ่มจาก 98 เป็น 112, `GET /billing/plans` ยัง public เข้าถึงได้แบบไม่ต้อง login เหมือนเดิม, diff property/param ทุกจุดระหว่าง live กับ docs ที่แก้ไปแล้วเหลือ 0 จุดต่างกัน
+
 ## 2026-09-01 (9) — Implement putawayStatus filter + Zone system (suggest-bin category matching) เข้า backend จริง
 
 ต่อยอดจากการตรวจสอบ+ทดสอบ `RECEIVING_AND_PUTAWAY_DESIGN.md` ที่พบ 2 gap ระหว่างเอกสารกับ backend จริง - หลังคุยเรื่อง impact กับ user แล้วให้ทำทั้งคู่ **implement เข้า backend จริงครบ ทดสอบ end-to-end บน local Docker และ production แล้ว**:
