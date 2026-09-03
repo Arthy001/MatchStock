@@ -780,6 +780,9 @@ model Supplier {
   name          String  @db.VarChar(255)
   contactPerson String? @map("contact_person") @db.VarChar(100)
   phone         String? @db.VarChar(50)
+  // 2026-09-02, MASTER_DATA_TEST_PLAN.md SUP-01/SUP-03 - format-validated
+  // email that never existed on this model before.
+  email         String? @db.VarChar(255)
   isActive      Boolean @default(true) @map("is_active")
   isDeleted     Boolean @default(false) @map("is_deleted")
 
@@ -1035,8 +1038,14 @@ model BinLocation {
 model TaxType {
   id          String  @id @default(uuid()) @db.Uuid
   tenantId    String  @map("tenant_id") @db.Uuid
+  // 2026-09-02, MASTER_DATA_TEST_PLAN.md TAX-01 - `code` (auto-derived from
+  // name if omitted, same convention as the rest of this schema's
+  // master-data models) and `isInclusive` (price-includes-tax vs
+  // added-on-top), neither of which existed on this model before.
+  code        String  @db.VarChar(50)
   name        String  @db.VarChar(100)
   ratePercent Float   @map("rate_percent")
+  isInclusive Boolean @default(false) @map("is_inclusive")
   isActive    Boolean @default(true) @map("is_active")
   isDeleted   Boolean @default(false) @map("is_deleted")
 
@@ -1054,6 +1063,7 @@ model TaxType {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, name])
+  @@unique([tenantId, code])
   @@index([tenantId])
   @@map("tax_types")
 }
