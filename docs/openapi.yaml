@@ -2857,6 +2857,24 @@ paths:
                       dimensions:
                         widthMeters: 42
                         depthMeters: 32
+                      zonesConfig:
+                        ZoneA:
+                          name: Zone A
+                          color: '#3B82F6'
+                      walls:
+                        - id: wall-01
+                          startX: 0
+                          startZ: 0
+                          endX: 42
+                          endZ: 0
+                          heightMeters: 6.0
+                      doors:
+                        - id: door-01
+                          x: 21
+                          z: 0
+                          widthMeters: 4.0
+                          heightMeters: 4.5
+                          type: dock
                   message: Blueprint updated successfully
       security:
         - jwt: []
@@ -7228,6 +7246,70 @@ components:
             depthMeters:
               type: number
               example: 32.0
+        zonesConfig:
+          type: object
+          description: Independent zone configurations for 3D layout
+          example:
+            ZoneA:
+              name: Zone A
+              color: '#3B82F6'
+              racksCount: 4
+            ZoneB:
+              name: Zone B
+              color: '#10B981'
+              racksCount: 2
+        walls:
+          type: array
+          description: 3D boundary walls definitions
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: wall-01
+              startX:
+                type: number
+                example: 0
+              startZ:
+                type: number
+                example: 0
+              endX:
+                type: number
+                example: 42
+              endZ:
+                type: number
+                example: 0
+              heightMeters:
+                type: number
+                example: 6.0
+              thicknessMeters:
+                type: number
+                example: 0.2
+        doors:
+          type: array
+          description: 3D entrance and dock door definitions
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: door-01
+              x:
+                type: number
+                example: 21
+              z:
+                type: number
+                example: 0
+              widthMeters:
+                type: number
+                example: 4.0
+              heightMeters:
+                type: number
+                example: 4.5
+              type:
+                type: string
+                enum: [dock, entrance, emergency_exit]
+                example: dock
       required:
         - blueprintUrl
     BatchSaveBinItemDto:

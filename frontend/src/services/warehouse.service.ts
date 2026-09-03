@@ -134,7 +134,7 @@ export const warehouseService = {
     return response.data?.data || response.data;
   },
 
-  // บันทึกแปลนภาพพิมพ์เขียว CAD/2D (PUT /warehouses/{warehouseId}/blueprint)
+  // บันทึกแปลนภาพพิมพ์เขียว CAD/2D และโครงสร้าง 3D (PUT /warehouses/{warehouseId}/blueprint)
   updateBlueprint: async (
     warehouseId: string,
     payload: {
@@ -144,6 +144,25 @@ export const warehouseService = {
         widthMeters?: number;
         depthMeters?: number;
       };
+      zonesConfig?: Record<string, any>;
+      walls?: Array<{
+        id: string;
+        startX: number;
+        startZ: number;
+        endX: number;
+        endZ: number;
+        heightMeters?: number;
+        thicknessMeters?: number;
+      }>;
+      doors?: Array<{
+        id: string;
+        x: number;
+        z: number;
+        widthMeters?: number;
+        heightMeters?: number;
+        type?: 'dock' | 'entrance' | 'emergency_exit';
+      }>;
+      [key: string]: any;
     }
   ) => {
     const response = await apiClient.put(`/warehouses/${warehouseId}/blueprint`, payload);

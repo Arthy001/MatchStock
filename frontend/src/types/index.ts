@@ -133,6 +133,25 @@ export interface TaxTypeItem {
   isActive?: boolean;
 }
 
+export interface BlueprintWall {
+  id: string;
+  startX: number;
+  startZ: number;
+  endX: number;
+  endZ: number;
+  heightMeters?: number;
+  thicknessMeters?: number;
+}
+
+export interface BlueprintDoor {
+  id: string;
+  x: number;
+  z: number;
+  widthMeters?: number;
+  heightMeters?: number;
+  type?: 'dock' | 'entrance' | 'emergency_exit';
+}
+
 export interface WarehouseItem {
   id: string;
   code: string;
@@ -147,6 +166,15 @@ export interface WarehouseItem {
       widthMeters?: number;
       depthMeters?: number;
     };
+    zonesConfig?: Record<string, {
+      name?: string;
+      color?: string;
+      racksCount?: number;
+      [key: string]: any;
+    }>;
+    walls?: BlueprintWall[];
+    doors?: BlueprintDoor[];
+    [key: string]: any;
   };
 }
 

@@ -939,6 +939,7 @@ model Warehouse {
   isDeleted   Boolean @default(false) @map("is_deleted")
   maxCapacity  Int?     @map("max_capacity")
   blueprintUrl String?  @map("blueprint_url") @db.VarChar(1000)
+  /// JSON structure: { opacity, dimensions: { widthMeters, depthMeters }, zonesConfig: { [zoneKey]: { name, color, racksCount } }, walls: [{ id, startX, startZ, endX, endZ, heightMeters, thicknessMeters }], doors: [{ id, x, z, widthMeters, heightMeters, type }] }
   blueprintCfg Json?    @map("blueprint_cfg")
 
   createdByType String?   @map("created_by_type") @db.VarChar(20)
