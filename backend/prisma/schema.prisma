@@ -88,6 +88,25 @@ enum CycleCountStatus {
   approved
 }
 
+enum OutboundWorkflowMode {
+  ONE_STEP_DIRECT      // 1-Step Direct Issue (Free, Pro, Ultra)
+  TWO_STEP_PICK_SHIP   // 2-Step Pick -> Ship (Pro, Ultra)
+  THREE_STEP_PACK      // 3-Step Pick -> Pack -> Ship (Pro, Ultra)
+  FOUR_STEP_ENTERPRISE // 4-Step Pick -> Pack -> Load -> Ship (Ultra Only)
+}
+
+enum GoodsIssueStatus {
+  draft
+  reserved
+  picking
+  picked
+  packing
+  packed
+  staged_for_loading
+  completed
+  cancelled
+}
+
 enum StockAdjustmentReason {
   damaged
   lost
@@ -938,6 +957,7 @@ model Warehouse {
   isActive    Boolean @default(true) @map("is_active")
   isDeleted   Boolean @default(false) @map("is_deleted")
   maxCapacity  Int?     @map("max_capacity")
+  outboundMode OutboundWorkflowMode @default(ONE_STEP_DIRECT) @map("outbound_mode")
   blueprintUrl String?  @map("blueprint_url") @db.VarChar(1000)
   /// JSON structure: { opacity, dimensions: { widthMeters, depthMeters }, zonesConfig: { [zoneKey]: { name, color, racksCount } }, walls: [{ id, startX, startZ, endX, endZ, heightMeters, thicknessMeters }], doors: [{ id, x, z, widthMeters, heightMeters, type }] }
   blueprintCfg Json?    @map("blueprint_cfg")
@@ -1249,14 +1269,32 @@ model StockBalance {
 }
 
 model GoodsIssue {
-  id            String   @id @default(uuid()) @db.Uuid
-  tenantId      String   @map("tenant_id") @db.Uuid
-  issueNumber   String   @map("issue_number") @db.VarChar(100)
-  warehouseId   String   @map("warehouse_id") @db.Uuid
-  binLocationId String?  @map("bin_location_id") @db.Uuid
-  reference     String?  @db.VarChar(255)
-  issuedAt      DateTime @map("issued_at")
-  notes         String?  @db.VarChar(1000)
+  id                 String               @id @default(uuid()) @db.Uuid
+  tenantId           String               @map("tenant_id") @db.Uuid
+  issueNumber        String               @map("issue_number") @db.VarChar(100)
+  warehouseId        String               @map("warehouse_id") @db.Uuid
+  binLocationId      String?              @map("bin_location_id") @db.Uuid
+  soNumber           String?              @map("so_number") @db.VarChar(100)
+  salesOrderId       String?              @map("sales_order_id") @db.Uuid
+  reference          String?              @db.VarChar(255)
+  status             GoodsIssueStatus     @default(draft)
+  workflowMode       OutboundWorkflowMode @default(ONE_STEP_DIRECT) @map("workflow_mode")
+
+  // Barcode Identifiers & Logistics
+  packageTrackingNo  String?              @map("package_tracking_no") @db.VarChar(100)
+  shippingCarrier    String?              @map("shipping_carrier") @db.VarChar(100)
+  cartonBarcode      String?              @map("carton_barcode") @db.VarChar(100)
+  stagingDockBarcode String?              @map("staging_dock_barcode") @db.VarChar(50)
+  totalWeightKg      Float?               @map("total_weight_kg")
+  boxCount           Int?                 @default(1) @map("box_count")
+
+  // Milestone Timestamps
+  issuedAt           DateTime             @map("issued_at")
+  pickedAt           DateTime?            @map("picked_at")
+  packedAt           DateTime?            @map("packed_at")
+  stagedAt           DateTime?            @map("staged_at")
+  dispatchedAt       DateTime?            @map("dispatched_at")
+  notes              String?              @db.VarChar(1000)
 
   createdByType String?   @map("created_by_type") @db.VarChar(20)
   createdById   String?   @map("created_by_id") @db.Uuid
@@ -1277,17 +1315,21 @@ model GoodsIssue {
   @@unique([tenantId, issueNumber])
   @@index([tenantId])
   @@index([warehouseId])
+  @@index([status])
   @@map("goods_issues")
 }
 
 model GoodsIssueLine {
-  id             String  @id @default(uuid()) @db.Uuid
-  goodsIssueId   String  @map("goods_issue_id") @db.Uuid
-  productId      String  @map("product_id") @db.Uuid
-  quantity       Int // จำนวนที่จ่ายออก
-  lotNumber      String? @map("lot_number") @db.VarChar(100)
-  binLocationId  String? @map("bin_location_id") @db.Uuid
-  unitPriceMinor BigInt? @map("unit_price_minor")
+  id                 String       @id @default(uuid()) @db.Uuid
+  goodsIssueId       String       @map("goods_issue_id") @db.Uuid
+  productId          String       @map("product_id") @db.Uuid
+  quantity           Int          // จำนวนที่สั่งเบิก (requested)
+  pickedQuantity     Int          @default(0) @map("picked_quantity")
+  packedQuantity     Int          @default(0) @map("packed_quantity")
+  dispatchedQuantity Int          @default(0) @map("dispatched_quantity")
+  lotNumber          String?      @map("lot_number") @db.VarChar(100)
+  binLocationId      String?      @map("bin_location_id") @db.Uuid
+  unitPriceMinor     BigInt?      @map("unit_price_minor")
 
   createdAt DateTime @default(now()) @map("created_at")
 

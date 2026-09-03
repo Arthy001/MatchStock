@@ -238,6 +238,23 @@ export interface UserPermissionItem {
 export type TransactionType = 'RECEIVE' | 'ISSUE' | 'TRANSFER' | 'ADJUSTMENT';
 export type TransactionStatus = 'COMPLETED' | 'PENDING' | 'CANCELLED';
 
+export type OutboundWorkflowMode =
+  | 'ONE_STEP_DIRECT'
+  | 'TWO_STEP_PICK_SHIP'
+  | 'THREE_STEP_PACK'
+  | 'FOUR_STEP_ENTERPRISE';
+
+export type GoodsIssueStatus =
+  | 'draft'
+  | 'reserved'
+  | 'picking'
+  | 'picked'
+  | 'packing'
+  | 'packed'
+  | 'staged_for_loading'
+  | 'completed'
+  | 'cancelled';
+
 export interface StockTransaction {
   id: string;
   documentNo: string;
@@ -255,6 +272,20 @@ export interface StockTransaction {
   // GI Specific
   issueReason?: string;
   recipientName?: string;
+  soNumber?: string;
+  salesOrderId?: string;
+  workflowMode?: OutboundWorkflowMode;
+  goodsIssueStatus?: GoodsIssueStatus;
+  packageTrackingNo?: string;
+  shippingCarrier?: string;
+  cartonBarcode?: string;
+  stagingDockBarcode?: string;
+  totalWeightKg?: number;
+  boxCount?: number;
+  pickedAt?: string;
+  packedAt?: string;
+  stagedAt?: string;
+  dispatchedAt?: string;
 
   // Transfer Specific
   transferType?: 'INTER_WAREHOUSE' | 'BIN_TO_BIN';

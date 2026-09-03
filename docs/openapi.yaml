@@ -4571,6 +4571,108 @@ paths:
         - jwt: []
       tags:
         - Goods Issues
+  /goods-issues/{id}/pick:
+    post:
+      operationId: GoodsIssuesController_recordPick_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordPickDto'
+      responses:
+        '200':
+          description: Pick step recorded and shelf stock deducted in real-time
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  message: Items picked successfully, shelf inventory updated
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    status: picked
+                    pickedAt: '2026-09-03T17:00:00.000Z'
+      security:
+        - jwt: []
+      summary: Record picking at shelf using barcode/RFID - immediately deducts StockBalance at bin.
+      tags:
+        - Goods Issues
+  /goods-issues/{id}/pack:
+    post:
+      operationId: GoodsIssuesController_recordPack_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordPackDto'
+      responses:
+        '200':
+          description: Packing station verification and waybill registration complete
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  message: Package packed and waybill registered
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    status: packed
+                    packedAt: '2026-09-03T17:15:00.000Z'
+      security:
+        - jwt: []
+      summary: Record packing station QC, carton barcode, box weight, and carrier tracking.
+      tags:
+        - Goods Issues
+  /goods-issues/{id}/stage-load:
+    post:
+      operationId: GoodsIssuesController_recordStageLoad_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordStageLoadDto'
+      responses:
+        '200':
+          description: Items registered at loading dock staging area
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  message: Staged at loading dock
+                  data:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    status: staged_for_loading
+                    stagedAt: '2026-09-03T17:30:00.000Z'
+      security:
+        - jwt: []
+      summary: Record staging at loading dock / truck bay prior to departure (Ultra Tier).
+      tags:
+        - Goods Issues
   /goods-issues/{id}/dispatch:
     post:
       operationId: GoodsIssuesController_dispatch_v1
@@ -7585,6 +7687,17 @@ components:
         binLocationId:
           type: string
           format: uuid
+        soNumber:
+          type: string
+          maxLength: 100
+          example: SO-2026-0042
+          description: Optional Sales Order document number linked to this issue.
+        salesOrderId:
+          type: string
+          format: uuid
+          nullable: true
+          example: 362fecaa-d3d7-4f42-b979-756fb8444d57
+          description: Optional direct UUID reference to the Sales Order entity.
         reference:
           type: string
           maxLength: 255
@@ -7604,6 +7717,71 @@ components:
       required:
         - issueNumber
         - warehouseId
+    RecordPickItemDto:
+      type: object
+      properties:
+        productBarcode:
+          type: string
+          example: '885123456789'
+        binBarcode:
+          type: string
+          example: ZoneA-A01-A-01
+        productId:
+          type: string
+          format: uuid
+        binLocationId:
+          type: string
+          format: uuid
+        pickedQuantity:
+          type: integer
+          example: 5
+        tagIds:
+          type: array
+          items:
+            type: string
+          description: Optional RFID Tag EPC IDs when scanned with RFID Handheld
+      required:
+        - pickedQuantity
+    RecordPickDto:
+      type: object
+      properties:
+        scannedItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordPickItemDto'
+      required:
+        - scannedItems
+    RecordPackDto:
+      type: object
+      properties:
+        cartonBarcode:
+          type: string
+          example: BOX-2026-001
+        boxCount:
+          type: integer
+          example: 1
+        totalWeightKg:
+          type: number
+          example: 2.5
+        shippingCarrier:
+          type: string
+          example: Flash Express
+        packageTrackingNo:
+          type: string
+          example: TH0192837465
+      required:
+        - cartonBarcode
+    RecordStageLoadDto:
+      type: object
+      properties:
+        stagingDockBarcode:
+          type: string
+          example: DOCK-BAY-04B
+        palletBarcode:
+          type: string
+          example: PALLET-092
+      required:
+        - stagingDockBarcode
     DispatchGoodsDto:
       type: object
       properties:

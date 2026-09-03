@@ -21,6 +21,8 @@ export interface IssueStockInput {
   recipient?: string;
   reason?: string;
   referenceNo?: string;
+  soNumber?: string;
+  salesOrderId?: string;
   notes?: string;
   items: {
     productId: string;
@@ -241,13 +243,21 @@ export const transactionService = {
 
   // บันทึก Goods Issue (GI) -> POST /goods-issues
   issueStock: async (data: IssueStockInput) => {
-    const payload = {
+    const payload: any = {
       issueNumber: data.referenceNo || `GI-${Date.now()}`,
       warehouseId: data.warehouseId,
-      binLocationId: data.items?.[0]?.binLocationId,
-      reference: data.referenceNo || data.recipient,
-      notes: data.notes || data.reason,
+      binLocationId: data.items?.[0]?.binLocationId || null,
+      reference: data.referenceNo || data.recipient || null,
+      soNumber: data.soNumber || data.referenceNo || null,
+      salesOrderId: data.salesOrderId || null,
+      notes: data.notes || data.reason || '',
       items: data.items,
+      lines: data.items?.map((it) => ({
+        productId: it.productId,
+        quantity: it.quantity,
+        binLocationId: it.binLocationId || null,
+        unitCostMinor: it.unitPrice ? Math.round(it.unitPrice * 100) : undefined,
+      })),
     };
     try {
       const response = await apiClient.post('/goods-issues', payload);
@@ -256,6 +266,30 @@ export const transactionService = {
       const response = await apiClient.post('/inventory/transactions/issue', data);
       return response.data?.data || response.data;
     }
+  },
+
+  // บันทึกการหยิบสินค้าหน้าชั้นวาง (Step 1: Pick @ Bin) -> POST /goods-issues/{id}/pick
+  pickStock: async (issueId: string, payload: { scannedItems: Array<{ productBarcode?: string; binBarcode?: string; productId?: string; binLocationId?: string; pickedQuantity: number; tagIds?: string[] }> }) => {
+    const response = await apiClient.post(`/goods-issues/${issueId}/pick`, payload);
+    return response.data?.data || response.data;
+  },
+
+  // บันทึกการแพ็คกล่องพัสดุและพิมพ์ใบปะหน้า (Step 2: Pack & QC) -> POST /goods-issues/{id}/pack
+  packStock: async (issueId: string, payload: { cartonBarcode: string; boxCount?: number; totalWeightKg?: number; shippingCarrier?: string; packageTrackingNo?: string }) => {
+    const response = await apiClient.post(`/goods-issues/${issueId}/pack`, payload);
+    return response.data?.data || response.data;
+  },
+
+  // บันทึกการย้ายเข้าลานพักท่าโหลดรถ (Step 3: Stage/Load Dock) -> POST /goods-issues/{id}/stage-load
+  stageLoadStock: async (issueId: string, payload: { stagingDockBarcode: string; palletBarcode?: string }) => {
+    const response = await apiClient.post(`/goods-issues/${issueId}/stage-load`, payload);
+    return response.data?.data || response.data;
+  },
+
+  // ยืนยันปล่อยสินค้าออกจากคลัง (Final Step: Ship) -> POST /goods-issues/{id}/dispatch
+  dispatchStock: async (issueId: string, payload?: { deliveryNoteBarcode?: string; tagIds?: string[] }) => {
+    const response = await apiClient.post(`/goods-issues/${issueId}/dispatch`, payload || {});
+    return response.data?.data || response.data;
   },
 
   // บันทึก Stock Transfer -> POST /stock-transfers
