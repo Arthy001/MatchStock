@@ -176,6 +176,7 @@ export const StockTransactions: React.FC<StockTransactionsProps> = ({
         lang={lang}
         t={t}
         isOpen={isModalOpen}
+        activeSubTab={activeSubTab}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateTransaction}
         isSubmitting={isSubmitting}

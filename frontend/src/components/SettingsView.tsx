@@ -20,6 +20,12 @@ import {
   Printer,
   Volume2,
   BellRing,
+  Truck,
+  PackageCheck,
+  PackagePlus,
+  Box,
+  Check,
+  ArrowRight,
 } from 'lucide-react';
 import { Language, ThemeMode, TenantSettings } from '../types';
 import { getTranslation } from '../i18n';
@@ -50,6 +56,13 @@ const DEFAULT_SETTINGS: TenantSettings = {
   enableRopAlerts: true,
   enableSoundFeedback: true,
   autoPrintBarcodeOnReceive: false,
+  outboundStations: {
+    enablePickStation: true,
+    enablePackStation: true,
+    enableStagingDock: true,
+    enableGateDispatch: true,
+  },
+  defaultOutboundWorkflow: 'FOUR_STEP_STAGE',
 };
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -74,12 +87,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
-  // Load Settings from LocalStorage
+  // Scope Settings by active Tenant ID
+  const getTenantStorageKey = () => {
+    try {
+      const authUser = localStorage.getItem('matchstock_current_user');
+      if (authUser) {
+        const parsed = JSON.parse(authUser);
+        if (parsed.tenantId) return `matchstock_tenant_settings_${parsed.tenantId}`;
+      }
+    } catch {}
+    const explicitTenant = localStorage.getItem('matchstock_tenant_id');
+    if (explicitTenant) return `matchstock_tenant_settings_${explicitTenant}`;
+    return 'matchstock_tenant_settings_default';
+  };
+
+  // Load Settings from Storage per Tenant
   useEffect(() => {
-    const saved = localStorage.getItem('matchstock_tenant_settings');
+    const key = getTenantStorageKey();
+    const saved = localStorage.getItem(key);
     if (saved) {
       try {
-        setSettings(JSON.parse(saved));
+        setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(saved) });
       } catch (e) {
         console.error('Failed to load settings:', e);
       }
@@ -87,7 +115,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   }, []);
 
   const handleSaveSettings = () => {
-    localStorage.setItem('matchstock_tenant_settings', JSON.stringify(settings));
+    const key = getTenantStorageKey();
+    localStorage.setItem(key, JSON.stringify(settings));
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 3000);
   };
@@ -484,6 +513,285 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       settings.autoPrintBarcodeOnReceive ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
+                </div>
+              </div>
+            </div>
+
+            {/* Outbound Workflow & Granular Station Checklist */}
+            <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4">
+              <div>
+                <h4 className={`text-sm font-bold flex items-center gap-2 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                  <Sliders className="w-4 h-4 text-blue-500" />
+                  {isEn ? 'Outbound Stations & Workflow Policy' : 'กำหนดสถานีและขั้นตอนการเบิกจ่ายสินค้า (Outbound Station Checklist)'}
+                </h4>
+                <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  {isEn
+                    ? 'Toggle which outbound fulfillment stations are active in your warehouse. Turning a station OFF skips it and auto-completes orders.'
+                    : 'เปิด/ปิด ด่านการทำงานที่คลังของคุณใช้งานจริง (หากปิดด่านใด เมื่อทำขั้นตอนก่อนหน้าเสร็จระบบจะข้ามและ Auto-Complete ให้อัตโนมัติ)'}
+                </p>
+              </div>
+
+              {/* Station Toggles Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {/* Station 1: Picking */}
+                <div
+                  className={`p-4 rounded-xl border flex items-center justify-between ${
+                    isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
+                      <PackageCheck className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                        1. สถานีเดินหยิบสินค้า (Picking)
+                      </span>
+                      <span className="block text-[11px] text-slate-400 truncate">
+                        สแกนหยิบตามชั้นวาง Bin (บังคับเปิดเสมอ)
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 shrink-0">
+                    REQUIRED
+                  </span>
+                </div>
+
+                {/* Station 2: Packing */}
+                <div
+                  onClick={() => {
+                    const current = settings.outboundStations?.enablePackStation ?? true;
+                    setSettings({
+                      ...settings,
+                      outboundStations: {
+                        ...(settings.outboundStations || {
+                          enablePickStation: true,
+                          enablePackStation: true,
+                          enableStagingDock: true,
+                          enableGateDispatch: true,
+                        }),
+                        enablePackStation: !current,
+                      },
+                    });
+                  }}
+                  className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition ${
+                    (settings.outboundStations?.enablePackStation ?? true)
+                      ? isDark
+                        ? 'bg-amber-500/5 border-amber-500/30'
+                        : 'bg-amber-50/50 border-amber-200'
+                      : isDark
+                      ? 'bg-slate-950 border-slate-800 opacity-60'
+                      : 'bg-slate-50 border-slate-200 opacity-60'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 border border-amber-500/20">
+                      <Box className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                        2. โต๊ะแพ็ค & ตรวจ QC (Packing)
+                      </span>
+                      <span className="block text-[11px] text-slate-400 truncate">
+                        สแกนตรวจซ้ำ + บาร์โค้ดกล่องพัสดุ
+                      </span>
+                    </div>
+                  </div>
+                  <div
+                    className={`w-11 h-6 rounded-full transition-colors duration-200 p-0.5 shrink-0 flex items-center ${
+                      (settings.outboundStations?.enablePackStation ?? true) ? 'bg-amber-500' : isDark ? 'bg-slate-700' : 'bg-slate-300'
+                    }`}
+                  >
+                    <div
+                      className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+                        (settings.outboundStations?.enablePackStation ?? true) ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {/* Station 3: Staging Dock */}
+                <div
+                  onClick={() => {
+                    const current = settings.outboundStations?.enableStagingDock ?? true;
+                    setSettings({
+                      ...settings,
+                      outboundStations: {
+                        ...(settings.outboundStations || {
+                          enablePickStation: true,
+                          enablePackStation: true,
+                          enableStagingDock: true,
+                          enableGateDispatch: true,
+                        }),
+                        enableStagingDock: !current,
+                      },
+                    });
+                  }}
+                  className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition ${
+                    (settings.outboundStations?.enableStagingDock ?? true)
+                      ? isDark
+                        ? 'bg-purple-500/5 border-purple-500/30'
+                        : 'bg-purple-50/50 border-purple-200'
+                      : isDark
+                      ? 'bg-slate-950 border-slate-800 opacity-60'
+                      : 'bg-slate-50 border-slate-200 opacity-60'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/20">
+                      <Layers className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                        3. ลานพักโหลดสินค้า (Dock Staging)
+                      </span>
+                      <span className="block text-[11px] text-slate-400 truncate">
+                        พักกล่องที่เบย์ชานชาลารอขึ้นรถ
+                      </span>
+                    </div>
+                  </div>
+                  <div
+                    className={`w-11 h-6 rounded-full transition-colors duration-200 p-0.5 shrink-0 flex items-center ${
+                      (settings.outboundStations?.enableStagingDock ?? true) ? 'bg-purple-600' : isDark ? 'bg-slate-700' : 'bg-slate-300'
+                    }`}
+                  >
+                    <div
+                      className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+                        (settings.outboundStations?.enableStagingDock ?? true) ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {/* Station 4: Gate Dispatch (User Question!) */}
+                <div
+                  onClick={() => {
+                    const current = settings.outboundStations?.enableGateDispatch ?? true;
+                    setSettings({
+                      ...settings,
+                      outboundStations: {
+                        ...(settings.outboundStations || {
+                          enablePickStation: true,
+                          enablePackStation: true,
+                          enableStagingDock: true,
+                          enableGateDispatch: true,
+                        }),
+                        enableGateDispatch: !current,
+                      },
+                    });
+                  }}
+                  className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition ${
+                    (settings.outboundStations?.enableGateDispatch ?? true)
+                      ? isDark
+                        ? 'bg-emerald-500/5 border-emerald-500/30'
+                        : 'bg-emerald-50/50 border-emerald-200'
+                      : isDark
+                      ? 'bg-slate-950 border-slate-800 opacity-60'
+                      : 'bg-slate-50 border-slate-200 opacity-60'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                      <Truck className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                        4. ด่านประตูปล่อยรถ (Gate Dispatch)
+                      </span>
+                      <span className="block text-[11px] text-slate-400 truncate">
+                        {(settings.outboundStations?.enableGateDispatch ?? true)
+                          ? 'ตรวจยืนยันปล่อยรถที่ประตูคลัง'
+                          : '⚡ ปิดใช้งาน: Auto-Complete ปิดงานทันทีเมื่อแพ็คเสร็จ'}
+                      </span>
+                    </div>
+                  </div>
+                  <div
+                    className={`w-11 h-6 rounded-full transition-colors duration-200 p-0.5 shrink-0 flex items-center ${
+                      (settings.outboundStations?.enableGateDispatch ?? true) ? 'bg-emerald-600' : isDark ? 'bg-slate-700' : 'bg-slate-300'
+                    }`}
+                  >
+                    <div
+                      className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+                        (settings.outboundStations?.enableGateDispatch ?? true) ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Dynamic Visual Pipeline Preview */}
+              <div
+                className={`p-4 rounded-xl border text-xs space-y-2.5 ${
+                  isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-blue-50/40 border-blue-100'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-700 dark:text-slate-300">
+                    🔄 แผนภาพสายพานการทำงานจริงของคลังคุณ (Active Pipeline):
+                  </span>
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    {!(settings.outboundStations?.enableGateDispatch ?? true) ? '⚡ Direct Auto-Complete' : '🛡️ Full Audit Gate'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap pt-1 font-medium">
+                  {/* Pick */}
+                  <div className="px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/30 flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5" />
+                    <span>1. สแกนหยิบ (Pick)</span>
+                  </div>
+
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+
+                  {/* Pack */}
+                  <div
+                    className={`px-3 py-1.5 rounded-lg border flex items-center gap-1.5 transition ${
+                      (settings.outboundStations?.enablePackStation ?? true)
+                        ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
+                        : 'bg-slate-800/40 text-slate-500 border-slate-700/50 line-through'
+                    }`}
+                  >
+                    {(settings.outboundStations?.enablePackStation ?? true) && <Check className="w-3.5 h-3.5" />}
+                    <span>2. โต๊ะแพ็ค (Pack)</span>
+                    {!(settings.outboundStations?.enablePackStation ?? true) && <span className="text-[10px] font-bold text-slate-400">(ข้าม)</span>}
+                  </div>
+
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+
+                  {/* Staging */}
+                  <div
+                    className={`px-3 py-1.5 rounded-lg border flex items-center gap-1.5 transition ${
+                      (settings.outboundStations?.enableStagingDock ?? true)
+                        ? 'bg-purple-500/10 text-purple-400 border-purple-500/30'
+                        : 'bg-slate-800/40 text-slate-500 border-slate-700/50 line-through'
+                    }`}
+                  >
+                    {(settings.outboundStations?.enableStagingDock ?? true) && <Check className="w-3.5 h-3.5" />}
+                    <span>3. ลานพัก (Stage)</span>
+                    {!(settings.outboundStations?.enableStagingDock ?? true) && <span className="text-[10px] font-bold text-slate-400">(ข้าม)</span>}
+                  </div>
+
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+
+                  {/* Gate */}
+                  <div
+                    className={`px-3 py-1.5 rounded-lg border flex items-center gap-1.5 transition ${
+                      (settings.outboundStations?.enableGateDispatch ?? true)
+                        ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
+                        : 'bg-slate-800/40 text-slate-500 border-slate-700/50 line-through'
+                    }`}
+                  >
+                    {(settings.outboundStations?.enableGateDispatch ?? true) && <Check className="w-3.5 h-3.5" />}
+                    <span>4. ปล่อยรถ (Gate)</span>
+                    {!(settings.outboundStations?.enableGateDispatch ?? true) && <span className="text-[10px] font-bold text-slate-400">(ข้าม)</span>}
+                  </div>
+
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+
+                  {/* Completed */}
+                  <div className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold shadow-xs">
+                    ✅ สำเร็จ (Completed)
+                  </div>
                 </div>
               </div>
             </div>

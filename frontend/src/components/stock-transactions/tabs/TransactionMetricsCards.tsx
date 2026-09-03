@@ -61,6 +61,21 @@ export const TransactionMetricsCards: React.FC<TransactionMetricsCardsProps> = (
 
   const headerInfo = getHeaderInfo();
 
+  const getButtonLabel = () => {
+    switch (activeSubTab) {
+      case 'receive':
+        return '+ บันทึกรับสินค้าเข้าคลัง (GR)';
+      case 'issue':
+        return '+ สร้างใบเบิก/จ่ายสินค้า (GI)';
+      case 'transfer':
+        return '+ สร้างใบโอนย้ายสินค้า (TR)';
+      case 'adjustment':
+        return '+ สร้างใบปรับปรุงสต็อก (ADJ)';
+      default:
+        return t.newTransactionBtn;
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Enterprise Title & Actions Toolbar (Matching Master Data) */}
@@ -80,7 +95,7 @@ export const TransactionMetricsCards: React.FC<TransactionMetricsCardsProps> = (
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-[14px] font-semibold shadow-xs shadow-blue-600/30 transition cursor-pointer active:scale-[0.99]"
           >
             <Plus className="w-4 h-4" />
-            <span>{t.newTransactionBtn}</span>
+            <span>{getButtonLabel()}</span>
           </button>
         </div>
       </div>

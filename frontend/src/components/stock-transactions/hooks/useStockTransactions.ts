@@ -74,53 +74,77 @@ export const useStockTransactions = (
         transactionService.getTransactions(),
       ]);
 
-      if (prodRes.status === 'fulfilled' && Array.isArray(prodRes.value)) {
-        setProductsList(
-          prodRes.value.map((p: any) => ({
+      if (prodRes.status === 'fulfilled') {
+        const prodData = (prodRes.value as any)?.data || (prodRes.value as any)?.items || (Array.isArray(prodRes.value) ? prodRes.value : []);
+        if (Array.isArray(prodData) && prodData.length > 0) {
+          const mappedProds: ProductItem[] = prodData.map((p: any) => ({
             id: p.id,
             code: p.code || 'PRD-000',
             sku: p.sku || p.code || 'SKU-000',
             name: p.name || 'Product',
-            category: p.category?.name || '-',
-            price: Number(p.price || 0),
-            stockOnHand: Number(p.stockOnHand || 0),
-            uom: p.uom || 'PCS',
+            category: p.category?.name || p.categoryName || '-',
+            price: Number(p.price || (p.sellingPriceMinor ? p.sellingPriceMinor / 100 : 0)),
+            stockOnHand: Number(p.stockOnHand ?? p.currentStock ?? 0),
+            uom: p.baseUnit?.name || p.uom || 'PCS',
             weightKg: Number(p.weightKg || 0),
             widthCm: Number(p.widthCm || 0),
             lengthCm: Number(p.lengthCm || 0),
             heightCm: Number(p.heightCm || 0),
             reorderLevel: Number(p.reorderLevel || p.reorderPoint || 10),
             minReorderQty: Number(p.minReorderQty || 5),
-          }))
-        );
+          }));
+          setProductsList(mappedProds);
+          setSelectedProductId((prev) => prev || mappedProds[0].id);
+        }
       }
 
-      if (whRes.status === 'fulfilled' && Array.isArray(whRes.value)) {
-        const bins: WarehouseBin[] = [];
-        whRes.value.forEach((wh: any) => {
-          if (Array.isArray(wh.bins)) {
-            wh.bins.forEach((b: any) => {
+      if (whRes.status === 'fulfilled') {
+        const whData = (whRes.value as any)?.data || (whRes.value as any)?.items || (Array.isArray(whRes.value) ? whRes.value : []);
+        if (Array.isArray(whData) && whData.length > 0) {
+          const bins: WarehouseBin[] = [];
+          whData.forEach((wh: any) => {
+            if (Array.isArray(wh.bins) && wh.bins.length > 0) {
+              wh.bins.forEach((b: any) => {
+                bins.push({
+                  id: b.id,
+                  warehouseId: wh.id,
+                  warehouseName: wh.name,
+                  binCode: b.code || `${wh.code}-${b.id.slice(0, 4)}`,
+                  zone: b.zone || 'A',
+                  rack: b.rack || '01',
+                  shelf: b.shelf || '1',
+                  capacityKg: Number(b.capacityKg || 1000),
+                  currentItemsCount: Number(b.currentItemsCount || 0),
+                  status: b.status || 'available',
+                });
+              });
+            } else {
               bins.push({
-                id: b.id,
+                id: wh.id,
                 warehouseId: wh.id,
                 warehouseName: wh.name,
-                binCode: b.code || `${wh.code}-${b.id.slice(0, 4)}`,
-                zone: b.zone || 'A',
-                rack: b.rack || '01',
-                shelf: b.shelf || '1',
-                capacityKg: Number(b.capacityKg || 1000),
-                currentItemsCount: Number(b.currentItemsCount || 0),
-                status: b.status || 'available',
+                binCode: `${wh.code || 'WH'}-MAIN`,
+                zone: 'General',
+                rack: '01',
+                shelf: '1',
+                capacityKg: 5000,
+                currentItemsCount: 0,
+                status: 'available',
               });
-            });
+            }
+          });
+          setWarehousesList(bins);
+          if (bins.length > 0) {
+            setFromBinId((prev) => prev || bins[0].id);
+            setToBinId((prev) => prev || (bins.length > 1 ? bins[1].id : bins[0].id));
           }
-        });
-        setWarehousesList(bins);
+        }
       }
 
-      if (supRes.status === 'fulfilled' && Array.isArray(supRes.value)) {
-        setSuppliersList(
-          supRes.value.map((s: any) => ({
+      if (supRes.status === 'fulfilled') {
+        const supData = (supRes.value as any)?.data || (supRes.value as any)?.items || (Array.isArray(supRes.value) ? supRes.value : []);
+        if (Array.isArray(supData) && supData.length > 0) {
+          const mappedSups = supData.map((s: any) => ({
             id: s.id,
             code: s.code || 'SUP-000',
             name: s.name || 'Supplier',
@@ -132,52 +156,70 @@ export const useStockTransactions = (
             discountTerms: s.discountTerms || 'Net 30',
             address: s.address || '',
             status: s.status || 'active',
-          }))
-        );
+          }));
+          setSuppliersList(mappedSups);
+          setFormSupplierId((prev) => prev || mappedSups[0].id);
+        }
       }
 
-      if (txRes.status === 'fulfilled' && Array.isArray(txRes.value)) {
-        setTransactions(
-          txRes.value.map((tx: any) => ({
-            id: tx.id,
-            documentNo: tx.documentNo || `TX-${tx.id.slice(0, 8)}`,
-            type: tx.type,
-            status: tx.status || 'COMPLETED',
-            createdAt: tx.createdAt ? tx.createdAt.replace('T', ' ').slice(0, 16) : new Date().toISOString().slice(0, 10),
-            createdBy: tx.createdBy?.name || tx.createdByName || 'Warehouse Staff',
-            referenceNo: tx.referenceNo,
-            supplierId: tx.supplierId,
-            supplierName: tx.supplier?.name || tx.supplierName,
-            recipientName: tx.recipientName,
-            issueReason: tx.issueReason,
-            transferType: tx.transferType,
-            adjustmentReason: tx.adjustmentReason,
-            adjustmentDirection: tx.adjustmentDirection,
-            notes: tx.notes,
-            items: Array.isArray(tx.items)
-              ? tx.items.map((i: any) => ({
-                  id: i.id,
-                  productId: i.productId,
-                  productCode: i.product?.code || i.productCode || 'PRD-000',
-                  productName: i.product?.name || i.productName || 'Product',
-                  sku: i.product?.sku || i.sku || 'SKU-000',
-                  uom: i.product?.uom || i.uom || 'PCS',
-                  quantity: Number(i.quantity || 0),
-                  unitPrice: Number(i.unitPrice || 0),
-                  totalPrice: Number(i.totalPrice || i.quantity * (i.unitPrice || 0)),
-                  lotNumber: i.lotNumber,
-                  mfgDate: i.mfgDate,
-                  expDate: i.expDate,
-                  fromWarehouseName: i.fromWarehouse?.name || i.fromWarehouseName,
-                  fromBinCode: i.fromBin?.code || i.fromBinCode,
-                  toWarehouseName: i.toWarehouse?.name || i.toWarehouseName,
-                  toBinCode: i.toBin?.code || i.toBinCode,
-                }))
-              : [],
-            totalQuantity: Number(tx.totalQuantity || (Array.isArray(tx.items) ? tx.items.reduce((s: number, it: any) => s + (it.quantity || 0), 0) : 0)),
-            totalAmount: Number(tx.totalAmount || 0),
-          }))
-        );
+      if (txRes.status === 'fulfilled') {
+        const txData = (txRes.value as any)?.data || (txRes.value as any)?.items || (Array.isArray(txRes.value) ? txRes.value : []);
+        if (Array.isArray(txData)) {
+          setTransactions(
+            txData.map((tx: any) => ({
+              id: tx.id,
+              documentNo: tx.documentNo || tx.issueNumber || tx.receiptNumber || `TX-${tx.id.slice(0, 8)}`,
+              type: tx.type || (tx.issueNumber ? 'ISSUE' : tx.receiptNumber ? 'RECEIVE' : 'RECEIVE'),
+              status: tx.status || 'COMPLETED',
+              createdAt: tx.createdAt ? String(tx.createdAt).replace('T', ' ').slice(0, 16) : new Date().toISOString().slice(0, 10),
+              createdBy: tx.createdBy?.name || tx.createdByName || 'Warehouse Staff',
+              referenceNo: tx.referenceNo || tx.soNumber || tx.poNumber || '-',
+              supplierId: tx.supplierId,
+              supplierName: tx.supplier?.name || tx.supplierName || '-',
+              recipientName: tx.recipientName || tx.recipient || '-',
+              issueReason: tx.issueReason || tx.reason,
+              transferType: tx.transferType || 'INTER_WAREHOUSE',
+              adjustmentReason: tx.adjustmentReason || tx.reason,
+              adjustmentDirection: tx.adjustmentDirection || 'DECREASE',
+              notes: tx.notes,
+              items: Array.isArray(tx.items)
+                ? tx.items.map((i: any) => ({
+                    id: i.id,
+                    productId: i.productId,
+                    productCode: i.product?.code || i.productCode || 'PRD-000',
+                    productName: i.product?.name || i.productName || 'Product',
+                    sku: i.product?.sku || i.sku || 'SKU-000',
+                    uom: i.product?.uom || i.uom || 'PCS',
+                    quantity: Number(i.quantity || 0),
+                    unitPrice: Number(i.unitPrice || 0),
+                    totalPrice: Number(i.totalPrice || i.quantity * (i.unitPrice || 0)),
+                    lotNumber: i.lotNumber || '-',
+                    mfgDate: i.mfgDate,
+                    expDate: i.expDate,
+                    fromWarehouseName: i.fromWarehouse?.name || i.fromWarehouseName,
+                    fromBinCode: i.fromBin?.code || i.fromBinCode,
+                    toWarehouseName: i.toWarehouse?.name || i.toWarehouseName,
+                    toBinCode: i.toBin?.code || i.toBinCode,
+                  }))
+                : Array.isArray(tx.lines)
+                ? tx.lines.map((l: any) => ({
+                    id: l.id,
+                    productId: l.productId,
+                    productCode: l.product?.code || 'PRD-000',
+                    productName: l.product?.name || 'Product',
+                    sku: l.product?.sku || 'SKU-000',
+                    uom: l.product?.baseUnit?.name || 'PCS',
+                    quantity: Number(l.quantity || 0),
+                    unitPrice: Number(l.unitPriceMinor ? l.unitPriceMinor / 100 : 0),
+                    totalPrice: Number(l.quantity * (l.unitPriceMinor ? l.unitPriceMinor / 100 : 0)),
+                    lotNumber: l.lotNumber || '-',
+                  }))
+                : [],
+              totalQuantity: Number(tx.totalQuantity || (Array.isArray(tx.items) ? tx.items.reduce((s: number, it: any) => s + (it.quantity || 0), 0) : 0)),
+              totalAmount: Number(tx.totalAmount || 0),
+            }))
+          );
+        }
       }
     } catch (err) {
       console.error('Error loading stock transactions live data:', err);
