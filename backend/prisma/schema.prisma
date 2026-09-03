@@ -937,7 +937,9 @@ model Warehouse {
   address     String? @db.VarChar(500)
   isActive    Boolean @default(true) @map("is_active")
   isDeleted   Boolean @default(false) @map("is_deleted")
-  maxCapacity Int?    @map("max_capacity")
+  maxCapacity  Int?     @map("max_capacity")
+  blueprintUrl String?  @map("blueprint_url") @db.VarChar(1000)
+  blueprintCfg Json?    @map("blueprint_cfg")
 
   createdByType String?   @map("created_by_type") @db.VarChar(20)
   createdById   String?   @map("created_by_id") @db.Uuid
@@ -968,10 +970,15 @@ model BinLocation {
   tenantId    String  @map("tenant_id") @db.Uuid
   warehouseId String  @map("warehouse_id") @db.Uuid
   code        String  @db.VarChar(50)
+  zoneName    String? @map("zone_name") @db.VarChar(100)
+  rack        String? @db.VarChar(50)
+  shelf       String? @db.VarChar(50)
+  capacityKg  Float?  @default(500) @map("capacity_kg")
+  status      String  @default("available") @db.VarChar(30)
   isActive    Boolean @default(true) @map("is_active")
   isDeleted   Boolean @default(false) @map("is_deleted")
   maxCapacity Int?    @map("max_capacity")
-  // 2026-09-01, RECEIVING_AND_PUTAWAY_DESIGN.md ยง3.2 - which storage zone
+  // 2026-09-01, RECEIVING_AND_PUTAWAY_DESIGN.md §3.2 - which storage zone
   // this shelf physically sits in, so suggest-bin can narrow by the
   // putaway-target product's category zone, not just free capacity. See
   // the Zone model's doc comment for the full suggest-bin matching rule.

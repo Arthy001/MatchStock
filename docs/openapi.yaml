@@ -2825,6 +2825,91 @@ paths:
       summary: Deactivate a warehouse (soft-delete - isActive:false).
       tags:
         - Warehouses
+  /warehouses/{id}/blueprint:
+    put:
+      operationId: WarehousesController_updateBlueprint_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBlueprintDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    id: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                    blueprintUrl: https://storage.matchstock.com/blueprints/wh-001-layout.jpg
+                    blueprintCfg:
+                      opacity: 0.55
+                      dimensions:
+                        widthMeters: 42
+                        depthMeters: 32
+                  message: Blueprint updated successfully
+      security:
+        - jwt: []
+      summary: Update blueprint image URL and 3D overlay calibration configuration.
+      tags:
+        - Warehouses
+  /warehouses/{id}/bins/batch:
+    post:
+      operationId: WarehousesController_batchSaveBins_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchSaveBinsDto'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  data:
+                    warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                    mode: overwrite
+                    totalBinsProcessed: 192
+                    createdCount: 192
+                    updatedCount: 0
+                    deletedCount: 0
+                  message: Warehouse layout saved successfully
+        '400':
+          description: Bad Request - Stock lock protection triggered when mode is overwrite
+          content:
+            application/json:
+              schema:
+                example:
+                  success: false
+                  statusCode: 400
+                  error: CANNOT_OVERWRITE_ACTIVE_STOCK
+                  message: Cannot overwrite layout - 3 bins currently hold active inventory. Please clear stock or use merge mode.
+      security:
+        - jwt: []
+      summary: Bulk create, replace, or merge bin locations scanned from 3D AI Blueprint.
+      tags:
+        - Warehouses
   /warehouses/{id}/bins:
     get:
       operationId: WarehousesController_listBins_v1
@@ -7092,6 +7177,24 @@ components:
           type: string
           maxLength: 50
           example: A1-03
+        zoneName:
+          type: string
+          maxLength: 100
+          example: Zone A
+        rack:
+          type: string
+          maxLength: 50
+          example: Rack A01
+        shelf:
+          type: string
+          maxLength: 50
+          example: Level A
+        capacityKg:
+          type: number
+          example: 500
+        status:
+          type: string
+          example: available
         isActive:
           type: boolean
           example: true
@@ -7103,6 +7206,75 @@ components:
           minimum: 0
           example: 100
           description: Total tag-count ceiling - GET /alerts flags this bin once the live count exceeds it.
+    UpdateBlueprintDto:
+      type: object
+      properties:
+        blueprintUrl:
+          type: string
+          format: uri
+          example: https://storage.matchstock.com/blueprints/wh-001-layout.jpg
+          description: Public or CDN URL of the CAD/2D blueprint image.
+        opacity:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.55
+        dimensions:
+          type: object
+          properties:
+            widthMeters:
+              type: number
+              example: 42.0
+            depthMeters:
+              type: number
+              example: 32.0
+      required:
+        - blueprintUrl
+    BatchSaveBinItemDto:
+      type: object
+      properties:
+        binCode:
+          type: string
+          example: ZoneA-A01-A-01
+        zone:
+          type: string
+          example: Zone A
+        rack:
+          type: string
+          example: Rack A01
+        shelf:
+          type: string
+          example: Level A
+        capacityKg:
+          type: number
+          example: 500
+        maxCapacity:
+          type: number
+          example: 500
+        status:
+          type: string
+          enum: [available, full, maintenance]
+          example: available
+        isActive:
+          type: boolean
+          example: true
+      required:
+        - binCode
+    BatchSaveBinsDto:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum: [overwrite, merge]
+          example: overwrite
+          description: 'overwrite: replace all bins (blocked if any active stock exists); merge: upsert bins without modifying inventory'
+        bins:
+          type: array
+          items:
+            $ref: '#/components/schemas/BatchSaveBinItemDto'
+      required:
+        - mode
+        - bins
     CreateTagDto:
       type: object
       properties:

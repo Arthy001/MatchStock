@@ -133,6 +133,23 @@ export interface TaxTypeItem {
   isActive?: boolean;
 }
 
+export interface WarehouseItem {
+  id: string;
+  code: string;
+  name: string;
+  address?: string;
+  maxCapacity?: number;
+  isActive?: boolean;
+  blueprintUrl?: string;
+  blueprintCfg?: {
+    opacity?: number;
+    dimensions?: {
+      widthMeters?: number;
+      depthMeters?: number;
+    };
+  };
+}
+
 export interface WarehouseBin {
   id: string;
   warehouseId: string;

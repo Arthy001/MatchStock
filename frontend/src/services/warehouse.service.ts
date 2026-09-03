@@ -112,4 +112,41 @@ export const warehouseService = {
       return response.data?.data || response.data;
     }
   },
+
+  // บันทึกรายการ Bins แบบชุดใหญ่ (POST /warehouses/{warehouseId}/bins/batch)
+  batchSaveBins: async (
+    warehouseId: string,
+    payload: {
+      mode: 'overwrite' | 'merge';
+      bins: Array<{
+        binCode: string;
+        zone?: string;
+        rack?: string;
+        shelf?: string;
+        capacityKg?: number;
+        maxCapacity?: number;
+        status?: 'available' | 'full' | 'maintenance';
+        isActive?: boolean;
+      }>;
+    }
+  ) => {
+    const response = await apiClient.post(`/warehouses/${warehouseId}/bins/batch`, payload);
+    return response.data?.data || response.data;
+  },
+
+  // บันทึกแปลนภาพพิมพ์เขียว CAD/2D (PUT /warehouses/{warehouseId}/blueprint)
+  updateBlueprint: async (
+    warehouseId: string,
+    payload: {
+      blueprintUrl: string;
+      opacity?: number;
+      dimensions?: {
+        widthMeters?: number;
+        depthMeters?: number;
+      };
+    }
+  ) => {
+    const response = await apiClient.put(`/warehouses/${warehouseId}/blueprint`, payload);
+    return response.data?.data || response.data;
+  },
 };
