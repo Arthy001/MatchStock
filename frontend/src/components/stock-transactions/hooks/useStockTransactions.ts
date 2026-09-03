@@ -52,14 +52,10 @@ export const useStockTransactions = (
 
   // Item Form Row
   const [selectedProductId, setSelectedProductId] = useState<string>('');
-  const [formQty, setFormQty] = useState<number>(10);
-  const [formLotNumber, setFormLotNumber] = useState<string>(
-    `LOT-${new Date().toISOString().slice(0, 7).replace('-', '')}-01`
-  );
-  const [formMfgDate, setFormMfgDate] = useState<string>(new Date().toISOString().slice(0, 10));
-  const [formExpDate, setFormExpDate] = useState<string>(
-    new Date(Date.now() + 365 * 24 * 60 * 60 * 1000 * 2).toISOString().slice(0, 10)
-  );
+  const [formQty, setFormQty] = useState<number>(1);
+  const [formLotNumber, setFormLotNumber] = useState<string>('');
+  const [formMfgDate, setFormMfgDate] = useState<string>('');
+  const [formExpDate, setFormExpDate] = useState<string>('');
   const [fromBinId, setFromBinId] = useState<string>('');
   const [toBinId, setToBinId] = useState<string>('');
 
@@ -74,10 +70,11 @@ export const useStockTransactions = (
         transactionService.getTransactions(),
       ]);
 
+      let mappedProds: ProductItem[] = [];
       if (prodRes.status === 'fulfilled') {
         const prodData = (prodRes.value as any)?.data || (prodRes.value as any)?.items || (Array.isArray(prodRes.value) ? prodRes.value : []);
         if (Array.isArray(prodData) && prodData.length > 0) {
-          const mappedProds: ProductItem[] = prodData.map((p: any) => ({
+          mappedProds = prodData.map((p: any) => ({
             id: p.id,
             code: p.code || 'PRD-000',
             sku: p.sku || p.code || 'SKU-000',
@@ -94,18 +91,17 @@ export const useStockTransactions = (
             minReorderQty: Number(p.minReorderQty || 5),
           }));
           setProductsList(mappedProds);
-          setSelectedProductId((prev) => prev || mappedProds[0].id);
         }
       }
 
+      let mappedBins: WarehouseBin[] = [];
       if (whRes.status === 'fulfilled') {
         const whData = (whRes.value as any)?.data || (whRes.value as any)?.items || (Array.isArray(whRes.value) ? whRes.value : []);
         if (Array.isArray(whData) && whData.length > 0) {
-          const bins: WarehouseBin[] = [];
           whData.forEach((wh: any) => {
             if (Array.isArray(wh.bins) && wh.bins.length > 0) {
               wh.bins.forEach((b: any) => {
-                bins.push({
+                mappedBins.push({
                   id: b.id,
                   warehouseId: wh.id,
                   warehouseName: wh.name,
@@ -119,7 +115,7 @@ export const useStockTransactions = (
                 });
               });
             } else {
-              bins.push({
+              mappedBins.push({
                 id: wh.id,
                 warehouseId: wh.id,
                 warehouseName: wh.name,
@@ -133,18 +129,19 @@ export const useStockTransactions = (
               });
             }
           });
-          setWarehousesList(bins);
-          if (bins.length > 0) {
-            setFromBinId((prev) => prev || bins[0].id);
-            setToBinId((prev) => prev || (bins.length > 1 ? bins[1].id : bins[0].id));
+          setWarehousesList(mappedBins);
+          if (mappedBins.length > 0) {
+            setFromBinId((prev) => prev || mappedBins[0].id);
+            setToBinId((prev) => prev || (mappedBins.length > 1 ? mappedBins[1].id : mappedBins[0].id));
           }
         }
       }
 
+      let mappedSups: Supplier[] = [];
       if (supRes.status === 'fulfilled') {
         const supData = (supRes.value as any)?.data || (supRes.value as any)?.items || (Array.isArray(supRes.value) ? supRes.value : []);
         if (Array.isArray(supData) && supData.length > 0) {
-          const mappedSups = supData.map((s: any) => ({
+          mappedSups = supData.map((s: any) => ({
             id: s.id,
             code: s.code || 'SUP-000',
             name: s.name || 'Supplier',
@@ -166,58 +163,95 @@ export const useStockTransactions = (
         const txData = (txRes.value as any)?.data || (txRes.value as any)?.items || (Array.isArray(txRes.value) ? txRes.value : []);
         if (Array.isArray(txData)) {
           setTransactions(
-            txData.map((tx: any) => ({
-              id: tx.id,
-              documentNo: tx.documentNo || tx.issueNumber || tx.receiptNumber || `TX-${tx.id.slice(0, 8)}`,
-              type: tx.type || (tx.issueNumber ? 'ISSUE' : tx.receiptNumber ? 'RECEIVE' : 'RECEIVE'),
-              status: tx.status || 'COMPLETED',
-              createdAt: tx.createdAt ? String(tx.createdAt).replace('T', ' ').slice(0, 16) : new Date().toISOString().slice(0, 10),
-              createdBy: tx.createdBy?.name || tx.createdByName || 'Warehouse Staff',
-              referenceNo: tx.referenceNo || tx.soNumber || tx.poNumber || '-',
-              supplierId: tx.supplierId,
-              supplierName: tx.supplier?.name || tx.supplierName || '-',
-              recipientName: tx.recipientName || tx.recipient || '-',
-              issueReason: tx.issueReason || tx.reason,
-              transferType: tx.transferType || 'INTER_WAREHOUSE',
-              adjustmentReason: tx.adjustmentReason || tx.reason,
-              adjustmentDirection: tx.adjustmentDirection || 'DECREASE',
-              notes: tx.notes,
-              items: Array.isArray(tx.items)
-                ? tx.items.map((i: any) => ({
-                    id: i.id,
-                    productId: i.productId,
-                    productCode: i.product?.code || i.productCode || 'PRD-000',
-                    productName: i.product?.name || i.productName || 'Product',
-                    sku: i.product?.sku || i.sku || 'SKU-000',
-                    uom: i.product?.uom || i.uom || 'PCS',
-                    quantity: Number(i.quantity || 0),
-                    unitPrice: Number(i.unitPrice || 0),
-                    totalPrice: Number(i.totalPrice || i.quantity * (i.unitPrice || 0)),
-                    lotNumber: i.lotNumber || '-',
-                    mfgDate: i.mfgDate,
-                    expDate: i.expDate,
-                    fromWarehouseName: i.fromWarehouse?.name || i.fromWarehouseName,
-                    fromBinCode: i.fromBin?.code || i.fromBinCode,
-                    toWarehouseName: i.toWarehouse?.name || i.toWarehouseName,
-                    toBinCode: i.toBin?.code || i.toBinCode,
-                  }))
-                : Array.isArray(tx.lines)
-                ? tx.lines.map((l: any) => ({
-                    id: l.id,
-                    productId: l.productId,
-                    productCode: l.product?.code || 'PRD-000',
-                    productName: l.product?.name || 'Product',
-                    sku: l.product?.sku || 'SKU-000',
-                    uom: l.product?.baseUnit?.name || 'PCS',
-                    quantity: Number(l.quantity || 0),
-                    unitPrice: Number(l.unitPriceMinor ? l.unitPriceMinor / 100 : 0),
-                    totalPrice: Number(l.quantity * (l.unitPriceMinor ? l.unitPriceMinor / 100 : 0)),
-                    lotNumber: l.lotNumber || '-',
-                  }))
-                : [],
-              totalQuantity: Number(tx.totalQuantity || (Array.isArray(tx.items) ? tx.items.reduce((s: number, it: any) => s + (it.quantity || 0), 0) : 0)),
-              totalAmount: Number(tx.totalAmount || 0),
-            }))
+            txData.map((tx: any) => {
+              const matchedWh = mappedBins.find(
+                (w) => w.warehouseId === tx.warehouseId || w.id === tx.warehouseId
+              );
+              const matchedSup = mappedSups.find((s) => s.id === tx.supplierId);
+
+              const items = Array.isArray(tx.items) && tx.items.length > 0
+                ? tx.items.map((i: any) => {
+                    const matchedProd = mappedProds.find((p) => p.id === i.productId);
+                    return {
+                      id: i.id,
+                      productId: i.productId,
+                      productCode: i.productCode || i.product?.code || matchedProd?.code || 'PRD-000',
+                      productName: i.productName || i.product?.name || matchedProd?.name || 'สินค้า',
+                      sku: i.sku || i.product?.sku || matchedProd?.sku || 'SKU-000',
+                      uom: i.uom || i.product?.uom || i.product?.baseUnit?.name || matchedProd?.uom || 'ชิ้น',
+                      quantity: Number(i.quantity || 0),
+                      unitPrice: Number(i.unitPrice || matchedProd?.price || 0),
+                      totalPrice: Number(i.totalPrice || (i.quantity * (i.unitPrice || matchedProd?.price || 0))),
+                      lotNumber: i.lotNumber || i.lot?.lotNumber || '-',
+                      mfgDate: i.mfgDate || i.lot?.manufacturedDate,
+                      expDate: i.expDate || i.lot?.expirationDate,
+                      fromWarehouseName: i.fromWarehouseName || i.fromWarehouse?.name,
+                      fromBinCode: i.fromBinCode || i.fromBinLocation?.code || i.fromBin?.code,
+                      toWarehouseName: i.toWarehouseName || i.toWarehouse?.name || matchedWh?.warehouseName || 'คลังหลัก',
+                      toBinCode: i.toBinCode || i.toBinLocation?.code || i.toBin?.code || matchedWh?.binCode || 'Dock Staging',
+                    };
+                  })
+                : Array.isArray(tx.lines) && tx.lines.length > 0
+                ? tx.lines.map((l: any) => {
+                    const matchedProd = mappedProds.find((p) => p.id === l.productId);
+                    const binObj = mappedBins.find((w) => w.id === l.binLocationId);
+                    const unitPrice = Number(l.unitCostMinor ? l.unitCostMinor / 100 : (l.unitCost || matchedProd?.price || 0));
+                    return {
+                      id: l.id,
+                      productId: l.productId,
+                      productCode: l.product?.code || matchedProd?.code || 'PRD-000',
+                      productName: l.product?.name || matchedProd?.name || 'สินค้า',
+                      sku: l.product?.sku || matchedProd?.sku || 'SKU-000',
+                      uom: l.product?.baseUnit?.name || matchedProd?.uom || 'ชิ้น',
+                      quantity: Number(l.quantity || 0),
+                      unitPrice: unitPrice,
+                      totalPrice: Number(l.quantity || 0) * unitPrice,
+                      lotNumber: l.lotNumber || '-',
+                      expDate: l.expiryDate ? String(l.expiryDate).slice(0, 10) : undefined,
+                      mfgDate: l.productionDate ? String(l.productionDate).slice(0, 10) : undefined,
+                      toWarehouseName: tx.warehouse?.name || matchedWh?.warehouseName || 'คลังสินค้าหลัก กรุงเทพฯ',
+                      toBinCode: l.binLocation?.code || binObj?.binCode || (l.binLocationId ? 'Bin' : 'Dock Staging'),
+                    };
+                  })
+                : [];
+
+              const totalQuantity = Array.isArray(tx.lines) && tx.lines.length > 0
+                ? tx.lines.reduce((s: number, l: any) => s + (Number(l.quantity) || 0), 0)
+                : Array.isArray(tx.items) && tx.items.length > 0
+                ? tx.items.reduce((s: number, it: any) => s + (Number(it.quantity) || 0), 0)
+                : Number(tx.totalQuantity || 0);
+
+              const totalAmount = Array.isArray(tx.lines) && tx.lines.length > 0
+                ? tx.lines.reduce((s: number, l: any) => {
+                    const p = mappedProds.find((pr) => pr.id === l.productId);
+                    const prc = Number(l.unitCostMinor ? l.unitCostMinor / 100 : (l.unitCost || p?.price || 0));
+                    return s + ((Number(l.quantity) || 0) * prc);
+                  }, 0)
+                : Array.isArray(tx.items) && tx.items.length > 0
+                ? tx.items.reduce((s: number, it: any) => s + (Number(it.totalPrice || (it.quantity * (it.unitPrice || 0))) || 0), 0)
+                : Number(tx.totalValue || tx.totalAmount || 0);
+
+              return {
+                id: tx.id,
+                documentNo: tx.documentNo || tx.issueNumber || tx.receiptNumber || `TX-${tx.id.slice(0, 8)}`,
+                type: tx.type || (tx.issueNumber ? 'ISSUE' : tx.receiptNumber ? 'RECEIVE' : 'RECEIVE'),
+                status: tx.status || 'COMPLETED',
+                createdAt: tx.createdAt || tx.date ? String(tx.createdAt || tx.date).replace('T', ' ').slice(0, 16) : new Date().toISOString().slice(0, 10),
+                createdBy: tx.createdBy?.name || tx.creatorName || tx.createdByName || 'Warehouse Staff',
+                referenceNo: tx.referenceNo || tx.soNumber || tx.poNumber || '-',
+                supplierId: tx.supplierId,
+                supplierName: tx.supplier?.name || tx.supplierName || matchedSup?.name || '-',
+                recipientName: tx.recipientName || tx.recipient || '-',
+                issueReason: tx.issueReason || tx.reason,
+                transferType: tx.transferType || 'INTER_WAREHOUSE',
+                adjustmentReason: tx.adjustmentReason || tx.reason,
+                adjustmentDirection: tx.adjustmentDirection || 'DECREASE',
+                notes: tx.notes,
+                items,
+                totalQuantity,
+                totalAmount,
+              };
+            })
           );
         }
       }
@@ -256,6 +290,68 @@ export const useStockTransactions = (
 
   const totalAdjustments = useMemo(
     () => transactions.filter((t) => t.type === 'ADJUSTMENT').length,
+    [transactions]
+  );
+
+  // Subtab-Specific Granular Inbound / Outbound Metrics
+  const receiveDocCount = useMemo(
+    () => transactions.filter((t) => t.type === 'RECEIVE').length,
+    [transactions]
+  );
+
+  const receiveCompletedCount = useMemo(
+    () => transactions.filter((t) => t.type === 'RECEIVE' && t.status === 'COMPLETED').length,
+    [transactions]
+  );
+
+  const receiveTotalValue = useMemo(
+    () =>
+      transactions
+        .filter((t) => t.type === 'RECEIVE')
+        .reduce((sum, t) => sum + (t.totalAmount || 0), 0),
+    [transactions]
+  );
+
+  const issueDocCount = useMemo(
+    () => transactions.filter((t) => t.type === 'ISSUE').length,
+    [transactions]
+  );
+
+  const issueCompletedCount = useMemo(
+    () => transactions.filter((t) => t.type === 'ISSUE' && t.status === 'COMPLETED').length,
+    [transactions]
+  );
+
+  const issueTotalValue = useMemo(
+    () =>
+      transactions
+        .filter((t) => t.type === 'ISSUE')
+        .reduce((sum, t) => sum + (t.totalAmount || 0), 0),
+    [transactions]
+  );
+
+  const transferWarehouseCount = useMemo(
+    () => transactions.filter((t) => t.type === 'TRANSFER' && t.transferType === 'INTER_WAREHOUSE').length,
+    [transactions]
+  );
+
+  const transferBinCount = useMemo(
+    () => transactions.filter((t) => t.type === 'TRANSFER' && t.transferType === 'BIN_TO_BIN').length,
+    [transactions]
+  );
+
+  const transferCompletedCount = useMemo(
+    () => transactions.filter((t) => t.type === 'TRANSFER' && t.status === 'COMPLETED').length,
+    [transactions]
+  );
+
+  const adjIncreaseCount = useMemo(
+    () => transactions.filter((t) => t.type === 'ADJUSTMENT' && t.adjustmentDirection === 'INCREASE').length,
+    [transactions]
+  );
+
+  const adjDecreaseCount = useMemo(
+    () => transactions.filter((t) => t.type === 'ADJUSTMENT' && t.adjustmentDirection === 'DECREASE').length,
     [transactions]
   );
 
@@ -572,6 +668,17 @@ export const useStockTransactions = (
     totalIssues,
     activeTransfers,
     totalAdjustments,
+    receiveDocCount,
+    receiveCompletedCount,
+    receiveTotalValue,
+    issueDocCount,
+    issueCompletedCount,
+    issueTotalValue,
+    transferWarehouseCount,
+    transferBinCount,
+    transferCompletedCount,
+    adjIncreaseCount,
+    adjDecreaseCount,
     filteredTransactions,
     handleOpenDetail,
     handleOpenCreateModal,

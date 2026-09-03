@@ -77,7 +77,28 @@ export const transactionService = {
   getTransactions: async (params?: { type?: string; search?: string; page?: number; limit?: number }) => {
     try {
       const response = await apiClient.get('/goods-receipts', { params });
-      return response.data?.data || response.data || [];
+      const data = response.data?.data || response.data || [];
+      if (Array.isArray(data) && data.length > 0) {
+        // Hydrate lines for receipts where lines array is omitted in list view
+        const hydrated = await Promise.all(
+          data.map(async (item: any) => {
+            if (!item.lines || (Array.isArray(item.lines) && item.lines.length === 0)) {
+              try {
+                const detailRes = await apiClient.get(`/goods-receipts/${item.id}`);
+                const fullItem = detailRes.data?.data || detailRes.data;
+                if (fullItem && Array.isArray(fullItem.lines) && fullItem.lines.length > 0) {
+                  return { ...item, lines: fullItem.lines };
+                }
+              } catch {
+                // Silent fallback to item if detail fetch fails
+              }
+            }
+            return item;
+          })
+        );
+        return hydrated;
+      }
+      return data;
     } catch {
       try {
         const response = await apiClient.get('/inventory/transactions', { params });
@@ -199,14 +220,23 @@ export const transactionService = {
       const payload = {
         receiptNumber: data.receiptNumber || `GR-${Date.now()}`,
         warehouseId: data.warehouseId,
-        binLocationId: data.binLocationId || null,
-        supplierId: data.supplierId || null,
-        poNumber: data.poNumber || null,
-        supplierInvoiceNo: data.supplierInvoiceNo || null,
+        binLocationId: data.binLocationId && data.binLocationId !== data.warehouseId ? data.binLocationId : undefined,
+        supplierId: data.supplierId || undefined,
+        poNumber: data.poNumber || undefined,
+        supplierInvoiceNo: data.supplierInvoiceNo || undefined,
         photoUrls: data.photoUrls || [],
         receivedAt: data.receivedAt || new Date().toISOString(),
-        notes: data.notes || '',
-        lines: data.lines,
+        notes: data.notes || undefined,
+        lines: data.lines.map((l: any) => ({
+          productId: l.productId,
+          quantity: Number(l.quantity),
+          damagedQuantity: Number(l.damagedQuantity) || 0,
+          lotNumber: l.lotNumber || undefined,
+          productionDate: l.productionDate || undefined,
+          expiryDate: l.expiryDate || undefined,
+          unitCostMinor: l.unitCostMinor ?? (l.unitCost ? Math.round(l.unitCost * 100) : 0),
+          binLocationId: l.binLocationId && l.binLocationId !== data.warehouseId ? l.binLocationId : undefined,
+        })),
       };
       const response = await apiClient.post('/goods-receipts', payload);
       return response.data?.data || response.data;
@@ -217,28 +247,21 @@ export const transactionService = {
     const payload = {
       receiptNumber: legacy.referenceNo || `GR-${Date.now()}`,
       warehouseId: legacy.warehouseId,
-      supplierId: legacy.supplierId,
-      binLocationId: legacy.items?.[0]?.binLocationId || null,
-      notes: legacy.notes,
-      items: legacy.items,
+      supplierId: legacy.supplierId || undefined,
+      notes: legacy.notes || undefined,
       lines: legacy.items?.map((it) => ({
         productId: it.productId,
         quantity: it.quantity,
         damagedQuantity: 0,
-        lotNumber: it.lotNumber,
-        productionDate: it.manufacturedDate,
-        expiryDate: it.expirationDate,
-        unitCostMinor: it.unitPrice ? Math.round(it.unitPrice * 100) : undefined,
-        binLocationId: it.binLocationId || null,
+        lotNumber: it.lotNumber || undefined,
+        productionDate: it.manufacturedDate || undefined,
+        expiryDate: it.expirationDate || undefined,
+        unitCostMinor: it.unitPrice ? Math.round(it.unitPrice * 100) : 0,
+        binLocationId: it.binLocationId && it.binLocationId !== legacy.warehouseId ? it.binLocationId : undefined,
       })),
     };
-    try {
-      const response = await apiClient.post('/goods-receipts', payload);
-      return response.data?.data || response.data;
-    } catch {
-      const response = await apiClient.post('/inventory/transactions/receive', data);
-      return response.data?.data || response.data;
-    }
+    const response = await apiClient.post('/goods-receipts', payload);
+    return response.data?.data || response.data;
   },
 
   // บันทึก Goods Issue (GI) -> POST /goods-issues

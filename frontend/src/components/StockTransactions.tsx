@@ -10,6 +10,7 @@ import { TransactionHistoryTable } from './stock-transactions/tabs/TransactionHi
 import { TransactionDetailDrawer } from './stock-transactions/modals/TransactionDetailDrawer';
 import { CreateTransactionModal } from './stock-transactions/modals/CreateTransactionModal';
 import { CreateGoodsReceiptModal } from './stock-transactions/modals/CreateGoodsReceiptModal';
+import { ReceiveHowToModal } from './stock-transactions/modals/ReceiveHowToModal';
 
 interface StockTransactionsProps {
   lang: Language;
@@ -24,6 +25,7 @@ export const StockTransactions: React.FC<StockTransactionsProps> = ({
   theme,
   searchQuery = '',
   activeSubTab = 'all',
+  onSubTabChange,
 }) => {
   const t = getTranslation(lang);
 
@@ -81,13 +83,26 @@ export const StockTransactions: React.FC<StockTransactionsProps> = ({
     totalIssues,
     activeTransfers,
     totalAdjustments,
+    receiveDocCount,
+    receiveCompletedCount,
+    receiveTotalValue,
+    issueDocCount,
+    issueCompletedCount,
+    issueTotalValue,
+    transferWarehouseCount,
+    transferBinCount,
+    transferCompletedCount,
+    adjIncreaseCount,
+    adjDecreaseCount,
     filteredTransactions,
     handleOpenDetail,
     handleOpenCreateModal,
     handleCreateTransaction,
+    loadLiveData,
   } = useStockTransactions(searchQuery, activeSubTab);
 
   const [isGrModalOpen, setIsGrModalOpen] = useState<boolean>(false);
+  const [isHowToModalOpen, setIsHowToModalOpen] = useState<boolean>(false);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -110,7 +125,7 @@ export const StockTransactions: React.FC<StockTransactionsProps> = ({
         </div>
       )}
 
-      {/* Header & KPI Summary Cards */}
+      {/* Header & Dynamic Context-Aware KPI Summary Cards */}
       <TransactionMetricsCards
         theme={theme}
         t={t}
@@ -119,6 +134,17 @@ export const StockTransactions: React.FC<StockTransactionsProps> = ({
         totalIssues={totalIssues}
         activeTransfers={activeTransfers}
         totalAdjustments={totalAdjustments}
+        receiveDocCount={receiveDocCount}
+        receiveCompletedCount={receiveCompletedCount}
+        receiveTotalValue={receiveTotalValue}
+        issueDocCount={issueDocCount}
+        issueCompletedCount={issueCompletedCount}
+        issueTotalValue={issueTotalValue}
+        transferWarehouseCount={transferWarehouseCount}
+        transferBinCount={transferBinCount}
+        transferCompletedCount={transferCompletedCount}
+        adjIncreaseCount={adjIncreaseCount}
+        adjDecreaseCount={adjDecreaseCount}
         onOpenCreateModal={() => {
           if (activeSubTab === 'receive') {
             setIsGrModalOpen(true);
@@ -126,6 +152,7 @@ export const StockTransactions: React.FC<StockTransactionsProps> = ({
             handleOpenCreateModal();
           }
         }}
+        onOpenHowToModal={() => setIsHowToModalOpen(true)}
       />
 
       {/* Transactions Data Table & Filters */}
@@ -141,6 +168,18 @@ export const StockTransactions: React.FC<StockTransactionsProps> = ({
         setStatusFilter={setStatusFilter}
         filteredTransactions={filteredTransactions}
         onOpenDetail={handleOpenDetail}
+      />
+
+      {/* Interactive Step-by-Step How-To Guide Popup Modal */}
+      <ReceiveHowToModal
+        theme={theme}
+        lang={lang}
+        isOpen={isHowToModalOpen}
+        onClose={() => setIsHowToModalOpen(false)}
+        onOpenCreateGRModal={() => {
+          setIsHowToModalOpen(false);
+          setIsGrModalOpen(true);
+        }}
       />
 
       {/* Slide-Over Drawer for Transaction Details */}
@@ -164,6 +203,7 @@ export const StockTransactions: React.FC<StockTransactionsProps> = ({
             type: 'success',
             message: lang === 'th' ? `สร้างใบรับสินค้า ${receipt?.receiptNumber || ''} เรียบร้อยแล้ว` : 'Goods Receipt created successfully',
           });
+          loadLiveData();
         }}
         productsList={productsList}
         warehousesList={warehousesList}

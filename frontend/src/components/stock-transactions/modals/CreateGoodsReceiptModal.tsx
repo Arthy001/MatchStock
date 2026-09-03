@@ -81,14 +81,14 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
   const [notes, setNotes] = useState<string>('');
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
 
-  // Lines State
+  // Lines State (Clean initial state - no dummy pre-filled items)
   const [lines, setLines] = useState<FormLineItem[]>([
     {
       id: 'line-1',
-      productId: productsList[0]?.id || '',
-      quantity: 10,
+      productId: '',
+      quantity: 1,
       damagedQuantity: 0,
-      lotNumber: `LOT-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-A`,
+      lotNumber: '',
       productionDate: '',
       expiryDate: '',
       unitCost: 0,
@@ -109,14 +109,14 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
       ...prev,
       {
         id: `line-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-        productId: productsList[0]?.id || '',
+        productId: '',
         quantity: 1,
         damagedQuantity: 0,
         lotNumber: '',
         productionDate: '',
         expiryDate: '',
         unitCost: 0,
-        binLocationId: availableBins[0]?.id || '',
+        binLocationId: '',
       },
     ]);
   };
@@ -196,8 +196,8 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
           productionDate: l.productionDate ? new Date(l.productionDate).toISOString() : undefined,
           expiryDate: l.expiryDate ? new Date(l.expiryDate).toISOString() : undefined,
           unitCostMinor: l.unitCost ? Math.round(l.unitCost * 100) : undefined,
-          // If 1-Step: send selected bin; If 2-Step: null/undefined (staged)
-          binLocationId: putawayMode === '1-STEP' ? l.binLocationId : undefined,
+          // If 1-Step: send selected bin (only if it is a real bin ID, not the warehouse ID fallback); If 2-Step: null/undefined (staged)
+          binLocationId: putawayMode === '1-STEP' && l.binLocationId && l.binLocationId !== warehouseId ? l.binLocationId : undefined,
         })),
       };
 
