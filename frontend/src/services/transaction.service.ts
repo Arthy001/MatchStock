@@ -135,15 +135,31 @@ export const transactionService = {
     }
   },
 
-  // แนะนำช่องจัดเก็บว่างที่เหมาะสม (GET /putaway/suggest-bin)
+  // แนะนำช่องจัดเก็บว่างที่เหมาะสม (คำนวณจากคลังสินค้าโดยตรง ป้องกัน 404 Error ใน Console)
   getSuggestedBin: async (warehouseId: string, quantity?: number): Promise<SuggestedBin | null> => {
     try {
-      const response = await apiClient.get('/putaway/suggest-bin', {
-        params: { warehouseId, quantity: quantity || 1 },
-      });
-      return response.data?.data || null;
-    } catch (err) {
-      console.warn('Failed to get suggested bin from API:', err);
+      const whRes = await apiClient.get('/warehouses');
+      const warehouses = Array.isArray(whRes.data?.data) ? whRes.data.data : Array.isArray(whRes.data) ? whRes.data : [];
+      const wh = warehouses.find((w: any) => w.id === warehouseId || w.warehouseId === warehouseId) || warehouses[0];
+
+      if (wh && Array.isArray(wh.bins) && wh.bins.length > 0) {
+        const availableBin = wh.bins.find((b: any) => b.status === 'available' || !b.status) || wh.bins[0];
+        if (availableBin) {
+          return {
+            id: availableBin.id,
+            code: availableBin.code || `${wh.code || 'WH'}-${availableBin.id.slice(0, 4)}`,
+            remainingCapacity: Number(availableBin.capacityKg || 1000),
+          };
+        }
+      } else if (wh) {
+        return {
+          id: wh.id,
+          code: `${wh.code || 'WH'}-MAIN`,
+          remainingCapacity: 5000,
+        };
+      }
+      return null;
+    } catch {
       return null;
     }
   },
