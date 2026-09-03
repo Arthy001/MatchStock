@@ -179,39 +179,41 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           >
             {/* Search Input Filter Bar */}
             {searchable && (
-              <div className="relative mb-2 shrink-0">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={searchPlaceholder}
-                  className={`w-full pl-8.5 pr-8 py-1.5 text-xs font-medium rounded-lg border outline-none transition ${
-                    theme === 'light'
-                      ? 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white'
-                      : 'bg-slate-950 border-slate-800 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:bg-slate-950'
-                  }`}
-                  onKeyDown={(e) => {
-                    // Prevent form submission if enter pressed inside search box
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      if (filteredOptions.length > 0 && !filteredOptions[0].isAction) {
-                        onChange(filteredOptions[0].value);
-                        setIsOpen(false);
+              <div className="relative mb-2 p-0.5 shrink-0">
+                <div className="relative flex items-center">
+                  <Search className="w-4 h-4 absolute left-3 text-slate-400 dark:text-slate-500 pointer-events-none shrink-0" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={searchPlaceholder}
+                    className={`w-full pl-9 pr-8 h-9 text-xs font-medium rounded-xl border outline-none transition shadow-2xs ${
+                      theme === 'light'
+                        ? 'bg-slate-50/80 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15'
+                        : 'bg-slate-950 border-slate-700/80 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:bg-slate-950 focus:ring-2 focus:ring-blue-500/20'
+                    }`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (filteredOptions.length > 0 && !filteredOptions[0].isAction) {
+                          onChange(filteredOptions[0].value);
+                          setIsOpen(false);
+                        }
                       }
-                    }
-                  }}
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-0.5"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
+                    }}
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-md transition"
+                      title="ล้างคำค้นหา"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 
