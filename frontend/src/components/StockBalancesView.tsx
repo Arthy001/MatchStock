@@ -24,6 +24,7 @@ import {
 } from '../types';
 import { transactionService } from '../services/transaction.service';
 import { warehouseService } from '../services/warehouse.service';
+import { CustomSelect } from './common/CustomSelect';
 
 interface StockBalancesViewProps {
   theme: ThemeMode;
@@ -175,24 +176,27 @@ export const StockBalancesView: React.FC<StockBalancesViewProps> = ({
               isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
             }`}
           >
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2 min-w-[240px]">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 shrink-0">
                 {isEn ? 'Warehouse:' : 'คลังสินค้า:'}
               </span>
-              <select
-                value={selectedWarehouseId}
-                onChange={(e) => setSelectedWarehouseId(e.target.value)}
-                className={`p-2 rounded-xl border text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none ${
-                  isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200'
-                }`}
-              >
-                <option value="all">{isEn ? 'All Warehouses' : 'ทุกคลังสินค้า'}</option>
-                {warehousesList.map((wh) => (
-                  <option key={wh.id} value={wh.warehouseId || wh.id}>
-                    {wh.warehouseName || (wh as any).name || wh.id}
-                  </option>
-                ))}
-              </select>
+              <div className="flex-1">
+                <CustomSelect
+                  theme={theme}
+                  value={selectedWarehouseId}
+                  onChange={setSelectedWarehouseId}
+                  searchable={true}
+                  placeholder={isEn ? 'All Warehouses' : 'ทุกคลังสินค้า'}
+                  searchPlaceholder="ค้นหาคลังสินค้า..."
+                  options={[
+                    { value: 'all', label: isEn ? 'All Warehouses' : 'ทุกคลังสินค้า (All)' },
+                    ...warehousesList.map((wh) => ({
+                      value: wh.warehouseId || wh.id,
+                      label: wh.warehouseName || (wh as any).name || wh.id,
+                    })),
+                  ]}
+                />
+              </div>
             </div>
 
             <div className="flex items-center gap-2 w-full sm:w-auto">

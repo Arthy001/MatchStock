@@ -122,8 +122,12 @@ export const OrdersManagement: React.FC<OrdersManagementProps> = ({
         products={products}
         warehouses={warehouses}
         calculatedTotal={calculatedTotal}
-        onAddItem={() => {
-          if (products.length > 0) handleAddItem(products[0].id);
+        onAddItem={(prodId) => {
+          if (prodId) {
+            handleAddItem(prodId);
+          } else if (products.length > 0) {
+            handleAddItem(products[0].id);
+          }
         }}
         onUpdateItemQty={handleUpdateItemQty}
         onUpdateItemPrice={handleUpdateItemPrice}

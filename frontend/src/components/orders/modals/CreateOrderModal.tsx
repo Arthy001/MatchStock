@@ -1,6 +1,7 @@
-import React from 'react';
-import { Plus, X, Trash2, ShoppingCart, ShoppingBag } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, X, Trash2, ShoppingCart, ShoppingBag, Package } from 'lucide-react';
 import { ThemeMode, Language, OrderItem, ProductItem } from '../../../types';
+import { CustomSelect } from '../../common/CustomSelect';
 
 interface CreateOrderModalProps {
   theme: ThemeMode;
@@ -24,7 +25,7 @@ interface CreateOrderModalProps {
   products: ProductItem[];
   warehouses: any[];
   calculatedTotal: number;
-  onAddItem: () => void;
+  onAddItem: (productId?: string) => void;
   onUpdateItemQty: (id: string, qty: number) => void;
   onUpdateItemPrice: (id: string, price: number) => void;
   onRemoveItem: (id: string) => void;
@@ -58,6 +59,16 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
 }) => {
   if (!isOpen) return null;
   const isEn = lang === 'en';
+  const [quickProductId, setQuickProductId] = useState<string>('');
+
+  const handleQuickAdd = () => {
+    if (quickProductId) {
+      onAddItem(quickProductId);
+      setQuickProductId('');
+    } else if (products.length > 0) {
+      onAddItem(products[0].id);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
@@ -184,21 +195,19 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
               <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
                 {isEn ? 'Warehouse:' : 'คลังเป้าหมาย:'}
               </label>
-              <select
+              <CustomSelect
+                theme={theme}
                 value={formWarehouseId}
-                onChange={(e) => setFormWarehouseId(e.target.value)}
-                className={`w-full px-3 py-2 rounded-xl border font-medium focus:ring-2 focus:ring-blue-500 transition cursor-pointer ${
-                  theme === 'dark'
-                    ? 'bg-slate-800 border-slate-700 text-slate-100'
-                    : 'bg-slate-50 border-slate-300 text-slate-900'
-                }`}
-              >
-                {warehouses.map((w) => (
-                  <option key={w.id || w.code} value={w.id || w.code}>
-                    {w.name || w.code}
-                  </option>
-                ))}
-              </select>
+                onChange={setFormWarehouseId}
+                searchable={true}
+                placeholder="-- เลือกคลังสินค้า --"
+                searchPlaceholder="ค้นหาชื่อหรือรหัสคลัง..."
+                options={warehouses.map((w) => ({
+                  value: w.id || w.code,
+                  label: w.name || w.code,
+                  sublabel: w.code,
+                }))}
+              />
             </div>
           </div>
 
@@ -208,13 +217,32 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
               <span className="font-bold text-slate-700 dark:text-slate-300">
                 {isEn ? 'Order Items:' : 'รายการสินค้า (Order Items):'}
               </span>
+            </div>
+
+            {/* Searchable Add Product Toolbar */}
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex-1">
+                <CustomSelect
+                  theme={theme}
+                  value={quickProductId}
+                  onChange={setQuickProductId}
+                  searchable={true}
+                  placeholder="-- ค้นหาและเลือกสินค้าเพื่อเพิ่ม --"
+                  searchPlaceholder="พิมพ์ชื่อสินค้า, SKU, หรือบาร์โค้ด..."
+                  options={products.map((p) => ({
+                    value: p.id,
+                    label: `${p.name} (${p.sku})`,
+                    sublabel: `฿${p.price?.toLocaleString()} | คงเหลือ: ${p.stockOnHand} ${p.uom}`,
+                  }))}
+                />
+              </div>
               <button
                 type="button"
-                onClick={onAddItem}
-                className="px-2.5 py-1 rounded-lg bg-blue-600/10 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white font-bold transition flex items-center gap-1 cursor-pointer"
+                onClick={handleQuickAdd}
+                className="h-[42px] px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition flex items-center gap-1.5 shadow-xs shrink-0 cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5" />
-                {isEn ? 'Add Item' : 'เพิ่มสินค้า'}
+                <Plus className="w-4 h-4" />
+                <span>{isEn ? 'Add' : 'เพิ่มรายการ'}</span>
               </button>
             </div>
 

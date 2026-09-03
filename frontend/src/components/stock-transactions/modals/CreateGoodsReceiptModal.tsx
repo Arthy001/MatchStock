@@ -27,6 +27,7 @@ import {
   CreateGoodsReceiptLineDto,
 } from '../../../types';
 import { transactionService } from '../../../services/transaction.service';
+import { CustomSelect } from '../../common/CustomSelect';
 
 interface CreateGoodsReceiptModalProps {
   theme: ThemeMode;
@@ -347,19 +348,19 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
                 <Warehouse className="w-3.5 h-3.5 text-blue-600" />
                 <span>{isEn ? 'Receiving Warehouse *' : 'คลังสินค้าที่รับเข้า *'}</span>
               </label>
-              <select
+              <CustomSelect
+                theme={theme}
                 value={warehouseId}
-                onChange={(e) => setWarehouseId(e.target.value)}
-                className={`w-full p-2.5 rounded-xl border text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none ${
-                  isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200'
-                }`}
-              >
-                {warehousesList.map((wh) => (
-                  <option key={wh.id} value={wh.warehouseId || wh.id}>
-                    {wh.warehouseName || (wh as any).name || wh.id}
-                  </option>
-                ))}
-              </select>
+                onChange={setWarehouseId}
+                searchable={true}
+                placeholder="-- เลือกคลังสินค้า --"
+                searchPlaceholder="ค้นหาชื่อหรือรหัสคลัง..."
+                options={warehousesList.map((wh) => ({
+                  value: wh.warehouseId || wh.id,
+                  label: wh.warehouseName || (wh as any).name || wh.id,
+                  sublabel: wh.warehouseId ? `ID: ${wh.warehouseId.slice(0, 8)}` : undefined,
+                }))}
+              />
             </div>
 
             {/* Supplier (Optional) */}
@@ -368,20 +369,22 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
                 <Truck className="w-3.5 h-3.5 text-blue-600" />
                 <span>{isEn ? 'Supplier (Optional)' : 'ผู้จัดจำหน่าย (ไม่บังคับ)'}</span>
               </label>
-              <select
+              <CustomSelect
+                theme={theme}
                 value={supplierId}
-                onChange={(e) => setSupplierId(e.target.value)}
-                className={`w-full p-2.5 rounded-xl border text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none ${
-                  isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200'
-                }`}
-              >
-                <option value="">{isEn ? '-- No Supplier (Return / Free Sample) --' : '-- ไม่ระบุ (รับคืน / ของแถม / ผลิตเอง) --'}</option>
-                {suppliersList.map((sup) => (
-                  <option key={sup.id} value={sup.id}>
-                    {sup.name} {sup.code ? `(${sup.code})` : ''}
-                  </option>
-                ))}
-              </select>
+                onChange={setSupplierId}
+                searchable={true}
+                placeholder={isEn ? '-- No Supplier --' : '-- ไม่ระบุ (รับคืน/ของแถม) --'}
+                searchPlaceholder="ค้นหาชื่อหรือรหัสคู่ค้า..."
+                options={[
+                  { value: '', label: isEn ? '-- No Supplier (Return / Free Sample) --' : '-- ไม่ระบุ (รับคืน / ของแถม / ผลิตเอง) --' },
+                  ...suppliersList.map((sup) => ({
+                    value: sup.id,
+                    label: sup.name,
+                    sublabel: sup.code,
+                  })),
+                ]}
+              />
             </div>
 
             {/* PO Number */}
@@ -474,19 +477,19 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
                       <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1">
                         {isEn ? 'Product Item *' : 'เลือกสินค้า *'}
                       </label>
-                      <select
+                      <CustomSelect
+                        theme={theme}
                         value={line.productId}
-                        onChange={(e) => handleLineChange(idx, 'productId', e.target.value)}
-                        className={`w-full p-2.5 rounded-xl border text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none ${
-                          isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200'
-                        }`}
-                      >
-                        {productsList.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name} {p.sku ? `[${p.sku}]` : ''} - ฿{p.costPrice || p.price || 0}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => handleLineChange(idx, 'productId', val)}
+                        searchable={true}
+                        placeholder="-- ค้นหาและเลือกสินค้า --"
+                        searchPlaceholder="พิมพ์ชื่อสินค้า, SKU..."
+                        options={productsList.map((p) => ({
+                          value: p.id,
+                          label: `${p.name} ${p.sku ? `[${p.sku}]` : ''}`,
+                          sublabel: `฿${p.costPrice || p.price || 0} | คลัง: ${p.stockOnHand || 0} ${p.uom}`,
+                        }))}
+                      />
                     </div>
 
                     {/* Quantity Received (Good condition) */}
@@ -499,7 +502,7 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
                         min="1"
                         value={line.quantity}
                         onChange={(e) => handleLineChange(idx, 'quantity', parseInt(e.target.value) || 0)}
-                        className={`w-full p-2.5 rounded-xl border text-xs font-bold text-blue-600 focus:ring-2 focus:ring-blue-500 outline-none ${
+                        className={`w-full h-[42px] px-3 py-2 rounded-xl border text-xs font-bold text-blue-600 focus:ring-2 focus:ring-blue-500 outline-none ${
                           isDark ? 'bg-slate-800 border-slate-700 text-blue-400' : 'bg-white border-slate-200'
                         }`}
                       />
@@ -518,7 +521,7 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
                         onChange={(e) =>
                           handleLineChange(idx, 'damagedQuantity', parseInt(e.target.value) || 0)
                         }
-                        className={`w-full p-2.5 rounded-xl border text-xs font-bold text-rose-600 focus:ring-2 focus:ring-rose-500 outline-none ${
+                        className={`w-full h-[42px] px-3 py-2 rounded-xl border text-xs font-bold text-rose-600 focus:ring-2 focus:ring-rose-500 outline-none ${
                           isDark ? 'bg-slate-800 border-slate-700 text-rose-400' : 'bg-white border-slate-200'
                         }`}
                       />
@@ -534,7 +537,7 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
                         value={line.lotNumber}
                         onChange={(e) => handleLineChange(idx, 'lotNumber', e.target.value)}
                         placeholder="e.g. LOT-2026-A"
-                        className={`w-full p-2 rounded-xl border text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none ${
+                        className={`w-full h-[42px] px-3 py-2 rounded-xl border text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none ${
                           isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200'
                         }`}
                       />
@@ -550,7 +553,7 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
                         type="date"
                         value={line.expiryDate}
                         onChange={(e) => handleLineChange(idx, 'expiryDate', e.target.value)}
-                        className={`w-full p-2 rounded-xl border text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none ${
+                        className={`w-full h-[42px] px-3 py-2 rounded-xl border text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none ${
                           isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200'
                         }`}
                       />
@@ -567,7 +570,7 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
                         step="0.01"
                         value={line.unitCost}
                         onChange={(e) => handleLineChange(idx, 'unitCost', parseFloat(e.target.value) || 0)}
-                        className={`w-full p-2 rounded-xl border text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none ${
+                        className={`w-full h-[42px] px-3 py-2 rounded-xl border text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none ${
                           isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200'
                         }`}
                       />
@@ -579,20 +582,19 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
                         <label className="block text-emerald-600 dark:text-emerald-400 font-semibold mb-1">
                           {isEn ? 'Target Shelf (Bin) *' : 'ตำแหน่งชั้นวาง (Bin) *'}
                         </label>
-                        <select
+                        <CustomSelect
+                          theme={theme}
                           value={line.binLocationId}
-                          onChange={(e) => handleLineChange(idx, 'binLocationId', e.target.value)}
-                          className={`w-full p-2 rounded-xl border text-xs font-bold text-emerald-600 focus:ring-2 focus:ring-emerald-500 outline-none ${
-                            isDark ? 'bg-slate-800 border-slate-700 text-emerald-400' : 'bg-white border-slate-200'
-                          }`}
-                        >
-                          <option value="">{isEn ? '-- Select Bin Location --' : '-- เลือกตำแหน่ง Bin --'}</option>
-                          {availableBins.map((bin) => (
-                            <option key={bin.id} value={bin.id}>
-                              {bin.binCode || (bin as any).code} {bin.zone ? `(Zone ${bin.zone})` : ''}
-                            </option>
-                          ))}
-                        </select>
+                          onChange={(val) => handleLineChange(idx, 'binLocationId', val)}
+                          searchable={true}
+                          placeholder={isEn ? '-- Select Bin --' : '-- เลือกตำแหน่ง Bin --'}
+                          searchPlaceholder="ค้นหารหัส Bin หรือโซน..."
+                          options={availableBins.map((bin) => ({
+                            value: bin.id,
+                            label: bin.binCode || (bin as any).code,
+                            sublabel: bin.zone ? `Zone ${bin.zone}` : undefined,
+                          }))}
+                        />
                       </div>
                     )}
                   </div>

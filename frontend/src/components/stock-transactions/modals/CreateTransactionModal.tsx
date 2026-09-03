@@ -19,6 +19,7 @@ import {
   Supplier,
   Language,
 } from '../../../types';
+import { CustomSelect } from '../../common/CustomSelect';
 
 interface CreateTransactionModalProps {
   theme: ThemeMode;
@@ -264,17 +265,19 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     {t.supplier} *
                   </label>
-                  <select
+                  <CustomSelect
+                    theme={theme}
                     value={formSupplierId}
-                    onChange={(e) => setFormSupplierId(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl text-xs font-medium bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
-                  >
-                    {suppliersList.map((sup) => (
-                      <option key={sup.id} value={sup.id}>
-                        {sup.name} ({sup.code})
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setFormSupplierId}
+                    searchable={true}
+                    placeholder="-- เลือกซัพพลายเออร์ --"
+                    searchPlaceholder="ค้นหาชื่อหรือรหัสคู่ค้า..."
+                    options={suppliersList.map((sup) => ({
+                      value: sup.id,
+                      label: sup.name,
+                      sublabel: sup.code,
+                    }))}
+                  />
                 </div>
               )}
 
@@ -392,17 +395,19 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
                   <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                     {t.productName} *
                   </label>
-                  <select
+                  <CustomSelect
+                    theme={theme}
                     value={selectedProductId}
-                    onChange={(e) => setSelectedProductId(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
-                  >
-                    {productsList.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ({p.sku}) — คงเหลือ: {p.stockOnHand} {p.uom}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setSelectedProductId}
+                    searchable={true}
+                    placeholder="-- ค้นหาและเลือกสินค้า --"
+                    searchPlaceholder="พิมพ์ชื่อสินค้า, SKU, หรือรหัส..."
+                    options={productsList.map((p) => ({
+                      value: p.id,
+                      label: `${p.name} (${p.sku})`,
+                      sublabel: `คงเหลือ: ${p.stockOnHand} ${p.uom}`,
+                    }))}
+                  />
                 </div>
 
                 <div>
@@ -415,7 +420,7 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
                     value={formQty}
                     onChange={(e) => setFormQty(Math.max(1, Number(e.target.value)))}
                     required
-                    className="w-full px-3.5 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full h-[42px] px-3.5 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -465,17 +470,19 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
                     <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                       {t.sourceLocation} (From Bin) *
                     </label>
-                    <select
+                    <CustomSelect
+                      theme={theme}
                       value={fromBinId}
-                      onChange={(e) => setFromBinId(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
-                    >
-                      {warehousesList.map((b) => (
-                        <option key={b.id} value={b.id}>
-                          {b.binCode} — {b.warehouseName.split(' ')[0]} ({b.zone.split(' ')[0]})
-                        </option>
-                      ))}
-                    </select>
+                      onChange={setFromBinId}
+                      searchable={true}
+                      placeholder="-- เลือกตำแหน่งชั้นวางต้นทาง --"
+                      searchPlaceholder="ค้นหารหัส Bin, โซน หรือคลัง..."
+                      options={warehousesList.map((b) => ({
+                        value: b.id,
+                        label: b.binCode,
+                        sublabel: `${b.warehouseName} (โซน ${b.zone})`,
+                      }))}
+                    />
                   </div>
                 )}
 
@@ -484,17 +491,19 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
                     <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                       {t.destLocation} (To Bin) *
                     </label>
-                    <select
+                    <CustomSelect
+                      theme={theme}
                       value={toBinId}
-                      onChange={(e) => setToBinId(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
-                    >
-                      {warehousesList.map((b) => (
-                        <option key={b.id} value={b.id}>
-                          {b.binCode} — {b.warehouseName.split(' ')[0]} ({b.zone.split(' ')[0]})
-                        </option>
-                      ))}
-                    </select>
+                      onChange={setToBinId}
+                      searchable={true}
+                      placeholder="-- เลือกตำแหน่งชั้นวางปลายทาง --"
+                      searchPlaceholder="ค้นหารหัส Bin, โซน หรือคลัง..."
+                      options={warehousesList.map((b) => ({
+                        value: b.id,
+                        label: b.binCode,
+                        sublabel: `${b.warehouseName} (โซน ${b.zone})`,
+                      }))}
+                    />
                   </div>
                 )}
               </div>

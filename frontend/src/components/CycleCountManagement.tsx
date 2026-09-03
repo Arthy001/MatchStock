@@ -38,6 +38,7 @@ import {
   WarehouseBin,
 } from '../types';
 import { getTranslation } from '../i18n';
+import { CustomSelect } from './common/CustomSelect';
 import { productService } from '../services/product.service';
 import { warehouseService } from '../services/warehouse.service';
 import { cycleCountService } from '../services/cycleCount.service';
@@ -1010,21 +1011,19 @@ export const CycleCountManagement: React.FC<CycleCountManagementProps> = ({
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
                     {isEn ? 'Target Warehouse:' : 'คลังสินค้าเป้าหมาย:'}
                   </label>
-                  <select
+                  <CustomSelect
+                    theme={theme}
                     value={newPlanWarehouseId}
-                    onChange={(e) => setNewPlanWarehouseId(e.target.value)}
-                    className={`w-full px-3 py-2.5 rounded-xl border font-medium focus:ring-2 focus:ring-blue-500 transition ${
-                      theme === 'dark'
-                        ? 'bg-slate-800 border-slate-700 text-slate-100'
-                        : 'bg-slate-50 border-slate-300 text-slate-900'
-                    }`}
-                  >
-                    {warehouses.map((w) => (
-                      <option key={w.id || w.code} value={w.id || w.code}>
-                        {w.name || w.code}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setNewPlanWarehouseId}
+                    searchable={true}
+                    placeholder="-- เลือกคลังสินค้า --"
+                    searchPlaceholder="ค้นหาคลังสินค้า..."
+                    options={warehouses.map((w) => ({
+                      value: w.id || w.code,
+                      label: w.name || w.code,
+                      sublabel: w.code,
+                    }))}
+                  />
                 </div>
 
                 <div>
