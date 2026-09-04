@@ -111,6 +111,7 @@ export const useMasterDataModals = ({
   const [editBinCode, setEditBinCode] = useState('');
   const [editBinZone, setEditBinZone] = useState('');
   const [editBinRack, setEditBinRack] = useState('');
+  const [editBinShelf, setEditBinShelf] = useState('');
   const [editBinCapacity, setEditBinCapacity] = useState('0');
   const [editBinIsActive, setEditBinIsActive] = useState(true);
 
@@ -397,6 +398,7 @@ export const useMasterDataModals = ({
     setEditBinCode(bin.binCode || (bin as any).code || 'BIN-01');
     setEditBinZone(bin.zone || (bin.binCode ? bin.binCode.split('-')[0] : 'Zone A'));
     setEditBinRack(bin.rack || (bin.binCode ? bin.binCode.split('-')[1] || 'Rack 1' : 'Rack 1'));
+    setEditBinShelf(bin.shelf || '');
     setEditBinCapacity(String(bin.capacityKg || (bin as any).maxCapacity || 500));
     setEditBinIsActive(bin.isActive !== false && bin.status !== 'maintenance');
   };
@@ -412,6 +414,11 @@ export const useMasterDataModals = ({
         await warehouseService.updateBin(targetWhId, editingBin.id, {
           code: editBinCode,
           name: editWhName,
+          zone: editBinZone,
+          rack: editBinRack,
+          shelf: editBinShelf,
+          capacityKg: parseFloat(editBinCapacity) || 0,
+          maxCapacity: parseInt(editBinCapacity) || 0,
           isActive: editBinIsActive,
         });
       } else {
@@ -431,6 +438,7 @@ export const useMasterDataModals = ({
                 binCode: editBinCode,
                 zone: editBinZone,
                 rack: editBinRack,
+                shelf: editBinShelf,
                 capacityKg: parseFloat(editBinCapacity) || 0,
                 isActive: editBinIsActive,
                 status: editBinIsActive ? (b.status === 'maintenance' ? 'available' : b.status) : 'maintenance',
@@ -721,6 +729,8 @@ export const useMasterDataModals = ({
     setEditBinZone,
     editBinRack,
     setEditBinRack,
+    editBinShelf,
+    setEditBinShelf,
     editBinCapacity,
     setEditBinCapacity,
     editBinIsActive,

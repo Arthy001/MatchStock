@@ -39,14 +39,12 @@ export const warehouseService = {
 
   // อัปเดตคลังสินค้า (PATCH /warehouses/{id})
   updateWarehouse: async (id: string, data: { name?: string; code?: string; address?: string; isDefault?: boolean; isActive?: boolean }) => {
-    if (data.isActive === false) {
-      try {
-        await apiClient.post(`/warehouses/${id}/deactivate`);
-      } catch {}
-    }
-
     const remotePayload: any = {};
-    if (data.name) remotePayload.name = data.name;
+    if (data.name !== undefined) remotePayload.name = data.name;
+    if (data.code !== undefined) remotePayload.code = data.code;
+    if (data.address !== undefined) remotePayload.address = data.address;
+    if (data.isDefault !== undefined) remotePayload.isDefault = data.isDefault;
+    if (data.isActive !== undefined) remotePayload.isActive = data.isActive;
 
     const response = await apiClient.patch(`/warehouses/${id}`, remotePayload);
     return response.data?.data || response.data;
@@ -64,7 +62,7 @@ export const warehouseService = {
   },
 
   // สร้าง Bin ใหม่ในคลัง (POST /warehouses/{warehouseId}/bins)
-  createBin: async (warehouseId: string, data: { code: string; zone?: string; rack?: string; shelf?: string; capacityKg?: number; description?: string }) => {
+  createBin: async (warehouseId: string, data: { code: string; zone?: string; rack?: string; shelf?: string; capacityKg?: number; maxCapacity?: number; description?: string }) => {
     const response = await apiClient.post(`/warehouses/${warehouseId}/bins`, data);
     return response.data?.data || response.data;
   },
@@ -76,15 +74,27 @@ export const warehouseService = {
     let data = arg3 || arg2;
 
     const remotePayload: any = {};
-    if (data.code) remotePayload.code = data.code;
-    if (data.name) remotePayload.name = data.name;
+    if (data.code !== undefined) remotePayload.code = data.code;
+    if (data.name !== undefined) remotePayload.name = data.name;
+    if (data.zone !== undefined) remotePayload.zone = data.zone;
+    if (data.zoneName !== undefined) remotePayload.zoneName = data.zoneName;
+    if (data.rack !== undefined) remotePayload.rack = data.rack;
+    if (data.shelf !== undefined) remotePayload.shelf = data.shelf;
+    if (data.capacityKg !== undefined) remotePayload.capacityKg = data.capacityKg;
+    if (data.maxCapacity !== undefined) remotePayload.maxCapacity = data.maxCapacity;
+    if (data.isActive !== undefined) remotePayload.isActive = data.isActive;
 
     if (warehouseId && warehouseId !== 'default' && warehouseId !== binId) {
-      const response = await apiClient.patch(`/warehouses/${warehouseId}/bins/${binId}`, remotePayload);
-      return response.data?.data || response.data;
+      const response = await apiClient.patch(`/warehouses/${warehouseId}/bins/${binId}`, remotePayload).catch(async () => {
+        return (await apiClient.patch(`/bins/${binId}`, remotePayload)).data?.data;
+      });
+      return response.data?.data || response.data || response;
     } else {
-      const response = await apiClient.patch(`/warehouses/${binId}`, remotePayload);
-      return response.data?.data || response.data;
+      // Editing warehouse directly
+      const response = await apiClient.patch(`/warehouses/${binId}`, remotePayload).catch(async () => {
+        return (await apiClient.patch(`/bins/${binId}`, remotePayload)).data?.data;
+      });
+      return response.data?.data || response.data || response;
     }
   },
 

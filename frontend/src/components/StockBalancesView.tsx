@@ -252,11 +252,11 @@ export const StockBalancesView: React.FC<StockBalancesViewProps> = ({
                   ) : filteredBalances.length > 0 ? (
                     filteredBalances.map((item) => (
                       <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                        <td className="py-3.5 px-4">
-                          <div className="font-bold text-slate-900 dark:text-white">
+                        <td className="py-3.5 px-4 min-w-[280px]">
+                          <div className="font-bold text-slate-900 dark:text-white whitespace-normal break-words leading-tight">
                             {item.productName}
                           </div>
-                          <div className="text-xs font-mono text-slate-400">
+                          <div className="text-xs font-mono text-slate-400 mt-0.5">
                             {item.sku}
                           </div>
                         </td>

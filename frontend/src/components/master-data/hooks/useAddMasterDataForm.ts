@@ -120,10 +120,14 @@ export const useAddMasterDataForm = ({
   const [addRole, setAddRole] = useState<UserRole>('warehouse_staff');
 
   // Warehouse Add state
+  const [creationMode, setCreationMode] = useState<'sub_bin' | 'new_warehouse'>('sub_bin');
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState('');
   const [addWarehouseName, setAddWarehouseName] = useState('');
+  const [addWarehouseCode, setAddWarehouseCode] = useState('');
   const [addBinCode, setAddBinCode] = useState('');
   const [addZone, setAddZone] = useState('');
   const [addRack, setAddRack] = useState('');
+  const [addShelf, setAddShelf] = useState('');
   const [addCapacityKg, setAddCapacityKg] = useState('500');
 
   // Supplier Add state
@@ -188,10 +192,14 @@ export const useAddMasterDataForm = ({
     setAddBrdCode('');
     setAddBrdName('');
     setAddBrdDescription('');
+    setCreationMode('sub_bin');
+    setSelectedWarehouseId('');
     setAddWarehouseName('');
+    setAddWarehouseCode('');
     setAddBinCode('');
     setAddZone('');
     setAddRack('');
+    setAddShelf('');
     setAddCapacityKg('500');
     setAddSupplierName('');
     setAddContactPerson('');
@@ -451,17 +459,58 @@ export const useAddMasterDataForm = ({
           return;
         }
       } else if (activeSubTab === 'warehouses') {
-        const binCode = addBinCode.trim() || `BIN-${Date.now().toString().slice(-3)}`;
-        try {
-          const createdBin = await warehouseService.createBin('wh-main', {
-            code: binCode,
-          });
-          setBinsList((prev) => [createdBin, ...prev]);
-          showToast(`เพิ่มตำแหน่ง Bin "${createdBin.binCode || binCode}" เรียบร้อยแล้ว`);
-        } catch (err: any) {
-          const msg = extractErrorMessage(err);
-          showToast(`เกิดข้อผิดพลาดในการเพิ่ม Bin: ${msg}`);
-          return;
+        if (creationMode === 'new_warehouse') {
+          if (!addWarehouseName.trim()) {
+            setFormErrors({ warehouseName: 'กรุณากรอกชื่อคลังสินค้า' });
+            return;
+          }
+          const whCode = addWarehouseCode.trim() || `WH-${Date.now().toString().slice(-4)}`;
+          try {
+            const createdWh = await warehouseService.createWarehouse({
+              code: whCode,
+              name: addWarehouseName.trim(),
+            });
+            showToast(`สร้างคลังสินค้า "${createdWh.name || addWarehouseName}" เรียบร้อยแล้ว`);
+            // Refresh bins/warehouses list from server
+            try {
+              const freshBins = await warehouseService.getBins();
+              setBinsList(freshBins);
+            } catch (rErr) {
+              console.warn('Failed to refresh bins after creating warehouse', rErr);
+            }
+          } catch (err: any) {
+            const msg = extractErrorMessage(err);
+            showToast(`เกิดข้อผิดพลาดในการสร้างคลังสินค้า: ${msg}`);
+            return;
+          }
+        } else {
+          // Sub-bin mode
+          if (!selectedWarehouseId) {
+            showToast('กรุณาเลือกคลังสินค้าหลักที่จะเพิ่ม Bin ย่อย');
+            return;
+          }
+          const binCode = addBinCode.trim() || `BIN-${Date.now().toString().slice(-4)}`;
+          try {
+            const createdBin = await warehouseService.createBin(selectedWarehouseId, {
+              code: binCode,
+              zone: addZone.trim() || undefined,
+              rack: addRack.trim() || undefined,
+              shelf: addShelf.trim() || undefined,
+              capacityKg: parseFloat(addCapacityKg) || 500,
+            });
+            // Reload fresh bins list to display newly added bin
+            try {
+              const freshBins = await warehouseService.getBins();
+              setBinsList(freshBins);
+            } catch {
+              setBinsList((prev) => [createdBin, ...prev]);
+            }
+            showToast(`เพิ่มตำแหน่ง Bin "${createdBin.binCode || createdBin.code || binCode}" เรียบร้อยแล้ว`);
+          } catch (err: any) {
+            const msg = extractErrorMessage(err);
+            showToast(`เกิดข้อผิดพลาดในการเพิ่ม Bin: ${msg}`);
+            return;
+          }
         }
       } else if (activeSubTab === 'suppliers') {
         const supName = (addSupplierName || addName).trim();
@@ -600,14 +649,22 @@ export const useAddMasterDataForm = ({
     setAddEmail,
     addRole,
     setAddRole,
+    creationMode,
+    setCreationMode,
+    selectedWarehouseId,
+    setSelectedWarehouseId,
     addWarehouseName,
     setAddWarehouseName,
+    addWarehouseCode,
+    setAddWarehouseCode,
     addBinCode,
     setAddBinCode,
     addZone,
     setAddZone,
     addRack,
     setAddRack,
+    addShelf,
+    setAddShelf,
     addCapacityKg,
     setAddCapacityKg,
     addSupplierName,

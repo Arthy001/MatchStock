@@ -2982,6 +2982,12 @@ paths:
           schema:
             example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
             type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBinLocationDto'
       responses:
         '201':
           description: ''
@@ -7494,6 +7500,34 @@ components:
         isDeleted:
           type: boolean
           example: false
+    CreateBinLocationDto:
+      type: object
+      properties:
+        code:
+          type: string
+          maxLength: 50
+          example: A1-03
+        zoneName:
+          type: string
+          maxLength: 100
+          example: Zone A
+        rack:
+          type: string
+          maxLength: 50
+          example: Rack A01
+        shelf:
+          type: string
+          maxLength: 50
+          example: Level A
+        capacityKg:
+          type: number
+          example: 500
+        maxCapacity:
+          type: number
+          minimum: 0
+          example: 100
+      required:
+        - code
     UpdateWarehouseDto:
       type: object
       properties:

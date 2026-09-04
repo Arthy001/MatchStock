@@ -749,6 +749,8 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         setEditBinZone={modals.setEditBinZone}
         editBinRack={modals.editBinRack}
         setEditBinRack={modals.setEditBinRack}
+        editBinShelf={modals.editBinShelf}
+        setEditBinShelf={modals.setEditBinShelf}
         editBinCapacity={modals.editBinCapacity}
         setEditBinCapacity={modals.setEditBinCapacity}
         editBinIsActive={modals.editBinIsActive}
@@ -915,12 +917,26 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         setAddRole={addForm.setAddRole}
         addWarehouseName={addForm.addWarehouseName}
         setAddWarehouseName={addForm.setAddWarehouseName}
+        addWarehouseCode={addForm.addWarehouseCode}
+        setAddWarehouseCode={addForm.setAddWarehouseCode}
+        creationMode={addForm.creationMode}
+        setCreationMode={addForm.setCreationMode}
+        selectedWarehouseId={addForm.selectedWarehouseId}
+        setSelectedWarehouseId={addForm.setSelectedWarehouseId}
+        warehousesList={binsList.reduce((acc: Array<{ id: string; name: string; code?: string }>, item) => {
+          if (!acc.some((w) => w.id === item.warehouseId)) {
+            acc.push({ id: item.warehouseId, name: item.warehouseName });
+          }
+          return acc;
+        }, [])}
         addBinCode={addForm.addBinCode}
         setAddBinCode={addForm.setAddBinCode}
         addZone={addForm.addZone}
         setAddZone={addForm.setAddZone}
         addRack={addForm.addRack}
         setAddRack={addForm.setAddRack}
+        addShelf={addForm.addShelf}
+        setAddShelf={addForm.setAddShelf}
         addCapacityKg={addForm.addCapacityKg}
         setAddCapacityKg={addForm.setAddCapacityKg}
         addSupplierName={addForm.addSupplierName}

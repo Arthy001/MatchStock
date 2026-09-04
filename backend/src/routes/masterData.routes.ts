@@ -478,13 +478,14 @@ router.put('/warehouses/:id', async (req: Request, res: Response) => {
 router.patch('/warehouses/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, code } = req.body;
+    const { name, code, isActive } = req.body;
 
     const warehouse = await prisma.warehouse.update({
       where: { id },
       data: {
-        ...(name && { name }),
-        ...(code && { code }),
+        ...(name !== undefined && { name }),
+        ...(code !== undefined && { code }),
+        ...(isActive !== undefined && { isActive }),
       },
     });
     res.json({ success: true, data: warehouse });
@@ -521,13 +522,18 @@ router.post('/warehouses/:warehouseId/bins', async (req: Request, res: Response)
   try {
     const { warehouseId } = req.params;
     const tenantId = req.tenantId || (req.headers['x-tenant-id'] as string) || 'default-tenant';
-    const { code } = req.body;
+    const { code, zone, rack, shelf, capacityKg, maxCapacity } = req.body;
 
     const bin = await prisma.binLocation.create({
       data: {
         tenantId,
         warehouseId,
         code: code || `BIN-${Math.floor(100 + Math.random() * 900)}`,
+        ...(zone !== undefined && { zoneName: zone }),
+        ...(rack !== undefined && { rack }),
+        ...(shelf !== undefined && { shelf }),
+        ...(capacityKg !== undefined && { capacityKg: parseFloat(capacityKg) || 0 }),
+        ...(maxCapacity !== undefined && { maxCapacity: parseInt(maxCapacity) || 0 }),
       },
     });
 
@@ -540,12 +546,18 @@ router.post('/warehouses/:warehouseId/bins', async (req: Request, res: Response)
 router.put('/bins/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { code } = req.body;
+    const { code, zoneName, zone, rack, shelf, capacityKg, maxCapacity, isActive } = req.body;
 
     const bin = await prisma.binLocation.update({
       where: { id },
       data: {
-        ...(code && { code }),
+        ...(code !== undefined && { code }),
+        ...((zoneName !== undefined || zone !== undefined) && { zoneName: zoneName || zone }),
+        ...(rack !== undefined && { rack }),
+        ...(shelf !== undefined && { shelf }),
+        ...(capacityKg !== undefined && { capacityKg: parseFloat(capacityKg) || 0 }),
+        ...(maxCapacity !== undefined && { maxCapacity: parseInt(maxCapacity) || 0 }),
+        ...(isActive !== undefined && { isActive }),
       },
     });
     res.json({ success: true, data: bin });
@@ -557,12 +569,18 @@ router.put('/bins/:id', async (req: Request, res: Response) => {
 router.patch('/bins/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { code } = req.body;
+    const { code, zoneName, zone, rack, shelf, capacityKg, maxCapacity, isActive } = req.body;
 
     const bin = await prisma.binLocation.update({
       where: { id },
       data: {
-        ...(code && { code }),
+        ...(code !== undefined && { code }),
+        ...((zoneName !== undefined || zone !== undefined) && { zoneName: zoneName || zone }),
+        ...(rack !== undefined && { rack }),
+        ...(shelf !== undefined && { shelf }),
+        ...(capacityKg !== undefined && { capacityKg: parseFloat(capacityKg) || 0 }),
+        ...(maxCapacity !== undefined && { maxCapacity: parseInt(maxCapacity) || 0 }),
+        ...(isActive !== undefined && { isActive }),
       },
     });
     res.json({ success: true, data: bin });

@@ -71,6 +71,59 @@ export const PutawayManagement: React.FC<PutawayManagementProps> = ({
     loadData();
   }, [selectedWarehouseId]);
 
+  const fetchAndMapAllBins = async (rawWhs: any[]): Promise<WarehouseBin[]> => {
+    const bins: WarehouseBin[] = [];
+
+    for (const wh of rawWhs) {
+      let whBins = Array.isArray(wh.bins) ? wh.bins : [];
+
+      // If wh.bins is empty, attempt to fetch sub-bins via /warehouses/:id/bins
+      if (whBins.length === 0 && wh.id) {
+        try {
+          const subBins = await warehouseService.getBinsByWarehouse(wh.id);
+          if (Array.isArray(subBins) && subBins.length > 0) {
+            whBins = subBins;
+          }
+        } catch (e) {
+          console.warn(`Failed to fetch sub-bins for warehouse ${wh.id}:`, e);
+        }
+      }
+
+      if (whBins.length > 0) {
+        whBins.forEach((b: any) => {
+          bins.push({
+            id: b.id || b.binId,
+            warehouseId: wh.id,
+            warehouseName: wh.name,
+            binCode: b.code || b.binCode || `${wh.code || 'WH'}-${(b.id || 'BIN').slice(0, 4)}`,
+            zone: b.zone || 'A',
+            rack: b.rack || '01',
+            shelf: b.shelf || '1',
+            capacityKg: Number(b.capacityKg || 1000),
+            currentItemsCount: Number(b.currentItemsCount || 0),
+            status: b.status || 'available',
+          });
+        });
+      } else {
+        // Fallback main warehouse location if no sub-bins exist
+        bins.push({
+          id: wh.id,
+          warehouseId: wh.id,
+          warehouseName: wh.name,
+          binCode: `${wh.code || 'WH'}-MAIN`,
+          zone: 'General',
+          rack: '01',
+          shelf: '1',
+          capacityKg: 5000,
+          currentItemsCount: 0,
+          status: 'available',
+        });
+      }
+    }
+
+    return bins;
+  };
+
   const loadData = async () => {
     setIsLoading(true);
     try {
@@ -85,28 +138,7 @@ export const PutawayManagement: React.FC<PutawayManagementProps> = ({
       const rawWhs = Array.isArray(whRes.data) ? whRes.data : Array.isArray(whRes) ? whRes : [];
       setWarehousesList(rawWhs);
 
-      // Pre-extract all available Bins for instant lookup (ONLY real Bin Locations)
-      const bins: WarehouseBin[] = [];
-      rawWhs.forEach((wh: any) => {
-        if (Array.isArray(wh.bins) && wh.bins.length > 0) {
-          wh.bins.forEach((b: any) => {
-            if (b.id) {
-              bins.push({
-                id: b.id,
-                warehouseId: wh.id,
-                warehouseName: wh.name,
-                binCode: b.code || `${wh.code}-${b.id.slice(0, 4)}`,
-                zone: b.zone || 'A',
-                rack: b.rack || '01',
-                shelf: b.shelf || '1',
-                capacityKg: Number(b.capacityKg || 1000),
-                currentItemsCount: Number(b.currentItemsCount || 0),
-                status: b.status || 'available',
-              });
-            }
-          });
-        }
-      });
+      const bins = await fetchAndMapAllBins(rawWhs);
       setAvailableBins(bins);
     } catch (e) {
       console.error('Failed to load putaway data:', e);
@@ -163,40 +195,16 @@ export const PutawayManagement: React.FC<PutawayManagementProps> = ({
     setActiveAllocId(allocId);
     setIsBinSearchOpen(true);
     setBinSearchQuery('');
-    if (availableBins.length === 0) {
-      setIsLoadingBins(true);
-      try {
-        const whRes = await warehouseService.getWarehouses();
-        const rawWhs = Array.isArray(whRes.data) ? whRes.data : Array.isArray(whRes) ? whRes : [];
-        const bins: WarehouseBin[] = [];
-
-        rawWhs.forEach((wh: any) => {
-          if (Array.isArray(wh.bins) && wh.bins.length > 0) {
-            wh.bins.forEach((b: any) => {
-              if (b.id) {
-                bins.push({
-                  id: b.id,
-                  warehouseId: wh.id,
-                  warehouseName: wh.name,
-                  binCode: b.code || `${wh.code}-${b.id.slice(0, 4)}`,
-                  zone: b.zone || 'A',
-                  rack: b.rack || '01',
-                  shelf: b.shelf || '1',
-                  capacityKg: Number(b.capacityKg || 1000),
-                  currentItemsCount: Number(b.currentItemsCount || 0),
-                  status: b.status || 'available',
-                });
-              }
-            });
-          }
-        });
-
-        setAvailableBins(bins);
-      } catch (err) {
-        console.error('Failed to fetch bins for search popup:', err);
-      } finally {
-        setIsLoadingBins(false);
-      }
+    setIsLoadingBins(true);
+    try {
+      const whRes = await warehouseService.getWarehouses();
+      const rawWhs = Array.isArray(whRes.data) ? whRes.data : Array.isArray(whRes) ? whRes : [];
+      const bins = await fetchAndMapAllBins(rawWhs);
+      setAvailableBins(bins);
+    } catch (err) {
+      console.error('Failed to fetch bins for search popup:', err);
+    } finally {
+      setIsLoadingBins(false);
     }
   };
 
@@ -584,11 +592,11 @@ export const PutawayManagement: React.FC<PutawayManagementProps> = ({
                         {item.receiptNumber}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-slate-900 dark:text-white">
+                    <td className="py-3.5 px-4 min-w-[280px]">
+                      <div className="font-bold text-slate-900 dark:text-white whitespace-normal break-words leading-tight">
                         {item.productName}
                       </div>
-                      <div className="text-xs font-mono text-slate-400">
+                      <div className="text-xs font-mono text-slate-400 mt-0.5">
                         {item.sku}
                       </div>
                     </td>

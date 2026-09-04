@@ -137,14 +137,23 @@ interface AddMasterDataModalProps {
   setAddRole: (val: UserRole) => void;
 
   // Warehouse states
+  creationMode?: 'sub_bin' | 'new_warehouse';
+  setCreationMode?: (mode: 'sub_bin' | 'new_warehouse') => void;
+  selectedWarehouseId?: string;
+  setSelectedWarehouseId?: (id: string) => void;
+  warehousesList?: Array<{ id: string; name: string; code?: string }>;
   addWarehouseName: string;
   setAddWarehouseName: (val: string) => void;
+  addWarehouseCode?: string;
+  setAddWarehouseCode?: (val: string) => void;
   addBinCode: string;
   setAddBinCode: (val: string) => void;
   addZone: string;
   setAddZone: (val: string) => void;
   addRack: string;
   setAddRack: (val: string) => void;
+  addShelf?: string;
+  setAddShelf?: (val: string) => void;
   addCapacityKg: string;
   setAddCapacityKg: (val: string) => void;
 
@@ -267,14 +276,23 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
   setAddEmail,
   addRole,
   setAddRole,
+  creationMode = 'sub_bin',
+  setCreationMode = () => {},
+  selectedWarehouseId = '',
+  setSelectedWarehouseId = () => {},
+  warehousesList = [],
   addWarehouseName,
   setAddWarehouseName,
+  addWarehouseCode = '',
+  setAddWarehouseCode = () => {},
   addBinCode,
   setAddBinCode,
   addZone,
   setAddZone,
   addRack,
   setAddRack,
+  addShelf = '',
+  setAddShelf = () => {},
   addCapacityKg,
   setAddCapacityKg,
   addSupplierName,
@@ -607,12 +625,21 @@ export const AddMasterDataModal: React.FC<AddMasterDataModalProps> = ({
                 theme={theme}
                 lang={lang}
                 t={t}
+                creationMode={creationMode}
+                setCreationMode={setCreationMode}
+                selectedWarehouseId={selectedWarehouseId}
+                setSelectedWarehouseId={setSelectedWarehouseId}
+                warehousesList={warehousesList}
                 addWarehouseName={addWarehouseName}
                 setAddWarehouseName={setAddWarehouseName}
+                addWarehouseCode={addWarehouseCode}
+                setAddWarehouseCode={setAddWarehouseCode}
                 addZone={addZone}
                 setAddZone={setAddZone}
                 addRack={addRack}
                 setAddRack={setAddRack}
+                addShelf={addShelf}
+                setAddShelf={setAddShelf}
                 addBinCode={addBinCode}
                 setAddBinCode={setAddBinCode}
                 addCapacityKg={addCapacityKg}

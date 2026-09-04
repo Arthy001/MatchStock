@@ -237,7 +237,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                   className="rounded border-zinc-300 dark:border-zinc-700 text-blue-600 focus:ring-0 cursor-pointer"
                 />
               </th>
-              <th className="py-2.5 px-3 min-w-[280px]">{isEn ? 'Item / Description' : 'สินค้า / รายละเอียด'}</th>
+              <th className="py-2.5 px-3 min-w-[360px]">{isEn ? 'Item / Description' : 'สินค้า / รายละเอียด'}</th>
               <th className="py-2.5 px-3 min-w-[140px]">{isEn ? 'SKU & Barcode' : 'SKU และบาร์โค้ด'}</th>
               <th className="py-2.5 px-3 min-w-[110px]">{isEn ? 'Brand' : 'แบรนด์'}</th>
               <th className="py-2.5 px-3 min-w-[130px] text-right">{isEn ? 'Physical Dim' : 'มิติกายภาพ'}</th>
@@ -304,7 +304,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                     </td>
 
                     {/* Item Name & Details */}
-                    <td className="py-2.5 px-3">
+                    <td className="py-2.5 px-3 min-w-[360px]">
                       <div className="flex items-center gap-2.5">
                         {resolveImageUrl(prod.imageUrl) ? (
                           <img
@@ -331,10 +331,10 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                         >
                           <Package className="w-4 h-4 opacity-70" />
                         </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <span
-                              className={`font-semibold text-xs truncate ${
+                              className={`font-semibold text-xs whitespace-normal break-words leading-tight ${
                                 isDark ? 'text-zinc-100' : 'text-zinc-900'
                               } ${prod.isActive === false ? 'line-through opacity-60' : ''}`}
                             >
