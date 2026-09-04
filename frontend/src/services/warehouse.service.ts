@@ -7,10 +7,25 @@ export const warehouseService = {
     return response.data?.data || response.data || [];
   },
 
-  // ดึงรายการ Bins ทั้งหมด
+  // ดึงรายการ Bins ทั้งหมด (พร้อมดึง Bins ย่อยของแต่ละคลังโดยอัตโนมัติ)
   getBins: async () => {
     const response = await apiClient.get('/warehouses');
-    return response.data?.bins || response.data?.data || response.data || [];
+    const whList = response.data?.data || response.data || [];
+    if (!Array.isArray(whList)) return [];
+
+    const fullWarehouses = await Promise.all(
+      whList.map(async (wh: any) => {
+        try {
+          const binsRes = await apiClient.get(`/warehouses/${wh.id}/bins`);
+          const fetchedBins = binsRes.data?.data || binsRes.data || [];
+          if (Array.isArray(fetchedBins) && fetchedBins.length > 0) {
+            return { ...wh, bins: fetchedBins };
+          }
+        } catch {}
+        return wh;
+      })
+    );
+    return fullWarehouses;
   },
 
   // ดึงรายการ Bins ในคลัง (GET /warehouses/{warehouseId}/bins)

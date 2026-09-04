@@ -91,7 +91,7 @@ export const Warehouse3DCanvas: React.FC<Warehouse3DCanvasProps> = ({
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
 
     containerRef.current.innerHTML = '';
     containerRef.current.appendChild(renderer.domElement);
