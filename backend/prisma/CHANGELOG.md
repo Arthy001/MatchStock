@@ -2,6 +2,16 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-04 (15) — Implement `CreateBinLocationDto` fields เข้า backend จริง (ตามที่ DevOps อัพเดท spec ของ `POST /warehouses/:id/bins`)
+
+ตรวจสอบ `docs/openapi.yaml` เทียบ backend จริงหลัง DevOps push commit `3c8417b` ("improve warehouse & bin location creation, shelf field...") พบว่า DevOps เพิ่ม request body ใหม่ (`CreateBinLocationDto`: `code`/`zoneName`/`rack`/`shelf`/`capacityKg`/`maxCapacity`) ให้ `POST /warehouses/:id/bins` (สร้าง bin เดี่ยว) **แต่ backend จริงยังรับแค่ `code`/`maxCapacity`/`zoneId` เท่านั้น** (`zoneName`/`rack`/`shelf`/`capacityKg` เคยเข้าได้ทางเดียวคือผ่าน `POST /warehouses/:id/bins/batch` ของงาน 3D Blueprint) — หลังคุยกับ user แล้ว **implement เข้า backend จริงครบ ทดสอบ end-to-end บน local Docker และ production แล้ว**:
+
+- ขยาย `CreateBinSchema` (Zod, `warehouse.schema.ts`) ให้รับ `zoneName`/`rack`/`shelf`/`capacityKg` เพิ่ม (optional ทั้งหมด ไม่ต้อง migrate schema ใหม่เลยเพราะ column มีอยู่แล้วบน `BinLocation` ตั้งแต่งาน 3D Blueprint) พร้อม validate ความยาว/ค่าติดลบตาม column constraint จริง (`zoneName` ≤100, `rack`/`shelf` ≤50, `capacityKg` ≥0)
+- `WarehousesService.createBin()` ส่งต่อ 4 field ใหม่นี้เข้า `BinLocation.create()`
+- **ไม่แตะ** `PATCH /warehouses/:id/bins/:binId` (`UpdateBinLocationDto`) เพราะ `docs/openapi.yaml` ไม่ได้ระบุ schema ใหม่ให้ endpoint นี้ในรอบนี้ (ต่างจาก prototype Express server แยกต่างหากที่ DevOps เก็บไว้ใน repo นี้เอง `backend/src/routes/masterData.routes.ts` ซึ่งแก้ทั้ง create และ update — ไฟล์นั้นเป็นคนละ codebase กับ backend จริงที่ deploy อยู่ที่ `match-stock.ddns.net` ไม่ใช่สิ่งที่ backend ทีมจริงต้องตามให้ตรง)
+
+**ทดสอบแล้วบน local Docker + production**: สร้าง bin พร้อม 4 field ใหม่ครบ ยืนยัน persist ถูกต้องทุกค่า, สร้าง bin แบบเดิม (ส่งแค่ `code`) ยังทำงานเหมือนเดิมทุกประการ (`zoneName`/`rack`/`shelf` เป็น `null`, `capacityKg` ใช้ default 500 ตาม schema), validate ความยาว `zoneName` เกิน 100 ตัวอักษรโดนบล็อกถูกต้อง, `PATCH` เดิมไม่กระทบ
+
 ## 2026-09-03 (14) — Sync 2 จุดที่ backend จริงมีอยู่แล้วแต่ยังไม่เคยแก้เอกสาร (ตรวจสอบ backend เทียบ schema.prisma/openapi.yaml เต็มไฟล์)
 
 ตรวจสอบ backend จริงเทียบกับ `schema.prisma`/`docs/openapi.yaml` ของ repo นี้แบบเต็มไฟล์ (diff ทุกบรรทัด ไม่ใช่แค่ high-level) เจอ 2 จุดที่ backend จริง implement ไปแล้วตั้งแต่รอบก่อนหน้า (สอดคล้องกับ standing preference ที่หยุด sync เอกสารไว้ชั่วคราว) แต่ยังไม่เคย sync กลับมาที่นี่เลย:
