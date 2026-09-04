@@ -203,14 +203,76 @@ export const WarehouseBinTab: React.FC<WarehouseBinTabProps> = ({
                             <p className="text-[11px] font-mono text-slate-400">UUID: {group.id}</p>
                           </div>
                         </div>
+
+                        {/* Separate Warehouse Level Actions: View, Edit, Delete */}
+                        <div className="flex items-center gap-1.5 self-end sm:self-auto bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                          <span className="text-[11px] font-bold text-slate-400 px-1.5">
+                            {isEn ? 'Warehouse:' : 'คลังสินค้า:'}
+                          </span>
+                          <button
+                            onClick={() => {
+                              // Find representative or main warehouse object
+                              const whObj = group.bins.find(b => b.id === group.id) || {
+                                id: group.id,
+                                warehouseId: group.id,
+                                warehouseName: group.name,
+                                binCode: group.name,
+                                name: group.name,
+                              };
+                              onOpenEditBin(whObj as unknown as WarehouseBin, true);
+                            }}
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-blue-500 hover:bg-white dark:hover:bg-slate-700 transition cursor-pointer flex items-center gap-1 text-xs font-semibold"
+                            title={isEn ? 'View Warehouse' : 'ดูรายละเอียดคลังสินค้า'}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span className="hidden md:inline">{isEn ? 'View' : 'ดู'}</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              const whObj = group.bins.find(b => b.id === group.id) || {
+                                id: group.id,
+                                warehouseId: group.id,
+                                warehouseName: group.name,
+                                binCode: group.name,
+                                name: group.name,
+                              };
+                              onOpenEditBin(whObj as unknown as WarehouseBin, false);
+                            }}
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-blue-500 hover:bg-white dark:hover:bg-slate-700 transition cursor-pointer flex items-center gap-1 text-xs font-semibold"
+                            title={isEn ? 'Edit Warehouse' : 'แก้ไขคลังสินค้า'}
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                            <span className="hidden md:inline">{isEn ? 'Edit' : 'แก้ไข'}</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              const whObj = group.bins.find(b => b.id === group.id) || {
+                                id: group.id,
+                                warehouseId: group.id,
+                                warehouseName: group.name,
+                                binCode: group.name,
+                                name: group.name,
+                              };
+                              onDeleteBin(whObj as unknown as WarehouseBin);
+                            }}
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-500 hover:bg-white dark:hover:bg-slate-700 transition cursor-pointer flex items-center gap-1 text-xs font-semibold"
+                            title={isEn ? 'Delete Warehouse' : 'ลบคลังสินค้า'}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span className="hidden md:inline">{isEn ? 'Delete' : 'ลบ'}</span>
+                          </button>
+                        </div>
                       </div>
 
                       {/* Bin Location Cards Grid inside this Warehouse */}
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {group.bins.map((bin) => {
-                          const isInactive = bin.isActive === false || bin.status === 'maintenance';
+                          const isActiveBool = (bin as any).isActive !== undefined 
+                            ? Boolean((bin as any).isActive) 
+                            : String(bin.status || '').toLowerCase() !== 'maintenance' && String(bin.status || '').toLowerCase() !== 'inactive';
+                          const isInactive = !isActiveBool;
                           const isFull = !isInactive && String(bin.status || '').toLowerCase() === 'full';
-                          const capacity = Number(bin.capacityKg || 500);
+                          const capacity = Number((bin as any).maxCapacity ?? bin.capacityKg ?? 0);
                           const currentItems = Number(bin.currentItemsCount || 0);
                           const isWarehouseOnly = bin.id === bin.warehouseId;
 
@@ -286,9 +348,34 @@ export const WarehouseBinTab: React.FC<WarehouseBinTabProps> = ({
 
                               <div className="space-y-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
                                 <div className="flex justify-between">
-                                  <span>{isEn ? 'Zone / Rack:' : 'โซน / แร็ค:'}</span>
-                                  <span className="text-slate-800 dark:text-slate-200">
-                                    {isWarehouseOnly ? (isEn ? 'General' : 'โซนหลัก') : `${bin.zone || 'A'} - ${bin.rack || '01'}`}
+                                  <span>{isEn ? 'Zone / Rack / Shelf:' : 'โซน / แร็ค / ชั้น:'}</span>
+                                  <span className="text-slate-800 dark:text-slate-200 font-semibold">
+                                    {(() => {
+                                      if (isWarehouseOnly) return isEn ? 'Main Warehouse' : 'โซนหลัก';
+                                      
+                                      const rawCode = bin.binCode || (bin as any).code || '';
+                                      const parts = rawCode.split('-').map((s: string) => s.trim());
+                                      
+                                      // If raw object has distinct zone/rack/shelf
+                                      let z = (bin as any).zoneName || bin.zone;
+                                      let r = bin.rack;
+                                      let s = bin.shelf;
+
+                                      // If fields are missing or generic (e.g. WH-A), extract from bin code WH-A-01-02
+                                      if (parts.length >= 4) {
+                                        // WH-A-01-02 -> Zone: A, Rack: 01, Shelf: 02
+                                        if (!z || z.startsWith('WH')) z = parts[1];
+                                        if (!r) r = parts[2];
+                                        if (!s) s = parts[3];
+                                      } else if (parts.length === 3) {
+                                        // WH-A-01 -> Zone: A, Rack: 01
+                                        if (!z || z.startsWith('WH')) z = parts[1];
+                                        if (!r) r = parts[2];
+                                      }
+
+                                      const displayParts = [z, r, s].filter(Boolean);
+                                      return displayParts.length > 0 ? displayParts.join(' - ') : rawCode || 'A - 01';
+                                    })()}
                                   </span>
                                 </div>
                                 <div className="flex justify-between">

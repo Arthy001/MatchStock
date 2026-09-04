@@ -394,13 +394,24 @@ export const useMasterDataModals = ({
   const openEditBin = (bin: WarehouseBin, viewOnly: boolean = false) => {
     setEditingBin(bin);
     setIsViewOnly(viewOnly);
-    setEditWhName(bin.warehouseName || (bin as any).name || 'Main Warehouse');
-    setEditBinCode(bin.binCode || (bin as any).code || 'BIN-01');
-    setEditBinZone(bin.zone || (bin.binCode ? bin.binCode.split('-')[0] : 'Zone A'));
-    setEditBinRack(bin.rack || (bin.binCode ? bin.binCode.split('-')[1] || 'Rack 1' : 'Rack 1'));
-    setEditBinShelf(bin.shelf || '');
-    setEditBinCapacity(String(bin.capacityKg || (bin as any).maxCapacity || 500));
-    setEditBinIsActive(bin.isActive !== false && bin.status !== 'maintenance');
+    setEditWhName(bin.warehouseName || (bin as any).name || '');
+    const binCodeVal = bin.binCode || (bin as any).code || '';
+    setEditBinCode(binCodeVal);
+    
+    // Parse binCode if zone/rack/shelf are not directly stored on object
+    const codeParts = binCodeVal.split('-').map((s: string) => s.trim());
+    // If format is WH-A-01-02 -> parts: [WH, A, 01, 02]
+    const extractedZone = (bin as any).zoneName || bin.zone || (codeParts.length >= 4 ? codeParts[1] : (codeParts.length >= 2 ? codeParts[0] : ''));
+    const extractedRack = bin.rack || (codeParts.length >= 4 ? codeParts[2] : (codeParts.length >= 2 ? codeParts[1] : ''));
+    const extractedShelf = bin.shelf || (codeParts.length >= 4 ? codeParts[3] : '');
+
+    setEditBinZone(extractedZone);
+    setEditBinRack(extractedRack);
+    setEditBinShelf(extractedShelf);
+    const cap = (bin as any).maxCapacity ?? bin.capacityKg ?? 0;
+    setEditBinCapacity(String(cap));
+    const activeVal = (bin as any).isActive !== undefined ? Boolean((bin as any).isActive) : (bin.status as string !== 'maintenance' && bin.status as string !== 'inactive');
+    setEditBinIsActive(activeVal);
   };
 
   const handleSaveEditBin = async (e: React.FormEvent) => {

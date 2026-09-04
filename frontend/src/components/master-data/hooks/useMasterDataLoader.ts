@@ -221,33 +221,38 @@ export const useMasterDataLoader = () => {
 
         if (Array.isArray(wh.bins) && wh.bins.length > 0) {
           wh.bins.forEach((b: any) => {
-            const bIsActive = b.isActive !== false && whIsActive;
+            const bIsActive = b.isActive !== undefined ? Boolean(b.isActive) : whIsActive;
             normalized.push({
+              ...b,
               id: b.id,
               warehouseId: wh.id,
-              warehouseName: wh.name || 'Main Warehouse',
-              binCode: b.code || b.binCode || 'BIN-01',
-              zone: b.zone || (b.code ? b.code.split('-')[0] : 'Zone A'),
-              rack: b.rack || (b.code ? b.code.split('-')[1] || 'Rack 1' : 'Rack 1'),
-              shelf: b.shelf || 'Level 1',
-              capacityKg: Number(b.maxCapacity || b.capacityKg || wh.maxCapacity || 500),
+              warehouseName: wh.name || 'Warehouse',
+              binCode: b.code || b.binCode || 'BIN',
+              zoneName: b.zoneName || b.zone || null,
+              zone: b.zone || b.zoneName || null,
+              rack: b.rack || null,
+              shelf: b.shelf || null,
+              maxCapacity: Number(b.maxCapacity ?? b.capacityKg ?? 0),
+              capacityKg: Number(b.maxCapacity ?? b.capacityKg ?? 0),
               currentItemsCount: Number(b.currentItemsCount || 0),
-              status: bIsActive ? (b.status === 'maintenance' ? 'available' : (b.status || 'available')) : 'maintenance',
+              status: b.status || (bIsActive ? 'available' : 'maintenance'),
               isActive: bIsActive,
             });
           });
         } else {
           normalized.push({
+            ...wh,
             id: wh.id,
             warehouseId: wh.id,
-            warehouseName: wh.name || wh.warehouseName || 'Main Warehouse',
-            binCode: wh.code || wh.binCode || 'MAIN-01',
-            zone: wh.zone || (wh.code ? wh.code.split('-')[0] : 'Zone A'),
-            rack: wh.rack || (wh.code ? wh.code.split('-')[1] || 'Rack 1' : 'Rack 1'),
-            shelf: wh.shelf || 'Level 1',
-            capacityKg: Number(wh.maxCapacity || wh.capacityKg || 1000),
+            warehouseName: wh.name || 'Warehouse',
+            binCode: wh.code || wh.binCode || 'WH-MAIN',
+            zoneName: wh.zoneName || wh.zone || null,
+            zone: wh.zone || wh.zoneName || null,
+            rack: wh.rack || null,
+            shelf: wh.shelf || null,
+            capacityKg: Number(wh.maxCapacity || wh.capacityKg || 0),
             currentItemsCount: Number(wh.currentItemsCount || 0),
-            status: whIsActive ? (wh.status === 'maintenance' ? 'available' : (wh.status || 'available')) : 'maintenance',
+            status: wh.status || (whIsActive ? 'available' : 'maintenance'),
             isActive: whIsActive,
           });
         }
