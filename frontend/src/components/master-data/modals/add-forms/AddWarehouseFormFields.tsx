@@ -53,6 +53,26 @@ export const AddWarehouseFormFields: React.FC<AddWarehouseFormFieldsProps> = ({
   const isEn = lang === 'en';
 
   // Helper to handle auto-generating Bin Code when Zone, Rack, Shelf, or Warehouse selection changes
+  const updateBinCodePreview = (whId: string, zoneVal: string, rackVal: string, shelfVal: string) => {
+    const selectedWh = warehousesList.find((w) => w.id === whId);
+    let whPrefix = 'WH';
+    if (selectedWh?.code && selectedWh.code.trim()) {
+      whPrefix = selectedWh.code.trim().toUpperCase();
+    } else if (selectedWh?.name && selectedWh.name.trim()) {
+      whPrefix = selectedWh.name.trim().slice(0, 3).toUpperCase();
+    }
+
+    const z = zoneVal.trim().toUpperCase() || 'A';
+    const r = rackVal.trim() || '01';
+    const s = shelfVal.trim() || '01';
+    setAddBinCode(`${whPrefix}-${z}-${r}-${s}`);
+  };
+
+  const handleWarehouseChange = (whId: string) => {
+    setSelectedWarehouseId(whId);
+    updateBinCodePreview(whId, addZone, addRack, addShelf);
+  };
+
   const handlePartChange = (field: 'zone' | 'rack' | 'shelf', value: string) => {
     let nextZone = addZone;
     let nextRack = addRack;
@@ -69,17 +89,7 @@ export const AddWarehouseFormFields: React.FC<AddWarehouseFormFieldsProps> = ({
       setAddShelf(value);
     }
 
-    // Find selected warehouse code
-    const selectedWh = warehousesList.find((w) => w.id === selectedWarehouseId);
-    const whPrefix = selectedWh?.code ? selectedWh.code.trim().toUpperCase() : 'WH';
-
-    // Auto-generate code if user has filled in parts
-    if (nextZone.trim() || nextRack.trim() || nextShelf.trim()) {
-      const z = nextZone.trim().toUpperCase() || 'A';
-      const r = nextRack.trim() || '01';
-      const s = nextShelf.trim() || '01';
-      setAddBinCode(`${whPrefix}-${z}-${r}-${s}`);
-    }
+    updateBinCodePreview(selectedWarehouseId, nextZone, nextRack, nextShelf);
   };
 
   return (
@@ -157,7 +167,7 @@ export const AddWarehouseFormFields: React.FC<AddWarehouseFormFieldsProps> = ({
             </label>
             <select
               value={selectedWarehouseId}
-              onChange={(e) => setSelectedWarehouseId(e.target.value)}
+              onChange={(e) => handleWarehouseChange(e.target.value)}
               className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${
                 theme === 'dark'
                   ? 'bg-slate-800 border-slate-700 text-white'

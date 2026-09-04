@@ -43,7 +43,7 @@ interface UseAddMasterDataFormProps {
   setBinsList: Dispatch<SetStateAction<WarehouseBin[]>>;
   setCategoriesList: Dispatch<SetStateAction<CategoryItem[]>>;
   setBrandsList: Dispatch<SetStateAction<BrandItem[]>>;
-  setUsersList: Dispatch<SetStateAction<RbacUser[]>>;
+  setUsersList?: Dispatch<SetStateAction<RbacUser[]>>;
   showToast: (msg: string) => void;
 }
 
@@ -496,7 +496,8 @@ export const useAddMasterDataForm = ({
               zone: addZone.trim() || undefined,
               rack: addRack.trim() || undefined,
               shelf: addShelf.trim() || undefined,
-              capacityKg: parseFloat(addCapacityKg) || 500,
+              maxCapacity: parseInt(addCapacityKg) || 0,
+              capacityKg: 0,
             });
             // Reload fresh bins list to display newly added bin
             try {

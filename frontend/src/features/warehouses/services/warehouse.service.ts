@@ -1,4 +1,4 @@
-import { apiClient } from './api.client';
+import { apiClient } from '../../../services/api.client';
 
 export const warehouseService = {
   // ดึงรายการคลังสินค้าทั้งหมด (GET /warehouses)
@@ -79,32 +79,8 @@ export const warehouseService = {
   },
 
   // สร้าง Bin ใหม่ในคลัง (POST /warehouses/{warehouseId}/bins)
-  createBin: async (
-    warehouseId: string,
-    data: {
-      code: string;
-      zone?: string;
-      zoneName?: string;
-      rack?: string;
-      shelf?: string;
-      capacityKg?: number;
-      maxCapacity?: number;
-      description?: string;
-      isActive?: boolean;
-    }
-  ) => {
-    const payload: any = {
-      code: data.code,
-      zone: data.zone || data.zoneName,
-      zoneName: data.zoneName || data.zone,
-      rack: data.rack,
-      shelf: data.shelf,
-      capacityKg: data.capacityKg ?? 0,
-      maxCapacity: data.maxCapacity,
-      description: data.description,
-      isActive: data.isActive,
-    };
-    const response = await apiClient.post(`/warehouses/${warehouseId}/bins`, payload);
+  createBin: async (warehouseId: string, data: { code: string; zone?: string; rack?: string; shelf?: string; capacityKg?: number; maxCapacity?: number; description?: string }) => {
+    const response = await apiClient.post(`/warehouses/${warehouseId}/bins`, data);
     return response.data?.data || response.data;
   },
 
