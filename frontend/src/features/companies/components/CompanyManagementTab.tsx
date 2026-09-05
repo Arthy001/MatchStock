@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
-import { Building2, Edit2, Trash2, Phone, Mail, MapPin, Eye } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Building2, Plus, Edit2, Trash2, Phone, Mail, MapPin, Eye } from 'lucide-react';
 import { ThemeMode, Language, Company } from '../../../types';
 import { useCompanies } from '../hooks/useCompanies';
 import { EditCompanyModal } from './EditCompanyModal';
+import { CreateCompanyModal } from './CreateCompanyModal';
 import { ConfirmDeleteModal } from '../../../components/master-data/modals/ConfirmDeleteModal';
 
 interface CompanyManagementTabProps {
@@ -28,6 +29,7 @@ export const CompanyManagementTab: React.FC<CompanyManagementTabProps> = ({
   onDeleteCompany: externalDelete,
   showToast,
 }) => {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const isEn = lang === 'en';
   const hook = useCompanies(showToast);
 
@@ -64,6 +66,14 @@ export const CompanyManagementTab: React.FC<CompanyManagementTabProps> = ({
               : 'บริหารจัดการนิติบุคคล บริษัทในเครือ สาขา และข้อมูลสำนักงานใหญ่'}
           </p>
         </div>
+
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-semibold shadow-xs transition cursor-pointer shrink-0"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>{isEn ? 'Add Company' : 'เพิ่มบริษัท'}</span>
+        </button>
       </div>
 
       {/* Companies Table */}
@@ -213,6 +223,15 @@ export const CompanyManagementTab: React.FC<CompanyManagementTabProps> = ({
       </div>
 
       {/* Self-contained Company Modal */}
+      <CreateCompanyModal
+        theme={theme}
+        lang={lang}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => hook.fetchCompanies()}
+        showToast={showToast}
+      />
+
       <EditCompanyModal
         theme={theme}
         lang={lang}

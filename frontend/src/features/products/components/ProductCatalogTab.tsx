@@ -11,11 +11,14 @@ import {
   ExternalLink,
   Layers,
   Package,
+  RefreshCw,
+  Plus,
 } from 'lucide-react';
 import { ThemeMode, Language, ProductItem, CategoryItem, BrandItem, Supplier, BarcodeSymbologyItem, TaxTypeItem } from '../../../types';
 import { resolveImageUrl } from '../../../services/product.service';
 import { useProducts } from '../hooks/useProducts';
 import { ProductDrawer } from './ProductDrawer';
+import { CreateProductModal } from './CreateProductModal';
 import { BarcodeModal } from '../../../components/master-data/modals/BarcodeModal';
 import { ConfirmDeleteModal } from '../../../components/master-data/modals/ConfirmDeleteModal';
 import { UnitItem } from '../../../components/master-data/hooks/useMasterDataLoader';
@@ -65,6 +68,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
 }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'IN_STOCK' | 'LOW' | 'OUT' | 'INACTIVE'>('ALL');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const isDark = theme === 'dark';
   const isEn = lang === 'en';
@@ -240,17 +244,41 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
           </button>
         </div>
 
-        {selectedIds.length > 0 && (
-          <div className="flex items-center gap-2 text-xs font-semibold">
-            <span className="text-blue-500 font-mono">{selectedIds.length} selected</span>
-            <button
-              onClick={() => setSelectedIds([])}
-              className="text-zinc-400 hover:text-zinc-200 underline cursor-pointer"
-            >
-              Clear
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {selectedIds.length > 0 && (
+            <div className="flex items-center gap-2 text-xs font-semibold">
+              <span className="text-blue-500 font-mono">{selectedIds.length} selected</span>
+              <button
+                onClick={() => setSelectedIds([])}
+                className="text-zinc-400 hover:text-zinc-200 underline cursor-pointer"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+
+          <button
+            onClick={() => hook.fetchProducts(true)}
+            disabled={hook.isLoading}
+            className={`p-1.5 rounded-lg border text-xs font-medium flex items-center gap-1 transition cursor-pointer ${
+              isDark
+                ? 'border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 disabled:opacity-50'
+                : 'border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 disabled:opacity-50'
+            }`}
+            title={isEn ? 'Refresh products and live stock balances' : 'รีเฟรชรายการสินค้าและยอดสต็อกคงเหลือจริง'}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${hook.isLoading ? 'animate-spin text-blue-500' : 'text-zinc-400'}`} />
+            <span className="hidden sm:inline text-[11px]">{isEn ? 'Refresh' : 'รีเฟรชสต็อก'}</span>
+          </button>
+
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-semibold shadow-xs flex items-center gap-1.5 transition cursor-pointer shrink-0"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>{isEn ? 'Add Product' : 'เพิ่มสินค้าใหม่'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Enterprise Data Table */}
@@ -574,6 +602,21 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
         lang={lang}
         product={hook.selectedProductForBarcode}
         onClose={() => hook.setSelectedProductForBarcode(null)}
+      />
+
+      <CreateProductModal
+        theme={theme}
+        lang={lang}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => hook.fetchProducts(true)}
+        categoriesList={categoriesList}
+        brandsList={brandsList}
+        unitsList={unitsList}
+        suppliersList={suppliersList}
+        barcodeSymbologiesList={barcodeSymbologiesList}
+        taxTypesList={taxTypesList}
+        showToast={showToast}
       />
 
       <ConfirmDeleteModal

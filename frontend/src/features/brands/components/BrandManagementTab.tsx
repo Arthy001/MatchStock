@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
-import { Bookmark, Edit2, Trash2, CheckCircle2, XCircle, Eye } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Bookmark, Plus, Edit2, Trash2, CheckCircle2, XCircle, Eye } from 'lucide-react';
 import { ThemeMode, Language, BrandItem } from '../../../types';
 import { useBrands } from '../hooks/useBrands';
 import { EditBrandModal } from './EditBrandModal';
+import { CreateBrandModal } from './CreateBrandModal';
 import { ConfirmDeleteModal } from '../../../components/master-data/modals/ConfirmDeleteModal';
 
 interface BrandManagementTabProps {
@@ -28,6 +29,7 @@ export const BrandManagementTab: React.FC<BrandManagementTabProps> = ({
   onDeleteBrand: externalDelete,
   showToast,
 }) => {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const isEn = lang === 'en';
   const hook = useBrands(showToast);
 
@@ -63,6 +65,14 @@ export const BrandManagementTab: React.FC<BrandManagementTabProps> = ({
               : 'จัดการรายชื่อแบรนด์ ผู้ผลิต และข้อมูลต้นกำเนิดของสินค้า'}
           </p>
         </div>
+
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs sm:text-sm font-semibold shadow-xs transition cursor-pointer shrink-0"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>{isEn ? 'Add Brand' : 'เพิ่มแบรนด์'}</span>
+        </button>
       </div>
 
       {/* Brands Table */}
@@ -201,6 +211,15 @@ export const BrandManagementTab: React.FC<BrandManagementTabProps> = ({
       </div>
 
       {/* Self-contained Brand Modal */}
+      <CreateBrandModal
+        theme={theme}
+        lang={lang}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => hook.fetchBrands()}
+        showToast={showToast}
+      />
+
       <EditBrandModal
         theme={theme}
         lang={lang}

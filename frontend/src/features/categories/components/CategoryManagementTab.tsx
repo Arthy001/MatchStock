@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, CheckCircle2, XCircle, Layers, Eye } from 'lucide-react';
 import { ThemeMode, Language, CategoryItem } from '../../../types';
 import { useCategories } from '../hooks/useCategories';
 import { EditCategoryModal } from './EditCategoryModal';
+import { CreateCategoryModal } from './CreateCategoryModal';
 import { ConfirmDeleteModal } from '../../../components/master-data/modals/ConfirmDeleteModal';
 
 interface CategoryManagementTabProps {
@@ -28,6 +29,7 @@ export const CategoryManagementTab: React.FC<CategoryManagementTabProps> = ({
   onDeleteCategory: externalDelete,
   showToast,
 }) => {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const isEn = lang === 'en';
   const hook = useCategories(showToast);
 
@@ -63,6 +65,14 @@ export const CategoryManagementTab: React.FC<CategoryManagementTabProps> = ({
               : 'จัดการโครงสร้างหมวดหมู่เพื่อจัดระเบียบสต็อกและการออกรายงาน'}
           </p>
         </div>
+
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-semibold shadow-xs transition cursor-pointer shrink-0"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>{isEn ? 'Add Category' : 'เพิ่มหมวดหมู่'}</span>
+        </button>
       </div>
 
       {/* Categories Table */}
@@ -201,6 +211,15 @@ export const CategoryManagementTab: React.FC<CategoryManagementTabProps> = ({
       </div>
 
       {/* Self-contained Category Modal */}
+      <CreateCategoryModal
+        theme={theme}
+        lang={lang}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => hook.fetchCategories()}
+        showToast={showToast}
+      />
+
       <EditCategoryModal
         theme={theme}
         lang={lang}

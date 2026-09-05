@@ -108,12 +108,23 @@ export const StockBalancesView: React.FC<StockBalancesViewProps> = ({
   const filteredBalances = balances.filter((b) => {
     const q = (localSearch || searchQuery).toLowerCase().trim();
     if (!q) return true;
+    const pName = (b.productName || (b as any).product?.name || '').toLowerCase();
+    const sku = (b.sku || (b as any).product?.sku || (b as any).product?.code || '').toLowerCase();
+    const bin = (b.binCode || (b as any).binLocation?.code || '').toLowerCase();
+    const whName = (b.warehouseName || (b as any).warehouse?.name || '').toLowerCase();
+    const zone = ((b as any).binLocation?.zoneName || (b as any).zone || '').toLowerCase();
+    const rack = ((b as any).binLocation?.rack || (b as any).rack || '').toLowerCase();
+    const shelf = ((b as any).binLocation?.shelf || (b as any).shelf || '').toLowerCase();
+    const lot = (b.lotNumber || '').toLowerCase();
     return (
-      b.productName?.toLowerCase().includes(q) ||
-      b.sku?.toLowerCase().includes(q) ||
-      b.binCode?.toLowerCase().includes(q) ||
-      b.warehouseName?.toLowerCase().includes(q) ||
-      b.lotNumber?.toLowerCase().includes(q)
+      pName.includes(q) ||
+      sku.includes(q) ||
+      bin.includes(q) ||
+      whName.includes(q) ||
+      zone.includes(q) ||
+      rack.includes(q) ||
+      shelf.includes(q) ||
+      lot.includes(q)
     );
   });
 
@@ -254,19 +265,24 @@ export const StockBalancesView: React.FC<StockBalancesViewProps> = ({
                       <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                         <td className="py-3.5 px-4 min-w-[280px]">
                           <div className="font-bold text-slate-900 dark:text-white whitespace-normal break-words leading-tight">
-                            {item.productName}
+                            {item.productName || (item as any).product?.name || (isEn ? 'Unnamed Product' : 'ไม่ระบุชื่อสินค้า')}
                           </div>
                           <div className="text-xs font-mono text-slate-400 mt-0.5">
-                            {item.sku}
+                            {item.sku || (item as any).product?.sku || (item as any).product?.code || '-'}
                           </div>
                         </td>
                         <td className="py-3.5 px-4">
                           <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                            {item.warehouseName}
+                            {item.warehouseName || (item as any).warehouse?.name || warehousesList.find((w) => (w.warehouseId || w.id) === item.warehouseId)?.warehouseName || (isEn ? 'Main Warehouse' : 'คลังสินค้าหลัก')}
                           </div>
-                          <div className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 mt-0.5 flex items-center gap-1">
+                          <div className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 mt-0.5 flex items-center gap-1 flex-wrap">
                             <MapPin className="w-3 h-3 shrink-0" />
-                            <span>{item.binCode || (isEn ? 'Staging Dock' : 'จุดพัก Staging')}</span>
+                            <span>{item.binCode || (item as any).binLocation?.code || (isEn ? 'Staging Dock' : 'จุดพัก Staging')}</span>
+                            {Boolean((item as any).binLocation?.zoneName || (item as any).binLocation?.rack || (item as any).binLocation?.shelf) && (
+                              <span className="text-[10px] font-normal text-slate-400 font-sans ml-1">
+                                ({[(item as any).binLocation?.zoneName, (item as any).binLocation?.rack ? `R:${(item as any).binLocation.rack}` : null, (item as any).binLocation?.shelf ? `L:${(item as any).binLocation.shelf}` : null].filter(Boolean).join(' / ')})
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td className="py-3.5 px-4">
@@ -281,13 +297,13 @@ export const StockBalancesView: React.FC<StockBalancesViewProps> = ({
                           )}
                         </td>
                         <td className="py-3.5 px-4 text-right font-extrabold text-slate-900 dark:text-white">
-                          {item.quantityOnHand.toLocaleString()}
+                          {Number(item.quantityOnHand ?? (item as any).onHand ?? 0).toLocaleString()}
                         </td>
                         <td className="py-3.5 px-4 text-right font-semibold text-amber-600 dark:text-amber-400">
-                          {item.quantityReserved.toLocaleString()}
+                          {Number(item.quantityReserved ?? (item as any).reserved ?? 0).toLocaleString()}
                         </td>
                         <td className="py-3.5 px-4 text-right font-black text-emerald-600 dark:text-emerald-400 text-sm">
-                          {item.availableQuantity.toLocaleString()}
+                          {Number(item.availableQuantity ?? (item as any).available ?? ((item.quantityOnHand ?? 0) - (item.quantityReserved ?? 0))).toLocaleString()}
                         </td>
                       </tr>
                     ))
@@ -452,12 +468,17 @@ export const StockBalancesView: React.FC<StockBalancesViewProps> = ({
                         lookupResult.locations.map((loc, i) => (
                           <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                             <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
-                              {loc.warehouseName}
+                              {loc.warehouseName || (loc as any).warehouse?.name || warehousesList.find((w) => (w.warehouseId || w.id) === loc.warehouseId)?.warehouseName || (isEn ? 'Main Warehouse' : 'คลังสินค้าหลัก')}
                             </td>
                             <td className="py-3 px-4">
                               <span className="font-mono font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800">
-                                {loc.binCode || (isEn ? 'Staging Dock' : 'จุดพัก Staging')}
+                                {loc.binCode || (loc as any).binLocation?.code || (isEn ? 'Staging Dock' : 'จุดพัก Staging')}
                               </span>
+                              {Boolean((loc as any).binLocation?.zoneName || (loc as any).binLocation?.rack || (loc as any).binLocation?.shelf) && (
+                                <span className="text-[10px] font-normal text-slate-400 font-sans ml-1.5">
+                                  ({[(loc as any).binLocation?.zoneName, (loc as any).binLocation?.rack ? `R:${(loc as any).binLocation.rack}` : null, (loc as any).binLocation?.shelf ? `L:${(loc as any).binLocation.shelf}` : null].filter(Boolean).join(' / ')})
+                                </span>
+                              )}
                             </td>
                             <td className="py-3 px-4 font-mono text-slate-600 dark:text-slate-300">
                               {loc.lotNumber || '-'}

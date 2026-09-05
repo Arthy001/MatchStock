@@ -99,10 +99,47 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Filter Bins for chosen Warehouse
+  // Filter Bins strictly for chosen Warehouse (Cascade Filter)
   const availableBins = warehousesList.filter(
-    (b) => (b.warehouseId && b.warehouseId === warehouseId) || b.id === warehouseId
+    (b) => b.warehouseId === warehouseId
   );
+
+  const distinctWarehouses = React.useMemo(() => {
+    const map = new Map<string, { id: string; name: string }>();
+    warehousesList.forEach((w) => {
+      const id = w.warehouseId || w.id;
+      if (id && !map.has(id)) {
+        map.set(id, { id, name: w.warehouseName || (w as any).name || id });
+      }
+    });
+    return Array.from(map.values());
+  }, [warehousesList]);
+
+  const handleWarehouseChange = (newWhId: string) => {
+    setWarehouseId(newWhId);
+    // Reset any bin that does not belong to the new warehouse
+    setLines((prev) =>
+      prev.map((line) => {
+        if (line.binLocationId) {
+          const bin = warehousesList.find((b) => b.id === line.binLocationId);
+          if (bin && bin.warehouseId && bin.warehouseId !== newWhId) {
+            return { ...line, binLocationId: '' };
+          }
+        }
+        return line;
+      })
+    );
+  };
+
+  const handleBinChange = (index: number, newBinId: string) => {
+    const bin = warehousesList.find((b) => b.id === newBinId);
+    if (bin && bin.warehouseId) {
+      if (!warehouseId || warehouseId !== bin.warehouseId) {
+        setWarehouseId(bin.warehouseId);
+      }
+    }
+    handleLineChange(index, 'binLocationId', newBinId);
+  };
 
   const handleAddLine = () => {
     setLines((prev) => [
@@ -351,14 +388,14 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
               <CustomSelect
                 theme={theme}
                 value={warehouseId}
-                onChange={setWarehouseId}
+                onChange={handleWarehouseChange}
                 searchable={true}
                 placeholder="-- เลือกคลังสินค้า --"
                 searchPlaceholder="ค้นหาชื่อหรือรหัสคลัง..."
-                options={warehousesList.map((wh) => ({
-                  value: wh.warehouseId || wh.id,
-                  label: wh.warehouseName || (wh as any).name || wh.id,
-                  sublabel: wh.warehouseId ? `ID: ${wh.warehouseId.slice(0, 8)}` : undefined,
+                options={distinctWarehouses.map((wh) => ({
+                  value: wh.id,
+                  label: wh.name,
+                  sublabel: `ID: ${wh.id.slice(0, 8)}`,
                 }))}
               />
             </div>
@@ -585,7 +622,7 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
                         <CustomSelect
                           theme={theme}
                           value={line.binLocationId}
-                          onChange={(val) => handleLineChange(idx, 'binLocationId', val)}
+                          onChange={(val) => handleBinChange(idx, val)}
                           searchable={true}
                           placeholder={isEn ? '-- Select Bin --' : '-- เลือกตำแหน่ง Bin --'}
                           searchPlaceholder="ค้นหารหัส Bin หรือโซน..."

@@ -4215,6 +4215,15 @@ paths:
                         createdAt: '2026-08-18T02:39:41.574Z'
                         updatedAt: '2026-08-18T02:39:41.574Z'
                   message: Operation completed successfully
+        '400':
+          description: Bad request - e.g. bin location does not belong to the selected warehouse
+          content:
+            application/json:
+              schema:
+                example:
+                  statusCode: 400
+                  message: ตำแหน่งชั้นวางที่เลือกไม่ได้อยู่ในคลังสินค้านี้
+                  error: Bad Request
       security:
         - jwt: []
       summary: Open a goods receipt header for an incoming shipment.
@@ -6173,6 +6182,15 @@ paths:
                       putawayQuantity: 0
                       binLocationId: null
                   message: Operation completed successfully
+        '400':
+          description: Bad request - e.g. target bin location does not belong to the goods receipt warehouse
+          content:
+            application/json:
+              schema:
+                example:
+                  statusCode: 400
+                  message: ตำแหน่งชั้นวางที่เลือกไม่ได้อยู่ในคลังสินค้านี้
+                  error: Bad Request
       security:
         - jwt: []
       summary: 'Scan-to-confirm: place `quantity` units of a staged line into a bin. `remaining` is non-null only on a partial (multi-bin) confirm - repeat the call with that line''s id for the rest.'
@@ -7868,7 +7886,7 @@ components:
         binLocationId:
           type: string
           format: uuid
-          description: Default putaway bin for this receipt.
+          description: Default putaway bin for this receipt. Must belong to warehouseId if specified; otherwise returns 400 Bad Request.
         supplierId:
           type: string
           format: uuid
@@ -8674,7 +8692,7 @@ components:
           type: string
           format: uuid
           example: a1111111-2222-4333-8444-555566667777
-          description: '1-Step Direct Putaway - the shelf this line is placed on immediately. Omit for 2-Step: the line is created staged (putawayQuantity: 0) and waits in GET /goods-receipts/staged-items for POST /putaway/confirm.'
+          description: '1-Step Direct Putaway - the shelf this line is placed on immediately. Must belong to the goods receipt warehouseId (returns 400 Bad Request if mismatched). Omit for 2-Step: the line is created staged (putawayQuantity: 0) and waits in GET /goods-receipts/staged-items for POST /putaway/confirm.'
       required:
         - productId
         - quantity
@@ -8867,7 +8885,7 @@ components:
           type: string
           format: uuid
           example: a1111111-2222-4333-8444-555566667777
-          description: The bin actually scanned on the floor - can differ from what GET /putaway/suggest-bin recommended (soft suggestion, never blocks).
+          description: The bin actually scanned on the floor - can differ from what GET /putaway/suggest-bin recommended (soft suggestion, never blocks). Must belong to the same warehouse as the goods receipt line (returns 400 Bad Request if mismatched).
         quantity:
           type: number
           minimum: 1

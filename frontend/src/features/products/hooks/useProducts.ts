@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import { ProductItem } from '../../../types';
+import { ProductItem, StockBalanceItem } from '../../../types';
 import { productService } from '../../../services/product.service';
+import { transactionService } from '../../../services/transaction.service';
 import { masterDataCache } from '../../common/cache/useMasterDataCache';
 import { ConfirmDeleteData } from '../../../components/master-data/modals/ConfirmDeleteModal';
 
@@ -75,7 +76,12 @@ export const useProducts = (showToast?: (msg: string) => void) => {
 
     setIsLoading(true);
     try {
-      const prods = await productService.getProducts({ page: 1, limit: 100 });
+      const [prodsRes, balancesRes] = await Promise.allSettled([
+        productService.getProducts({ page: 1, limit: 100 }),
+        transactionService.getStockBalances({ limit: 500 }),
+      ]);
+
+      const prods = prodsRes.status === 'fulfilled' ? prodsRes.value : [];
       const rawProds = Array.isArray(prods)
         ? prods
         : Array.isArray((prods as any)?.data)
@@ -84,39 +90,65 @@ export const useProducts = (showToast?: (msg: string) => void) => {
         ? (prods as any).items
         : [];
 
-      const mapped: ProductItem[] = rawProds.map((p: any) => ({
-        ...p,
-        id: p.id || `prod-${Math.random().toString(36).substring(2, 9)}`,
-        code: p.code || 'PRD-000',
-        name: p.name || 'Unnamed Product',
-        sku: p.sku || p.code || 'SKU-GEN',
-        category: typeof p.category === 'object' ? (p.category?.name || '-') : (p.category || '-'),
-        categoryId: p.categoryId || (typeof p.category === 'object' ? p.category?.id : undefined),
-        brand: typeof p.brand === 'object' ? (p.brand?.name || '-') : (p.brand || '-'),
-        brandId: p.brandId || (typeof p.brand === 'object' ? p.brand?.id : undefined),
-        unitId: p.unitId || (typeof p.unit === 'object' ? p.unit?.id : undefined),
-        supplierId: p.supplierId || (typeof p.supplier === 'object' ? p.supplier?.id : undefined),
-        barcodeSymbologyId: p.barcodeSymbologyId,
-        taxTypeId: p.taxTypeId,
-        barcodeValue: p.barcodeValue || p.barcode || '',
-        price: Number(p.price || (p.sellingPriceMinor ? p.sellingPriceMinor / 100 : 0)),
-        costPrice: Number(p.costPrice || (p.costPriceMinor ? p.costPriceMinor / 100 : 0)),
-        stockOnHand: Number(p.stockOnHand || p.inStockCount || 0),
-        reorderLevel: Number(p.reorderLevel || p.reorderPoint || 10),
-        minReorderQty: Number(p.minReorderQty || p.minReorderQuantity || 5),
-        weightKg: Number(p.weightKg || p.weightValue || 0),
-        widthCm: Number(p.widthCm || p.widthValue || 0),
-        lengthCm: Number(p.lengthCm || p.lengthValue || 0),
-        heightCm: Number(p.heightCm || p.heightValue || 0),
-        isLotControl: Boolean(p.isLotControl || p.lotControlled),
-        isReturnable: Boolean(p.isReturnable),
-        isActive: p.isActive !== false,
-        warrantyPeriodDays: Number(p.warrantyPeriodDays || 0),
-        barcodeType: p.barcodeType || 'CODE128',
-        status: p.status || (p.stockOnHand > 0 ? 'active' : 'out_of_stock'),
-        imageUrl: p.imageUrl || p.images?.[0]?.url || '',
-        images: p.images || [],
-      }));
+      // Calculate total stock on hand per product from live bin balances
+      const stockMap = new Map<string, number>();
+      if (balancesRes.status === 'fulfilled') {
+        const balData = balancesRes.value?.data;
+        if (Array.isArray(balData)) {
+          balData.forEach((b: StockBalanceItem) => {
+            const qty = Number(b.quantityOnHand || 0);
+            if (b.productId) {
+              stockMap.set(b.productId, (stockMap.get(b.productId) || 0) + qty);
+            }
+            if (b.sku) {
+              stockMap.set(b.sku.toUpperCase(), (stockMap.get(b.sku.toUpperCase()) || 0) + qty);
+            }
+          });
+        }
+      }
+
+      const mapped: ProductItem[] = rawProds.map((p: any) => {
+        const calculatedStock = stockMap.get(p.id) ?? (p.sku ? stockMap.get(p.sku.toUpperCase()) : undefined);
+        const stockOnHand = Number(
+          calculatedStock !== undefined
+            ? calculatedStock
+            : p.stockOnHand ?? p.inStockCount ?? 0
+        );
+
+        return {
+          ...p,
+          id: p.id || `prod-${Math.random().toString(36).substring(2, 9)}`,
+          code: p.code || 'PRD-000',
+          name: p.name || 'Unnamed Product',
+          sku: p.sku || p.code || 'SKU-GEN',
+          category: typeof p.category === 'object' ? (p.category?.name || '-') : (p.category || '-'),
+          categoryId: p.categoryId || (typeof p.category === 'object' ? p.category?.id : undefined),
+          brand: typeof p.brand === 'object' ? (p.brand?.name || '-') : (p.brand || '-'),
+          brandId: p.brandId || (typeof p.brand === 'object' ? p.brand?.id : undefined),
+          unitId: p.unitId || (typeof p.unit === 'object' ? p.unit?.id : undefined),
+          supplierId: p.supplierId || (typeof p.supplier === 'object' ? p.supplier?.id : undefined),
+          barcodeSymbologyId: p.barcodeSymbologyId,
+          taxTypeId: p.taxTypeId,
+          barcodeValue: p.barcodeValue || p.barcode || '',
+          price: Number(p.price || (p.sellingPriceMinor ? p.sellingPriceMinor / 100 : 0)),
+          costPrice: Number(p.costPrice || (p.costPriceMinor ? p.costPriceMinor / 100 : 0)),
+          stockOnHand,
+          reorderLevel: Number(p.reorderLevel || p.reorderPoint || 10),
+          minReorderQty: Number(p.minReorderQty || p.minReorderQuantity || 5),
+          weightKg: Number(p.weightKg || p.weightValue || 0),
+          widthCm: Number(p.widthCm || p.widthValue || 0),
+          lengthCm: Number(p.lengthCm || p.lengthValue || 0),
+          heightCm: Number(p.heightCm || p.heightValue || 0),
+          isLotControl: Boolean(p.isLotControl || p.lotControlled),
+          isReturnable: Boolean(p.isReturnable),
+          isActive: p.isActive !== false,
+          warrantyPeriodDays: Number(p.warrantyPeriodDays || 0),
+          barcodeType: p.barcodeType || 'CODE128',
+          status: p.status || (stockOnHand > 0 ? 'active' : 'out_of_stock'),
+          imageUrl: p.imageUrl || p.images?.[0]?.url || '',
+          images: p.images || [],
+        };
+      });
 
       setProductsList(mapped);
       masterDataCache.set(CACHE_KEY, mapped);

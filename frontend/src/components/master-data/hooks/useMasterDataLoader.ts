@@ -8,12 +8,14 @@ import {
   BarcodeSymbologyItem,
   TaxTypeItem,
   WarehouseBin,
+  StockBalanceItem,
   UserRole,
   MasterDataSubTab,
 } from '../../../types';
 import { productService } from '../../../services/product.service';
 import { warehouseService } from '../../../services/warehouse.service';
 import { masterDataService } from '../../../services/masterData.service';
+import { transactionService } from '../../../services/transaction.service';
 
 export interface UnitItem {
   id: string;
@@ -29,43 +31,44 @@ export interface RbacUser {
   email: string;
   department: string;
   role: UserRole;
-  status: string;
+  status?: string;
+  isActive?: boolean;
+  avatarUrl?: string;
 }
 
 export const useMasterDataLoader = () => {
-  const [isLoading, setIsLoading] = useState(false);
-
-  // In-Memory Cached Tabs tracking
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadedTabs, setLoadedTabs] = useState<Set<MasterDataSubTab>>(new Set());
-  const fetchingRef = useRef<{ [key: string]: boolean }>({});
 
-  // Entity States
+  // Master Data State
   const [productsList, setProductsList] = useState<ProductItem[]>([]);
-  const [companiesList, setCompaniesList] = useState<Company[]>([]);
-  const [suppliersList, setSuppliersList] = useState<Supplier[]>([]);
-  const [unitsList, setUnitsList] = useState<UnitItem[]>([]);
-  const [binsList, setBinsList] = useState<WarehouseBin[]>([]);
-  const [usersList, setUsersList] = useState<RbacUser[]>([]);
   const [categoriesList, setCategoriesList] = useState<CategoryItem[]>([]);
   const [brandsList, setBrandsList] = useState<BrandItem[]>([]);
+  const [unitsList, setUnitsList] = useState<UnitItem[]>([]);
+  const [companiesList, setCompaniesList] = useState<Company[]>([]);
+  const [suppliersList, setSuppliersList] = useState<Supplier[]>([]);
+  const [binsList, setBinsList] = useState<WarehouseBin[]>([]);
+  const [usersList, setUsersList] = useState<RbacUser[]>([]);
   const [barcodeSymbologiesList, setBarcodeSymbologiesList] = useState<BarcodeSymbologyItem[]>([]);
   const [taxTypesList, setTaxTypesList] = useState<TaxTypeItem[]>([]);
 
-  // Parallel helper loader
+  // Prevent duplicate fetches
+  const fetchingRef = useRef<{ [key: string]: boolean }>({});
+
   const loadProductMasterHelpers = useCallback(async () => {
     try {
-      const [cats, brds, units, sups, symbologies, taxTypes] = await Promise.all([
-        masterDataService.getCategories().catch(() => []),
-        masterDataService.getBrands().catch(() => []),
-        masterDataService.getUnits().catch(() => []),
-        masterDataService.getSuppliers().catch(() => []),
-        masterDataService.getBarcodeSymbologies().catch(() => []),
-        masterDataService.getTaxTypes().catch(() => []),
+      const [cats, brds, unts, sups, symbologies, taxTypes] = await Promise.all([
+        masterDataService.getCategories(),
+        masterDataService.getBrands(),
+        masterDataService.getUnits(),
+        masterDataService.getSuppliers(),
+        masterDataService.getBarcodeSymbologies(),
+        masterDataService.getTaxTypes(),
       ]);
 
       const rawCats = Array.isArray(cats) ? cats : (cats as any)?.data || [];
       const rawBrds = Array.isArray(brds) ? brds : (brds as any)?.data || [];
-      const rawUnits = Array.isArray(units) ? units : (units as any)?.data || [];
+      const rawUnits = Array.isArray(unts) ? unts : (unts as any)?.data || [];
       const rawSups = Array.isArray(sups) ? sups : (sups as any)?.data || [];
 
       if (rawCats.length > 0) setCategoriesList(rawCats);
@@ -86,7 +89,12 @@ export const useMasterDataLoader = () => {
     try {
       loadProductMasterHelpers();
 
-      const prods = await productService.getProducts({ page: 1, limit: 100 });
+      const [prodsRes, balancesRes] = await Promise.allSettled([
+        productService.getProducts({ page: 1, limit: 100 }),
+        transactionService.getStockBalances({ limit: 500 }),
+      ]);
+
+      const prods = prodsRes.status === 'fulfilled' ? prodsRes.value : [];
       const rawProds = Array.isArray(prods)
         ? prods
         : Array.isArray((prods as any)?.data)
@@ -95,40 +103,66 @@ export const useMasterDataLoader = () => {
         ? (prods as any).items
         : [];
 
+      // Calculate total stock on hand per product from live bin balances
+      const stockMap = new Map<string, number>();
+      if (balancesRes.status === 'fulfilled') {
+        const balData = balancesRes.value?.data;
+        if (Array.isArray(balData)) {
+          balData.forEach((b: StockBalanceItem) => {
+            const qty = Number(b.quantityOnHand || 0);
+            if (b.productId) {
+              stockMap.set(b.productId, (stockMap.get(b.productId) || 0) + qty);
+            }
+            if (b.sku) {
+              stockMap.set(b.sku.toUpperCase(), (stockMap.get(b.sku.toUpperCase()) || 0) + qty);
+            }
+          });
+        }
+      }
+
       setProductsList(
-        rawProds.map((p: any) => ({
-          ...p,
-          id: p.id || `prod-${Math.random().toString(36).substring(2, 9)}`,
-          code: p.code || 'PRD-000',
-          name: p.name || 'Unnamed Product',
-          sku: p.sku || p.code || 'SKU-GEN',
-          category: typeof p.category === 'object' ? (p.category?.name || '-') : (p.category || '-'),
-          categoryId: p.categoryId || (typeof p.category === 'object' ? p.category?.id : undefined),
-          brand: typeof p.brand === 'object' ? (p.brand?.name || '-') : (p.brand || '-'),
-          brandId: p.brandId || (typeof p.brand === 'object' ? p.brand?.id : undefined),
-          unitId: p.unitId || (typeof p.unit === 'object' ? p.unit?.id : undefined),
-          supplierId: p.supplierId || (typeof p.supplier === 'object' ? p.supplier?.id : undefined),
-          barcodeSymbologyId: p.barcodeSymbologyId,
-          taxTypeId: p.taxTypeId,
-          barcodeValue: p.barcodeValue || p.barcode || '',
-          price: Number(p.price || (p.sellingPriceMinor ? p.sellingPriceMinor / 100 : 0)),
-          costPrice: Number(p.costPrice || (p.costPriceMinor ? p.costPriceMinor / 100 : 0)),
-          stockOnHand: Number(p.stockOnHand || p.inStockCount || 0),
-          reorderLevel: Number(p.reorderLevel || p.reorderPoint || 10),
-          minReorderQty: Number(p.minReorderQty || p.minReorderQuantity || 5),
-          weightKg: Number(p.weightKg || p.weightValue || 0),
-          widthCm: Number(p.widthCm || p.widthValue || 0),
-          lengthCm: Number(p.lengthCm || p.lengthValue || 0),
-          heightCm: Number(p.heightCm || p.heightValue || 0),
-          isLotControl: Boolean(p.isLotControl || p.lotControlled),
-          isReturnable: Boolean(p.isReturnable),
-          isActive: p.isActive !== false,
-          warrantyPeriodDays: Number(p.warrantyPeriodDays || 0),
-          barcodeType: p.barcodeType || 'CODE128',
-          status: p.status || (p.stockOnHand > 0 ? 'active' : 'out_of_stock'),
-          imageUrl: p.imageUrl || p.images?.[0]?.url || '',
-          images: p.images || [],
-        }))
+        rawProds.map((p: any) => {
+          const calculatedStock = stockMap.get(p.id) ?? (p.sku ? stockMap.get(p.sku.toUpperCase()) : undefined);
+          const stockOnHand = Number(
+            calculatedStock !== undefined
+              ? calculatedStock
+              : p.stockOnHand ?? p.inStockCount ?? 0
+          );
+
+          return {
+            ...p,
+            id: p.id || `prod-${Math.random().toString(36).substring(2, 9)}`,
+            code: p.code || 'PRD-000',
+            name: p.name || 'Unnamed Product',
+            sku: p.sku || p.code || 'SKU-GEN',
+            category: typeof p.category === 'object' ? (p.category?.name || '-') : (p.category || '-'),
+            categoryId: p.categoryId || (typeof p.category === 'object' ? p.category?.id : undefined),
+            brand: typeof p.brand === 'object' ? (p.brand?.name || '-') : (p.brand || '-'),
+            brandId: p.brandId || (typeof p.brand === 'object' ? p.brand?.id : undefined),
+            unitId: p.unitId || (typeof p.unit === 'object' ? p.unit?.id : undefined),
+            supplierId: p.supplierId || (typeof p.supplier === 'object' ? p.supplier?.id : undefined),
+            barcodeSymbologyId: p.barcodeSymbologyId,
+            taxTypeId: p.taxTypeId,
+            barcodeValue: p.barcodeValue || p.barcode || '',
+            price: Number(p.price || (p.sellingPriceMinor ? p.sellingPriceMinor / 100 : 0)),
+            costPrice: Number(p.costPrice || (p.costPriceMinor ? p.costPriceMinor / 100 : 0)),
+            stockOnHand,
+            reorderLevel: Number(p.reorderLevel || p.reorderPoint || 10),
+            minReorderQty: Number(p.minReorderQty || p.minReorderQuantity || 5),
+            weightKg: Number(p.weightKg || p.weightValue || 0),
+            widthCm: Number(p.widthCm || p.widthValue || 0),
+            lengthCm: Number(p.lengthCm || p.lengthValue || 0),
+            heightCm: Number(p.heightCm || p.heightValue || 0),
+            isLotControl: Boolean(p.isLotControl || p.lotControlled),
+            isReturnable: Boolean(p.isReturnable),
+            isActive: p.isActive !== false,
+            warrantyPeriodDays: Number(p.warrantyPeriodDays || 0),
+            barcodeType: p.barcodeType || 'CODE128',
+            status: p.status || (stockOnHand > 0 ? 'active' : 'out_of_stock'),
+            imageUrl: p.imageUrl || p.images?.[0]?.url || '',
+            images: p.images || [],
+          };
+        })
       );
       setLoadedTabs((prev) => new Set(prev).add('products').add('barcodes'));
     } catch (err) {

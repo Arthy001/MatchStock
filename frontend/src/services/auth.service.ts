@@ -1,5 +1,6 @@
 import { apiClient, API_BASE_URL } from './api.client';
 import axios from 'axios';
+import { masterDataCache } from '../features/common/cache/useMasterDataCache';
 
 export interface LoginPayload {
   email: string;
@@ -73,6 +74,9 @@ export const authService = {
         resData.success = true;
       }
 
+      // Invalidate memory cache on login so new tenant data is always fresh
+      masterDataCache.invalidate();
+
       return resData;
     } catch (error: any) {
       console.error('API Login failed with response data:', error.response?.data || error.message);
@@ -116,7 +120,7 @@ export const authService = {
     return response.data;
   },
 
-  // 4. ออกจากระบบ (แจ้ง Server เพื่อ Revoke Refresh Token และล้าง Storage)
+  // 4. ออกจากระบบ (แจ้ง Server เพื่อ Revoke Refresh Token และล้าง Storage & In-Memory Cache)
   logout: async () => {
     const currentRefreshToken = localStorage.getItem('matchstock_refresh_token');
     if (currentRefreshToken) {
@@ -132,5 +136,8 @@ export const authService = {
     localStorage.removeItem('matchstock_refresh_token');
     localStorage.removeItem('matchstock_tenant_id');
     localStorage.removeItem('matchstock_user');
+
+    // Completely purge In-Memory RAM Cache to eliminate cross-user tenant data leakage
+    masterDataCache.invalidate();
   },
 };

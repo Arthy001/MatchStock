@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
-import { Scale, Edit2, Trash2, CheckCircle2, XCircle, Eye } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Scale, Plus, Edit2, Trash2, CheckCircle2, XCircle, Eye } from 'lucide-react';
 import { ThemeMode, Language } from '../../../types';
 import { UnitItem } from '../../../components/master-data/hooks/useMasterDataLoader';
 import { useUnits } from '../hooks/useUnits';
 import { EditUnitModal } from './EditUnitModal';
+import { CreateUnitModal } from './CreateUnitModal';
 import { ConfirmDeleteModal } from '../../../components/master-data/modals/ConfirmDeleteModal';
 
 interface UnitManagementTabProps {
@@ -29,6 +30,7 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
   onDeleteUnit: externalDelete,
   showToast,
 }) => {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const isEn = lang === 'en';
   const hook = useUnits(showToast);
 
@@ -63,6 +65,14 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
               : 'กำหนดหน่วยนับและหน่วยบรรจุภัณฑ์ (เช่น ชิ้น, กล่อง, ลัง, กิโลกรัม, เมตร)'}
           </p>
         </div>
+
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white text-xs sm:text-sm font-semibold shadow-xs transition cursor-pointer shrink-0"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>{isEn ? 'Add Unit' : 'เพิ่มหน่วยนับ'}</span>
+        </button>
       </div>
 
       {/* Units Table */}
@@ -197,6 +207,15 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
       </div>
 
       {/* Self-contained Unit Modal */}
+      <CreateUnitModal
+        theme={theme}
+        lang={lang}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => hook.fetchUnits()}
+        showToast={showToast}
+      />
+
       <EditUnitModal
         theme={theme}
         lang={lang}

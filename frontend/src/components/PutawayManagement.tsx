@@ -28,6 +28,7 @@ import {
 } from '../types';
 import { transactionService } from '../services/transaction.service';
 import { warehouseService } from '../services/warehouse.service';
+import { masterDataCache } from '../features/common/cache/useMasterDataCache';
 import { CustomSelect } from './common/CustomSelect';
 
 interface PutawayManagementProps {
@@ -299,27 +300,26 @@ export const PutawayManagement: React.FC<PutawayManagementProps> = ({
 
       let binUuid = '';
       let binCodeDisplay = targetStr;
+      let targetBinObj: WarehouseBin | undefined;
 
       // 1. Check if targetStr is a valid UUID in availableBins or regex
       if (isUUID(targetStr)) {
         binUuid = targetStr;
-        const bObj = availableBins.find((b) => b.id === targetStr);
-        if (bObj) binCodeDisplay = bObj.binCode;
+        targetBinObj = availableBins.find((b) => b.id === targetStr);
+        if (targetBinObj) binCodeDisplay = targetBinObj.binCode;
       } else {
-        // 2. Try match by binCode text (e.g. "A-01-01")
-        const matchedByCode = availableBins.find(
+        // 2. Try match by binCode text within selected item's warehouse or any bin
+        targetBinObj = availableBins.find(
+          (b) =>
+            b.binCode.toLowerCase() === targetStr.toLowerCase() &&
+            (!selectedItem.warehouseId || b.warehouseId === selectedItem.warehouseId)
+        ) || availableBins.find(
           (b) => b.binCode.toLowerCase() === targetStr.toLowerCase()
         );
-        if (matchedByCode && isUUID(matchedByCode.id)) {
-          binUuid = matchedByCode.id;
-          binCodeDisplay = matchedByCode.binCode;
-        } else {
-          // 3. Fallback: match any bin in selectedItem.warehouseId
-          const whId = selectedItem.warehouseId;
-          const whBin = availableBins.find((b) => (b.warehouseId === whId || b.id === whId) && isUUID(b.id));
-          if (whBin) {
-            binUuid = whBin.id;
-          }
+
+        if (targetBinObj && isUUID(targetBinObj.id)) {
+          binUuid = targetBinObj.id;
+          binCodeDisplay = targetBinObj.binCode;
         }
       }
 
@@ -328,6 +328,16 @@ export const PutawayManagement: React.FC<PutawayManagementProps> = ({
           isEn
             ? `Bin location "${targetStr}" was not found. Please click "Find Bin" to select a valid shelf.`
             : `ไม่พบตำแหน่งชั้นวาง "${targetStr}" ในคลังสินค้า กรุณากดปุ่ม "ค้นหา Bin" เพื่อเลือกชั้นวางที่มีอยู่จริง`
+        );
+        return;
+      }
+
+      // 3. Strict Cross-Warehouse Validation
+      if (targetBinObj && selectedItem.warehouseId && targetBinObj.warehouseId && targetBinObj.warehouseId !== selectedItem.warehouseId) {
+        showToast(
+          isEn
+            ? `Bin "${targetBinObj.binCode}" belongs to ${targetBinObj.warehouseName || 'another warehouse'}, not the received warehouse.`
+            : `ชั้นวาง "${targetBinObj.binCode}" สังกัดคลัง "${targetBinObj.warehouseName || 'คลังอื่น'}" ไม่ตรงกับคลังที่รับสินค้าเข้า`
         );
         return;
       }
@@ -364,6 +374,9 @@ export const PutawayManagement: React.FC<PutawayManagementProps> = ({
           quantity: alloc.quantity,
         });
       }
+
+      masterDataCache.invalidate('products_list');
+      masterDataCache.invalidate('warehouses_bins_list');
 
       showToast(
         isEn
@@ -966,6 +979,9 @@ export const PutawayManagement: React.FC<PutawayManagementProps> = ({
               ) : (
                 (() => {
                   const filteredBins = availableBins.filter((b) => {
+                    if (selectedItem?.warehouseId && b.warehouseId && b.warehouseId !== selectedItem.warehouseId) {
+                      return false;
+                    }
                     const q = binSearchQuery.trim().toLowerCase();
                     if (!q) return true;
                     return (

@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
-import { Truck, Edit2, Trash2, CheckCircle2, XCircle, Phone, Mail, MapPin, Eye } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Truck, Plus, Edit2, Trash2, CheckCircle2, XCircle, Phone, Mail, MapPin, Eye } from 'lucide-react';
 import { ThemeMode, Language, Supplier } from '../../../types';
 import { useSuppliers } from '../hooks/useSuppliers';
 import { EditSupplierModal } from './EditSupplierModal';
+import { CreateSupplierModal } from './CreateSupplierModal';
 import { ConfirmDeleteModal } from '../../../components/master-data/modals/ConfirmDeleteModal';
 
 interface SupplierManagementTabProps {
@@ -28,6 +29,7 @@ export const SupplierManagementTab: React.FC<SupplierManagementTabProps> = ({
   onDeleteSupplier: externalDelete,
   showToast,
 }) => {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const isEn = lang === 'en';
   const hook = useSuppliers(showToast);
 
@@ -65,6 +67,14 @@ export const SupplierManagementTab: React.FC<SupplierManagementTabProps> = ({
               : 'จัดการรายชื่อผู้จัดจำหน่าย คู่ค้า ข้อมูลการติดต่อ และการจัดซื้อ'}
           </p>
         </div>
+
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs sm:text-sm font-semibold shadow-xs transition cursor-pointer shrink-0"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>{isEn ? 'Add Supplier' : 'เพิ่มผู้จัดจำหน่าย'}</span>
+        </button>
       </div>
 
       {/* Suppliers Table */}
@@ -218,6 +228,15 @@ export const SupplierManagementTab: React.FC<SupplierManagementTabProps> = ({
       </div>
 
       {/* Self-contained Supplier Modal */}
+      <CreateSupplierModal
+        theme={theme}
+        lang={lang}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => hook.fetchSuppliers()}
+        showToast={showToast}
+      />
+
       <EditSupplierModal
         theme={theme}
         lang={lang}
