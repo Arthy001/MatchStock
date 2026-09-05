@@ -1,0 +1,319 @@
+cycle_counts:
+  get:
+    operationId: CycleCountsController_list_v1
+    parameters:
+      - name: page
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          default: 1
+          example: 1
+          type: number
+      - name: limit
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+          type: number
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    countNumber: CC-202608-001
+                    warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                    binLocationId: null
+                    status: open
+                    missingCount: null
+                    foundCount: null
+                    netVarianceCount: null
+                    notes: null
+                    openedAt: '2026-08-18T02:39:41.574Z'
+                    submittedAt: null
+                    closedAt: null
+                    approvedByType: null
+                    approvedById: null
+                    approvedAt: null
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    tags:
+      - Cycle Counts
+  post:
+    operationId: CycleCountsController_create_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/inventory.yaml#/CreateCycleCountDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  countNumber: CC-202608-001
+                  warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  binLocationId: null
+                  status: open
+                  missingCount: null
+                  foundCount: null
+                  netVarianceCount: null
+                  notes: null
+                  openedAt: '2026-08-18T02:39:41.574Z'
+                  submittedAt: null
+                  closedAt: null
+                  approvedByType: null
+                  approvedById: null
+                  approvedAt: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Open a cycle count - snapshots what the system currently expects to be in_stock in this scope.
+    tags:
+      - Cycle Counts
+cycle_counts__id:
+  get:
+    operationId: CycleCountsController_getById_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  countNumber: CC-202608-001
+                  warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  binLocationId: null
+                  status: open
+                  missingCount: null
+                  foundCount: null
+                  netVarianceCount: null
+                  notes: null
+                  openedAt: '2026-08-18T02:39:41.574Z'
+                  submittedAt: null
+                  closedAt: null
+                  approvedByType: null
+                  approvedById: null
+                  approvedAt: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    tags:
+      - Cycle Counts
+cycle_counts__id__submit_count:
+  post:
+    operationId: CycleCountsController_submitCount_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/inventory.yaml#/SubmitCycleCountDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  countNumber: CC-202608-001
+                  warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  binLocationId: null
+                  status: open
+                  missingCount: null
+                  foundCount: null
+                  netVarianceCount: null
+                  notes: null
+                  openedAt: '2026-08-18T02:39:41.574Z'
+                  submittedAt: '2026-08-18T02:45:00.000Z'
+                  closedAt: null
+                  approvedByType: null
+                  approvedById: null
+                  approvedAt: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Record what was actually scanned/counted - re-submittable while still open.
+    tags:
+      - Cycle Counts
+cycle_counts__id__close:
+  post:
+    operationId: CycleCountsController_close_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  countNumber: CC-202608-001
+                  warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  binLocationId: null
+                  status: closed
+                  missingCount: 1
+                  foundCount: 0
+                  netVarianceCount: -1
+                  notes: null
+                  openedAt: '2026-08-18T02:39:41.574Z'
+                  submittedAt: '2026-08-18T02:45:00.000Z'
+                  closedAt: '2026-08-18T02:50:00.000Z'
+                  approvedByType: null
+                  approvedById: null
+                  approvedAt: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Diff expected vs counted and record a missing/found/net variance preview - does not touch tag state yet, see /approve.
+    tags:
+      - Cycle Counts
+cycle_counts__id__approve:
+  post:
+    operationId: CycleCountsController_approve_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  countNumber: CC-202608-001
+                  warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  binLocationId: null
+                  status: approved
+                  missingCount: 1
+                  foundCount: 0
+                  netVarianceCount: -1
+                  notes: null
+                  openedAt: '2026-08-18T02:39:41.574Z'
+                  submittedAt: '2026-08-18T02:45:00.000Z'
+                  closedAt: '2026-08-18T02:50:00.000Z'
+                  approvedByType: user
+                  approvedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  approvedAt: '2026-08-18T03:00:00.000Z'
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Approve a closed count - actually applies the variance tag-by-tag. Only callable once the count is "closed".
+    tags:
+      - Cycle Counts

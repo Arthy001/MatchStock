@@ -1,4 +1,18 @@
 openapi: 3.0.0
+info:
+  title: MatchStock API
+  description: |-
+    RFID inventory ingestion + management API. Every route below is shown at its real /api/v1/... path. Most endpoints require a user JWT (sign in via POST /api/v1/auth/login, then click "Authorize" below and paste the accessToken). POST /api/v1/ingestion/readings is authenticated differently: each request is signed with the device secret rather than carrying a bearer token - see that endpoint's description for the X-Device-Key-Id/X-Signature headers.
+
+    Response envelope: every successful response is wrapped as `{ "success": true, "data": <shown below>, "message": string, "meta"?: {page,limit,totalCount,totalPages} }` (`meta` only on paginated list endpoints) - the schemas documented per endpoint below describe the `data` field only, not the outer envelope. Every error response is `{ "success": false, "message": string, "errors": string[] }` - `message` is a fixed category label (e.g. "Validation failed", "Not found"), the actual reason(s) are always in `errors` (the real HTTP status code is on the response line, not duplicated in the body). A handful of non-JSON endpoints (file downloads, the RFID ingestion endpoint, the payment webhook) are exempt and return their body unwrapped - each says so in its own description.
+  version: '1.0'
+  contact: {}
+servers:
+  - url: https://match-stock.ddns.net/api/v1
+    description: Production (OCI VM)
+  - url: http://localhost:3010/api/v1
+    description: Local Development Server
+tags: []
 paths:
   /auth/login:
     post:
@@ -2867,12 +2881,12 @@ paths:
                           startZ: 0
                           endX: 42
                           endZ: 0
-                          heightMeters: 6.0
+                          heightMeters: 6
                       doors:
                         - id: door-01
                           x: 21
                           z: 0
-                          widthMeters: 4.0
+                          widthMeters: 4
                           heightMeters: 4.5
                           type: dock
                   message: Blueprint updated successfully
@@ -6597,7 +6611,7 @@ paths:
                   data:
                     chargeId: chrg_test_abc123
                     status: pending
-                    authorizeUri: 'https://pay.example.com/authorize/chrg_test_abc123'
+                    authorizeUri: https://pay.example.com/authorize/chrg_test_abc123
                   message: Operation completed successfully
       security:
         - jwt: []
@@ -7040,20 +7054,6 @@ paths:
         - jwt: []
       tags:
         - Zones
-info:
-  title: MatchStock API
-  description: |-
-    RFID inventory ingestion + management API. Every route below is shown at its real /api/v1/... path. Most endpoints require a user JWT (sign in via POST /api/v1/auth/login, then click "Authorize" below and paste the accessToken). POST /api/v1/ingestion/readings is authenticated differently: each request is signed with the device secret rather than carrying a bearer token - see that endpoint's description for the X-Device-Key-Id/X-Signature headers.
-
-    Response envelope: every successful response is wrapped as `{ "success": true, "data": <shown below>, "message": string, "meta"?: {page,limit,totalCount,totalPages} }` (`meta` only on paginated list endpoints) - the schemas documented per endpoint below describe the `data` field only, not the outer envelope. Every error response is `{ "success": false, "message": string, "errors": string[] }` - `message` is a fixed category label (e.g. "Validation failed", "Not found"), the actual reason(s) are always in `errors` (the real HTTP status code is on the response line, not duplicated in the body). A handful of non-JSON endpoints (file downloads, the RFID ingestion endpoint, the payment webhook) are exempt and return their body unwrapped - each says so in its own description.
-  version: '1.0'
-  contact: {}
-tags: []
-servers:
-  - url: https://match-stock.ddns.net/api/v1
-    description: Production (OCI VM)
-  - url: http://localhost:3010/api/v1
-    description: Local Development Server
 components:
   securitySchemes:
     jwt:
@@ -7627,10 +7627,10 @@ components:
           properties:
             widthMeters:
               type: number
-              example: 42.0
+              example: 42
             depthMeters:
               type: number
-              example: 32.0
+              example: 32
         zonesConfig:
           type: object
           description: Independent zone configurations for 3D layout
@@ -7666,7 +7666,7 @@ components:
                 example: 0
               heightMeters:
                 type: number
-                example: 6.0
+                example: 6
               thicknessMeters:
                 type: number
                 example: 0.2
@@ -7687,13 +7687,16 @@ components:
                 example: 0
               widthMeters:
                 type: number
-                example: 4.0
+                example: 4
               heightMeters:
                 type: number
                 example: 4.5
               type:
                 type: string
-                enum: [dock, entrance, emergency_exit]
+                enum:
+                  - dock
+                  - entrance
+                  - emergency_exit
                 example: dock
       required:
         - blueprintUrl
@@ -7720,7 +7723,10 @@ components:
           example: 500
         status:
           type: string
-          enum: [available, full, maintenance]
+          enum:
+            - available
+            - full
+            - maintenance
           example: available
         isActive:
           type: boolean
@@ -7732,7 +7738,9 @@ components:
       properties:
         mode:
           type: string
-          enum: [overwrite, merge]
+          enum:
+            - overwrite
+            - merge
           example: overwrite
           description: 'overwrite: replace all bins (blocked if any active stock exists); merge: upsert bins without modifying inventory'
         bins:

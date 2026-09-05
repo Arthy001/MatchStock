@@ -1,0 +1,116 @@
+stock_balances:
+  get:
+    operationId: StockController_getBalances_v1
+    parameters:
+      - name: page
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          default: 1
+          example: 1
+          type: number
+      - name: limit
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+          type: number
+      - name: warehouseId
+        required: false
+        in: query
+        schema:
+          format: uuid
+          example: 362fecaa-d3d7-4f42-b979-756fb8444d57
+          type: string
+      - name: binLocationId
+        required: false
+        in: query
+        schema:
+          format: uuid
+          type: string
+      - name: productId
+        required: false
+        in: query
+        schema:
+          format: uuid
+          example: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: a1b2c3d4-e5f6-4a5b-8c7d-1e2f3a4b5c6d
+                    warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                    warehouseName: Main Warehouse
+                    binLocationId: a1111111-2222-4333-8444-555566667777
+                    binCode: A-02-01
+                    productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                    productName: Cardboard Box 30x30x30
+                    sku: DEMO-SKU-001
+                    lotNumber: LOT-2026-08-A
+                    expiryDate: '2027-08-01T00:00:00.000Z'
+                    quantityOnHand: 1000
+                    quantityReserved: 50
+                    availableQuantity: 950
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 50
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    summary: Query real-time stock balances, filtered by warehouse, product, or bin location.
+    tags:
+      - Stock & Inventory
+stock_lookup:
+  get:
+    operationId: StockController_lookup_v1
+    parameters:
+      - name: code
+        required: true
+        in: query
+        description: Barcode, SKU, product code, or RFID Tag ID to search.
+        schema:
+          maxLength: 255
+          example: '8851234567890'
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                  sku: DEMO-SKU-001
+                  name: Cardboard Box 30x30x30
+                  barcodeValue: '8851234567890'
+                  totalOnHand: 1000
+                  totalAvailable: 950
+                  totalReserved: 50
+                  locations:
+                    - warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                      warehouseName: Main Warehouse
+                      binLocationId: a1111111-2222-4333-8444-555566667777
+                      binCode: A-02-01
+                      lotNumber: LOT-2026-08-A
+                      expiryDate: '2027-08-01T00:00:00.000Z'
+                      quantity: 1000
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Universal stock lookup by barcode, SKU, product code, or RFID Tag ID.
+    tags:
+      - Stock & Inventory

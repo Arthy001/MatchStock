@@ -1,0 +1,263 @@
+suppliers:
+  get:
+    operationId: SuppliersController_list_v1
+    parameters:
+      - name: page
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          default: 1
+          example: 1
+          type: number
+      - name: limit
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+          type: number
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: thai-packaging-co
+                    name: Thai Packaging Co., Ltd.
+                    contactPerson: Somchai Owner
+                    phone: +66-2-123-4567
+                    isActive: true
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    summary: List the signed-in user's tenant suppliers.
+    tags:
+      - Suppliers
+  post:
+    operationId: SuppliersController_create_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/master-data.yaml#/CreateSupplierDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  code: thai-packaging-co
+                  name: Thai Packaging Co., Ltd.
+                  contactPerson: Somchai Owner
+                  phone: +66-2-123-4567
+                  isActive: true
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Create a supplier.
+    tags:
+      - Suppliers
+suppliers__id:
+  get:
+    operationId: SuppliersController_getById_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  code: thai-packaging-co
+                  name: Thai Packaging Co., Ltd.
+                  contactPerson: Somchai Owner
+                  phone: +66-2-123-4567
+                  isActive: true
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    tags:
+      - Suppliers
+  patch:
+    operationId: SuppliersController_update_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/master-data.yaml#/UpdateSupplierDto
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  code: thai-packaging-co
+                  name: Thai Packaging Co., Ltd.
+                  contactPerson: Somchai Owner
+                  phone: +66-2-123-4567
+                  isActive: true
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    tags:
+      - Suppliers
+  delete:
+    operationId: SuppliersController_remove_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  code: thai-packaging-co
+                  name: Thai Packaging Co., Ltd.
+                  contactPerson: Somchai Owner
+                  phone: +66-2-123-4567
+                  isActive: true
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: '2026-08-31T00:00:00.000Z'
+                  deletedByType: user
+                  deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                  isDeleted: true
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: 'Delete a supplier (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
+    tags:
+      - Suppliers
+suppliers__id__deactivate:
+  post:
+    operationId: SuppliersController_deactivate_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  code: thai-packaging-co
+                  name: Thai Packaging Co., Ltd.
+                  contactPerson: Somchai Owner
+                  phone: +66-2-123-4567
+                  isActive: false
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    tags:
+      - Suppliers

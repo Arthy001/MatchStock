@@ -1,0 +1,565 @@
+UpdateProductDto:
+  type: object
+  properties:
+    code:
+      type: string
+      maxLength: 50
+      example: INTL-00123
+    slug:
+      type: string
+      maxLength: 150
+      example: cardboard-box-30x30x30
+    name:
+      type: string
+      maxLength: 255
+      example: Cardboard Box 30x30x30
+    description:
+      type: string
+      maxLength: 1000
+      example: Standard shipping carton, single-wall corrugated.
+    categoryId:
+      type: string
+      format: uuid
+      description: id from GET /categories
+    unitOfMeasure:
+      type: string
+      maxLength: 20
+      example: pcs
+    isActive:
+      type: boolean
+      example: true
+    isReturnable:
+      type: boolean
+      example: true
+    unitId:
+      type: string
+      format: uuid
+      description: id from GET /units?type=quantity
+    brandId:
+      type: string
+      format: uuid
+      description: id from GET /brands
+    manufacturerId:
+      type: string
+      format: uuid
+      description: id from GET /manufacturers
+    widthValue:
+      type: number
+      example: 30
+    lengthValue:
+      type: number
+      example: 30
+    heightValue:
+      type: number
+      example: 30
+    dimensionUnitId:
+      type: string
+      format: uuid
+      description: id from GET /units?type=dimension
+    weightValue:
+      type: number
+      example: 1.2
+    weightUnitId:
+      type: string
+      format: uuid
+      description: id from GET /units?type=weight
+    supplierId:
+      type: string
+      format: uuid
+      description: id from GET /suppliers
+    costPriceMinor:
+      type: number
+      minimum: 0
+      example: 15000
+      description: Minor units (satang)
+    sellingPriceMinor:
+      type: number
+      minimum: 0
+      example: 25000
+      description: Minor units (satang)
+    currency:
+      type: string
+      maxLength: 3
+      example: THB
+    reorderPoint:
+      type: number
+      minimum: 0
+      example: 10
+      description: Flag this product as low-stock once inStockCount drops to or below this.
+    minReorderQuantity:
+      type: number
+      minimum: 0
+      example: 20
+      description: Suggested quantity to reorder once low-stock triggers. Fixed value, not auto-calculated.
+    barcodeValue:
+      type: string
+      maxLength: 64
+      example: '1234567890123'
+    barcodeSymbologyId:
+      type: string
+      format: uuid
+      description: id from GET /barcode-symbologies
+    taxTypeId:
+      type: string
+      format: uuid
+      description: id from GET /tax-types
+    discountType:
+      type: string
+      enum:
+        - percentage
+        - fixed
+      example: percentage
+    discountValue:
+      type: number
+      minimum: 0
+      example: 10
+      description: 0-100 when discountType=percentage, minor units when discountType=fixed.
+    lotControlled:
+      type: boolean
+      example: true
+    warrantyPeriodDays:
+      type: number
+      minimum: 0
+      example: 365
+      description: Warranty period in days.
+ReorderProductImagesDto:
+  type: object
+  properties:
+    imageIds:
+      minItems: 1
+      description: Every image id belonging to this product, exactly once, in the desired order - first entry becomes primary.
+      type: array
+      items:
+        type: string
+        format: uuid
+  required:
+    - imageIds
+CreateUnitDto:
+  type: object
+  properties:
+    code:
+      type: string
+      maxLength: 50
+      example: kg
+      description: Auto-derived from name if omitted.
+    name:
+      type: string
+      maxLength: 100
+      example: Kilogram
+    type:
+      enum:
+        - quantity
+        - dimension
+        - weight
+      type: string
+      example: quantity
+      default: quantity
+  required:
+    - name
+UpdateUnitDto:
+  type: object
+  properties:
+    name:
+      type: string
+      maxLength: 100
+    isActive:
+      type: boolean
+    isDeleted:
+      type: boolean
+      example: false
+CreateBrandDto:
+  type: object
+  properties:
+    code:
+      type: string
+      maxLength: 50
+      example: acme
+      description: Auto-derived from name if omitted.
+    name:
+      type: string
+      maxLength: 100
+      example: Acme
+    description:
+      type: string
+      maxLength: 1000
+  required:
+    - name
+UpdateBrandDto:
+  type: object
+  properties:
+    name:
+      type: string
+      maxLength: 100
+    description:
+      type: string
+      maxLength: 1000
+    isActive:
+      type: boolean
+    isDeleted:
+      type: boolean
+      example: false
+CreateManufacturerDto:
+  type: object
+  properties:
+    code:
+      type: string
+      maxLength: 50
+      example: chainway
+      description: Auto-derived from name if omitted.
+    name:
+      type: string
+      maxLength: 255
+      example: Chainway
+    contactPerson:
+      type: string
+      maxLength: 100
+    phone:
+      type: string
+      maxLength: 50
+    email:
+      type: string
+      maxLength: 100
+      format: email
+  required:
+    - name
+UpdateManufacturerDto:
+  type: object
+  properties:
+    name:
+      type: string
+      maxLength: 255
+    contactPerson:
+      type: string
+      maxLength: 100
+    phone:
+      type: string
+      maxLength: 50
+    email:
+      type: string
+      maxLength: 100
+      format: email
+    isActive:
+      type: boolean
+    isDeleted:
+      type: boolean
+      example: false
+CreateSupplierDto:
+  type: object
+  properties:
+    code:
+      type: string
+      maxLength: 50
+      example: globex
+      description: Auto-derived from name if omitted.
+    name:
+      type: string
+      maxLength: 255
+      example: Globex Supplies Co.
+    contactPerson:
+      type: string
+      maxLength: 100
+    phone:
+      type: string
+      maxLength: 50
+    companyId:
+      type: string
+      format: uuid
+      description: Set only if this supplier is really an inter-company subsidiary in the same tenant, not an outside vendor.
+  required:
+    - name
+UpdateSupplierDto:
+  type: object
+  properties:
+    name:
+      type: string
+      maxLength: 255
+    contactPerson:
+      type: string
+      maxLength: 100
+    phone:
+      type: string
+      maxLength: 50
+    isActive:
+      type: boolean
+    isDeleted:
+      type: boolean
+      example: false
+    companyId:
+      type: string
+      nullable: true
+      format: uuid
+      description: Set only if this supplier is really an inter-company subsidiary in the same tenant, not an outside vendor. null clears it back to an outside vendor.
+CreateCategoryDto:
+  type: object
+  properties:
+    code:
+      type: string
+      maxLength: 50
+      example: packaging
+      description: Auto-derived from name if omitted.
+    name:
+      type: string
+      maxLength: 255
+      example: Packaging
+    description:
+      type: string
+      maxLength: 1000
+  required:
+    - name
+UpdateCategoryDto:
+  type: object
+  properties:
+    name:
+      type: string
+      maxLength: 255
+    description:
+      type: string
+      maxLength: 1000
+    isActive:
+      type: boolean
+    isDeleted:
+      type: boolean
+      example: false
+CreateTaxTypeDto:
+  type: object
+  properties:
+    name:
+      type: string
+      maxLength: 100
+      example: VAT
+    ratePercent:
+      type: number
+      minimum: 0
+      maximum: 100
+      example: 7
+  required:
+    - name
+    - ratePercent
+UpdateTaxTypeDto:
+  type: object
+  properties:
+    name:
+      type: string
+      maxLength: 100
+      example: VAT
+    ratePercent:
+      type: number
+      minimum: 0
+      maximum: 100
+      example: 7
+    isActive:
+      type: boolean
+      example: true
+    isDeleted:
+      type: boolean
+      example: false
+CreateBarcodeSymbologyDto:
+  type: object
+  properties:
+    code:
+      type: string
+      maxLength: 50
+      example: ean13
+      description: Auto-derived from name if omitted.
+    name:
+      type: string
+      maxLength: 100
+      example: EAN-13
+    description:
+      type: string
+      maxLength: 1000
+  required:
+    - name
+UpdateBarcodeSymbologyDto:
+  type: object
+  properties:
+    name:
+      type: string
+      maxLength: 100
+    description:
+      type: string
+      maxLength: 1000
+    isActive:
+      type: boolean
+    isDeleted:
+      type: boolean
+      example: false
+CreateBinLocationDto:
+  type: object
+  properties:
+    code:
+      type: string
+      maxLength: 50
+      example: A1-03
+    zoneName:
+      type: string
+      maxLength: 100
+      example: Zone A
+    rack:
+      type: string
+      maxLength: 50
+      example: Rack A01
+    shelf:
+      type: string
+      maxLength: 50
+      example: Level A
+    capacityKg:
+      type: number
+      example: 500
+    maxCapacity:
+      type: number
+      minimum: 0
+      example: 100
+  required:
+    - code
+UpdateWarehouseDto:
+  type: object
+  properties:
+    name:
+      type: string
+      maxLength: 255
+      example: Bangkok Main Warehouse
+    address:
+      type: string
+      maxLength: 500
+      example: 123 Sukhumvit Rd, Bangkok
+    isActive:
+      type: boolean
+      example: true
+    isDeleted:
+      type: boolean
+      example: false
+    maxCapacity:
+      type: number
+      minimum: 0
+      example: 1000
+      description: Total tag-count ceiling - GET /alerts flags this warehouse once the live count exceeds it.
+    companyId:
+      type: string
+      nullable: true
+      format: uuid
+      description: Scope this warehouse to one Company (branch/subsidiary) - null = shared/tenant-wide warehouse.
+UpdateBinLocationDto:
+  type: object
+  properties:
+    code:
+      type: string
+      maxLength: 50
+      example: A1-03
+    zoneName:
+      type: string
+      maxLength: 100
+      example: Zone A
+    rack:
+      type: string
+      maxLength: 50
+      example: Rack A01
+    shelf:
+      type: string
+      maxLength: 50
+      example: Level A
+    capacityKg:
+      type: number
+      example: 500
+    status:
+      type: string
+      example: available
+    isActive:
+      type: boolean
+      example: true
+    isDeleted:
+      type: boolean
+      example: false
+    maxCapacity:
+      type: number
+      minimum: 0
+      example: 100
+      description: Total tag-count ceiling - GET /alerts flags this bin once the live count exceeds it.
+BatchSaveBinItemDto:
+  type: object
+  properties:
+    binCode:
+      type: string
+      example: ZoneA-A01-A-01
+    zone:
+      type: string
+      example: Zone A
+    rack:
+      type: string
+      example: Rack A01
+    shelf:
+      type: string
+      example: Level A
+    capacityKg:
+      type: number
+      example: 500
+    maxCapacity:
+      type: number
+      example: 500
+    status:
+      type: string
+      enum:
+        - available
+        - full
+        - maintenance
+      example: available
+    isActive:
+      type: boolean
+      example: true
+  required:
+    - binCode
+BatchSaveBinsDto:
+  type: object
+  properties:
+    mode:
+      type: string
+      enum:
+        - overwrite
+        - merge
+      example: overwrite
+      description: 'overwrite: replace all bins (blocked if any active stock exists); merge: upsert bins without modifying inventory'
+    bins:
+      type: array
+      items:
+        $ref: ./master-data.yaml#/BatchSaveBinItemDto
+  required:
+    - mode
+    - bins
+BindTagDto:
+  type: object
+  properties:
+    productId:
+      type: string
+      format: uuid
+      example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+    receivedAt:
+      type: string
+      example: '2026-08-01'
+      description: When this physical unit/lot actually arrived - defaults to now only if never set (e.g. by preRegister), never overwrites an already-set value unless provided explicitly here.
+  required:
+    - productId
+CreateZoneDto:
+  type: object
+  properties:
+    code:
+      type: string
+      maxLength: 50
+      example: cold-storage
+      description: Auto-derived from name if omitted.
+    name:
+      type: string
+      maxLength: 255
+      example: Cold Storage
+  required:
+    - name
+UpdateZoneDto:
+  type: object
+  properties:
+    name:
+      type: string
+      maxLength: 255
+    isActive:
+      type: boolean
+    isDeleted:
+      type: boolean
+      example: false

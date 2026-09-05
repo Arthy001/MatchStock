@@ -1,0 +1,336 @@
+goods_receipts:
+  get:
+    operationId: GoodsReceiptsController_list_v1
+    parameters:
+      - name: page
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          default: 1
+          example: 1
+          type: number
+      - name: limit
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+          type: number
+      - name: supplierId
+        required: false
+        in: query
+        schema:
+          format: uuid
+          example: 9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d
+          type: string
+      - name: warehouseId
+        required: false
+        in: query
+        schema:
+          format: uuid
+          example: 362fecaa-d3d7-4f42-b979-756fb8444d57
+          type: string
+      - name: receivedFrom
+        required: false
+        in: query
+        schema:
+          example: '2026-08-01T00:00:00.000Z'
+          type: string
+      - name: receivedTo
+        required: false
+        in: query
+        schema:
+          example: '2026-08-31T23:59:59.000Z'
+          type: string
+      - name: putawayStatus
+        required: false
+        in: query
+        description: staged = has at least one quantity-line still awaiting putaway (quantity > putawayQuantity, see GET /goods-receipts/staged-items for the line-level queue). complete = every quantity-line on the receipt is fully put away (or it has none). Omit to see everything, same as before this filter existed.
+        schema:
+          type: string
+          enum:
+            - staged
+            - complete
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    receiptNumber: GR-202608-001
+                    warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                    binLocationId: null
+                    supplierId: 9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d
+                    poNumber: PO-2026-0088
+                    supplierInvoiceNo: INV-88213
+                    photoUrls: []
+                    receivedAt: '2026-08-18T02:39:41.574Z'
+                    notes: null
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                    lines:
+                      - id: a2c3d4e5-6f70-4a8b-9c1d-2e3f4a5b6c7d
+                        goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                        productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                        quantity: 95
+                        damagedQuantity: 5
+                        putawayQuantity: 0
+                        lotNumber: LOT-2026-08-A
+                        productionDate: '2026-08-01T00:00:00.000Z'
+                        expiryDate: '2027-08-01T00:00:00.000Z'
+                        unitCostMinor: 10000
+                        binLocationId: null
+                        createdAt: '2026-08-18T02:39:41.574Z'
+                        updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    tags:
+      - Goods Receipts
+  post:
+    operationId: GoodsReceiptsController_create_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/inventory.yaml#/CreateGoodsReceiptDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  receiptNumber: GR-202608-001
+                  warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  binLocationId: null
+                  supplierId: 9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d
+                  poNumber: PO-2026-0088
+                  supplierInvoiceNo: INV-88213
+                  photoUrls: []
+                  receivedAt: '2026-08-18T02:39:41.574Z'
+                  notes: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                  lines:
+                    - id: a2c3d4e5-6f70-4a8b-9c1d-2e3f4a5b6c7d
+                      goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                      productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                      quantity: 95
+                      damagedQuantity: 5
+                      putawayQuantity: 0
+                      lotNumber: LOT-2026-08-A
+                      productionDate: '2026-08-01T00:00:00.000Z'
+                      expiryDate: '2027-08-01T00:00:00.000Z'
+                      unitCostMinor: 10000
+                      binLocationId: null
+                      createdAt: '2026-08-18T02:39:41.574Z'
+                      updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+      '400':
+        description: Bad request - e.g. bin location does not belong to the selected warehouse
+        content:
+          application/json:
+            schema:
+              example:
+                statusCode: 400
+                message: ตำแหน่งชั้นวางที่เลือกไม่ได้อยู่ในคลังสินค้านี้
+                error: Bad Request
+    security:
+      - jwt: []
+    summary: Open a goods receipt header for an incoming shipment.
+    tags:
+      - Goods Receipts
+goods_receipts__id:
+  get:
+    operationId: GoodsReceiptsController_getById_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  receiptNumber: GR-202608-001
+                  warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  binLocationId: null
+                  supplierId: 9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d
+                  poNumber: PO-2026-0088
+                  supplierInvoiceNo: INV-88213
+                  photoUrls: []
+                  receivedAt: '2026-08-18T02:39:41.574Z'
+                  notes: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                  lines:
+                    - id: a2c3d4e5-6f70-4a8b-9c1d-2e3f4a5b6c7d
+                      goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                      productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                      quantity: 95
+                      damagedQuantity: 5
+                      putawayQuantity: 0
+                      lotNumber: LOT-2026-08-A
+                      productionDate: '2026-08-01T00:00:00.000Z'
+                      expiryDate: '2027-08-01T00:00:00.000Z'
+                      unitCostMinor: 10000
+                      binLocationId: null
+                      createdAt: '2026-08-18T02:39:41.574Z'
+                      updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    tags:
+      - Goods Receipts
+goods_receipts__id__lines:
+  post:
+    operationId: GoodsReceiptsController_receive_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/common.yaml#/ReceiveGoodsDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: a1b2c3d4-e5f6-4a5b-8c7d-1e2f3a4b5c6d
+                    tagId: 686E14141E13194568471D7F
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                    status: bound
+                    boundAt: '2026-08-18T02:39:41.574Z'
+                    receivedAt: '2026-08-18T02:39:41.574Z'
+                    lotNumber: null
+                    productionDate: null
+                    expiryDate: null
+                    unitCostMinor: 15000
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Receive one or more tags under this receipt - pre-registers unseen tags, binds each to the product with this receipt's lot/production/expiry data.
+    tags:
+      - Goods Receipts
+goods_receipts_staged_items:
+  get:
+    operationId: GoodsReceiptsController_listStagedItems_v1
+    parameters:
+      - name: page
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          default: 1
+          example: 1
+          type: number
+      - name: limit
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+          type: number
+      - name: warehouseId
+        required: false
+        in: query
+        schema:
+          format: uuid
+          example: 362fecaa-d3d7-4f42-b979-756fb8444d57
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - goodsReceiptLineId: a2c3d4e5-6f70-4a8b-9c1d-2e3f4a5b6c7d
+                    goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    receiptNumber: GR-202608-001
+                    productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                    sku: DEMO-SKU-001
+                    productName: Cardboard Box 30x30x30
+                    remainingQuantity: 95
+                    lotNumber: LOT-2026-08-A
+                    expiryDate: '2027-08-01T00:00:00.000Z'
+                    suggestedBinLocationId: null
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    summary: List goods receipt lines still waiting for Putaway (2-Step flow) - the queue GET /putaway/suggest-bin + POST /putaway/confirm work against.
+    tags:
+      - Goods Receipts

@@ -1,0 +1,131 @@
+reports_stock_card__productId:
+  get:
+    description: Ascending chronological order (not this API's usual newest-first) - a ledger reads top-to-bottom with an accumulating balance, matching real stock-card/bin-card convention. Covers received/exited/transferred/adjusted events only; RFID-signal and identity-assignment events are not business movements and are excluded.
+    operationId: ReportsController_getStockCard_v1
+    parameters:
+      - name: productId
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+      - name: page
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          default: 1
+          example: 1
+          type: number
+      - name: limit
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+          type: number
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - eventId: e5e91151-2499-4a6a-be28-3433f4afdba0
+                    occurredAt: '2026-08-18T02:39:41.574Z'
+                    eventType: received
+                    direction: in
+                    tagId: 686E14141E13194568471D7F
+                    referenceType: goods_receipt
+                    referenceId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    runningBalance: 1
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    summary: Stock card - full In/Out/Move movement ledger for one product, oldest first, with a running balance.
+    tags:
+      - Reports
+reports_moving_analysis:
+  get:
+    description: movementCount counts In+Out (received/exited/adjusted) events only - a pure location Move does not represent turnover. Sorted ascending by movementCount by default, so products tying up storage surface first.
+    operationId: ReportsController_getMovingAnalysis_v1
+    parameters:
+      - name: page
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          default: 1
+          example: 1
+          type: number
+      - name: limit
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+          type: number
+      - name: days
+        required: false
+        in: query
+        description: Lookback window in days for counting In/Out movement.
+        schema:
+          minimum: 1
+          default: 30
+          example: 30
+          type: number
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                    sku: DEMO-SKU-001
+                    name: Cardboard Box 30x30x30
+                    inStockCount: 42
+                    movementCount: 3
+                    lastMovementAt: '2026-08-15T10:00:00.000Z'
+                    daysSinceLastMovement: 3
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    summary: Slow/Fast Moving analysis - per-product turnover within a lookback window, slowest first.
+    tags:
+      - Reports
+reports_stock_valuation:
+  get:
+    description: costValueMinor is specific-identification/FIFO-consistent actual cost (sum of each in-stock tag's captured unitCostMinor from Goods Receipt), not a static catalog price. Tags received before cost capture existed (or with cost omitted) are surfaced via uncostedCount/uncostedInStockCount rather than silently valued at zero.
+    operationId: ReportsController_getStockValuation_v1
+    parameters: []
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              type: object
+    security:
+      - jwt: []
+    summary: Stock Summary & Valuation - tenant-wide quantity/value overview plus a per-product breakdown.
+    tags:
+      - Reports

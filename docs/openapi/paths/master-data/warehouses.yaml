@@ -1,0 +1,645 @@
+warehouses:
+  get:
+    operationId: WarehousesController_list_v1
+    parameters: []
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    name: Main Warehouse
+                    code: WH-MAIN
+                    address: null
+                    isActive: true
+                    maxCapacity: null
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    summary: List the signed-in user's tenant warehouses.
+    tags:
+      - Warehouses
+  post:
+    operationId: WarehousesController_create_v1
+    parameters: []
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  name: Main Warehouse
+                  code: WH-MAIN
+                  address: null
+                  isActive: true
+                  maxCapacity: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Create a warehouse.
+    tags:
+      - Warehouses
+warehouses__id:
+  get:
+    operationId: WarehousesController_getById_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  name: Main Warehouse
+                  code: WH-MAIN
+                  address: null
+                  isActive: true
+                  maxCapacity: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    tags:
+      - Warehouses
+  patch:
+    operationId: WarehousesController_update_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/master-data.yaml#/UpdateWarehouseDto
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  name: Main Warehouse
+                  code: WH-MAIN
+                  address: null
+                  isActive: true
+                  maxCapacity: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Update a warehouse.
+    tags:
+      - Warehouses
+  delete:
+    operationId: WarehousesController_remove_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  name: Main Warehouse
+                  code: WH-MAIN
+                  address: null
+                  isActive: true
+                  maxCapacity: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: '2026-08-31T00:00:00.000Z'
+                  deletedByType: user
+                  deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                  isDeleted: true
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: 'Delete a warehouse (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
+    tags:
+      - Warehouses
+warehouses__id__stock:
+  get:
+    operationId: WarehousesController_getStock_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+    security:
+      - jwt: []
+    summary: Per-product in-stock counts in this warehouse, derived from current tag state (last_warehouse_id, set by the reader assigned to each bin) - never stored, so it can never drift.
+    tags:
+      - Warehouses
+warehouses__id__deactivate:
+  post:
+    operationId: WarehousesController_deactivate_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  name: Main Warehouse
+                  code: WH-MAIN
+                  address: null
+                  isActive: false
+                  maxCapacity: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Deactivate a warehouse (soft-delete - isActive:false).
+    tags:
+      - Warehouses
+warehouses__id__blueprint:
+  put:
+    operationId: WarehousesController_updateBlueprint_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/common.yaml#/UpdateBlueprintDto
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  blueprintUrl: https://storage.matchstock.com/blueprints/wh-001-layout.jpg
+                  blueprintCfg:
+                    opacity: 0.55
+                    dimensions:
+                      widthMeters: 42
+                      depthMeters: 32
+                    zonesConfig:
+                      ZoneA:
+                        name: Zone A
+                        color: '#3B82F6'
+                    walls:
+                      - id: wall-01
+                        startX: 0
+                        startZ: 0
+                        endX: 42
+                        endZ: 0
+                        heightMeters: 6
+                    doors:
+                      - id: door-01
+                        x: 21
+                        z: 0
+                        widthMeters: 4
+                        heightMeters: 4.5
+                        type: dock
+                message: Blueprint updated successfully
+    security:
+      - jwt: []
+    summary: Update blueprint image URL and 3D overlay calibration configuration.
+    tags:
+      - Warehouses
+warehouses__id__bins_batch:
+  post:
+    operationId: WarehousesController_batchSaveBins_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/master-data.yaml#/BatchSaveBinsDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  mode: overwrite
+                  totalBinsProcessed: 192
+                  createdCount: 192
+                  updatedCount: 0
+                  deletedCount: 0
+                message: Warehouse layout saved successfully
+      '400':
+        description: Bad Request - Stock lock protection triggered when mode is overwrite
+        content:
+          application/json:
+            schema:
+              example:
+                success: false
+                statusCode: 400
+                error: CANNOT_OVERWRITE_ACTIVE_STOCK
+                message: Cannot overwrite layout - 3 bins currently hold active inventory. Please clear stock or use merge mode.
+    security:
+      - jwt: []
+    summary: Bulk create, replace, or merge bin locations scanned from 3D AI Blueprint.
+    tags:
+      - Warehouses
+warehouses__id__bins:
+  get:
+    operationId: WarehousesController_listBins_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: c4f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6c
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                    code: A-01
+                    isActive: true
+                    maxCapacity: null
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    summary: List bin locations within one warehouse.
+    tags:
+      - Warehouses
+  post:
+    operationId: WarehousesController_createBin_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/master-data.yaml#/CreateBinLocationDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: c4f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6c
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  code: A-01
+                  isActive: true
+                  maxCapacity: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Create a bin location within one warehouse.
+    tags:
+      - Warehouses
+warehouses__id__bins__binId:
+  get:
+    operationId: WarehousesController_getBin_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+      - name: binId
+        required: true
+        in: path
+        schema:
+          example: c4f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6c
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: c4f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6c
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  code: A-01
+                  isActive: true
+                  maxCapacity: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    tags:
+      - Warehouses
+  patch:
+    operationId: WarehousesController_updateBin_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+      - name: binId
+        required: true
+        in: path
+        schema:
+          example: c4f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6c
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/master-data.yaml#/UpdateBinLocationDto
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: c4f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6c
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  code: A-01
+                  isActive: true
+                  maxCapacity: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    tags:
+      - Warehouses
+  delete:
+    operationId: WarehousesController_removeBin_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+      - name: binId
+        required: true
+        in: path
+        schema:
+          example: c4f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6c
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: c4f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6c
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  code: A-01
+                  isActive: true
+                  maxCapacity: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: '2026-08-31T00:00:00.000Z'
+                  deletedByType: user
+                  deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                  isDeleted: true
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: 'Delete a bin location (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/cross-reference. Use PATCH { isActive:false } for a reversible suspend instead.'
+    tags:
+      - Warehouses
+warehouses__id__bins__binId__deactivate:
+  post:
+    operationId: WarehousesController_deactivateBin_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+      - name: binId
+        required: true
+        in: path
+        schema:
+          example: c4f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6c
+          type: string
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: c4f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6c
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  code: A-01
+                  isActive: false
+                  maxCapacity: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    tags:
+      - Warehouses

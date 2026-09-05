@@ -1,0 +1,260 @@
+UpdateBlueprintDto:
+  type: object
+  properties:
+    blueprintUrl:
+      type: string
+      format: uri
+      example: https://storage.matchstock.com/blueprints/wh-001-layout.jpg
+      description: Public or CDN URL of the CAD/2D blueprint image.
+    opacity:
+      type: number
+      minimum: 0
+      maximum: 1
+      example: 0.55
+    dimensions:
+      type: object
+      properties:
+        widthMeters:
+          type: number
+          example: 42
+        depthMeters:
+          type: number
+          example: 32
+    zonesConfig:
+      type: object
+      description: Independent zone configurations for 3D layout
+      example:
+        ZoneA:
+          name: Zone A
+          color: '#3B82F6'
+          racksCount: 4
+        ZoneB:
+          name: Zone B
+          color: '#10B981'
+          racksCount: 2
+    walls:
+      type: array
+      description: 3D boundary walls definitions
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            example: wall-01
+          startX:
+            type: number
+            example: 0
+          startZ:
+            type: number
+            example: 0
+          endX:
+            type: number
+            example: 42
+          endZ:
+            type: number
+            example: 0
+          heightMeters:
+            type: number
+            example: 6
+          thicknessMeters:
+            type: number
+            example: 0.2
+    doors:
+      type: array
+      description: 3D entrance and dock door definitions
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            example: door-01
+          x:
+            type: number
+            example: 21
+          z:
+            type: number
+            example: 0
+          widthMeters:
+            type: number
+            example: 4
+          heightMeters:
+            type: number
+            example: 4.5
+          type:
+            type: string
+            enum:
+              - dock
+              - entrance
+              - emergency_exit
+            example: dock
+  required:
+    - blueprintUrl
+CreateDeviceDto:
+  type: object
+  properties:
+    readerId:
+      type: string
+      description: Must match the reader_id the physical device sends when ingesting.
+      maxLength: 64
+      example: R001
+    label:
+      type: string
+      maxLength: 255
+      example: Dock door 3 reader
+    locationZone:
+      type: string
+      maxLength: 255
+      example: Zone-A
+    model:
+      type: string
+      maxLength: 100
+      example: Impinj Speedway R420
+    firmwareVersion:
+      type: string
+      maxLength: 50
+      example: 5.13.2.240
+  required:
+    - readerId
+UpdateDeviceDto:
+  type: object
+  properties:
+    label:
+      type: string
+      maxLength: 255
+      example: Dock door 3 reader
+    locationZone:
+      type: string
+      maxLength: 255
+      example: Zone-A
+    status:
+      enum:
+        - active
+        - inactive
+        - decommissioned
+      type: string
+      example: active
+    binLocationId:
+      type: string
+      format: uuid
+      description: Which bin this reader is physically stationed at - id from GET /warehouses/:id/bins.
+ReceiveGoodsDto:
+  type: object
+  properties:
+    productId:
+      type: string
+      format: uuid
+      example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+    tagIds:
+      minItems: 1
+      example:
+        - 686E14141E13194568471D7F
+      type: array
+      items:
+        type: string
+    lotNumber:
+      type: string
+      maxLength: 100
+      example: LOT-2026-08-A
+    productionDate:
+      type: string
+      example: '2026-08-01T00:00:00.000Z'
+    expiryDate:
+      type: string
+      example: '2027-08-01T00:00:00.000Z'
+    unitCostMinor:
+      type: number
+      minimum: 0
+      example: 10000
+      description: Actual unit cost paid, minor units (satang) - captured per physical tag for FIFO/specific-identification valuation. Omit if unknown; the valuation report flags uncosted stock rather than treating it as free.
+  required:
+    - productId
+    - tagIds
+DispatchGoodsDto:
+  type: object
+  properties:
+    tagIds:
+      minItems: 1
+      example:
+        - 686E14141E13194568471D7F
+      description: RFID tags (optional if `lines` is given instead - at least one of the two is required).
+      type: array
+      items:
+        type: string
+    lines:
+      maxItems: 500
+      description: Quantity-based line items (barcode/manual-count path) - only quantity/productId/binLocationId/lotNumber are used here (unitPriceMinor is ignored for reserve/release).
+      type: array
+      items:
+        $ref: ./inventory.yaml#/CreateGoodsIssueItemDto
+DispatchByQuantityDto:
+  type: object
+  properties:
+    productId:
+      type: string
+      format: uuid
+      example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+    quantity:
+      type: number
+      minimum: 1
+      example: 5
+    warehouseId:
+      type: string
+      format: uuid
+      description: Restrict FIFO selection to tags currently in this warehouse.
+  required:
+    - productId
+    - quantity
+SubscribeRequestDto:
+  type: object
+  properties:
+    planCode:
+      type: string
+      example: PRO_MONTHLY
+    billingCycle:
+      type: string
+      enum:
+        - monthly
+        - yearly
+      example: monthly
+    gatewayCardId:
+      type: string
+      example: card_test_5xyz123
+  required:
+    - planCode
+    - billingCycle
+FeatureNotIncludedError:
+  type: object
+  properties:
+    success:
+      type: boolean
+      example: false
+    error:
+      type: string
+      example: FEATURE_NOT_INCLUDED
+    feature:
+      type: string
+      example: stock.fefo
+    message:
+      type: string
+      example: Your current plan does not include this feature. Please upgrade to Pro or Ultra.
+QuotaExceededError:
+  type: object
+  properties:
+    success:
+      type: boolean
+      example: false
+    error:
+      type: string
+      example: QUOTA_EXCEEDED
+    resource:
+      type: string
+      example: warehouses
+    currentUsage:
+      type: integer
+      example: 3
+    maxAllowed:
+      type: integer
+      example: 3
+    message:
+      type: string
+      example: Warehouse limit reached for current plan (3/3). Please upgrade your subscription.
