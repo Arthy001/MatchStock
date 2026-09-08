@@ -174,9 +174,15 @@ export const transactionService = {
   // ดึงยอดคงเหลือจริงแบบ Real-time ตาม Warehouse, Bin, Product (GET /stock/balances)
   getStockBalances: async (params?: { warehouseId?: string; binLocationId?: string; productId?: string; page?: number; limit?: number }): Promise<{ data: StockBalanceItem[]; meta?: any }> => {
     try {
-      const response = await apiClient.get('/stock/balances', { params });
+      const sanitizedParams = params
+        ? {
+            ...params,
+            limit: params.limit ? Math.min(Math.max(params.limit, 1), 100) : undefined,
+          }
+        : undefined;
+      const response = await apiClient.get('/stock/balances', { params: sanitizedParams });
       const items = response.data?.data || [];
-      const meta = response.data?.meta || { page: 1, limit: 50, totalCount: items.length };
+      const meta = response.data?.meta || { page: 1, limit: sanitizedParams?.limit || 50, totalCount: items.length };
       return { data: items, meta };
     } catch {
       // Fallback

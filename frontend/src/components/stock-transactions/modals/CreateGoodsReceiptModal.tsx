@@ -697,7 +697,7 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
               onClick={onClose}
               className="px-5 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
             >
-              {t.cancel}
+              {t?.cancel || (isEn ? 'Cancel' : 'ยกเลิก')}
             </button>
             <button
               type="submit"

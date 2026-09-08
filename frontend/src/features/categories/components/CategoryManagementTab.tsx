@@ -31,6 +31,13 @@ export const CategoryManagementTab: React.FC<CategoryManagementTabProps> = ({
 }) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const isEn = lang === 'en';
+  const safeT = t || {
+    categoryName: isEn ? 'Category Name' : 'ชื่อหมวดหมู่',
+    code: isEn ? 'Category Code' : 'รหัสหมวดหมู่',
+    close: isEn ? 'Close' : 'ปิด',
+    save: isEn ? 'Save Changes' : 'บันทึกการแก้ไข',
+    cancel: isEn ? 'Cancel' : 'ยกเลิก',
+  };
   const hook = useCategories(showToast);
 
   useEffect(() => {
@@ -223,7 +230,7 @@ export const CategoryManagementTab: React.FC<CategoryManagementTabProps> = ({
       <EditCategoryModal
         theme={theme}
         lang={lang}
-        t={t}
+        t={safeT}
         category={hook.editingCategory}
         isViewOnly={hook.isViewOnly}
         onSwitchToEdit={() => hook.setIsViewOnly(false)}

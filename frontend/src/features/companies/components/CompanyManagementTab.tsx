@@ -31,6 +31,13 @@ export const CompanyManagementTab: React.FC<CompanyManagementTabProps> = ({
 }) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const isEn = lang === 'en';
+  const safeT = t || {
+    companyName: isEn ? 'Company Name' : 'ชื่อบริษัท',
+    code: isEn ? 'Company Code' : 'รหัสบริษัท',
+    close: isEn ? 'Close' : 'ปิด',
+    save: isEn ? 'Save Changes' : 'บันทึกการแก้ไข',
+    cancel: isEn ? 'Cancel' : 'ยกเลิก',
+  };
   const hook = useCompanies(showToast);
 
   useEffect(() => {
@@ -235,7 +242,7 @@ export const CompanyManagementTab: React.FC<CompanyManagementTabProps> = ({
       <EditCompanyModal
         theme={theme}
         lang={lang}
-        t={t}
+        t={safeT}
         company={hook.editingCompany}
         isViewOnly={hook.isViewOnly}
         onSwitchToEdit={() => hook.setIsViewOnly(false)}

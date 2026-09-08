@@ -323,7 +323,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
 
               <div className="flex-1">
                 <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-                  {t.productName} <span className="text-rose-500 font-bold">*</span>
+                  {t?.productName || (lang === 'en' ? 'Product Name' : 'ชื่อสินค้า')} <span className="text-rose-500 font-bold">*</span>
                 </label>
                 <input
                   type="text"
@@ -403,7 +403,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-                  {t.code} <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+                  {t?.code || (lang === 'en' ? 'Product Code' : 'รหัสสินค้า')} <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
                 </label>
                 <input
                   type="text"
@@ -418,7 +418,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
               </div>
               <div>
                 <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-                  {t.sku} <span className="text-slate-400 font-normal text-xs">(รหัสถาวร)</span>
+                  {t?.sku || (lang === 'en' ? 'SKU' : 'รหัส SKU')} <span className="text-slate-400 font-normal text-xs">(รหัสถาวร)</span>
                 </label>
                 <input
                   type="text"
@@ -452,7 +452,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
               </div>
               <div>
                 <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-                  {t.brand} (Brand) <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
+                  {t?.brand || (lang === 'en' ? 'Brand' : 'แบรนด์')} <span className="text-slate-400 font-normal text-xs">(ไม่บังคับ)</span>
                 </label>
                 {brandsList.length > 0 ? (
                   <CustomSelect
@@ -561,7 +561,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[13px] mb-1">
-                  {t.price} (฿) <span className="text-rose-500 font-bold">*</span>
+                  {t?.price || (lang === 'en' ? 'Price' : 'ราคาขาย')} (฿) <span className="text-rose-500 font-bold">*</span>
                 </label>
                 <input
                   type="number"
@@ -950,7 +950,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                   : 'border-slate-300 text-slate-700 hover:bg-slate-100'
               }`}
             >
-              {t.close}
+              {t?.close || (lang === 'en' ? 'Close' : 'ปิด')}
             </button>
             <button
               type="button"
@@ -959,7 +959,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
               className="w-1/2 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-xs shadow-md shadow-blue-600/30 transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>{isSaving ? (lang === 'en' ? 'Saving...' : 'กำลังบันทึก...') : t.save}</span>
+              <span>{isSaving ? (lang === 'en' ? 'Saving...' : 'กำลังบันทึก...') : (t?.save || (lang === 'en' ? 'Save Changes' : 'บันทึกการแก้ไข'))}</span>
             </button>
           </div>
           <button

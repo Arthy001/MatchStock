@@ -185,7 +185,7 @@ export const EditBrandModal: React.FC<EditBrandModalProps> = ({
                   onClick={onClose}
                   className="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 font-semibold text-xs transition cursor-pointer"
                 >
-                  {t.close}
+                  {t?.close || (isEn ? 'Close' : 'ปิด')}
                 </button>
                 {onSwitchToEdit && (
                   <button
@@ -209,7 +209,7 @@ export const EditBrandModal: React.FC<EditBrandModalProps> = ({
                       : 'border-slate-300 text-slate-700 hover:bg-slate-100'
                   }`}
                 >
-                  {t.cancel}
+                  {t?.cancel || (isEn ? 'Cancel' : 'ยกเลิก')}
                 </button>
                 <button
                   type="submit"
@@ -217,7 +217,7 @@ export const EditBrandModal: React.FC<EditBrandModalProps> = ({
                   className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md shadow-blue-600/30 transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>{isSaving ? (isEn ? 'Saving...' : 'กำลังบันทึก...') : t.save}</span>
+                  <span>{isSaving ? (isEn ? 'Saving...' : 'กำลังบันทึก...') : (t?.save || (isEn ? 'Save Changes' : 'บันทึก'))}</span>
                 </button>
               </>
             )}

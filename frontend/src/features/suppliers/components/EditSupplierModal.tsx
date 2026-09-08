@@ -122,7 +122,7 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                {t.code}
+                {t?.code || (isEn ? 'Supplier Code' : 'รหัสผู้จัดจำหน่าย (Code)')}
                 <span className="ml-1.5 text-[11px] font-normal text-slate-400">
                   {isEn ? '(Cannot be changed after creation)' : '(ไม่สามารถแก้ไขได้หลังสร้าง)'}
                 </span>
@@ -136,7 +136,7 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
             </div>
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                {t.supplierName} <span className="text-rose-500 font-bold">*</span>
+                {t?.supplierName || (isEn ? 'Supplier Name' : 'ชื่อผู้จัดจำหน่าย (Supplier Name)')} <span className="text-rose-500 font-bold">*</span>
               </label>
               <input
                 type="text"
@@ -252,7 +252,7 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
                   onClick={onClose}
                   className="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 font-semibold text-xs transition cursor-pointer"
                 >
-                  {t.close}
+                  {t?.close || (isEn ? 'Close' : 'ปิด')}
                 </button>
                 {onSwitchToEdit && (
                   <button
@@ -272,15 +272,15 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
                   onClick={onClose}
                   className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 font-semibold cursor-pointer text-xs"
                 >
-                  {t.cancel}
+                  {t?.cancel || (isEn ? 'Cancel' : 'ยกเลิก')}
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>{isSaving ? (isEn ? 'Saving...' : 'กำลังบันทึก...') : t.save}</span>
+                  <span>{isSaving ? (isEn ? 'Saving...' : 'กำลังบันทึก...') : (t?.save || (isEn ? 'Save Changes' : 'บันทึก'))}</span>
                 </button>
               </>
             )}

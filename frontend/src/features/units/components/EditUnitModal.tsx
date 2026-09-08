@@ -167,7 +167,7 @@ export const EditUnitModal: React.FC<EditUnitModalProps> = ({
                   onClick={onClose}
                   className="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 font-semibold text-xs transition cursor-pointer"
                 >
-                  {t.close}
+                  {t?.close || (isEn ? 'Close' : 'ปิด')}
                 </button>
                 {onSwitchToEdit && (
                   <button
@@ -187,15 +187,15 @@ export const EditUnitModal: React.FC<EditUnitModalProps> = ({
                   onClick={onClose}
                   className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 font-semibold cursor-pointer text-xs"
                 >
-                  {t.cancel}
+                  {t?.cancel || (isEn ? 'Cancel' : 'ยกเลิก')}
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>{isSaving ? (isEn ? 'Saving...' : 'กำลังบันทึก...') : t.save}</span>
+                  <span>{isSaving ? (isEn ? 'Saving...' : 'กำลังบันทึก...') : (t?.save || (isEn ? 'Save Changes' : 'บันทึก'))}</span>
                 </button>
               </>
             )}

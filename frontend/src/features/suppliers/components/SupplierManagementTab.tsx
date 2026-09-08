@@ -31,6 +31,13 @@ export const SupplierManagementTab: React.FC<SupplierManagementTabProps> = ({
 }) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const isEn = lang === 'en';
+  const safeT = t || {
+    supplierName: isEn ? 'Supplier Name' : 'ชื่อผู้จัดจำหน่าย',
+    code: isEn ? 'Supplier Code' : 'รหัสผู้จัดจำหน่าย',
+    close: isEn ? 'Close' : 'ปิด',
+    save: isEn ? 'Save Changes' : 'บันทึกการแก้ไข',
+    cancel: isEn ? 'Cancel' : 'ยกเลิก',
+  };
   const hook = useSuppliers(showToast);
 
   useEffect(() => {
@@ -240,7 +247,7 @@ export const SupplierManagementTab: React.FC<SupplierManagementTabProps> = ({
       <EditSupplierModal
         theme={theme}
         lang={lang}
-        t={t}
+        t={safeT}
         supplier={hook.editingSupplier}
         isViewOnly={hook.isViewOnly}
         onSwitchToEdit={() => hook.setIsViewOnly(false)}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Scale, X, CheckCircle2, Hash, FileText } from 'lucide-react';
+import { Scale, X, CheckCircle2, Hash } from 'lucide-react';
 import { ThemeMode, Language } from '../../../types';
 import { masterDataService } from '../../common/services/masterData.service';
 import { masterDataCache } from '../../common/cache/useMasterDataCache';
@@ -27,8 +27,7 @@ export const CreateUnitModal: React.FC<CreateUnitModalProps> = ({
 
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
-  const [type, setType] = useState('count');
-  const [description, setDescription] = useState('');
+  const [type, setType] = useState<'quantity' | 'dimension' | 'weight'>('quantity');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,8 +44,7 @@ export const CreateUnitModal: React.FC<CreateUnitModalProps> = ({
       const created = await masterDataService.createUnit({
         code: code.trim().toUpperCase(),
         name: name.trim(),
-        type: type || undefined,
-        description: description.trim() || undefined,
+        type: type,
       });
 
       // Strict backend validation
@@ -62,11 +60,24 @@ export const CreateUnitModal: React.FC<CreateUnitModalProps> = ({
       // Reset
       setName('');
       setCode('');
-      setType('count');
-      setDescription('');
+      setType('quantity');
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'เกิดข้อผิดพลาดในการสร้างหน่วยนับ';
-      setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
+      const data = err.response?.data;
+      let msg = 'เกิดข้อผิดพลาดในการสร้างหน่วยนับ';
+      if (data) {
+        if (Array.isArray(data.errors) && data.errors.length > 0) {
+          msg = data.errors
+            .map((e: any) => (typeof e === 'string' ? e : e.message || e.error || `${e.field || 'field'}: invalid`))
+            .join(', ');
+        } else if (data.message && data.message !== 'Validation failed') {
+          msg = Array.isArray(data.message) ? data.message.join(', ') : String(data.message);
+        } else if (data.error) {
+          msg = String(data.error);
+        }
+      } else if (err.message) {
+        msg = err.message;
+      }
+      setError(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -151,29 +162,13 @@ export const CreateUnitModal: React.FC<CreateUnitModalProps> = ({
             </label>
             <select
               value={type}
-              onChange={(e) => setType(e.target.value)}
+              onChange={(e) => setType(e.target.value as 'quantity' | 'dimension' | 'weight')}
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-hidden transition cursor-pointer"
             >
-              <option value="count">{isEn ? 'Count / Quantity (e.g. Pcs, Pack)' : 'นับจำนวนชิ้น (ชิ้น, แพ็ค, กล่อง)'}</option>
-              <option value="weight">{isEn ? 'Weight (e.g. Kg, Gram)' : 'น้ำหนัก (กิโลกรัม, กรัม)'}</option>
-              <option value="volume">{isEn ? 'Volume (e.g. Liter, ML)' : 'ปริมาตร (ลิตร, มิลลิลิตร)'}</option>
-              <option value="length">{isEn ? 'Length (e.g. Meter, CM)' : 'ความยาว (เมตร, เซนติเมตร)'}</option>
-              <option value="area">{isEn ? 'Area (e.g. Sqm)' : 'พื้นที่ (ตารางเมตร)'}</option>
+              <option value="quantity">{isEn ? 'Quantity / Count (e.g. PCS, BOX, PACK)' : 'นับจำนวนชิ้น (ชิ้น, กล่อง, แพ็ค, โหล)'}</option>
+              <option value="dimension">{isEn ? 'Dimension / Length (e.g. CM, M, INCH)' : 'มิติ / ขนาด / ความยาว (ซม., เมตร, นิ้ว)'}</option>
+              <option value="weight">{isEn ? 'Weight (e.g. KG, G, TON)' : 'น้ำหนัก (กิโลกรัม, กรัม, ตัน)'}</option>
             </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5 text-slate-400" />
-              <span>{isEn ? 'Description' : 'คำอธิบายเพิ่มเติม'}</span>
-            </label>
-            <textarea
-              rows={2}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={isEn ? 'Optional description' : 'รายละเอียดเพิ่มเติม'}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-hidden transition resize-none"
-            />
           </div>
 
           {/* Footer */}

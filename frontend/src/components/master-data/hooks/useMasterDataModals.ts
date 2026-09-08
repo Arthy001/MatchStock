@@ -345,7 +345,6 @@ export const useMasterDataModals = ({
     setIsSaving(true);
     try {
       const updated = await masterDataService.updateUnit(editingUnit.id, {
-        code: editUnitCode,
         name: editUnitName,
         isActive: editUnitIsActive,
       });

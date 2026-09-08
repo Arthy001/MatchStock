@@ -32,6 +32,13 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
 }) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const isEn = lang === 'en';
+  const safeT = t || {
+    unitName: isEn ? 'Unit Name' : 'ชื่อหน่วยนับ',
+    code: isEn ? 'Unit Code' : 'รหัสหน่วยนับ',
+    close: isEn ? 'Close' : 'ปิด',
+    save: isEn ? 'Save Changes' : 'บันทึกการแก้ไข',
+    cancel: isEn ? 'Cancel' : 'ยกเลิก',
+  };
   const hook = useUnits(showToast);
 
   useEffect(() => {
@@ -219,7 +226,7 @@ export const UnitManagementTab: React.FC<UnitManagementTabProps> = ({
       <EditUnitModal
         theme={theme}
         lang={lang}
-        t={t}
+        t={safeT}
         unit={hook.editingUnit}
         isViewOnly={hook.isViewOnly}
         onSwitchToEdit={() => hook.setIsViewOnly(false)}

@@ -80,7 +80,6 @@ export const useUnits = (showToast?: (msg: string) => void) => {
     setIsSaving(true);
     try {
       await masterDataService.updateUnit(editingUnit.id, {
-        code: editUnitCode.trim() || undefined,
         name: editUnitName.trim(),
         isActive: editUnitIsActive,
       });

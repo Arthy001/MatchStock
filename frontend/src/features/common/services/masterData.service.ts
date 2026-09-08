@@ -136,24 +136,20 @@ export const masterDataService = {
     return response.data?.data || response.data || [];
   },
 
-  createUnit: async (data: { code: string; name: string; type?: string; description?: string }) => {
+  createUnit: async (data: { code?: string; name: string; type?: string }) => {
     const payload: any = {
-      code: data.code.trim(),
       name: data.name.trim(),
     };
+    if (data.code?.trim()) payload.code = data.code.trim();
     if (data.type?.trim()) payload.type = data.type.trim();
-    if (data.description?.trim()) payload.description = data.description.trim();
 
     const response = await apiClient.post('/units', payload);
     return response.data?.data || response.data;
   },
 
-  updateUnit: async (id: string, data: { code?: string; name?: string; type?: string; description?: string; isActive?: boolean }) => {
+  updateUnit: async (id: string, data: { name?: string; isActive?: boolean }) => {
     const payload: any = {};
-    // code is not accepted by UpdateUnitDto — omit it
     if (data.name !== undefined) payload.name = data.name.trim();
-    if (data.type?.trim()) payload.type = data.type.trim();
-    if (data.description?.trim()) payload.description = data.description.trim();
     if (data.isActive !== undefined) payload.isActive = data.isActive;
 
     const response = await apiClient.patch(`/units/${id}`, payload);

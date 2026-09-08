@@ -31,6 +31,13 @@ export const BrandManagementTab: React.FC<BrandManagementTabProps> = ({
 }) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const isEn = lang === 'en';
+  const safeT = t || {
+    brandName: isEn ? 'Brand Name' : 'ชื่อแบรนด์',
+    code: isEn ? 'Brand Code' : 'รหัสแบรนด์',
+    close: isEn ? 'Close' : 'ปิด',
+    save: isEn ? 'Save Changes' : 'บันทึกการแก้ไข',
+    cancel: isEn ? 'Cancel' : 'ยกเลิก',
+  };
   const hook = useBrands(showToast);
 
   useEffect(() => {
@@ -223,7 +230,7 @@ export const BrandManagementTab: React.FC<BrandManagementTabProps> = ({
       <EditBrandModal
         theme={theme}
         lang={lang}
-        t={t}
+        t={safeT}
         brand={hook.editingBrand}
         isViewOnly={hook.isViewOnly}
         onSwitchToEdit={() => hook.setIsViewOnly(false)}

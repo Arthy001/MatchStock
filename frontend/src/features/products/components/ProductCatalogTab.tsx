@@ -72,6 +72,16 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
 
   const isDark = theme === 'dark';
   const isEn = lang === 'en';
+  const safeT = t || {
+    productName: isEn ? 'Product Name' : 'ชื่อสินค้า',
+    code: isEn ? 'Code' : 'รหัสสินค้า',
+    sku: isEn ? 'SKU' : 'รหัส SKU',
+    brand: isEn ? 'Brand' : 'แบรนด์',
+    price: isEn ? 'Price' : 'ราคาขาย',
+    close: isEn ? 'Close' : 'ปิด',
+    save: isEn ? 'Save Changes' : 'บันทึกการแก้ไข',
+    cancel: isEn ? 'Cancel' : 'ยกเลิก',
+  };
 
   const hook = useProducts(showToast);
 
@@ -535,7 +545,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
       <ProductDrawer
         theme={theme}
         lang={lang}
-        t={t}
+        t={safeT}
         product={hook.drawerProduct}
         categoriesList={categoriesList}
         brandsList={brandsList}

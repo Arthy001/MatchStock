@@ -91,7 +91,7 @@ export const useMasterDataLoader = () => {
 
       const [prodsRes, balancesRes] = await Promise.allSettled([
         productService.getProducts({ page: 1, limit: 100 }),
-        transactionService.getStockBalances({ limit: 500 }),
+        transactionService.getStockBalances({ limit: 100 }),
       ]);
 
       const prods = prodsRes.status === 'fulfilled' ? prodsRes.value : [];
