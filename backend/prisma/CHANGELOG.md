@@ -2,6 +2,22 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-09 (20) — Implement Platform Tenants management + `department` field + แก้ syntax error จริงใน openapi.yaml (commit `20962db`)
+
+ตรวจสอบ `docs/openapi.yaml` เทียบ backend จริงหลัง DevOps push commit `20962db` ("implement platform admin roles and tenant RBAC with SEC-02 action guards") พบ 4 จุดที่ backend ยังไม่มี - หลังคุยกับ user แล้ว **implement ครบทั้ง 4 จุด ทดสอบ end-to-end บน local Docker และ production แล้ว**:
+
+1. **`PlatformTenantsController` ใหม่ทั้งหมด** (`GET/PATCH /platform/tenants*`) - ไม่เคยมีมาก่อนเลย: `GET /platform/tenants` (list พร้อม search/status/planCode filter, role `super_admin`+`support`), `GET /platform/tenants/:id` (รายละเอียด + subscription + quota usage แบบเดียวกับที่ tenant เองเห็นใน `GET /billing/current-subscription`), `PATCH /platform/tenants/:id/status` (suspend/reactivate, `super_admin` เท่านั้น) - ใช้ `Tenant.status` field ที่มีอยู่แล้วในสคีมา ไม่ต้อง migrate
+2. **`Tenant.status = 'suspended'` ไม่เคยมีผลอะไรเลยมาก่อน** - ตรวจพบว่าไม่มีที่ไหนในระบบเช็คค่านี้เลยทั้งที่ field มีมานานแล้ว การ implement ข้อ 1 เฉยๆ จะได้ปุ่ม "suspend" ที่กดแล้วไม่มีผลจริง (cosmetic bug) - **แก้เพิ่มเติมนอกเหนือจากที่ขอ**: เพิ่ม `AuthService.assertTenantActive()` เช็คใน `login()` และ `refresh()` ทั้งคู่ - tenant ที่ถูก suspend ล็อกอิน/ต่ออายุ session ไม่ได้อีก (401) เป็นการตัดสินใจด้าน engineering ที่ตั้งใจจำกัดแค่จุด login/refresh เท่านั้น (ไม่เช็คทุก request เพื่อไม่เพิ่ม DB round-trip ให้ hot path) - session ที่ค้างอยู่ก่อนแล้วจะหมดอายุเองภายใน 15 นาที (`JWT_ACCESS_EXPIRES_IN`)
+3. **`GET /platform/subscription-plans` (list) ไม่มีมาก่อน** - มีแค่ POST (create)/PATCH (update) - เพิ่ม `PlansService.listAll()` (ต่างจาก `listActive()` เดิมที่ใช้หน้า signup สาธารณะ - เวอร์ชัน admin นี้เห็น plan ที่ถูกปิดใช้งานด้วย) และ endpoint ใหม่
+4. **role ของ `POST /platform/subscription-plans` (create) แคบกว่าที่มีอยู่จริง** - เดิมใช้ class-level `@PlatformAuth('super_admin', 'billing')` เหมือนทั้ง controller ตาม doc ใหม่ต้องเป็น `super_admin` เท่านั้น (billing แก้ราคา/quota ของแผนเดิมได้ แต่สร้างแผนใหม่ทำไม่ได้) - แก้เป็น method-level override
+5. **`User.department` field ไม่มีอยู่จริง** - `CreateUserDto`/`UpdateUserDto` ใหม่ที่ DevOps ระบุต้องการ field นี้ (free-text, ไม่ validate กับอะไร) - เพิ่มเข้า schema (migration `20260909130000_user_department_field`) + DTO ทั้งสอง + wiring เข้า service ครบ (พบเพิ่มว่า `UpdateUserDto` เดิมไม่มี `fullName` เลยทั้งที่ doc ใหม่ต้องการ - เพิ่มให้ด้วย)
+
+**เจอบั๊กจริงเพิ่มเติมระหว่างตรวจสอบ (ไม่เกี่ยวกับ backend แต่เป็นไฟล์เอกสารตัวนี้เอง) - แก้ไปด้วย**:
+- **`docs/openapi.yaml` parse ไม่ได้เลยทั้งไฟล์** (YAML syntax error) - commit `20962db` เพิ่ม `summary:` 7 จุดที่มีข้อความรูปแบบ `"...(Platform Roles: super_admin, billing)."` โดยไม่ครอบด้วย quote - เครื่องหมาย `:` ตามด้วย space ข้างในทำให้ YAML parser งง (ตีความเป็น nested mapping) พังทั้งไฟล์ ไม่ใช่แค่บรรทัดนั้น - แก้โดยครอบทั้ง 7 จุดด้วย double quote
+- **`CreateUserDto`/`UpdateUserDto` ถูกประกาศซ้ำ 2 รอบ** ในไฟล์เดียวกัน (`duplicated mapping key`) - เวอร์ชันเก่า (ตรงกับ backend ก่อนหน้า มี `companyId`/role enum เต็ม) กับเวอร์ชันใหม่ของ DevOps (มี `department`/`fullName` แต่ role enum แคบกว่าและไม่มี `companyId`) - แก้โดย **รวมทั้งสองเวอร์ชันเข้าด้วยกัน** เป็นนิยามเดียว (ตรงกับ backend จริงที่มีครบทั้ง `companyId` และ `department`) แล้วลบส่วนซ้ำทิ้ง
+
+**ทดสอบแล้วบน local Docker + production**: สร้าง platform admin ทดสอบครบ 3 role (`super_admin`/`billing`/`support`) ยิงทุก endpoint ยืนยัน role restriction ถูกต้องทุกจุด, suspend tenant จริงแล้วยืนยัน login ถูกบล็อก 401 ทันที + reactivate แล้ว login กลับมาใช้ได้ปกติ, สร้าง/แก้ user พร้อม `department`/`fullName` สำเร็จ, `docs/openapi.yaml` parse ผ่านสมบูรณ์แล้ว (170+ paths, 70 schemas, ไม่มี duplicate key), diff path เทียบ live `/api-docs-json` เหลือ 0 จุดต่างกันจริง (2 จุดที่ต่างเป็น `/platform/auth/*` ที่ตั้งใจซ่อนจาก public Swagger อยู่แล้ว ไม่ใช่ gap)
+
 ## 2026-09-09 (19) — ตรวจสอบ RBAC ตามที่ DevOps ขอ (Master Data SEC-02 / User Management / Platform Admin) - เจอ+แก้ 1 จุด
 
 DevOps ส่งคำขอตรวจสอบ/บังคับใช้ RBAC 3 จุด หลังประกาศว่าต่อ `GET/POST/PATCH /users`+`PATCH /users/{id}/deactivate` เข้า frontend แล้ว (พร้อม `CreateUserDto`/`UpdateUserDto` ใน openapi.yaml) - ทดสอบจริงด้วยการสร้าง user จริงแต่ละ role แล้วยิง API ตรง ไม่ใช่แค่อ่านโค้ด:

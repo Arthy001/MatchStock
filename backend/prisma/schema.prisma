@@ -232,6 +232,9 @@ model User {
   // call site keeps working without modification.
   role                String    @default("operator") @db.VarChar(50)
   companyId           String?   @map("company_id") @db.Uuid
+  // 2026-09-09, CreateUserDto/UpdateUserDto (DevOps's employee-directory
+  // contract) - free-text, no validation against anything.
+  department          String?   @db.VarChar(100)
   isActive            Boolean   @default(true) @map("is_active")
   lastLoginAt         DateTime? @map("last_login_at")
   failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
