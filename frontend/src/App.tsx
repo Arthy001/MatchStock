@@ -66,7 +66,7 @@ const getInitialNavState = (pathname: string) => {
   } else if (path.startsWith('/warehouses')) {
     tab = 'masterData';
     masterSub = 'warehouses';
-  } else if (path.startsWith('/suppliers')) {
+  } else if (path.startsWith('/suppliers') || path.startsWith('/supplier')) {
     tab = 'masterData';
     masterSub = 'suppliers';
   } else if (path.startsWith('/rbac') || path.startsWith('/users')) {
@@ -85,7 +85,7 @@ const getInitialNavState = (pathname: string) => {
     else if (path.includes('/brands')) masterSub = 'brands';
     else if (path.includes('/units')) masterSub = 'units';
     else if (path.includes('/warehouses')) masterSub = 'warehouses';
-    else if (path.includes('/suppliers')) masterSub = 'suppliers';
+    else if (path.includes('/supplier')) masterSub = 'suppliers';
     else if (path.includes('/rbac')) masterSub = 'rbac';
     else if (path.includes('/barcodes')) masterSub = 'barcodes';
     else masterSub = 'products';
