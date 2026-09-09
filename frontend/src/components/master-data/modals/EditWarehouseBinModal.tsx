@@ -21,6 +21,8 @@ interface EditWarehouseBinModalProps {
   setEditBinZone: (val: string) => void;
   editBinRack: string;
   setEditBinRack: (val: string) => void;
+  editBinShelf?: string;
+  setEditBinShelf?: (val: string) => void;
   editBinCapacity: string;
   setEditBinCapacity: (val: string) => void;
   editBinIsActive: boolean;
@@ -45,6 +47,8 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
   setEditBinZone,
   editBinRack,
   setEditBinRack,
+  editBinShelf = '',
+  setEditBinShelf = () => {},
   editBinCapacity,
   setEditBinCapacity,
   editBinIsActive,
@@ -150,10 +154,10 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                {isEn ? 'Rack' : 'แร็คจัดเก็บ (Rack)'} <span className="text-slate-400 font-normal text-xs">({isEn ? 'Optional' : 'ไม่บังคับ'})</span>
+                {isEn ? 'Rack' : 'แร็ค/แถว (Rack)'} <span className="text-slate-400 font-normal text-xs">({isEn ? 'Optional' : 'ไม่บังคับ'})</span>
               </label>
               <input
                 type="text"
@@ -165,7 +169,19 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
             </div>
             <div>
               <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
-                {isEn ? 'Max Capacity (kg)' : 'ความจุสูงสุด (Capacity kg)'} <span className="text-slate-400 font-normal text-xs">({isEn ? 'Optional' : 'ไม่บังคับ'})</span>
+                {isEn ? 'Shelf' : 'ชั้นวาง (Shelf)'} <span className="text-slate-400 font-normal text-xs">({isEn ? 'Optional' : 'ไม่บังคับ'})</span>
+              </label>
+              <input
+                type="text"
+                disabled={isViewOnly}
+                value={editBinShelf}
+                onChange={(e) => setEditBinShelf(e.target.value)}
+                className={`w-full px-3 py-2 rounded-xl border font-medium outline-hidden ${disabledCls}`}
+              />
+            </div>
+            <div>
+              <label className="block text-slate-700 dark:text-slate-200 font-semibold text-[14px] mb-1.5">
+                {isEn ? 'Max Capacity' : 'ความจุสูงสุด'} <span className="text-slate-400 font-normal text-xs">({isEn ? 'Optional' : 'ไม่บังคับ'})</span>
               </label>
               <input
                 type="number"
@@ -213,7 +229,7 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
                   onClick={onClose}
                   className="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 font-semibold text-xs transition cursor-pointer"
                 >
-                  {t.close}
+                  {t?.close || (isEn ? 'Close' : 'ปิด')}
                 </button>
                 {onSwitchToEdit && (
                   <button
@@ -233,15 +249,15 @@ export const EditWarehouseBinModal: React.FC<EditWarehouseBinModalProps> = ({
                   onClick={onClose}
                   className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 font-semibold cursor-pointer text-xs"
                 >
-                  {t.cancel}
+                  {t?.cancel || (isEn ? 'Cancel' : 'ยกเลิก')}
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>{isSaving ? (isEn ? 'Saving...' : 'กำลังบันทึก...') : t.save}</span>
+                  <span>{isSaving ? (isEn ? 'Saving...' : 'กำลังบันทึก...') : (t?.save || (isEn ? 'Save Changes' : 'บันทึก'))}</span>
                 </button>
               </>
             )}

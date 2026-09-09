@@ -1,0 +1,98 @@
+RefreshTokenDto:
+  type: object
+  properties:
+    refreshToken:
+      type: string
+      example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  required:
+    - refreshToken
+CreateUserDto:
+  type: object
+  properties:
+    email:
+      type: string
+      format: email
+      example: operator1@beta.test
+    password:
+      type: string
+      minLength: 8
+      example: OperatorPass123
+    fullName:
+      type: string
+      example: Suda Operator
+    role:
+      type: string
+      enum:
+        - admin
+        - operator
+        - viewer
+        - manager
+        - warehouse_staff
+        - purchasing_staff
+      example: operator
+    companyId:
+      type: string
+      format: uuid
+      description: Restrict this user to one Company (branch/subsidiary) - omit/null to see every company in the tenant.
+  required:
+    - email
+    - password
+    - fullName
+UpdateUserDto:
+  type: object
+  properties:
+    role:
+      type: string
+      enum:
+        - admin
+        - operator
+        - viewer
+        - manager
+        - warehouse_staff
+        - purchasing_staff
+      example: operator
+    isActive:
+      type: boolean
+      example: true
+    companyId:
+      type: string
+      nullable: true
+      format: uuid
+      description: Restrict this user to one Company (branch/subsidiary) - null clears the restriction (sees every company in the tenant).
+RegisterTenantDto:
+  type: object
+  properties:
+    companyName:
+      type: string
+      minLength: 2
+      example: Beta Logistics Co., Ltd.
+    ownerEmail:
+      type: string
+      format: email
+      example: owner@beta.test
+    ownerPassword:
+      type: string
+      minLength: 8
+      example: AnotherSecret123
+    ownerFullName:
+      type: string
+      example: Somchai Owner
+    webPlanCode:
+      type: string
+      example: web_standard_monthly
+      description: Subscription plan code (type=web) to start on signup as pending_payment/trialing - omit to sign up with no web subscription yet.
+    hardwarePlanCode:
+      type: string
+      example: hardware_standard_monthly
+      description: Subscription plan code (type=hardware) to start on signup - the ingestion/data plan, independent of who owns the physical reader.
+    hardwareQuantity:
+      type: number
+      minimum: 1
+      example: 1
+      default: 1
+      description: Quantity for hardwarePlanCode (e.g. number of readers) - ignored if hardwarePlanCode is omitted.
+  required:
+    - companyName
+    - ownerEmail
+    - ownerPassword
+    - ownerFullName

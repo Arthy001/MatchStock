@@ -1,0 +1,139 @@
+stock_adjustments:
+  get:
+    operationId: StockAdjustmentsController_list_v1
+    parameters:
+      - name: page
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          default: 1
+          example: 1
+          type: number
+      - name: limit
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+          type: number
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    adjustmentNumber: SA-202608-001
+                    warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                    binLocationId: null
+                    reason: damaged
+                    notes: null
+                    adjustedAt: '2026-08-18T02:39:41.574Z'
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    tags:
+      - Stock Adjustments
+  post:
+    operationId: StockAdjustmentsController_create_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/inventory.yaml#/CreateStockAdjustmentDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  adjustmentNumber: SA-202608-001
+                  warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  binLocationId: null
+                  reason: damaged
+                  notes: null
+                  adjustedAt: '2026-08-18T02:39:41.574Z'
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Reconcile specific tags to their true physical state with a reason - never a raw quantity delta.
+    tags:
+      - Stock Adjustments
+stock_adjustments__id:
+  get:
+    operationId: StockAdjustmentsController_getById_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  adjustmentNumber: SA-202608-001
+                  warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  binLocationId: null
+                  reason: damaged
+                  notes: null
+                  adjustedAt: '2026-08-18T02:39:41.574Z'
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    tags:
+      - Stock Adjustments

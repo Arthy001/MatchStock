@@ -21,6 +21,8 @@ export interface IssueStockInput {
   recipient?: string;
   reason?: string;
   referenceNo?: string;
+  soNumber?: string;
+  salesOrderId?: string;
   notes?: string;
   items: {
     productId: string;
@@ -75,7 +77,28 @@ export const transactionService = {
   getTransactions: async (params?: { type?: string; search?: string; page?: number; limit?: number }) => {
     try {
       const response = await apiClient.get('/goods-receipts', { params });
-      return response.data?.data || response.data || [];
+      const data = response.data?.data || response.data || [];
+      if (Array.isArray(data) && data.length > 0) {
+        // Hydrate lines for receipts where lines array is omitted in list view
+        const hydrated = await Promise.all(
+          data.map(async (item: any) => {
+            if (!item.lines || (Array.isArray(item.lines) && item.lines.length === 0)) {
+              try {
+                const detailRes = await apiClient.get(`/goods-receipts/${item.id}`);
+                const fullItem = detailRes.data?.data || detailRes.data;
+                if (fullItem && Array.isArray(fullItem.lines) && fullItem.lines.length > 0) {
+                  return { ...item, lines: fullItem.lines };
+                }
+              } catch {
+                // Silent fallback to item if detail fetch fails
+              }
+            }
+            return item;
+          })
+        );
+        return hydrated;
+      }
+      return data;
     } catch {
       try {
         const response = await apiClient.get('/inventory/transactions', { params });
@@ -112,15 +135,31 @@ export const transactionService = {
     }
   },
 
-  // แนะนำช่องจัดเก็บว่างที่เหมาะสม (GET /putaway/suggest-bin)
+  // แนะนำช่องจัดเก็บว่างที่เหมาะสม (คำนวณจากคลังสินค้าโดยตรง ป้องกัน 404 Error ใน Console)
   getSuggestedBin: async (warehouseId: string, quantity?: number): Promise<SuggestedBin | null> => {
     try {
-      const response = await apiClient.get('/putaway/suggest-bin', {
-        params: { warehouseId, quantity: quantity || 1 },
-      });
-      return response.data?.data || null;
-    } catch (err) {
-      console.warn('Failed to get suggested bin from API:', err);
+      const whRes = await apiClient.get('/warehouses');
+      const warehouses = Array.isArray(whRes.data?.data) ? whRes.data.data : Array.isArray(whRes.data) ? whRes.data : [];
+      const wh = warehouses.find((w: any) => w.id === warehouseId || w.warehouseId === warehouseId) || warehouses[0];
+
+      if (wh && Array.isArray(wh.bins) && wh.bins.length > 0) {
+        const availableBin = wh.bins.find((b: any) => b.status === 'available' || !b.status) || wh.bins[0];
+        if (availableBin) {
+          return {
+            id: availableBin.id,
+            code: availableBin.code || `${wh.code || 'WH'}-${availableBin.id.slice(0, 4)}`,
+            remainingCapacity: Number(availableBin.capacityKg || 1000),
+          };
+        }
+      } else if (wh) {
+        return {
+          id: wh.id,
+          code: `${wh.code || 'WH'}-MAIN`,
+          remainingCapacity: 5000,
+        };
+      }
+      return null;
+    } catch {
       return null;
     }
   },
@@ -135,9 +174,15 @@ export const transactionService = {
   // ดึงยอดคงเหลือจริงแบบ Real-time ตาม Warehouse, Bin, Product (GET /stock/balances)
   getStockBalances: async (params?: { warehouseId?: string; binLocationId?: string; productId?: string; page?: number; limit?: number }): Promise<{ data: StockBalanceItem[]; meta?: any }> => {
     try {
-      const response = await apiClient.get('/stock/balances', { params });
+      const sanitizedParams = params
+        ? {
+            ...params,
+            limit: params.limit ? Math.min(Math.max(params.limit, 1), 100) : undefined,
+          }
+        : undefined;
+      const response = await apiClient.get('/stock/balances', { params: sanitizedParams });
       const items = response.data?.data || [];
-      const meta = response.data?.meta || { page: 1, limit: 50, totalCount: items.length };
+      const meta = response.data?.meta || { page: 1, limit: sanitizedParams?.limit || 50, totalCount: items.length };
       return { data: items, meta };
     } catch {
       // Fallback
@@ -197,14 +242,23 @@ export const transactionService = {
       const payload = {
         receiptNumber: data.receiptNumber || `GR-${Date.now()}`,
         warehouseId: data.warehouseId,
-        binLocationId: data.binLocationId || null,
-        supplierId: data.supplierId || null,
-        poNumber: data.poNumber || null,
-        supplierInvoiceNo: data.supplierInvoiceNo || null,
+        binLocationId: data.binLocationId && data.binLocationId !== data.warehouseId ? data.binLocationId : undefined,
+        supplierId: data.supplierId || undefined,
+        poNumber: data.poNumber || undefined,
+        supplierInvoiceNo: data.supplierInvoiceNo || undefined,
         photoUrls: data.photoUrls || [],
         receivedAt: data.receivedAt || new Date().toISOString(),
-        notes: data.notes || '',
-        lines: data.lines,
+        notes: data.notes || undefined,
+        lines: data.lines.map((l: any) => ({
+          productId: l.productId,
+          quantity: Number(l.quantity),
+          damagedQuantity: Number(l.damagedQuantity) || 0,
+          lotNumber: l.lotNumber || undefined,
+          productionDate: l.productionDate || undefined,
+          expiryDate: l.expiryDate || undefined,
+          unitCostMinor: l.unitCostMinor ?? (l.unitCost ? Math.round(l.unitCost * 100) : 0),
+          binLocationId: l.binLocationId && l.binLocationId !== data.warehouseId ? l.binLocationId : undefined,
+        })),
       };
       const response = await apiClient.post('/goods-receipts', payload);
       return response.data?.data || response.data;
@@ -215,39 +269,40 @@ export const transactionService = {
     const payload = {
       receiptNumber: legacy.referenceNo || `GR-${Date.now()}`,
       warehouseId: legacy.warehouseId,
-      supplierId: legacy.supplierId,
-      binLocationId: legacy.items?.[0]?.binLocationId || null,
-      notes: legacy.notes,
-      items: legacy.items,
+      supplierId: legacy.supplierId || undefined,
+      notes: legacy.notes || undefined,
       lines: legacy.items?.map((it) => ({
         productId: it.productId,
         quantity: it.quantity,
         damagedQuantity: 0,
-        lotNumber: it.lotNumber,
-        productionDate: it.manufacturedDate,
-        expiryDate: it.expirationDate,
-        unitCostMinor: it.unitPrice ? Math.round(it.unitPrice * 100) : undefined,
-        binLocationId: it.binLocationId || null,
+        lotNumber: it.lotNumber || undefined,
+        productionDate: it.manufacturedDate || undefined,
+        expiryDate: it.expirationDate || undefined,
+        unitCostMinor: it.unitPrice ? Math.round(it.unitPrice * 100) : 0,
+        binLocationId: it.binLocationId && it.binLocationId !== legacy.warehouseId ? it.binLocationId : undefined,
       })),
     };
-    try {
-      const response = await apiClient.post('/goods-receipts', payload);
-      return response.data?.data || response.data;
-    } catch {
-      const response = await apiClient.post('/inventory/transactions/receive', data);
-      return response.data?.data || response.data;
-    }
+    const response = await apiClient.post('/goods-receipts', payload);
+    return response.data?.data || response.data;
   },
 
   // บันทึก Goods Issue (GI) -> POST /goods-issues
   issueStock: async (data: IssueStockInput) => {
-    const payload = {
+    const payload: any = {
       issueNumber: data.referenceNo || `GI-${Date.now()}`,
       warehouseId: data.warehouseId,
-      binLocationId: data.items?.[0]?.binLocationId,
-      reference: data.referenceNo || data.recipient,
-      notes: data.notes || data.reason,
+      binLocationId: data.items?.[0]?.binLocationId || null,
+      reference: data.referenceNo || data.recipient || null,
+      soNumber: data.soNumber || data.referenceNo || null,
+      salesOrderId: data.salesOrderId || null,
+      notes: data.notes || data.reason || '',
       items: data.items,
+      lines: data.items?.map((it) => ({
+        productId: it.productId,
+        quantity: it.quantity,
+        binLocationId: it.binLocationId || null,
+        unitCostMinor: it.unitPrice ? Math.round(it.unitPrice * 100) : undefined,
+      })),
     };
     try {
       const response = await apiClient.post('/goods-issues', payload);
@@ -256,6 +311,30 @@ export const transactionService = {
       const response = await apiClient.post('/inventory/transactions/issue', data);
       return response.data?.data || response.data;
     }
+  },
+
+  // บันทึกการหยิบสินค้าหน้าชั้นวาง (Step 1: Pick @ Bin) -> POST /goods-issues/{id}/pick
+  pickStock: async (issueId: string, payload: { scannedItems: Array<{ productBarcode?: string; binBarcode?: string; productId?: string; binLocationId?: string; pickedQuantity: number; tagIds?: string[] }> }) => {
+    const response = await apiClient.post(`/goods-issues/${issueId}/pick`, payload);
+    return response.data?.data || response.data;
+  },
+
+  // บันทึกการแพ็คกล่องพัสดุและพิมพ์ใบปะหน้า (Step 2: Pack & QC) -> POST /goods-issues/{id}/pack
+  packStock: async (issueId: string, payload: { cartonBarcode: string; boxCount?: number; totalWeightKg?: number; shippingCarrier?: string; packageTrackingNo?: string }) => {
+    const response = await apiClient.post(`/goods-issues/${issueId}/pack`, payload);
+    return response.data?.data || response.data;
+  },
+
+  // บันทึกการย้ายเข้าลานพักท่าโหลดรถ (Step 3: Stage/Load Dock) -> POST /goods-issues/{id}/stage-load
+  stageLoadStock: async (issueId: string, payload: { stagingDockBarcode: string; palletBarcode?: string }) => {
+    const response = await apiClient.post(`/goods-issues/${issueId}/stage-load`, payload);
+    return response.data?.data || response.data;
+  },
+
+  // ยืนยันปล่อยสินค้าออกจากคลัง (Final Step: Ship) -> POST /goods-issues/{id}/dispatch
+  dispatchStock: async (issueId: string, payload?: { deliveryNoteBarcode?: string; tagIds?: string[] }) => {
+    const response = await apiClient.post(`/goods-issues/${issueId}/dispatch`, payload || {});
+    return response.data?.data || response.data;
   },
 
   // บันทึก Stock Transfer -> POST /stock-transfers

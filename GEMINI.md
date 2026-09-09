@@ -1,0 +1,20 @@
+# MatchStock - AI Agent Rules & Instructions (GEMINI.md)
+
+## 🚫 Code Modification & Execution Rules (STRICT)
+1. **ห้ามทำการแก้ไขโค้ดเองโดยพลการ (Never modify code automatically without explicit request):**
+   - เมื่อเกิดข้อผิดพลาดหรือมีคำถาม ให้ทำการวิเคราะห์หาสาเหตุ (Root Cause) และอธิบายแนวทางแก้ไขให้ผู้ใช้ทราบก่อนเสมอ
+   - จะลงมือแก้ไขโค้ด (Create / Edit / Delete files) ได้ต่อเมื่อผู้ใช้สั่งให้ลงมือแก้ไข หรือร้องขออย่างชัดเจนเท่านั้น
+2. **ห้ามทำการ `git commit` หรือ `git add` เองโดยเด็ดขาด** (Never run `git commit` or `git add` automatically).
+3. ให้ทำการแก้ไขไฟล์หรือตอบคำถามตามที่ผู้ใช้ร้องขอเท่านั้น 
+4. หากจำเป็นต้อง commit จะต้องรอให้ผู้ใช้เป็นคนสั่งคำว่า "commit" หรือร้องขออย่างชัดเจนเท่านั้น
+5. ห้ามทำการ `git push` โดยเด็ดขาด เว้นแต่จะได้รับคำสั่งเจาะจงจากผู้ใช้
+6. **PowerShell Syntax Rule:** เมื่อรันคำสั่งหลายคำสั่งต่อกันบน Windows PowerShell ให้ใช้เครื่องหมายเซมิโคลอน (`;`) คั่นคำสั่ง ห้ามใช้ `&&` หรือ `&` (เช่น `git add ... ; git commit ...`)
+
+---
+
+## 🛠️ Development & Schema Guidelines
+1. ตรวจสอบความถูกต้องของ `backend/prisma/schema.prisma` และ `docs/openapi.yaml` ทุกครั้งที่มีการเปลี่ยนแปลง Contract
+2. การปรับปรุงโมเดลฐานข้อมูลต้องคำนึงถึง Data Integrity, Multi-Tenancy (`tenantId`), และการทำ Soft-Delete เสมอ
+3. รักษาความเข้ากันได้ของ API (Backward Compatibility) ป้องกันไม่ให้ Front-End ที่ใช้งานอยู่เกิดข้อผิดพลาด
+4. **Backend API Constraint Rule:** ไม่ต้องทำการปรับแต่งโค้ดส่วน Backend ใน `backend/` เองโดยตรง หากมีการปรับปรุง API ให้ทำการอัปเดตสัญญาอินเทอร์เฟซใน `docs/openapi.yaml` เท่านั้น (Backend implementation เป็นหน้าที่ของทีม Backend/ระบบอื่น)
+

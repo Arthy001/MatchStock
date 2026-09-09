@@ -1,0 +1,71 @@
+CreateTagDto:
+  type: object
+  properties:
+    tagId:
+      type: string
+      minLength: 1
+      maxLength: 64
+      example: 686E14141E13194568471D7F
+      description: Physical EPC/tag ID, globally unique.
+    receivedAt:
+      type: string
+      example: '2026-08-01'
+      description: When this physical unit/lot actually arrived - defaults to unset (not "now"); set explicitly for batch/historical stock entry.
+  required:
+    - tagId
+ReadingDto:
+  type: object
+  properties:
+    tagid:
+      type: string
+      minLength: 1
+      maxLength: 64
+      example: 686E14141E13194568471D7F
+      description: Physical EPC/tag ID, globally unique.
+    rssi:
+      type: number
+      minimum: -100
+      maximum: 0
+      example: -61
+      description: Received signal strength in dBm.
+    ant:
+      type: number
+      minimum: 1
+      maximum: 64
+      example: 4
+      description: Antenna port number that saw this tag.
+  required:
+    - tagid
+    - rssi
+    - ant
+IngestBatchDto:
+  type: object
+  properties:
+    reader_id:
+      type: string
+      maxLength: 64
+      example: R001
+      description: Must match the readerId the device was registered under.
+    timestamp:
+      type: string
+      example: '2026-08-10T12:00:00.000Z'
+      description: ISO8601, must be within a few minutes of server time.
+    readings:
+      maxItems: 5000
+      example:
+        - tagid: 686E14141E13194568471D7F
+          rssi: -61
+          ant: 4
+        - tagid: 686E14141E13194568471D7F
+          rssi: -58
+          ant: 4
+        - tagid: A94012E5000401234567890A
+          rssi: -72
+          ant: 2
+      type: array
+      items:
+        $ref: ./rfid.yaml#/ReadingDto
+  required:
+    - reader_id
+    - timestamp
+    - readings

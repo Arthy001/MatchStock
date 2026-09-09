@@ -7,10 +7,25 @@ export const warehouseService = {
     return response.data?.data || response.data || [];
   },
 
-  // ดึงรายการ Bins ทั้งหมด
+  // ดึงรายการ Bins ทั้งหมด (พร้อมดึง Bins ย่อยของแต่ละคลังโดยอัตโนมัติ)
   getBins: async () => {
     const response = await apiClient.get('/warehouses');
-    return response.data?.bins || response.data?.data || response.data || [];
+    const whList = response.data?.data || response.data || [];
+    if (!Array.isArray(whList)) return [];
+
+    const fullWarehouses = await Promise.all(
+      whList.map(async (wh: any) => {
+        try {
+          const binsRes = await apiClient.get(`/warehouses/${wh.id}/bins`);
+          const fetchedBins = binsRes.data?.data || binsRes.data || [];
+          if (Array.isArray(fetchedBins) && fetchedBins.length > 0) {
+            return { ...wh, bins: fetchedBins };
+          }
+        } catch {}
+        return wh;
+      })
+    );
+    return fullWarehouses;
   },
 
   // ดึงรายการ Bins ในคลัง (GET /warehouses/{warehouseId}/bins)
@@ -38,15 +53,15 @@ export const warehouseService = {
   },
 
   // อัปเดตคลังสินค้า (PATCH /warehouses/{id})
-  updateWarehouse: async (id: string, data: { name?: string; code?: string; address?: string; isDefault?: boolean; isActive?: boolean }) => {
-    if (data.isActive === false) {
-      try {
-        await apiClient.post(`/warehouses/${id}/deactivate`);
-      } catch {}
-    }
-
+  updateWarehouse: async (id: string, data: { name?: string; code?: string; address?: string; isDefault?: boolean; isActive?: boolean; maxCapacity?: number; companyId?: string | null }) => {
     const remotePayload: any = {};
-    if (data.name) remotePayload.name = data.name;
+    if (data.name !== undefined) remotePayload.name = data.name;
+    if (data.code !== undefined) remotePayload.code = data.code;
+    if (data.address !== undefined) remotePayload.address = data.address;
+    if (data.isDefault !== undefined) remotePayload.isDefault = data.isDefault;
+    if (data.isActive !== undefined) remotePayload.isActive = data.isActive;
+    if (data.maxCapacity !== undefined) remotePayload.maxCapacity = data.maxCapacity;
+    if (data.companyId !== undefined) remotePayload.companyId = data.companyId;
 
     const response = await apiClient.patch(`/warehouses/${id}`, remotePayload);
     return response.data?.data || response.data;
@@ -64,8 +79,32 @@ export const warehouseService = {
   },
 
   // สร้าง Bin ใหม่ในคลัง (POST /warehouses/{warehouseId}/bins)
-  createBin: async (warehouseId: string, data: { code: string; zone?: string; rack?: string; shelf?: string; capacityKg?: number; description?: string }) => {
-    const response = await apiClient.post(`/warehouses/${warehouseId}/bins`, data);
+  createBin: async (
+    warehouseId: string,
+    data: {
+      code: string;
+      zone?: string;
+      zoneName?: string;
+      rack?: string;
+      shelf?: string;
+      capacityKg?: number;
+      maxCapacity?: number;
+      description?: string;
+      isActive?: boolean;
+    }
+  ) => {
+    const payload: any = {
+      code: data.code,
+      zone: data.zone || data.zoneName,
+      zoneName: data.zoneName || data.zone,
+      rack: data.rack,
+      shelf: data.shelf,
+      capacityKg: data.capacityKg ?? 0,
+      maxCapacity: data.maxCapacity,
+      description: data.description,
+      isActive: data.isActive,
+    };
+    const response = await apiClient.post(`/warehouses/${warehouseId}/bins`, payload);
     return response.data?.data || response.data;
   },
 
@@ -75,15 +114,35 @@ export const warehouseService = {
     let binId = arg3 ? arg2 : arg1;
     let data = arg3 || arg2;
 
-    const remotePayload: any = {};
-    if (data.code) remotePayload.code = data.code;
-    if (data.name) remotePayload.name = data.name;
-
     if (warehouseId && warehouseId !== 'default' && warehouseId !== binId) {
-      const response = await apiClient.patch(`/warehouses/${warehouseId}/bins/${binId}`, remotePayload);
+      // Clean Bin Update Payload matching strictly OpenAPI UpdateBinLocationDto
+      const binPayload: any = {};
+      if (data.code && String(data.code).trim()) binPayload.code = String(data.code).trim();
+      const zName = data.zoneName || data.zone;
+      if (zName && String(zName).trim()) binPayload.zoneName = String(zName).trim();
+      if (data.rack && String(data.rack).trim()) binPayload.rack = String(data.rack).trim();
+      if (data.shelf && String(data.shelf).trim()) binPayload.shelf = String(data.shelf).trim();
+      
+      // Use maxCapacity exclusively, set capacityKg to 0 as fallback
+      const maxCap = parseInt(data.maxCapacity || data.capacityKg || 0, 10);
+      if (!isNaN(maxCap) && maxCap >= 0) {
+        binPayload.maxCapacity = maxCap;
+      }
+      binPayload.capacityKg = 0; // Always default capacityKg to 0 as instructed
+      
+      if (typeof data.isActive === 'boolean') binPayload.isActive = data.isActive;
+
+      const response = await apiClient.patch(`/warehouses/${warehouseId}/bins/${binId}`, binPayload);
       return response.data?.data || response.data;
     } else {
-      const response = await apiClient.patch(`/warehouses/${binId}`, remotePayload);
+      // Editing warehouse directly (PATCH /warehouses/:id)
+      const whPayload: any = {};
+      if (data.name && String(data.name).trim()) whPayload.name = String(data.name).trim();
+      if (data.code && String(data.code).trim()) whPayload.code = String(data.code).trim();
+      if (data.address && String(data.address).trim()) whPayload.address = String(data.address).trim();
+      if (typeof data.isActive === 'boolean') whPayload.isActive = data.isActive;
+
+      const response = await apiClient.patch(`/warehouses/${binId}`, whPayload);
       return response.data?.data || response.data;
     }
   },
@@ -111,5 +170,61 @@ export const warehouseService = {
       const response = await apiClient.delete(`/warehouses/${warehouseId}/bins/${binId}`);
       return response.data?.data || response.data;
     }
+  },
+
+  // บันทึกรายการ Bins แบบชุดใหญ่ (POST /warehouses/{warehouseId}/bins/batch)
+  batchSaveBins: async (
+    warehouseId: string,
+    payload: {
+      mode: 'overwrite' | 'merge';
+      bins: Array<{
+        binCode: string;
+        zone?: string;
+        rack?: string;
+        shelf?: string;
+        capacityKg?: number;
+        maxCapacity?: number;
+        status?: 'available' | 'full' | 'maintenance';
+        isActive?: boolean;
+      }>;
+    }
+  ) => {
+    const response = await apiClient.post(`/warehouses/${warehouseId}/bins/batch`, payload);
+    return response.data?.data || response.data;
+  },
+
+  // บันทึกแปลนภาพพิมพ์เขียว CAD/2D และโครงสร้าง 3D (PUT /warehouses/{warehouseId}/blueprint)
+  updateBlueprint: async (
+    warehouseId: string,
+    payload: {
+      blueprintUrl: string;
+      opacity?: number;
+      dimensions?: {
+        widthMeters?: number;
+        depthMeters?: number;
+      };
+      zonesConfig?: Record<string, any>;
+      walls?: Array<{
+        id: string;
+        startX: number;
+        startZ: number;
+        endX: number;
+        endZ: number;
+        heightMeters?: number;
+        thicknessMeters?: number;
+      }>;
+      doors?: Array<{
+        id: string;
+        x: number;
+        z: number;
+        widthMeters?: number;
+        heightMeters?: number;
+        type?: 'dock' | 'entrance' | 'emergency_exit';
+      }>;
+      [key: string]: any;
+    }
+  ) => {
+    const response = await apiClient.put(`/warehouses/${warehouseId}/blueprint`, payload);
+    return response.data?.data || response.data;
   },
 };

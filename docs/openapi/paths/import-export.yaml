@@ -1,0 +1,120 @@
+import_export__entityType__template:
+  get:
+    operationId: ImportExportController_template_v1
+    parameters:
+      - name: entityType
+        required: true
+        in: path
+        schema:
+          enum:
+            - products
+            - warehouses
+            - bin-locations
+            - tax-types
+            - units
+            - brands
+            - manufacturers
+            - suppliers
+            - categories
+            - barcode-symbologies
+            - goods-receipts
+            - goods-issues
+            - stock-transfers
+            - stock-adjustments
+            - cycle-counts
+          type: string
+      - name: format
+        required: true
+        in: query
+        schema:
+          enum:
+            - csv
+            - xlsx
+          type: string
+    responses:
+      '200':
+        description: ''
+    security:
+      - jwt: []
+    summary: Download an empty (headers-only) template file for one entity type.
+    tags:
+      - Import / Export
+import_export__entityType__export:
+  get:
+    operationId: ImportExportController_export_v1
+    parameters:
+      - name: entityType
+        required: true
+        in: path
+        schema:
+          enum:
+            - products
+            - warehouses
+            - bin-locations
+            - tax-types
+            - units
+            - brands
+            - manufacturers
+            - suppliers
+            - categories
+            - barcode-symbologies
+            - goods-receipts
+            - goods-issues
+            - stock-transfers
+            - stock-adjustments
+            - cycle-counts
+          type: string
+      - name: format
+        required: true
+        in: query
+        schema:
+          enum:
+            - csv
+            - xlsx
+          type: string
+    responses:
+      '200':
+        description: ''
+    security:
+      - jwt: []
+    summary: Export this tenant's existing data for one entity type.
+    tags:
+      - Import / Export
+import_export__entityType__import:
+  post:
+    description: Never persisted to disk - parsed once from memory and discarded. Bad rows are reported per-row/per-document-group; good rows still commit.
+    operationId: ImportExportController_import_v1
+    parameters:
+      - name: entityType
+        required: true
+        in: path
+        schema:
+          enum:
+            - products
+            - warehouses
+            - bin-locations
+            - tax-types
+            - units
+            - brands
+            - manufacturers
+            - suppliers
+            - categories
+            - barcode-symbologies
+            - goods-receipts
+            - goods-issues
+            - stock-transfers
+            - stock-adjustments
+            - cycle-counts
+          type: string
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              type: object
+    security:
+      - jwt: []
+    summary: Upload a CSV/XLSX file to bulk-create/upsert one entity type.
+    tags:
+      - Import / Export

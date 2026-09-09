@@ -1,0 +1,165 @@
+users:
+  get:
+    operationId: UsersController_list_v1
+    parameters:
+      - name: page
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          default: 1
+          example: 1
+          type: number
+      - name: limit
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+          type: number
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: 9c6b1a2d-3e4f-4a5b-8c7d-1e2f3a4b5c6d
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    email: operator1@beta.test
+                    fullName: Suda Operator
+                    role: operator
+                    isActive: true
+                    lastLoginAt: null
+                    failedLoginAttempts: 0
+                    lockedUntil: null
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    summary: List all users in the signed-in user's tenant.
+    tags:
+      - Users
+  post:
+    operationId: UsersController_create_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/auth.yaml#/CreateUserDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              type: object
+    security:
+      - jwt: []
+    summary: Invite/create a new user in the tenant (owner/admin only).
+    tags:
+      - Users
+users__id:
+  patch:
+    operationId: UsersController_update_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: 9c6b1a2d-3e4f-4a5b-8c7d-1e2f3a4b5c6d
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/auth.yaml#/UpdateUserDto
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              type: object
+    security:
+      - jwt: []
+    summary: Update a user's role or active status (owner/admin only).
+    tags:
+      - Users
+  delete:
+    operationId: UsersController_remove_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: 9c6b1a2d-3e4f-4a5b-8c7d-1e2f3a4b5c6d
+          type: string
+    responses:
+      '204':
+        description: ''
+    security:
+      - jwt: []
+    summary: 'Permanently remove a user (owner/admin only) - distinct from deactivate: this hides the row from every normal lookup, including this API, with no undo. Deactivate is the routine, reversible action; use this only to actually remove a mistaken/unwanted account.'
+    tags:
+      - Users
+users__id__deactivate:
+  patch:
+    operationId: UsersController_deactivate_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: 9c6b1a2d-3e4f-4a5b-8c7d-1e2f3a4b5c6d
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              type: object
+    security:
+      - jwt: []
+    summary: Deactivate a user (owner/admin only) - shorthand for update with isActive:false.
+    tags:
+      - Users
+menu:
+  get:
+    operationId: MenuController_getMenu_v1
+    parameters: []
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+    security:
+      - jwt: []
+    summary: Nested nav tree of menu items granted to the signed-in user's tenant and visible to their role.
+    tags:
+      - Menu

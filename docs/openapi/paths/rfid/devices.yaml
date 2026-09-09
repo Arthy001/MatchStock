@@ -1,0 +1,580 @@
+tags:
+  post:
+    description: Optional - tags are also auto-registered the first time a reader reports them via /ingestion/readings.
+    operationId: TagsController_preRegister_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/rfid.yaml#/CreateTagDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: a1b2c3d4-e5f6-4a5b-8c7d-1e2f3a4b5c6d
+                  tagId: 686E14141E13194568471D7F
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  productId: null
+                  status: unbound
+                  boundAt: null
+                  receivedAt: '2026-08-18T02:39:41.574Z'
+                  lotNumber: null
+                  productionDate: null
+                  expiryDate: null
+                  unitCostMinor: 15000
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Pre-register a physical tag ID before it has been seen by a reader.
+    tags:
+      - Tags
+  get:
+    operationId: TagsController_list_v1
+    parameters:
+      - name: page
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          default: 1
+          example: 1
+          type: number
+      - name: limit
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+          type: number
+      - name: status
+        required: false
+        in: query
+        schema:
+          example: bound
+          type: string
+          enum:
+            - unbound
+            - bound
+            - retired
+      - name: productId
+        required: false
+        in: query
+        schema:
+          format: uuid
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: a1b2c3d4-e5f6-4a5b-8c7d-1e2f3a4b5c6d
+                    tagId: 686E14141E13194568471D7F
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                    status: bound
+                    boundAt: '2026-08-18T02:39:41.574Z'
+                    receivedAt: '2026-08-18T02:39:41.574Z'
+                    lotNumber: null
+                    productionDate: null
+                    expiryDate: null
+                    unitCostMinor: 15000
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    summary: List tags, optionally filtered by status or bound product.
+    tags:
+      - Tags
+tags__tagId__bind:
+  post:
+    operationId: TagsController_bind_v1
+    parameters:
+      - name: tagId
+        required: true
+        in: path
+        schema:
+          example: 686E14141E13194568471D7F
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/master-data.yaml#/BindTagDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: a1b2c3d4-e5f6-4a5b-8c7d-1e2f3a4b5c6d
+                  tagId: 686E14141E13194568471D7F
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                  status: bound
+                  boundAt: '2026-08-18T02:39:41.574Z'
+                  receivedAt: '2026-08-18T02:39:41.574Z'
+                  lotNumber: null
+                  productionDate: null
+                  expiryDate: null
+                  unitCostMinor: 15000
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Bind a physical tag to a product, so its reads count as that SKU in inventory.
+    tags:
+      - Tags
+tags__tagId__unbind:
+  post:
+    operationId: TagsController_unbind_v1
+    parameters:
+      - name: tagId
+        required: true
+        in: path
+        schema:
+          example: 686E14141E13194568471D7F
+          type: string
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: a1b2c3d4-e5f6-4a5b-8c7d-1e2f3a4b5c6d
+                  tagId: 686E14141E13194568471D7F
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  productId: null
+                  status: unbound
+                  boundAt: null
+                  receivedAt: '2026-08-18T02:39:41.574Z'
+                  lotNumber: null
+                  productionDate: null
+                  expiryDate: null
+                  unitCostMinor: 15000
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Unbind a tag from its product.
+    tags:
+      - Tags
+tags_unbound:
+  get:
+    operationId: TagsController_listUnbound_v1
+    parameters:
+      - name: page
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          default: 1
+          example: 1
+          type: number
+      - name: limit
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+          type: number
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: a1b2c3d4-e5f6-4a5b-8c7d-1e2f3a4b5c6d
+                    tagId: 686E14141E13194568471D7F
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    productId: null
+                    status: unbound
+                    boundAt: null
+                    receivedAt: '2026-08-18T02:39:41.574Z'
+                    lotNumber: null
+                    productionDate: null
+                    expiryDate: null
+                    unitCostMinor: 15000
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    summary: List tags that have been seen/registered but not yet bound to a product.
+    tags:
+      - Tags
+tags__tagId:
+  get:
+    operationId: TagsController_getDetail_v1
+    parameters:
+      - name: tagId
+        required: true
+        in: path
+        schema:
+          example: 686E14141E13194568471D7F
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              type: object
+    security:
+      - jwt: []
+    summary: Get a single tag by its physical tag ID.
+    tags:
+      - Tags
+  delete:
+    operationId: TagsController_remove_v1
+    parameters:
+      - name: tagId
+        required: true
+        in: path
+        schema:
+          example: 686E14141E13194568471D7F
+          type: string
+    responses:
+      '204':
+        description: ''
+    security:
+      - jwt: []
+    summary: 'Permanently remove a mistakenly-registered tag record - distinct from unbind (which just detaches it from a product and keeps the row): this hides the row from every normal lookup, with no undo.'
+    tags:
+      - Tags
+devices:
+  get:
+    operationId: DevicesController_list_v1
+    parameters:
+      - name: page
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          default: 1
+          example: 1
+          type: number
+      - name: limit
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+          type: number
+      - name: warehouseId
+        required: false
+        in: query
+        description: Filter to readers assigned to one warehouse - lets a multi-site tenant scope a device picker by location.
+        schema:
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: 91ddb1e2-fa16-4123-867e-e7ed4d6e8753
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    readerId: R001
+                    label: Dock door 3 reader
+                    locationZone: Zone-A
+                    status: active
+                    lastSeenAt: '2026-08-18T02:39:41.574Z'
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    summary: List all RFID readers registered to the signed-in user's tenant.
+    tags:
+      - Devices
+  post:
+    description: The returned apiKey is only ever shown once, in this response - store it in the reader/edge-agent config immediately. If it is lost, use the rotate-credential endpoint below to issue a new one (this invalidates the old key).
+    operationId: DevicesController_register_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/common.yaml#/CreateDeviceDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                device:
+                  id: 91ddb1e2-fa16-4123-867e-e7ed4d6e8753
+                  readerId: R001
+                  label: Dock door 3 reader
+                  locationZone: Zone-A
+                  status: active
+                apiKey: devk_3f9a1c.7b2e4d9a1f6c8b3e5a0d2f4c6e8a1b3d
+    security:
+      - jwt: []
+    summary: Register a new RFID reader and issue its API key (owner/admin only).
+    tags:
+      - Devices
+devices__id:
+  get:
+    operationId: DevicesController_getById_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: 91ddb1e2-fa16-4123-867e-e7ed4d6e8753
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: 91ddb1e2-fa16-4123-867e-e7ed4d6e8753
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  readerId: R001
+                  label: Dock door 3 reader
+                  locationZone: Zone-A
+                  status: active
+                  lastSeenAt: '2026-08-18T02:39:41.574Z'
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Get a single device by its internal id.
+    tags:
+      - Devices
+  patch:
+    operationId: DevicesController_update_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: 91ddb1e2-fa16-4123-867e-e7ed4d6e8753
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/common.yaml#/UpdateDeviceDto
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: 91ddb1e2-fa16-4123-867e-e7ed4d6e8753
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  readerId: R001
+                  label: Dock door 3 reader
+                  locationZone: Zone-A
+                  status: active
+                  lastSeenAt: '2026-08-18T02:39:41.574Z'
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Update a device label/zone/status (owner/admin only).
+    tags:
+      - Devices
+  delete:
+    operationId: DevicesController_decommission_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: 91ddb1e2-fa16-4123-867e-e7ed4d6e8753
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: 91ddb1e2-fa16-4123-867e-e7ed4d6e8753
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  readerId: R001
+                  label: Dock door 3 reader
+                  locationZone: Zone-A
+                  status: decommissioned
+                  lastSeenAt: '2026-08-18T02:39:41.574Z'
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Decommission a device (owner/admin only).
+    tags:
+      - Devices
+devices__id__credentials_rotate:
+  post:
+    description: Use this when the original apiKey from POST /devices was lost, since it is never shown again.
+    operationId: DevicesController_rotateCredential_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: 91ddb1e2-fa16-4123-867e-e7ed4d6e8753
+          type: string
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                apiKey: devk_3f9a1c.9d1e5a7c3b0f2d4a6c8e1b3d5f7a9c0e
+    security:
+      - jwt: []
+    summary: Issue a brand-new API key for this device, invalidating the previous one (owner/admin only).
+    tags:
+      - Devices
+devices__id__credentials_revoke:
+  post:
+    operationId: DevicesController_revokeCredential_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: 91ddb1e2-fa16-4123-867e-e7ed4d6e8753
+          type: string
+    responses:
+      '201':
+        description: ''
+    security:
+      - jwt: []
+    summary: Revoke the device API key without issuing a new one - the device can no longer ingest until rotated (owner/admin only).
+    tags:
+      - Devices

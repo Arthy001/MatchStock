@@ -1,0 +1,292 @@
+CreateWebhookSubscriptionDto:
+  type: object
+  properties:
+    url:
+      type: string
+      format: uri
+      example: https://example.com/webhooks/matchstock
+    eventTypes:
+      type: array
+      minItems: 1
+      items:
+        type: string
+        enum:
+          - low_stock.triggered
+          - tag.missing
+          - goods_receipt.received
+          - goods_issue.dispatched
+          - stock_adjustment.closed
+          - stock_transfer.completed
+          - cycle_count.closed
+          - '*'
+      example:
+        - goods_receipt.received
+        - goods_issue.dispatched
+      description: Event types to subscribe to, or ["*"] for every event.
+  required:
+    - url
+    - eventTypes
+UpdateWebhookSubscriptionDto:
+  type: object
+  properties:
+    url:
+      type: string
+      format: uri
+      example: https://example.com/webhooks/matchstock
+    eventTypes:
+      type: array
+      minItems: 1
+      items:
+        type: string
+        enum:
+          - low_stock.triggered
+          - tag.missing
+          - goods_receipt.received
+          - goods_issue.dispatched
+          - stock_adjustment.closed
+          - stock_transfer.completed
+          - cycle_count.closed
+          - '*'
+    status:
+      enum:
+        - active
+        - disabled
+      type: string
+UpdateTenantDto:
+  type: object
+  properties:
+    name:
+      type: string
+      example: Beta Logistics Co., Ltd.
+    contactEmail:
+      type: string
+      format: email
+      example: contact@beta.test
+CreateCompanyDto:
+  type: object
+  properties:
+    code:
+      type: string
+      maxLength: 50
+      example: COMP-001
+    name:
+      type: string
+      maxLength: 255
+      example: MatchStock Retail Co., Ltd.
+    taxId:
+      type: string
+      maxLength: 20
+      example: '0105559012345'
+    branchCode:
+      type: string
+      maxLength: 10
+      example: '00000'
+    branchName:
+      type: string
+      maxLength: 255
+      example: Headquarters (สำนักงานใหญ่)
+    phone:
+      type: string
+      maxLength: 50
+      example: +66 2 555 0100
+    email:
+      type: string
+      maxLength: 255
+      format: email
+      example: contact@matchstock.com
+    address:
+      type: string
+      example: 88/1 Sukhumvit Rd, Bangkok 10110
+    isHeadquarter:
+      type: boolean
+      example: true
+  required:
+    - name
+UpdateCompanyDto:
+  type: object
+  properties:
+    code:
+      type: string
+      maxLength: 50
+      example: COMP-001
+    name:
+      type: string
+      maxLength: 255
+      example: MatchStock Retail Co., Ltd.
+    taxId:
+      type: string
+      maxLength: 20
+      example: '0105559012345'
+    branchCode:
+      type: string
+      maxLength: 10
+      example: '00000'
+    branchName:
+      type: string
+      maxLength: 255
+      example: Headquarters
+    phone:
+      type: string
+      maxLength: 50
+      example: +66 2 555 0100
+    email:
+      type: string
+      maxLength: 255
+      format: email
+      example: contact@matchstock.com
+    address:
+      type: string
+      example: 88/1 Sukhumvit Rd, Bangkok
+    isHeadquarter:
+      type: boolean
+      example: true
+    isDeleted:
+      type: boolean
+      example: false
+CancelSubscriptionDto:
+  type: object
+  properties:
+    reason:
+      type: string
+      example: Moving to on-premise
+CreateSubscriptionDto:
+  type: object
+  properties:
+    planCode:
+      type: string
+      example: web_standard_monthly
+    quantity:
+      type: number
+      minimum: 1
+      default: 1
+      example: 1
+  required:
+    - planCode
+CheckoutDto:
+  type: object
+  properties:
+    subscriptionId:
+      type: string
+      format: uuid
+      example: 9c6b1a2d-3e4f-4a5b-8c7d-1e2f3a4b5c6d
+    method:
+      type: string
+      enum:
+        - card
+        - promptpay
+      example: card
+    cardToken:
+      type: string
+      example: tokn_test_abc123
+      description: Client-side card token - required for method=card.
+  required:
+    - subscriptionId
+    - method
+CreateSubscriptionPlanDto:
+  type: object
+  properties:
+    code:
+      type: string
+      example: PRO_MONTHLY
+    name:
+      type: string
+      example: MatchStock Pro
+    type:
+      type: string
+      enum:
+        - web
+        - hardware
+      example: web
+    billingCycle:
+      type: string
+      enum:
+        - monthly
+        - yearly
+      example: monthly
+    priceMinor:
+      type: integer
+      example: 199000
+    currency:
+      type: string
+      example: THB
+    trialDays:
+      type: integer
+      example: 14
+    maxUsers:
+      type: integer
+      example: 10
+    maxWarehouses:
+      type: integer
+      example: 3
+    maxProducts:
+      type: integer
+      example: 10000
+    maxDevices:
+      type: integer
+      example: 0
+    maxCompanies:
+      type: integer
+      nullable: true
+      description: Max Companies (branches) under one tenant. Omit/null = unlimited - no fixed per-tier default is seeded, Platform Admin sets this explicitly per plan.
+      example: 1
+    features:
+      type: array
+      items:
+        type: string
+      example:
+        - products.basic
+        - warehouse.bins
+        - stock.fefo
+  required:
+    - code
+    - name
+    - type
+    - billingCycle
+    - priceMinor
+UpdateSubscriptionPlanDto:
+  type: object
+  properties:
+    name:
+      type: string
+      example: MatchStock Pro Plus
+    priceMinor:
+      type: integer
+      example: 219000
+    maxUsers:
+      type: integer
+      example: 15
+    maxWarehouses:
+      type: integer
+      example: 5
+    maxProducts:
+      type: integer
+      example: 15000
+    maxDevices:
+      type: integer
+      example: 2
+    maxCompanies:
+      type: integer
+      nullable: true
+      description: Max Companies (branches) under one tenant. Omit/null = unlimited.
+      example: 2
+    features:
+      type: array
+      items:
+        type: string
+    isActive:
+      type: boolean
+      example: true
+CollectDepositDto:
+  type: object
+  properties:
+    method:
+      enum:
+        - card
+        - promptpay
+      type: string
+      example: card
+    cardToken:
+      type: string
+      example: tokn_test_abc123
+  required:
+    - method

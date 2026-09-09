@@ -1,0 +1,89 @@
+putaway_suggest_bin:
+  get:
+    operationId: PutawayController_suggestBin_v1
+    parameters:
+      - name: warehouseId
+        required: true
+        in: query
+        schema:
+          format: uuid
+          example: 362fecaa-d3d7-4f42-b979-756fb8444d57
+          type: string
+      - name: quantity
+        required: false
+        in: query
+        description: How many units need a home - only bins with this much free capacity (maxCapacity minus what is already put away there) are suggested. Bins with no maxCapacity set are always considered to have room.
+        schema:
+          minimum: 1
+          default: 1
+          example: 40
+          type: number
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: a1111111-2222-4333-8444-555566667777
+                  code: B-02-01
+                  maxCapacity: 200
+                  remainingCapacity: 140
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Suggest a bin with enough free capacity in this warehouse (soft suggestion - confirm accepts any bin regardless).
+    tags:
+      - Putaway
+putaway_confirm:
+  post:
+    operationId: PutawayController_confirm_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/inventory.yaml#/ConfirmPutawayDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  placed:
+                    id: a2c3d4e5-6f70-4a8b-9c1d-2e3f4a5b6c7d
+                    goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                    quantity: 60
+                    damagedQuantity: 0
+                    putawayQuantity: 60
+                    binLocationId: a1111111-2222-4333-8444-555566667777
+                  remaining:
+                    id: c4d5e6f7-8091-4a2b-9c3d-4e5f6a7b8c9d
+                    goodsReceiptId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                    quantity: 35
+                    damagedQuantity: 0
+                    putawayQuantity: 0
+                    binLocationId: null
+                message: Operation completed successfully
+      '400':
+        description: Bad request - e.g. target bin location does not belong to the goods receipt warehouse
+        content:
+          application/json:
+            schema:
+              example:
+                statusCode: 400
+                message: ตำแหน่งชั้นวางที่เลือกไม่ได้อยู่ในคลังสินค้านี้
+                error: Bad Request
+    security:
+      - jwt: []
+    summary: 'Scan-to-confirm: place `quantity` units of a staged line into a bin. `remaining` is non-null only on a partial (multi-bin) confirm - repeat the call with that line''s id for the rest.'
+    tags:
+      - Putaway

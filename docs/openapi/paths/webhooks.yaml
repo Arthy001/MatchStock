@@ -1,0 +1,246 @@
+webhook_subscriptions:
+  get:
+    operationId: WebhooksController_list_v1
+    parameters:
+      - name: page
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          default: 1
+          example: 1
+          type: number
+      - name: limit
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+          type: number
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    url: https://example.com/webhooks/inventory
+                    eventTypes: low_stock.triggered,tag.missing
+                    keyPrefix: whk_3f9a1c7b
+                    status: active
+                    lastDeliveryAt: null
+                    lastDeliveryStatus: null
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    tags:
+      - Webhooks
+  post:
+    description: The returned secret is only ever shown once, in this response - store it immediately, it is needed to verify each delivery's X-Webhook-Signature.
+    operationId: WebhooksController_create_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/billing.yaml#/CreateWebhookSubscriptionDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  subscription:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    url: https://example.com/webhooks/inventory
+                    eventTypes: low_stock.triggered,tag.missing
+                    keyPrefix: whk_3f9a1c7b
+                    status: active
+                    lastDeliveryAt: null
+                    lastDeliveryStatus: null
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                  secret: whsec_9d1e5a7c3b0f2d4a6c8e1b3d5f7a9c0e
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Register an outbound webhook endpoint (owner/admin only).
+    tags:
+      - Webhooks
+webhook_subscriptions__id:
+  get:
+    operationId: WebhooksController_getById_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              type: object
+    security:
+      - jwt: []
+    tags:
+      - Webhooks
+  patch:
+    operationId: WebhooksController_update_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/billing.yaml#/UpdateWebhookSubscriptionDto
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              type: object
+    security:
+      - jwt: []
+    tags:
+      - Webhooks
+  delete:
+    operationId: WebhooksController_remove_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          type: string
+    responses:
+      '204':
+        description: ''
+    security:
+      - jwt: []
+    tags:
+      - Webhooks
+webhook_subscriptions__id__rotate_secret:
+  post:
+    description: The old secret is immediately unusable, same idiom as device credential rotation.
+    operationId: WebhooksController_rotateSecret_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          type: string
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  subscription:
+                    id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    url: https://example.com/webhooks/inventory
+                    eventTypes: low_stock.triggered,tag.missing
+                    keyPrefix: whk_3f9a1c7b
+                    status: active
+                    lastDeliveryAt: null
+                    lastDeliveryStatus: null
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                  secret: whsec_1a3c5e7f9b0d2a4c6e8f0a2c4e6f8a0c
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Issue a new secret for this subscription (owner/admin only).
+    tags:
+      - Webhooks
+webhook_subscriptions__id__deliveries:
+  get:
+    operationId: WebhooksController_listDeliveries_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          default: 1
+          example: 1
+          type: number
+      - name: limit
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+          type: number
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: e5e91151-2499-4a6a-be28-3433f4afdba0
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    subscriptionId: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    eventType: low_stock.triggered
+                    payload:
+                      productId: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                      sku: DEMO-SKU-001
+                      inStockCount: 5
+                      reorderPoint: 10
+                    status: delivered
+                    attemptCount: 1
+                    responseStatus: 200
+                    lastError: null
+                    nextRetryAt: null
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    deliveredAt: '2026-08-18T02:39:42.100Z'
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    summary: Delivery attempt history for this subscription - for debugging.
+    tags:
+      - Webhooks

@@ -1,0 +1,117 @@
+auth_login:
+  post:
+    operationId: AuthController_login_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            example:
+              email: owner@acme-demo.test
+              password: Passw0rd!
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIuLi4ifQ.abc123
+                refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIuLi4ifQ.def456
+                user:
+                  id: 9c6b1a2d-3e4f-4a5b-8c7d-1e2f3a4b5c6d
+                  email: owner@acme-demo.test
+                  role: owner
+                  tenantId: e5e91151-2499-4a6a-be28-3433f4afdba0
+                subscription:
+                  planCode: GROWTH
+                  status: active
+                  features:
+                    - products.manage
+                    - warehouses.manage
+                    - reports.view
+    summary: Sign in with email/password, get a JWT access + refresh token pair.
+    tags:
+      - Auth
+auth_me:
+  get:
+    operationId: AuthController_me_v1
+    parameters: []
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: 9c6b1a2d-3e4f-4a5b-8c7d-1e2f3a4b5c6d
+                  email: owner@acme-demo.test
+                  fullName: Owner Demo
+                  role: owner
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  isActive: true
+                  lastLoginAt: '2026-08-18T02:39:41.574Z'
+                  subscription:
+                    planCode: GROWTH
+                    status: active
+                    features:
+                      - products.manage
+                      - warehouses.manage
+                      - reports.view
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Get the signed-in user's own profile.
+    tags:
+      - Auth
+auth_refresh:
+  post:
+    operationId: AuthController_refresh_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/auth.yaml#/RefreshTokenDto
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              type: object
+    summary: Exchange a still-valid refresh token for a new access + refresh token pair.
+    tags:
+      - Auth
+auth_logout:
+  post:
+    operationId: AuthController_logout_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/auth.yaml#/RefreshTokenDto
+    responses:
+      '204':
+        description: ''
+    summary: Revoke a refresh token (does not invalidate already-issued access tokens, which expire on their own).
+    tags:
+      - Auth
+auth_logout_all:
+  post:
+    operationId: AuthController_logoutAll_v1
+    parameters: []
+    responses:
+      '204':
+        description: ''
+    security:
+      - jwt: []
+    summary: Revoke every refresh token for the signed-in user (log out of all devices/sessions at once).
+    tags:
+      - Auth

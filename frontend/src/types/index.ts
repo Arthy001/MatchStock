@@ -133,6 +133,51 @@ export interface TaxTypeItem {
   isActive?: boolean;
 }
 
+export interface BlueprintWall {
+  id: string;
+  startX: number;
+  startZ: number;
+  endX: number;
+  endZ: number;
+  heightMeters?: number;
+  thicknessMeters?: number;
+}
+
+export interface BlueprintDoor {
+  id: string;
+  x: number;
+  z: number;
+  widthMeters?: number;
+  heightMeters?: number;
+  type?: 'dock' | 'entrance' | 'emergency_exit';
+}
+
+export interface WarehouseItem {
+  id: string;
+  code: string;
+  name: string;
+  address?: string;
+  maxCapacity?: number;
+  isActive?: boolean;
+  blueprintUrl?: string;
+  blueprintCfg?: {
+    opacity?: number;
+    dimensions?: {
+      widthMeters?: number;
+      depthMeters?: number;
+    };
+    zonesConfig?: Record<string, {
+      name?: string;
+      color?: string;
+      racksCount?: number;
+      [key: string]: any;
+    }>;
+    walls?: BlueprintWall[];
+    doors?: BlueprintDoor[];
+    [key: string]: any;
+  };
+}
+
 export interface WarehouseBin {
   id: string;
   warehouseId: string;
@@ -193,6 +238,25 @@ export interface UserPermissionItem {
 export type TransactionType = 'RECEIVE' | 'ISSUE' | 'TRANSFER' | 'ADJUSTMENT';
 export type TransactionStatus = 'COMPLETED' | 'PENDING' | 'CANCELLED';
 
+export type OutboundWorkflowMode =
+  | 'ONE_STEP_DIRECT'
+  | 'TWO_STEP_PICK_SHIP'
+  | 'TWO_STEP_PICK'
+  | 'THREE_STEP_PACK'
+  | 'FOUR_STEP_ENTERPRISE'
+  | 'FOUR_STEP_STAGE';
+
+export type GoodsIssueStatus =
+  | 'draft'
+  | 'reserved'
+  | 'picking'
+  | 'picked'
+  | 'packing'
+  | 'packed'
+  | 'staged_for_loading'
+  | 'completed'
+  | 'cancelled';
+
 export interface StockTransaction {
   id: string;
   documentNo: string;
@@ -210,6 +274,20 @@ export interface StockTransaction {
   // GI Specific
   issueReason?: string;
   recipientName?: string;
+  soNumber?: string;
+  salesOrderId?: string;
+  workflowMode?: OutboundWorkflowMode;
+  goodsIssueStatus?: GoodsIssueStatus;
+  packageTrackingNo?: string;
+  shippingCarrier?: string;
+  cartonBarcode?: string;
+  stagingDockBarcode?: string;
+  totalWeightKg?: number;
+  boxCount?: number;
+  pickedAt?: string;
+  packedAt?: string;
+  stagedAt?: string;
+  dispatchedAt?: string;
 
   // Transfer Specific
   transferType?: 'INTER_WAREHOUSE' | 'BIN_TO_BIN';
@@ -356,6 +434,13 @@ export interface Order {
   createdAt: string;
 }
 
+export interface OutboundStationToggles {
+  enablePickStation: boolean;
+  enablePackStation: boolean;
+  enableStagingDock: boolean;
+  enableGateDispatch: boolean;
+}
+
 // --- Section 6: Settings & Organization Profile Types ---
 export interface TenantSettings {
   companyName: string;
@@ -373,6 +458,8 @@ export interface TenantSettings {
   enableSoundFeedback: boolean;
   autoPrintBarcodeOnReceive: boolean;
   apiWebhookUrl?: string;
+  outboundStations?: OutboundStationToggles;
+  defaultOutboundWorkflow?: OutboundWorkflowMode;
 }
 
 // --- Section 7: Phase 4 — Subscription, Billing & Quota Types ---

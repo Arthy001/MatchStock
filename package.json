@@ -1,0 +1,8 @@
+{
+  "name": "matchstock",
+  "private": true,
+  "scripts": {
+    "openapi:bundle": "redocly bundle docs/openapi/index.yaml -o docs/openapi.yaml --ext yaml",
+    "openapi:lint": "redocly lint docs/openapi/index.yaml"
+  }
+}

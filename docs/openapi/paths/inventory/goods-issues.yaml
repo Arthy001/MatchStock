@@ -1,0 +1,343 @@
+goods_issues:
+  get:
+    operationId: GoodsIssuesController_list_v1
+    parameters:
+      - name: page
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          default: 1
+          example: 1
+          type: number
+      - name: limit
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+          type: number
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    issueNumber: GI-202608-001
+                    warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                    binLocationId: null
+                    reference: null
+                    issuedAt: '2026-08-18T02:39:41.574Z'
+                    notes: null
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    tags:
+      - Goods Issues
+  post:
+    operationId: GoodsIssuesController_create_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/inventory.yaml#/CreateGoodsIssueDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  issueNumber: GI-202608-001
+                  warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  binLocationId: null
+                  reference: null
+                  issuedAt: '2026-08-18T02:39:41.574Z'
+                  notes: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Open a goods issue header for an outgoing dispatch.
+    tags:
+      - Goods Issues
+goods_issues__id:
+  get:
+    operationId: GoodsIssuesController_getById_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  issueNumber: GI-202608-001
+                  warehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  binLocationId: null
+                  reference: null
+                  issuedAt: '2026-08-18T02:39:41.574Z'
+                  notes: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    tags:
+      - Goods Issues
+goods_issues__id__pick:
+  post:
+    operationId: GoodsIssuesController_recordPick_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/inventory.yaml#/RecordPickDto
+    responses:
+      '200':
+        description: Pick step recorded and shelf stock deducted in real-time
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                message: Items picked successfully, shelf inventory updated
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  status: picked
+                  pickedAt: '2026-09-03T17:00:00.000Z'
+    security:
+      - jwt: []
+    summary: Record picking at shelf using barcode/RFID - immediately deducts StockBalance at bin.
+    tags:
+      - Goods Issues
+goods_issues__id__pack:
+  post:
+    operationId: GoodsIssuesController_recordPack_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/inventory.yaml#/RecordPackDto
+    responses:
+      '200':
+        description: Packing station verification and waybill registration complete
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                message: Package packed and waybill registered
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  status: packed
+                  packedAt: '2026-09-03T17:15:00.000Z'
+    security:
+      - jwt: []
+    summary: Record packing station QC, carton barcode, box weight, and carrier tracking.
+    tags:
+      - Goods Issues
+goods_issues__id__stage_load:
+  post:
+    operationId: GoodsIssuesController_recordStageLoad_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/inventory.yaml#/RecordStageLoadDto
+    responses:
+      '200':
+        description: Items registered at loading dock staging area
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                message: Staged at loading dock
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  status: staged_for_loading
+                  stagedAt: '2026-09-03T17:30:00.000Z'
+    security:
+      - jwt: []
+    summary: Record staging at loading dock / truck bay prior to departure (Ultra Tier).
+    tags:
+      - Goods Issues
+goods_issues__id__dispatch:
+  post:
+    operationId: GoodsIssuesController_dispatch_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/common.yaml#/DispatchGoodsDto
+    responses:
+      '201':
+        description: ''
+    security:
+      - jwt: []
+    summary: Mark tags as exited under this issue - they drop out of the destination product's derived in-stock count.
+    tags:
+      - Goods Issues
+goods_issues__id__dispatch_by_quantity:
+  post:
+    operationId: GoodsIssuesController_dispatchByQuantity_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/common.yaml#/DispatchByQuantityDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+    security:
+      - jwt: []
+    summary: FIFO dispatch - give a quantity, the system picks the oldest-received unreserved in-stock tags for you.
+    tags:
+      - Goods Issues
+goods_issues__id__reserve:
+  post:
+    operationId: GoodsIssuesController_reserve_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/common.yaml#/DispatchGoodsDto
+    responses:
+      '201':
+        description: ''
+    security:
+      - jwt: []
+    summary: Soft-hold tags for this issue - earmarked, still in_stock, unavailable to other issues.
+    tags:
+      - Goods Issues
+goods_issues__id__release:
+  post:
+    operationId: GoodsIssuesController_release_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/common.yaml#/DispatchGoodsDto
+    responses:
+      '201':
+        description: ''
+    security:
+      - jwt: []
+    summary: Clear a reservation without dispatching (e.g. order cancelled).
+    tags:
+      - Goods Issues

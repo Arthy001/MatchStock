@@ -19,7 +19,7 @@ export const masterDataService = {
   updateCategory: async (id: string, data: { name?: string; code?: string; description?: string; isActive?: boolean }) => {
     const payload: any = {};
     if (data.name !== undefined) payload.name = data.name.trim();
-    if (data.code?.trim()) payload.code = data.code.trim();
+    // code is not accepted by UpdateCategoryDto — omit it
     if (data.description?.trim()) payload.description = data.description.trim();
     if (data.isActive !== undefined) payload.isActive = data.isActive;
 
@@ -50,7 +50,7 @@ export const masterDataService = {
   updateBrand: async (id: string, data: { name?: string; code?: string; description?: string; isActive?: boolean }) => {
     const payload: any = {};
     if (data.name !== undefined) payload.name = data.name.trim();
-    if (data.code?.trim()) payload.code = data.code.trim();
+    // code is not accepted by UpdateBrandDto — omit it
     if (data.description?.trim()) payload.description = data.description.trim();
     if (data.isActive !== undefined) payload.isActive = data.isActive;
 
@@ -136,24 +136,20 @@ export const masterDataService = {
     return response.data?.data || response.data || [];
   },
 
-  createUnit: async (data: { code: string; name: string; type?: string; description?: string }) => {
+  createUnit: async (data: { code?: string; name: string; type?: string }) => {
     const payload: any = {
-      code: data.code.trim(),
       name: data.name.trim(),
     };
+    if (data.code?.trim()) payload.code = data.code.trim();
     if (data.type?.trim()) payload.type = data.type.trim();
-    if (data.description?.trim()) payload.description = data.description.trim();
 
     const response = await apiClient.post('/units', payload);
     return response.data?.data || response.data;
   },
 
-  updateUnit: async (id: string, data: { code?: string; name?: string; type?: string; description?: string; isActive?: boolean }) => {
+  updateUnit: async (id: string, data: { name?: string; isActive?: boolean }) => {
     const payload: any = {};
-    if (data.code !== undefined) payload.code = data.code.trim();
     if (data.name !== undefined) payload.name = data.name.trim();
-    if (data.type?.trim()) payload.type = data.type.trim();
-    if (data.description?.trim()) payload.description = data.description.trim();
     if (data.isActive !== undefined) payload.isActive = data.isActive;
 
     const response = await apiClient.patch(`/units/${id}`, payload);
@@ -189,12 +185,9 @@ export const masterDataService = {
   updateSupplier: async (id: string, data: { name?: string; code?: string; contactPerson?: string; phone?: string; email?: string; taxId?: string; address?: string; isActive?: boolean }) => {
     const payload: any = {};
     if (data.name !== undefined) payload.name = data.name.trim();
-    if (data.code?.trim()) payload.code = data.code.trim();
+    // code, email, taxId, address are not accepted by UpdateSupplierDto — omit them
     if (data.contactPerson?.trim()) payload.contactPerson = data.contactPerson.trim();
     if (data.phone?.trim()) payload.phone = data.phone.trim();
-    if (data.email?.trim()) payload.email = data.email.trim();
-    if (data.taxId?.trim()) payload.taxId = data.taxId.trim();
-    if (data.address?.trim()) payload.address = data.address.trim();
     if (data.isActive !== undefined) payload.isActive = data.isActive;
 
     const response = await apiClient.patch(`/suppliers/${id}`, payload);

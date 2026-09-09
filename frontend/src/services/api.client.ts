@@ -20,13 +20,25 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('matchstock_token');
-    const tenantId =
-      localStorage.getItem('matchstock_tenant_id') || 'f97fe2dc-486e-4054-931c-aadf92823e69';
+    
+    // Dynamically retrieve tenantId from user session object or storage
+    let tenantId = localStorage.getItem('matchstock_tenant_id');
+    if (!tenantId) {
+      try {
+        const userStr = localStorage.getItem('matchstock_user');
+        if (userStr) {
+          const userObj = JSON.parse(userStr);
+          tenantId = userObj?.tenantId || userObj?.tenant_id;
+        }
+      } catch {}
+    }
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    config.headers['x-tenant-id'] = tenantId;
+    if (tenantId) {
+      config.headers['x-tenant-id'] = tenantId;
+    }
 
     return config;
   },

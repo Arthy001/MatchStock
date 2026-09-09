@@ -306,10 +306,8 @@ export const App: React.FC = () => {
           name: parsed.fullName || parsed.name || parsed.email?.split('@')[0] || 'User',
           email: parsed.email || '',
           role: parsed.role || 'admin',
-          tenantId: savedTenantId || parsed.tenantId || 'f97fe2dc-486e-4054-931c-aadf92823e69',
-          tenantName: (savedTenantId === '35213af2-d412-4be7-bcc0-a972ed233e73')
-            ? 'Acme Industrial Supplies'
-            : 'WH-Bangkok Center (MatchStock Demo)',
+          tenantId: savedTenantId || parsed.tenantId || parsed.tenant_id || '',
+          tenantName: parsed.tenantName || parsed.tenant?.name || 'MatchStock Tenant',
         });
         if (savedTenantId) setSelectedTenantId(savedTenantId);
         setIsLoggedIn(true);

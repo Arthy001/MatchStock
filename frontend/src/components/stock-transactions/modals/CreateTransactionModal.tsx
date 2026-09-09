@@ -19,12 +19,14 @@ import {
   Supplier,
   Language,
 } from '../../../types';
+import { CustomSelect } from '../../common/CustomSelect';
 
 interface CreateTransactionModalProps {
   theme: ThemeMode;
   lang?: Language;
   t: any;
   isOpen: boolean;
+  activeSubTab?: 'all' | 'receive' | 'issue' | 'transfer' | 'adjustment';
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
   isSubmitting: boolean;
@@ -70,6 +72,7 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
   lang = 'th',
   t,
   isOpen,
+  activeSubTab = 'all',
   onClose,
   onSubmit,
   isSubmitting,
@@ -112,6 +115,36 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
   if (!isOpen) return null;
   const isEn = lang === 'en';
 
+  const getModalTitle = () => {
+    switch (formType) {
+      case 'RECEIVE':
+        return isEn ? 'Receive Goods (GR)' : 'บันทึกการรับสินค้าเข้าคลัง (Goods Receipt)';
+      case 'ISSUE':
+        return isEn ? 'Create Goods Issue (GI)' : 'สร้างใบเบิก/จ่ายสินค้าออกจากคลัง (Goods Issue)';
+      case 'TRANSFER':
+        return isEn ? 'Create Stock Transfer (TR)' : 'สร้างใบโอนย้ายสินค้าระหว่างคลัง/ตำแหน่ง (Stock Transfer)';
+      case 'ADJUSTMENT':
+        return isEn ? 'Create Stock Adjustment (ADJ)' : 'สร้างใบปรับยอดสต็อกสินค้า (Stock Adjustment)';
+      default:
+        return t.modalNewTransaction;
+    }
+  };
+
+  const getModalSubtitle = () => {
+    switch (formType) {
+      case 'RECEIVE':
+        return isEn ? 'Record incoming goods from supplier and allocate to bin location' : 'บันทึกการรับสินค้าจากซัพพลายเออร์ พร้อมระบุล็อต วันหมดอายุ และตำแหน่งจัดเก็บ';
+      case 'ISSUE':
+        return isEn ? 'Record outgoing goods issue for sales or department consumption' : 'บันทึกการเบิกจ่ายสินค้า ตัดสต็อกออกจากคลัง พร้อมระบุผู้รับและเหตุผลการเบิก';
+      case 'TRANSFER':
+        return isEn ? 'Transfer stock between warehouses or bin locations' : 'โอนย้ายสินค้าข้ามคลัง หรือย้ายตำแหน่งชั้นวางภายในคลัง';
+      case 'ADJUSTMENT':
+        return isEn ? 'Adjust inventory balance from count variance or damage' : 'ปรับปรุงยอดสต็อกเพิ่ม/ลด จากผลต่างการตรวจนับ หรือสินค้าชำรุด';
+      default:
+        return isEn ? 'Record stock movements and inventory ledger transactions' : 'บันทึกรายการเคลื่อนไหวและธุรกรรมสินค้าคงคลัง (Stock Movement)';
+    }
+  };
+
   return createPortal(
     <div className="fixed inset-0 z-[9999] overflow-hidden bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
       {/* Backdrop click to close */}
@@ -127,15 +160,31 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
         {/* Enterprise Pro Modal Header */}
         <div className="p-5 sm:p-6 flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 shrink-0 bg-slate-50/75 dark:bg-slate-900/90 z-10">
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-11 h-11 rounded-2xl flex items-center justify-center border shadow-xs shrink-0 text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20">
+            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center border shadow-xs shrink-0 ${
+              formType === 'RECEIVE'
+                ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                : formType === 'ISSUE'
+                ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20'
+                : formType === 'TRANSFER'
+                ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border-indigo-500/20'
+                : 'text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/20'
+            }`}>
               <Boxes className="w-5 h-5" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tracking-tight">
-                  {t.modalNewTransaction}
+                  {getModalTitle()}
                 </h3>
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full border shadow-2xs bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800">
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border shadow-2xs ${
+                  formType === 'RECEIVE'
+                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                    : formType === 'ISSUE'
+                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                    : formType === 'TRANSFER'
+                    ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
+                    : 'bg-purple-50 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                }`}>
                   {formType === 'RECEIVE'
                     ? isEn ? 'Receive GR' : 'รับเข้า GR'
                     : formType === 'ISSUE'
@@ -146,7 +195,7 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5 truncate">
-                {isEn ? 'Record stock movements and inventory ledger transactions' : 'บันทึกรายการเคลื่อนไหวและธุรกรรมสินค้าคงคลัง (Stock Movement)'}
+                {getModalSubtitle()}
               </p>
             </div>
           </div>
@@ -163,34 +212,36 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
         {/* Modal Form with Scrollable Content & Pinned Footer */}
         <form onSubmit={onSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
           <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
-            {/* Type Switcher Pills */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                {t.transType} *
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {[
-                  { type: 'RECEIVE' as TransactionType, label: '1. Receive (GR)', icon: ArrowDownLeft, color: 'text-emerald-500' },
-                  { type: 'ISSUE' as TransactionType, label: '2. Issue (GI)', icon: ArrowUpRight, color: 'text-amber-500' },
-                  { type: 'TRANSFER' as TransactionType, label: '3. Transfer (TR)', icon: ArrowRightLeft, color: 'text-indigo-500' },
-                  { type: 'ADJUSTMENT' as TransactionType, label: '4. Adjust (ADJ)', icon: SlidersHorizontal, color: 'text-purple-500' },
-                ].map((btn) => (
-                  <button
-                    type="button"
-                    key={btn.type}
-                    onClick={() => setFormType(btn.type)}
-                    className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-xs font-bold transition border cursor-pointer ${
-                      formType === btn.type
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/30'
-                        : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <btn.icon className={`w-3.5 h-3.5 ${formType === btn.type ? 'text-white' : btn.color}`} />
-                    {btn.label}
-                  </button>
-                ))}
+            {/* Type Switcher Pills (Show ONLY when on 'all' transactions view) */}
+            {(!activeSubTab || activeSubTab === 'all') && (
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
+                  {t.transType} *
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {[
+                    { type: 'RECEIVE' as TransactionType, label: '1. Receive (GR)', icon: ArrowDownLeft, color: 'text-emerald-500' },
+                    { type: 'ISSUE' as TransactionType, label: '2. Issue (GI)', icon: ArrowUpRight, color: 'text-amber-500' },
+                    { type: 'TRANSFER' as TransactionType, label: '3. Transfer (TR)', icon: ArrowRightLeft, color: 'text-indigo-500' },
+                    { type: 'ADJUSTMENT' as TransactionType, label: '4. Adjust (ADJ)', icon: SlidersHorizontal, color: 'text-purple-500' },
+                  ].map((btn) => (
+                    <button
+                      type="button"
+                      key={btn.type}
+                      onClick={() => setFormType(btn.type)}
+                      className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-xs font-bold transition border cursor-pointer ${
+                        formType === btn.type
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/30'
+                          : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <btn.icon className={`w-3.5 h-3.5 ${formType === btn.type ? 'text-white' : btn.color}`} />
+                      {btn.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Dynamic Form Fields based on Type */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -214,17 +265,19 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     {t.supplier} *
                   </label>
-                  <select
+                  <CustomSelect
+                    theme={theme}
                     value={formSupplierId}
-                    onChange={(e) => setFormSupplierId(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl text-xs font-medium bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
-                  >
-                    {suppliersList.map((sup) => (
-                      <option key={sup.id} value={sup.id}>
-                        {sup.name} ({sup.code})
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setFormSupplierId}
+                    searchable={true}
+                    placeholder="-- เลือกซัพพลายเออร์ --"
+                    searchPlaceholder="ค้นหาชื่อหรือรหัสคู่ค้า..."
+                    options={suppliersList.map((sup) => ({
+                      value: sup.id,
+                      label: sup.name,
+                      sublabel: sup.code,
+                    }))}
+                  />
                 </div>
               )}
 
@@ -342,17 +395,19 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
                   <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                     {t.productName} *
                   </label>
-                  <select
+                  <CustomSelect
+                    theme={theme}
                     value={selectedProductId}
-                    onChange={(e) => setSelectedProductId(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
-                  >
-                    {productsList.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ({p.sku}) — คงเหลือ: {p.stockOnHand} {p.uom}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setSelectedProductId}
+                    searchable={true}
+                    placeholder="-- ค้นหาและเลือกสินค้า --"
+                    searchPlaceholder="พิมพ์ชื่อสินค้า, SKU, หรือรหัส..."
+                    options={productsList.map((p) => ({
+                      value: p.id,
+                      label: `${p.name} (${p.sku})`,
+                      sublabel: `คงเหลือ: ${p.stockOnHand} ${p.uom}`,
+                    }))}
+                  />
                 </div>
 
                 <div>
@@ -365,7 +420,7 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
                     value={formQty}
                     onChange={(e) => setFormQty(Math.max(1, Number(e.target.value)))}
                     required
-                    className="w-full px-3.5 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full h-[42px] px-3.5 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -415,17 +470,19 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
                     <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                       {t.sourceLocation} (From Bin) *
                     </label>
-                    <select
+                    <CustomSelect
+                      theme={theme}
                       value={fromBinId}
-                      onChange={(e) => setFromBinId(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
-                    >
-                      {warehousesList.map((b) => (
-                        <option key={b.id} value={b.id}>
-                          {b.binCode} — {b.warehouseName.split(' ')[0]} ({b.zone.split(' ')[0]})
-                        </option>
-                      ))}
-                    </select>
+                      onChange={setFromBinId}
+                      searchable={true}
+                      placeholder="-- เลือกตำแหน่งชั้นวางต้นทาง --"
+                      searchPlaceholder="ค้นหารหัส Bin, โซน หรือคลัง..."
+                      options={warehousesList.map((b) => ({
+                        value: b.id,
+                        label: b.binCode,
+                        sublabel: `${b.warehouseName} (โซน ${b.zone})`,
+                      }))}
+                    />
                   </div>
                 )}
 
@@ -434,17 +491,19 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
                     <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                       {t.destLocation} (To Bin) *
                     </label>
-                    <select
+                    <CustomSelect
+                      theme={theme}
                       value={toBinId}
-                      onChange={(e) => setToBinId(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
-                    >
-                      {warehousesList.map((b) => (
-                        <option key={b.id} value={b.id}>
-                          {b.binCode} — {b.warehouseName.split(' ')[0]} ({b.zone.split(' ')[0]})
-                        </option>
-                      ))}
-                    </select>
+                      onChange={setToBinId}
+                      searchable={true}
+                      placeholder="-- เลือกตำแหน่งชั้นวางปลายทาง --"
+                      searchPlaceholder="ค้นหารหัส Bin, โซน หรือคลัง..."
+                      options={warehousesList.map((b) => ({
+                        value: b.id,
+                        label: b.binCode,
+                        sublabel: `${b.warehouseName} (โซน ${b.zone})`,
+                      }))}
+                    />
                   </div>
                 )}
               </div>
@@ -472,7 +531,7 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
               onClick={onClose}
               className="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition cursor-pointer"
             >
-              {t.cancel}
+              {t?.cancel || 'ยกเลิก'}
             </button>
             <button
               type="submit"

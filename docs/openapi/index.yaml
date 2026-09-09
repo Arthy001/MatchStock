@@ -1,0 +1,407 @@
+openapi: 3.0.0
+info:
+  title: MatchStock API
+  description: |-
+    RFID inventory ingestion + management API. Every route below is shown at its real /api/v1/... path. Most endpoints require a user JWT (sign in via POST /api/v1/auth/login, then click "Authorize" below and paste the accessToken). POST /api/v1/ingestion/readings is authenticated differently: each request is signed with the device secret rather than carrying a bearer token - see that endpoint's description for the X-Device-Key-Id/X-Signature headers.
+
+    Response envelope: every successful response is wrapped as `{ "success": true, "data": <shown below>, "message": string, "meta"?: {page,limit,totalCount,totalPages} }` (`meta` only on paginated list endpoints) - the schemas documented per endpoint below describe the `data` field only, not the outer envelope. Every error response is `{ "success": false, "message": string, "errors": string[] }` - `message` is a fixed category label (e.g. "Validation failed", "Not found"), the actual reason(s) are always in `errors` (the real HTTP status code is on the response line, not duplicated in the body). A handful of non-JSON endpoints (file downloads, the RFID ingestion endpoint, the payment webhook) are exempt and return their body unwrapped - each says so in its own description.
+  version: '1.0'
+  contact: {}
+tags: []
+servers:
+  - url: https://match-stock.ddns.net/api/v1
+    description: Production (OCI VM)
+  - url: http://localhost:3010/api/v1
+    description: Local Development Server
+paths:
+  /auth/login:
+    $ref: ./paths/auth.yaml#/auth_login
+  /auth/me:
+    $ref: ./paths/auth.yaml#/auth_me
+  /auth/refresh:
+    $ref: ./paths/auth.yaml#/auth_refresh
+  /auth/logout:
+    $ref: ./paths/auth.yaml#/auth_logout
+  /auth/logout-all:
+    $ref: ./paths/auth.yaml#/auth_logout_all
+  /users:
+    $ref: ./paths/users-rbac.yaml#/users
+  /users/{id}:
+    $ref: ./paths/users-rbac.yaml#/users__id
+  /users/{id}/deactivate:
+    $ref: ./paths/users-rbac.yaml#/users__id__deactivate
+  /products:
+    $ref: ./paths/master-data/products.yaml#/products
+  /products/{id}:
+    $ref: ./paths/master-data/products.yaml#/products__id
+  /products/{id}/images:
+    $ref: ./paths/master-data/products.yaml#/products__id__images
+  /products/{id}/images/{imageId}:
+    $ref: ./paths/master-data/products.yaml#/products__id__images__imageId
+  /products/{id}/images/reorder:
+    $ref: ./paths/master-data/products.yaml#/products__id__images_reorder
+  /units:
+    $ref: ./paths/master-data/units.yaml#/units
+  /units/{id}:
+    $ref: ./paths/master-data/units.yaml#/units__id
+  /units/{id}/deactivate:
+    $ref: ./paths/master-data/units.yaml#/units__id__deactivate
+  /brands:
+    $ref: ./paths/master-data/brands.yaml#/brands
+  /brands/{id}:
+    $ref: ./paths/master-data/brands.yaml#/brands__id
+  /brands/{id}/deactivate:
+    $ref: ./paths/master-data/brands.yaml#/brands__id__deactivate
+  /manufacturers:
+    $ref: ./paths/master-data/manufacturers.yaml#/manufacturers
+  /manufacturers/{id}:
+    $ref: ./paths/master-data/manufacturers.yaml#/manufacturers__id
+  /manufacturers/{id}/deactivate:
+    $ref: ./paths/master-data/manufacturers.yaml#/manufacturers__id__deactivate
+  /suppliers:
+    $ref: ./paths/master-data/suppliers.yaml#/suppliers
+  /suppliers/{id}:
+    $ref: ./paths/master-data/suppliers.yaml#/suppliers__id
+  /suppliers/{id}/deactivate:
+    $ref: ./paths/master-data/suppliers.yaml#/suppliers__id__deactivate
+  /categories:
+    $ref: ./paths/master-data/categories.yaml#/categories
+  /categories/{id}:
+    $ref: ./paths/master-data/categories.yaml#/categories__id
+  /categories/{id}/deactivate:
+    $ref: ./paths/master-data/categories.yaml#/categories__id__deactivate
+  /tax-types:
+    $ref: ./paths/master-data/tax-types.yaml#/tax_types
+  /tax-types/{id}:
+    $ref: ./paths/master-data/tax-types.yaml#/tax_types__id
+  /tax-types/{id}/deactivate:
+    $ref: ./paths/master-data/tax-types.yaml#/tax_types__id__deactivate
+  /barcode-symbologies:
+    $ref: ./paths/master-data/barcode-symbologies.yaml#/barcode_symbologies
+  /barcode-symbologies/{id}:
+    $ref: ./paths/master-data/barcode-symbologies.yaml#/barcode_symbologies__id
+  /barcode-symbologies/{id}/deactivate:
+    $ref: ./paths/master-data/barcode-symbologies.yaml#/barcode_symbologies__id__deactivate
+  /warehouses:
+    $ref: ./paths/master-data/warehouses.yaml#/warehouses
+  /warehouses/{id}:
+    $ref: ./paths/master-data/warehouses.yaml#/warehouses__id
+  /warehouses/{id}/stock:
+    $ref: ./paths/master-data/warehouses.yaml#/warehouses__id__stock
+  /warehouses/{id}/deactivate:
+    $ref: ./paths/master-data/warehouses.yaml#/warehouses__id__deactivate
+  /warehouses/{id}/blueprint:
+    $ref: ./paths/master-data/warehouses.yaml#/warehouses__id__blueprint
+  /warehouses/{id}/bins/batch:
+    $ref: ./paths/master-data/warehouses.yaml#/warehouses__id__bins_batch
+  /warehouses/{id}/bins:
+    $ref: ./paths/master-data/warehouses.yaml#/warehouses__id__bins
+  /warehouses/{id}/bins/{binId}:
+    $ref: ./paths/master-data/warehouses.yaml#/warehouses__id__bins__binId
+  /warehouses/{id}/bins/{binId}/deactivate:
+    $ref: ./paths/master-data/warehouses.yaml#/warehouses__id__bins__binId__deactivate
+  /tags:
+    $ref: ./paths/rfid/devices.yaml#/tags
+  /tags/{tagId}/bind:
+    $ref: ./paths/rfid/devices.yaml#/tags__tagId__bind
+  /tags/{tagId}/unbind:
+    $ref: ./paths/rfid/devices.yaml#/tags__tagId__unbind
+  /tags/unbound:
+    $ref: ./paths/rfid/devices.yaml#/tags_unbound
+  /tags/{tagId}:
+    $ref: ./paths/rfid/devices.yaml#/tags__tagId
+  /devices:
+    $ref: ./paths/rfid/devices.yaml#/devices
+  /devices/{id}:
+    $ref: ./paths/rfid/devices.yaml#/devices__id
+  /devices/{id}/credentials/rotate:
+    $ref: ./paths/rfid/devices.yaml#/devices__id__credentials_rotate
+  /devices/{id}/credentials/revoke:
+    $ref: ./paths/rfid/devices.yaml#/devices__id__credentials_revoke
+  /webhook-subscriptions:
+    $ref: ./paths/webhooks.yaml#/webhook_subscriptions
+  /webhook-subscriptions/{id}:
+    $ref: ./paths/webhooks.yaml#/webhook_subscriptions__id
+  /webhook-subscriptions/{id}/rotate-secret:
+    $ref: ./paths/webhooks.yaml#/webhook_subscriptions__id__rotate_secret
+  /webhook-subscriptions/{id}/deliveries:
+    $ref: ./paths/webhooks.yaml#/webhook_subscriptions__id__deliveries
+  /alerts:
+    $ref: ./paths/inventory/alerts.yaml#/alerts
+  /goods-receipts:
+    $ref: ./paths/inventory/goods-receipts.yaml#/goods_receipts
+  /goods-receipts/{id}:
+    $ref: ./paths/inventory/goods-receipts.yaml#/goods_receipts__id
+  /goods-receipts/{id}/lines:
+    $ref: ./paths/inventory/goods-receipts.yaml#/goods_receipts__id__lines
+  /stock/balances:
+    $ref: ./paths/inventory/stock-balances.yaml#/stock_balances
+  /stock/lookup:
+    $ref: ./paths/inventory/stock-balances.yaml#/stock_lookup
+  /goods-issues:
+    $ref: ./paths/inventory/goods-issues.yaml#/goods_issues
+  /goods-issues/{id}:
+    $ref: ./paths/inventory/goods-issues.yaml#/goods_issues__id
+  /goods-issues/{id}/pick:
+    $ref: ./paths/inventory/goods-issues.yaml#/goods_issues__id__pick
+  /goods-issues/{id}/pack:
+    $ref: ./paths/inventory/goods-issues.yaml#/goods_issues__id__pack
+  /goods-issues/{id}/stage-load:
+    $ref: ./paths/inventory/goods-issues.yaml#/goods_issues__id__stage_load
+  /goods-issues/{id}/dispatch:
+    $ref: ./paths/inventory/goods-issues.yaml#/goods_issues__id__dispatch
+  /goods-issues/{id}/dispatch-by-quantity:
+    $ref: ./paths/inventory/goods-issues.yaml#/goods_issues__id__dispatch_by_quantity
+  /goods-issues/{id}/reserve:
+    $ref: ./paths/inventory/goods-issues.yaml#/goods_issues__id__reserve
+  /goods-issues/{id}/release:
+    $ref: ./paths/inventory/goods-issues.yaml#/goods_issues__id__release
+  /stock-transfers:
+    $ref: ./paths/inventory/stock-transfers.yaml#/stock_transfers
+  /stock-transfers/{id}:
+    $ref: ./paths/inventory/stock-transfers.yaml#/stock_transfers__id
+  /stock-transfers/{id}/complete:
+    $ref: ./paths/inventory/stock-transfers.yaml#/stock_transfers__id__complete
+  /stock-transfers/{id}/cancel:
+    $ref: ./paths/inventory/stock-transfers.yaml#/stock_transfers__id__cancel
+  /stock-adjustments:
+    $ref: ./paths/inventory/stock-adjustments.yaml#/stock_adjustments
+  /stock-adjustments/{id}:
+    $ref: ./paths/inventory/stock-adjustments.yaml#/stock_adjustments__id
+  /cycle-counts:
+    $ref: ./paths/inventory/cycle-counts.yaml#/cycle_counts
+  /cycle-counts/{id}:
+    $ref: ./paths/inventory/cycle-counts.yaml#/cycle_counts__id
+  /cycle-counts/{id}/submit-count:
+    $ref: ./paths/inventory/cycle-counts.yaml#/cycle_counts__id__submit_count
+  /cycle-counts/{id}/close:
+    $ref: ./paths/inventory/cycle-counts.yaml#/cycle_counts__id__close
+  /cycle-counts/{id}/approve:
+    $ref: ./paths/inventory/cycle-counts.yaml#/cycle_counts__id__approve
+  /reports/stock-card/{productId}:
+    $ref: ./paths/reports.yaml#/reports_stock_card__productId
+  /reports/moving-analysis:
+    $ref: ./paths/reports.yaml#/reports_moving_analysis
+  /reports/stock-valuation:
+    $ref: ./paths/reports.yaml#/reports_stock_valuation
+  /import-export/{entityType}/template:
+    $ref: ./paths/import-export.yaml#/import_export__entityType__template
+  /import-export/{entityType}/export:
+    $ref: ./paths/import-export.yaml#/import_export__entityType__export
+  /import-export/{entityType}/import:
+    $ref: ./paths/import-export.yaml#/import_export__entityType__import
+  /ingestion/readings:
+    $ref: ./paths/rfid/ingestion.yaml#/ingestion_readings
+  /companies/register:
+    $ref: ./paths/tenants-companies.yaml#/companies_register
+  /companies/me:
+    $ref: ./paths/tenants-companies.yaml#/companies_me
+  /companies:
+    $ref: ./paths/tenants-companies.yaml#/companies
+  /companies/{id}:
+    $ref: ./paths/tenants-companies.yaml#/companies__id
+  /goods-receipts/staged-items:
+    $ref: ./paths/inventory/goods-receipts.yaml#/goods_receipts_staged_items
+  /putaway/suggest-bin:
+    $ref: ./paths/inventory/putaway.yaml#/putaway_suggest_bin
+  /putaway/confirm:
+    $ref: ./paths/inventory/putaway.yaml#/putaway_confirm
+  /billing/plans:
+    $ref: ./paths/billing.yaml#/billing_plans
+  /billing/current-subscription:
+    $ref: ./paths/billing.yaml#/billing_current_subscription
+  /billing/subscribe:
+    $ref: ./paths/billing.yaml#/billing_subscribe
+  /billing/cancel:
+    $ref: ./paths/billing.yaml#/billing_cancel
+  /billing/invoices:
+    $ref: ./paths/billing.yaml#/billing_invoices
+  /billing/invoices/{id}:
+    $ref: ./paths/billing.yaml#/billing_invoices__id
+  /billing/payments:
+    $ref: ./paths/billing.yaml#/billing_payments
+  /billing/subscriptions:
+    $ref: ./paths/billing.yaml#/billing_subscriptions
+  /billing/subscriptions/{id}/cancel:
+    $ref: ./paths/billing.yaml#/billing_subscriptions__id__cancel
+  /billing/checkout:
+    $ref: ./paths/billing.yaml#/billing_checkout
+  /billing/_mock/complete/{chargeId}:
+    $ref: ./paths/billing.yaml#/billing__mock_complete__chargeId
+  /platform/billing/subscriptions:
+    $ref: ./paths/billing.yaml#/platform_billing_subscriptions
+  /platform/subscription-plans:
+    $ref: ./paths/billing.yaml#/platform_subscription_plans
+  /platform/subscription-plans/{id}:
+    $ref: ./paths/billing.yaml#/platform_subscription_plans__id
+  /menu:
+    $ref: ./paths/users-rbac.yaml#/menu
+  /rentals:
+    $ref: ./paths/billing.yaml#/rentals
+  /rentals/{id}:
+    $ref: ./paths/billing.yaml#/rentals__id
+  /rentals/{id}/deposit-checkout:
+    $ref: ./paths/billing.yaml#/rentals__id__deposit_checkout
+  /zones:
+    $ref: ./paths/master-data/zones.yaml#/zones
+  /zones/{id}:
+    $ref: ./paths/master-data/zones.yaml#/zones__id
+  /zones/{id}/deactivate:
+    $ref: ./paths/master-data/zones.yaml#/zones__id__deactivate
+components:
+  securitySchemes:
+    jwt:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http
+    platform-jwt:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http
+      description: Platform-admin token from POST /platform/auth/login - a separate credential space from tenant users, never interchangeable with the "jwt" scheme above.
+    device-key:
+      type: apiKey
+      in: header
+      name: X-Device-Key-Id
+      description: The prefix half of the issued API key (before the ".") - the secret half is never sent, see X-Signature.
+  schemas:
+    RefreshTokenDto:
+      $ref: ./components/schemas/auth.yaml#/RefreshTokenDto
+    CreateUserDto:
+      $ref: ./components/schemas/auth.yaml#/CreateUserDto
+    UpdateUserDto:
+      $ref: ./components/schemas/auth.yaml#/UpdateUserDto
+    UpdateProductDto:
+      $ref: ./components/schemas/master-data.yaml#/UpdateProductDto
+    ReorderProductImagesDto:
+      $ref: ./components/schemas/master-data.yaml#/ReorderProductImagesDto
+    CreateUnitDto:
+      $ref: ./components/schemas/master-data.yaml#/CreateUnitDto
+    UpdateUnitDto:
+      $ref: ./components/schemas/master-data.yaml#/UpdateUnitDto
+    CreateBrandDto:
+      $ref: ./components/schemas/master-data.yaml#/CreateBrandDto
+    UpdateBrandDto:
+      $ref: ./components/schemas/master-data.yaml#/UpdateBrandDto
+    CreateManufacturerDto:
+      $ref: ./components/schemas/master-data.yaml#/CreateManufacturerDto
+    UpdateManufacturerDto:
+      $ref: ./components/schemas/master-data.yaml#/UpdateManufacturerDto
+    CreateSupplierDto:
+      $ref: ./components/schemas/master-data.yaml#/CreateSupplierDto
+    UpdateSupplierDto:
+      $ref: ./components/schemas/master-data.yaml#/UpdateSupplierDto
+    CreateCategoryDto:
+      $ref: ./components/schemas/master-data.yaml#/CreateCategoryDto
+    UpdateCategoryDto:
+      $ref: ./components/schemas/master-data.yaml#/UpdateCategoryDto
+    CreateTaxTypeDto:
+      $ref: ./components/schemas/master-data.yaml#/CreateTaxTypeDto
+    UpdateTaxTypeDto:
+      $ref: ./components/schemas/master-data.yaml#/UpdateTaxTypeDto
+    CreateBarcodeSymbologyDto:
+      $ref: ./components/schemas/master-data.yaml#/CreateBarcodeSymbologyDto
+    UpdateBarcodeSymbologyDto:
+      $ref: ./components/schemas/master-data.yaml#/UpdateBarcodeSymbologyDto
+    CreateBinLocationDto:
+      $ref: ./components/schemas/master-data.yaml#/CreateBinLocationDto
+    UpdateWarehouseDto:
+      $ref: ./components/schemas/master-data.yaml#/UpdateWarehouseDto
+    UpdateBinLocationDto:
+      $ref: ./components/schemas/master-data.yaml#/UpdateBinLocationDto
+    UpdateBlueprintDto:
+      $ref: ./components/schemas/common.yaml#/UpdateBlueprintDto
+    BatchSaveBinItemDto:
+      $ref: ./components/schemas/master-data.yaml#/BatchSaveBinItemDto
+    BatchSaveBinsDto:
+      $ref: ./components/schemas/master-data.yaml#/BatchSaveBinsDto
+    CreateTagDto:
+      $ref: ./components/schemas/rfid.yaml#/CreateTagDto
+    BindTagDto:
+      $ref: ./components/schemas/master-data.yaml#/BindTagDto
+    CreateDeviceDto:
+      $ref: ./components/schemas/common.yaml#/CreateDeviceDto
+    UpdateDeviceDto:
+      $ref: ./components/schemas/common.yaml#/UpdateDeviceDto
+    CreateWebhookSubscriptionDto:
+      $ref: ./components/schemas/billing.yaml#/CreateWebhookSubscriptionDto
+    UpdateWebhookSubscriptionDto:
+      $ref: ./components/schemas/billing.yaml#/UpdateWebhookSubscriptionDto
+    CreateGoodsReceiptDto:
+      $ref: ./components/schemas/inventory.yaml#/CreateGoodsReceiptDto
+    ReceiveGoodsDto:
+      $ref: ./components/schemas/common.yaml#/ReceiveGoodsDto
+    CreateGoodsIssueDto:
+      $ref: ./components/schemas/inventory.yaml#/CreateGoodsIssueDto
+    RecordPickItemDto:
+      $ref: ./components/schemas/inventory.yaml#/RecordPickItemDto
+    RecordPickDto:
+      $ref: ./components/schemas/inventory.yaml#/RecordPickDto
+    RecordPackDto:
+      $ref: ./components/schemas/inventory.yaml#/RecordPackDto
+    RecordStageLoadDto:
+      $ref: ./components/schemas/inventory.yaml#/RecordStageLoadDto
+    DispatchGoodsDto:
+      $ref: ./components/schemas/common.yaml#/DispatchGoodsDto
+    DispatchByQuantityDto:
+      $ref: ./components/schemas/common.yaml#/DispatchByQuantityDto
+    CreateStockTransferDto:
+      $ref: ./components/schemas/inventory.yaml#/CreateStockTransferDto
+    StockAdjustmentLineDto:
+      $ref: ./components/schemas/inventory.yaml#/StockAdjustmentLineDto
+    CreateStockAdjustmentDto:
+      $ref: ./components/schemas/inventory.yaml#/CreateStockAdjustmentDto
+    CreateCycleCountDto:
+      $ref: ./components/schemas/inventory.yaml#/CreateCycleCountDto
+    SubmitCycleCountDto:
+      $ref: ./components/schemas/inventory.yaml#/SubmitCycleCountDto
+    ReadingDto:
+      $ref: ./components/schemas/rfid.yaml#/ReadingDto
+    IngestBatchDto:
+      $ref: ./components/schemas/rfid.yaml#/IngestBatchDto
+    RegisterTenantDto:
+      $ref: ./components/schemas/auth.yaml#/RegisterTenantDto
+    UpdateTenantDto:
+      $ref: ./components/schemas/billing.yaml#/UpdateTenantDto
+    CreateCompanyDto:
+      $ref: ./components/schemas/billing.yaml#/CreateCompanyDto
+    UpdateCompanyDto:
+      $ref: ./components/schemas/billing.yaml#/UpdateCompanyDto
+    CreateGoodsReceiptItemDto:
+      $ref: ./components/schemas/inventory.yaml#/CreateGoodsReceiptItemDto
+    SubscribeRequestDto:
+      $ref: ./components/schemas/common.yaml#/SubscribeRequestDto
+    CancelSubscriptionDto:
+      $ref: ./components/schemas/billing.yaml#/CancelSubscriptionDto
+    CreateSubscriptionDto:
+      $ref: ./components/schemas/billing.yaml#/CreateSubscriptionDto
+    CheckoutDto:
+      $ref: ./components/schemas/billing.yaml#/CheckoutDto
+    CreateSubscriptionPlanDto:
+      $ref: ./components/schemas/billing.yaml#/CreateSubscriptionPlanDto
+    UpdateSubscriptionPlanDto:
+      $ref: ./components/schemas/billing.yaml#/UpdateSubscriptionPlanDto
+    FeatureNotIncludedError:
+      $ref: ./components/schemas/common.yaml#/FeatureNotIncludedError
+    QuotaExceededError:
+      $ref: ./components/schemas/common.yaml#/QuotaExceededError
+    CollectDepositDto:
+      $ref: ./components/schemas/billing.yaml#/CollectDepositDto
+    CreateGoodsReceiptLineDto:
+      $ref: ./components/schemas/inventory.yaml#/CreateGoodsReceiptLineDto
+    StockBalanceDto:
+      $ref: ./components/schemas/inventory.yaml#/StockBalanceDto
+    StockLookupResponseDto:
+      $ref: ./components/schemas/inventory.yaml#/StockLookupResponseDto
+    CreateGoodsIssueItemDto:
+      $ref: ./components/schemas/inventory.yaml#/CreateGoodsIssueItemDto
+    CreateStockTransferItemDto:
+      $ref: ./components/schemas/inventory.yaml#/CreateStockTransferItemDto
+    CreateStockAdjustmentItemDto:
+      $ref: ./components/schemas/inventory.yaml#/CreateStockAdjustmentItemDto
+    ConfirmPutawayDto:
+      $ref: ./components/schemas/inventory.yaml#/ConfirmPutawayDto
+    CreateZoneDto:
+      $ref: ./components/schemas/master-data.yaml#/CreateZoneDto
+    UpdateZoneDto:
+      $ref: ./components/schemas/master-data.yaml#/UpdateZoneDto

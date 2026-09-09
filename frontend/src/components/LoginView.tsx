@@ -138,8 +138,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
             name: userObj.fullName || userObj.email.split('@')[0],
             email: userObj.email,
             role: (userObj.role as any) || 'admin',
-            tenantId: userObj.tenantId || tenantObj?.id || 'f97fe2dc-486e-4054-931c-aadf92823e69',
-            tenantName: tenantObj?.name || (userObj.email.includes('acme') ? 'Acme Industrial Supplies' : 'WH-Bangkok Center (Enterprise)'),
+            tenantId: userObj.tenantId || (userObj as any).tenant_id || tenantObj?.id || '',
+            tenantName: tenantObj?.name || 'MatchStock Tenant',
           };
           onLoginSuccess(loggedUser);
           return;

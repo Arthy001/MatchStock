@@ -1,16 +1,18 @@
 import React from 'react';
 import {
   Search,
-  FileText,
-  MapPin,
-  Package,
+  CheckCircle2,
+  Clock,
+  XCircle,
   ArrowDownLeft,
   ArrowUpRight,
   ArrowRightLeft,
   SlidersHorizontal,
-  CheckCircle2,
-  Clock,
-  XCircle,
+  Package,
+  FileText,
+  MapPin,
+  Truck,
+  Boxes,
 } from 'lucide-react';
 import { ThemeMode, StockTransaction, TransactionType, TransactionStatus } from '../../../types';
 
@@ -47,28 +49,28 @@ export const TransactionHistoryTable: React.FC<TransactionHistoryTableProps> = (
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
             <ArrowDownLeft className="w-3.5 h-3.5" />
-            {t.typeReceive}
+            {t.typeReceive || 'รับเข้าคลัง (GR)'}
           </span>
         );
       case 'ISSUE':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
             <ArrowUpRight className="w-3.5 h-3.5" />
-            {t.typeIssue}
+            {t.typeIssue || 'เบิก/จ่าย (GI)'}
           </span>
         );
       case 'TRANSFER':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
             <ArrowRightLeft className="w-3.5 h-3.5" />
-            {t.typeTransfer}
+            {t.typeTransfer || 'โอนย้าย (TR)'}
           </span>
         );
       case 'ADJUSTMENT':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
             <SlidersHorizontal className="w-3.5 h-3.5" />
-            {t.typeAdjustment}
+            {t.typeAdjustment || 'ปรับยอด (ADJ)'}
           </span>
         );
       default:
@@ -80,29 +82,35 @@ export const TransactionHistoryTable: React.FC<TransactionHistoryTableProps> = (
     switch (status) {
       case 'COMPLETED':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="w-3 h-3" />
-            {t.statusCompleted}
+            {t.statusCompleted || 'เสร็จสมบูรณ์'}
           </span>
         );
       case 'PENDING':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400">
             <Clock className="w-3 h-3" />
-            {t.statusPending}
+            {t.statusPending || 'รอดำเนินการ'}
           </span>
         );
       case 'CANCELLED':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400">
             <XCircle className="w-3 h-3" />
-            {t.statusCancelled}
+            {t.statusCancelled || 'ยกเลิก'}
           </span>
         );
       default:
-        return null;
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600">
+            {status}
+          </span>
+        );
     }
   };
+
+  const isReceiveTab = activeSubTab === 'receive';
 
   return (
     <div className="space-y-4">
@@ -118,7 +126,11 @@ export const TransactionHistoryTable: React.FC<TransactionHistoryTableProps> = (
             type="text"
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            placeholder={t.searchPlaceholder}
+            placeholder={
+              isReceiveTab
+                ? 'ค้นหาเลขที่ใบรับ GR, เลขที่ PO, หรือชื่อผู้จำหน่าย...'
+                : t.searchPlaceholder || 'ค้นหาเลขที่เอกสาร, ผู้จำหน่าย, สินค้า...'
+            }
             className="w-full pl-10 pr-4 py-2 rounded-xl text-xs md:text-sm font-medium bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
           />
         </div>
@@ -146,9 +158,9 @@ export const TransactionHistoryTable: React.FC<TransactionHistoryTableProps> = (
             className="px-3 py-2 rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
           >
             <option value="ALL">ทุกสถานะ (All Status)</option>
-            <option value="COMPLETED">{t.statusCompleted}</option>
-            <option value="PENDING">{t.statusPending}</option>
-            <option value="CANCELLED">{t.statusCancelled}</option>
+            <option value="COMPLETED">{t.statusCompleted || 'เสร็จสมบูรณ์'}</option>
+            <option value="PENDING">{t.statusPending || 'รอดำเนินการ'}</option>
+            <option value="CANCELLED">{t.statusCancelled || 'ยกเลิก'}</option>
           </select>
         </div>
       </div>
@@ -160,33 +172,45 @@ export const TransactionHistoryTable: React.FC<TransactionHistoryTableProps> = (
         }`}
       >
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1200px] text-left border-collapse">
+          <table className="w-full min-w-[1000px] text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-950/40 text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                <th className="py-3.5 px-4 whitespace-nowrap min-w-[160px]">{t.docNo}</th>
-                <th className="py-3.5 px-4 whitespace-nowrap min-w-[130px]">{t.transType}</th>
-                <th className="py-3.5 px-4 min-w-[180px]">{t.productName}</th>
-                <th className="py-3.5 px-4 whitespace-nowrap min-w-[120px]">{t.lotBatch}</th>
-                <th className="py-3.5 px-4 min-w-[160px]">
-                  {t.sourceLocation} / {t.destLocation}
-                </th>
-                <th className="py-3.5 px-4 text-right whitespace-nowrap min-w-[90px]">{t.quantity}</th>
-                <th className="py-3.5 px-4 text-right whitespace-nowrap min-w-[100px]">{t.totalValue}</th>
-                <th className="py-3.5 px-4 text-center whitespace-nowrap min-w-[100px]">{t.status}</th>
-                <th className="py-3.5 px-4 text-center whitespace-nowrap min-w-[100px]">{t.actions}</th>
+                <th className="py-3.5 px-4 whitespace-nowrap min-w-[160px]">เลขที่เอกสาร / วันที่</th>
+                {isReceiveTab ? (
+                  <>
+                    <th className="py-3.5 px-4 min-w-[200px]">ผู้จัดจำหน่าย / เลขที่อ้างอิง</th>
+                    <th className="py-3.5 px-4 min-w-[180px]">คลังสินค้าปลายทาง</th>
+                    <th className="py-3.5 px-4 text-center whitespace-nowrap min-w-[120px]">จำนวนรายการ</th>
+                    <th className="py-3.5 px-4 text-right whitespace-nowrap min-w-[130px]">ยอดรับเข้ารวม (ชิ้น)</th>
+                    <th className="py-3.5 px-4 text-right whitespace-nowrap min-w-[130px]">มูลค่ารวม (บาท)</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="py-3.5 px-4 whitespace-nowrap min-w-[130px]">{t.transType || 'ประเภท'}</th>
+                    <th className="py-3.5 px-4 min-w-[180px]">คู่ค้า / เลขที่อ้างอิง</th>
+                    <th className="py-3.5 px-4 min-w-[160px]">ต้นทาง / ปลายทาง</th>
+                    <th className="py-3.5 px-4 text-center whitespace-nowrap min-w-[110px]">จำนวนรายการ</th>
+                    <th className="py-3.5 px-4 text-right whitespace-nowrap min-w-[110px]">จำนวนรวม</th>
+                    <th className="py-3.5 px-4 text-right whitespace-nowrap min-w-[120px]">มูลค่ารวม</th>
+                  </>
+                )}
+                <th className="py-3.5 px-4 text-center whitespace-nowrap min-w-[100px]">{t.status || 'สถานะ'}</th>
+                <th className="py-3.5 px-4 text-center whitespace-nowrap min-w-[100px]">{t.actions || 'จัดการ'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
               {filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400 font-medium">
+                  <td colSpan={8} className="py-12 text-center text-slate-400 font-medium">
                     <Package className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-700 mb-2" />
-                    ไม่พบรายการธุรกรรมตามเงื่อนไขที่ค้นหา
+                    ไม่พบรายการใบรับสินค้าตามเงื่อนไขที่ค้นหา
                   </td>
                 </tr>
               ) : (
                 filteredTransactions.map((tx) => {
                   const firstItem = tx.items[0];
+                  const itemsCount = tx.items ? tx.items.length : 0;
+
                   return (
                     <tr
                       key={tx.id}
@@ -204,91 +228,103 @@ export const TransactionHistoryTable: React.FC<TransactionHistoryTableProps> = (
                         </div>
                       </td>
 
-                      {/* Transaction Type */}
-                      <td className="py-3.5 px-4 whitespace-nowrap">{renderTypeBadge(tx.type)}</td>
-
-                      {/* Product Name & SKU */}
-                      <td className="py-3.5 px-4 max-w-[220px]">
-                        <div className="font-semibold text-slate-900 dark:text-slate-100 truncate" title={firstItem?.productName}>
-                          {firstItem?.productName || '-'}
-                        </div>
-                        <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                          {firstItem?.sku} ({firstItem?.uom})
-                        </div>
-                      </td>
-
-                      {/* Lot / Batch & Expiry */}
-                      <td className="py-3.5 px-4 whitespace-nowrap">
-                        {firstItem?.lotNumber ? (
-                          <div>
-                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[11px]">
-                              {firstItem.lotNumber}
-                            </span>
-                            {firstItem.expDate && (
-                              <div className="text-[10px] text-rose-500 font-medium mt-0.5">
-                                EXP: {firstItem.expDate}
+                      {/* Subtab Specific Columns */}
+                      {isReceiveTab ? (
+                        <>
+                          {/* Supplier & Ref PO / Invoice */}
+                          <td className="py-3.5 px-4 min-w-[200px]">
+                            <div className="font-semibold text-slate-900 dark:text-slate-100 truncate flex items-center gap-1.5">
+                              <Truck className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span>{tx.supplierName && tx.supplierName !== '-' ? tx.supplierName : 'ไม่ระบุผู้จำหน่าย (รับคืน/ของแถม)'}</span>
+                            </div>
+                            {(tx.referenceNo && tx.referenceNo !== '-') && (
+                              <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-0.5">
+                                Ref: {tx.referenceNo}
                               </div>
                             )}
-                          </div>
-                        ) : (
-                          <span className="text-slate-400 text-xs">-</span>
-                        )}
-                      </td>
+                          </td>
 
-                      {/* Location: From / To */}
-                      <td className="py-3.5 px-4 text-[11px]">
-                        {tx.type === 'RECEIVE' && (
-                          <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
-                            <MapPin className="w-3.5 h-3.5 shrink-0" />
-                            <span>
-                              To: {firstItem?.toBinCode} ({firstItem?.toWarehouseName?.split(' ')[0]})
-                            </span>
-                          </div>
-                        )}
-                        {tx.type === 'ISSUE' && (
-                          <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
-                            <MapPin className="w-3.5 h-3.5 shrink-0" />
-                            <span>
-                              From: {firstItem?.fromBinCode} ({firstItem?.fromWarehouseName?.split(' ')[0]})
-                            </span>
-                          </div>
-                        )}
-                        {tx.type === 'TRANSFER' && (
-                          <div className="space-y-0.5">
-                            <div className="text-slate-500">
-                              From: <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{firstItem?.fromBinCode}</span>
+                          {/* Destination Warehouse */}
+                          <td className="py-3.5 px-4 min-w-[180px]">
+                            <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
+                              <MapPin className="w-3.5 h-3.5 shrink-0" />
+                              <span>{firstItem?.toWarehouseName || 'คลังสินค้าหลัก กรุงเทพฯ'}</span>
                             </div>
-                            <div className="text-indigo-600 dark:text-indigo-400 font-semibold">
-                              To: <span className="font-mono font-bold">{firstItem?.toBinCode}</span>
+                            <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                              {firstItem?.toBinCode ? `พิกัด: ${firstItem.toBinCode}` : 'พักจุดรับ (Staging Dock)'}
                             </div>
-                          </div>
-                        )}
-                        {tx.type === 'ADJUSTMENT' && (
-                          <div className="text-purple-600 dark:text-purple-400 font-medium">
-                            At: {firstItem?.fromBinCode || firstItem?.toBinCode}
-                          </div>
-                        )}
-                      </td>
+                          </td>
 
-                      {/* Quantity */}
-                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                        <div className="font-black text-slate-900 dark:text-slate-50 text-sm">
-                          {tx.type === 'RECEIVE' && `+${tx.totalQuantity}`}
-                          {tx.type === 'ISSUE' && `-${tx.totalQuantity}`}
-                          {tx.type === 'TRANSFER' && `${tx.totalQuantity}`}
-                          {tx.type === 'ADJUSTMENT' && (
-                            <span className={tx.adjustmentDirection === 'INCREASE' ? 'text-emerald-600' : 'text-rose-600'}>
-                              {tx.adjustmentDirection === 'INCREASE' ? `+${tx.totalQuantity}` : `-${tx.totalQuantity}`}
+                          {/* Line Items Count */}
+                          <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                              <Boxes className="w-3 h-3" />
+                              <span>{itemsCount} รายการ</span>
                             </span>
-                          )}
-                        </div>
-                        <div className="text-[10px] text-slate-400 uppercase">{firstItem?.uom}</div>
-                      </td>
+                          </td>
 
-                      {/* Total Value */}
-                      <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                        ฿{(tx.totalAmount || 0).toLocaleString()}
-                      </td>
+                          {/* Total Quantity (SUM) */}
+                          <td className="py-3.5 px-4 text-right whitespace-nowrap font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                            +{tx.totalQuantity.toLocaleString()}
+                          </td>
+
+                          {/* Total Value (SUM) */}
+                          <td className="py-3.5 px-4 text-right whitespace-nowrap font-mono font-bold text-slate-900 dark:text-slate-100 text-sm">
+                            ฿{(tx.totalAmount || 0).toLocaleString()}
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          {/* Generic Type */}
+                          <td className="py-3.5 px-4 whitespace-nowrap">{renderTypeBadge(tx.type)}</td>
+
+                          {/* Partner / Reference */}
+                          <td className="py-3.5 px-4 min-w-[180px]">
+                            <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+                              {tx.supplierName || tx.recipientName || '-'}
+                            </div>
+                            <div className="text-[11px] font-mono text-slate-500">{tx.referenceNo || '-'}</div>
+                          </td>
+
+                          {/* Location */}
+                          <td className="py-3.5 px-4 text-[11px]">
+                            {tx.type === 'RECEIVE' && (
+                              <span className="text-emerald-600 font-medium">To: {firstItem?.toWarehouseName || 'คลังหลัก'}</span>
+                            )}
+                            {tx.type === 'ISSUE' && (
+                              <span className="text-amber-600 font-medium">From: {firstItem?.fromWarehouseName || 'คลังหลัก'}</span>
+                            )}
+                            {tx.type === 'TRANSFER' && (
+                              <span className="text-indigo-600 font-medium">From {firstItem?.fromBinCode} → To {firstItem?.toBinCode}</span>
+                            )}
+                            {tx.type === 'ADJUSTMENT' && (
+                              <span className="text-purple-600 font-medium">At: {firstItem?.fromBinCode || firstItem?.toBinCode || 'คลังหลัก'}</span>
+                            )}
+                          </td>
+
+                          {/* Items Count */}
+                          <td className="py-3.5 px-4 text-center whitespace-nowrap font-semibold text-slate-600 dark:text-slate-300">
+                            {itemsCount} รายการ
+                          </td>
+
+                          {/* Total Quantity */}
+                          <td className="py-3.5 px-4 text-right whitespace-nowrap font-mono font-black text-sm">
+                            {tx.type === 'RECEIVE' && <span className="text-emerald-600">+{tx.totalQuantity.toLocaleString()}</span>}
+                            {tx.type === 'ISSUE' && <span className="text-amber-600">-{tx.totalQuantity.toLocaleString()}</span>}
+                            {tx.type === 'TRANSFER' && <span className="text-indigo-600">{tx.totalQuantity.toLocaleString()}</span>}
+                            {tx.type === 'ADJUSTMENT' && (
+                              <span className={tx.adjustmentDirection === 'INCREASE' ? 'text-emerald-600' : 'text-rose-600'}>
+                                {tx.adjustmentDirection === 'INCREASE' ? `+${tx.totalQuantity.toLocaleString()}` : `-${tx.totalQuantity.toLocaleString()}`}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Total Value */}
+                          <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                            ฿{(tx.totalAmount || 0).toLocaleString()}
+                          </td>
+                        </>
+                      )}
 
                       {/* Status */}
                       <td className="py-3.5 px-4 text-center whitespace-nowrap">{renderStatusBadge(tx.status)}</td>
@@ -302,7 +338,7 @@ export const TransactionHistoryTable: React.FC<TransactionHistoryTableProps> = (
                           }}
                           className="px-2.5 py-1 rounded-lg text-xs font-bold text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition cursor-pointer"
                         >
-                          {t.viewDetails}
+                          {t.viewDetails || 'ดูรายละเอียด'}
                         </button>
                       </td>
                     </tr>

@@ -1,0 +1,287 @@
+companies_register:
+  post:
+    operationId: CompaniesController_register_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/auth.yaml#/RegisterTenantDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              type: object
+    summary: Create a new tenant and its owner user in one call - the entry point for a brand-new customer.
+    tags:
+      - Companies
+companies_me:
+  get:
+    operationId: CompaniesController_getMe_v1
+    parameters: []
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: d01b933f-1a06-411a-9009-516a2a52c749
+                  name: Acme Demo Co
+                  slug: acme-demo
+                  contactEmail: null
+                  status: active
+                  createdByType: null
+                  createdById: null
+                  updatedByType: null
+                  updatedById: null
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Get the signed-in user's own tenant.
+    tags:
+      - Companies
+  patch:
+    operationId: CompaniesController_updateMe_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/billing.yaml#/UpdateTenantDto
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: d01b933f-1a06-411a-9009-516a2a52c749
+                  name: Acme Demo Co
+                  slug: acme-demo
+                  contactEmail: null
+                  status: active
+                  createdByType: null
+                  createdById: null
+                  updatedByType: null
+                  updatedById: null
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Update the signed-in user's own tenant (owner/admin only).
+    tags:
+      - Companies
+companies:
+  get:
+    operationId: CompaniesController_listCompanies_v1
+    parameters:
+      - name: page
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          default: 1
+          example: 1
+          type: number
+      - name: limit
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+          type: number
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    code: COMP-001
+                    name: MatchStock Retail Co., Ltd.
+                    taxId: '0105559012345'
+                    branchCode: '00000'
+                    branchName: Headquarters (สำนักงานใหญ่)
+                    phone: +66 2 555 0100
+                    email: contact@matchstock.com
+                    address: 88/1 Sukhumvit Rd, Bangkok 10110
+                    isHeadquarter: true
+                    createdAt: '2026-08-26T02:39:41.574Z'
+                    updatedAt: '2026-08-26T02:39:41.574Z'
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    summary: List the signed-in user's tenant companies/branches.
+    tags:
+      - Companies
+  post:
+    operationId: CompaniesController_createCompany_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/billing.yaml#/CreateCompanyDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  code: COMP-001
+                  name: MatchStock Retail Co., Ltd.
+                  taxId: '0105559012345'
+                  branchCode: '00000'
+                  branchName: Headquarters (สำนักงานใหญ่)
+                  phone: +66 2 555 0100
+                  email: contact@matchstock.com
+                  address: 88/1 Sukhumvit Rd, Bangkok 10110
+                  isHeadquarter: true
+                  createdAt: '2026-08-26T02:39:41.574Z'
+                  updatedAt: '2026-08-26T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Create a company/branch under the signed-in tenant.
+    tags:
+      - Companies
+companies__id:
+  get:
+    operationId: CompaniesController_getCompanyById_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  code: COMP-001
+                  name: MatchStock Retail Co., Ltd.
+                  taxId: '0105559012345'
+                  branchCode: '00000'
+                  branchName: Headquarters (สำนักงานใหญ่)
+                  phone: +66 2 555 0100
+                  email: contact@matchstock.com
+                  address: 88/1 Sukhumvit Rd, Bangkok 10110
+                  isHeadquarter: true
+                  createdAt: '2026-08-26T02:39:41.574Z'
+                  updatedAt: '2026-08-26T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Get a single company/branch by id.
+    tags:
+      - Companies
+  put:
+    operationId: CompaniesController_updateCompany_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/billing.yaml#/UpdateCompanyDto
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  code: COMP-001
+                  name: MatchStock Retail Co., Ltd.
+                  taxId: '0105559012345'
+                  branchCode: '00000'
+                  branchName: Headquarters (สำนักงานใหญ่)
+                  phone: +66 2 555 0100
+                  email: contact@matchstock.com
+                  address: 88/1 Sukhumvit Rd, Bangkok 10110
+                  isHeadquarter: true
+                  createdAt: '2026-08-26T02:39:41.574Z'
+                  updatedAt: '2026-08-26T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Update a company/branch.
+    tags:
+      - Companies
+  delete:
+    operationId: CompaniesController_deleteCompany_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data: null
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Delete a company/branch.
+    tags:
+      - Companies

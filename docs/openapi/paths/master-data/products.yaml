@@ -1,0 +1,468 @@
+products:
+  get:
+    operationId: ProductsController_list_v1
+    parameters: []
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    sku: DEMO-SKU-001
+                    code: DEMO-SKU-001
+                    slug: demo-sku-001
+                    name: Cardboard Box 30x30x30
+                    description: null
+                    categoryId: f870ae79-783c-40d9-92cf-2676ddcfdf64
+                    unitOfMeasure: null
+                    isActive: true
+                    isDeleted: false
+                    isReturnable: false
+                    unitId: null
+                    brandId: null
+                    manufacturerId: null
+                    widthValue: 30
+                    lengthValue: 30
+                    heightValue: 30
+                    dimensionUnitId: null
+                    weightValue: null
+                    weightUnitId: null
+                    supplierId: null
+                    costPriceMinor: 15000
+                    sellingPriceMinor: 25000
+                    currency: THB
+                    reorderPoint: 10
+                    minReorderQuantity: 20
+                    barcodeValue: null
+                    barcodeSymbologyId: null
+                    taxTypeId: null
+                    discountType: null
+                    discountValue: null
+                    lowStockNotifiedAt: null
+                    lotControlled: false
+                    warrantyPeriodDays: 0
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-08-18T02:39:41.690Z'
+                    updatedAt: '2026-08-18T02:39:41.690Z'
+                    unit: null
+                    brand: null
+                    manufacturer: null
+                    dimensionUnit: null
+                    weightUnit: null
+                    supplier: null
+                    category:
+                      id: f870ae79-783c-40d9-92cf-2676ddcfdf64
+                      name: Packaging
+                    barcodeSymbology: null
+                    taxType: null
+                    images:
+                      - id: a1b2c3d4-e5f6-4a5b-8c7d-1e2f3a4b5c6d
+                        url: /uploads/products/a1b2c3d4.jpg
+                        isPrimary: true
+                        sortOrder: 0
+                    inStockCount: 42
+                    reservedCount: 5
+                    availableCount: 37
+                    isLowStock: false
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    summary: List the signed-in user's tenant products - pagination, search by SKU/Barcode/Name, and category filter.
+    tags:
+      - Products
+  post:
+    operationId: ProductsController_create_v1
+    parameters: []
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  sku: DEMO-SKU-001
+                  code: DEMO-SKU-001
+                  slug: demo-sku-001
+                  name: Cardboard Box 30x30x30
+                  description: null
+                  categoryId: f870ae79-783c-40d9-92cf-2676ddcfdf64
+                  unitOfMeasure: null
+                  isActive: true
+                  isDeleted: false
+                  isReturnable: false
+                  unitId: null
+                  brandId: null
+                  manufacturerId: null
+                  widthValue: 30
+                  lengthValue: 30
+                  heightValue: 30
+                  dimensionUnitId: null
+                  weightValue: null
+                  weightUnitId: null
+                  supplierId: null
+                  costPriceMinor: 15000
+                  sellingPriceMinor: 25000
+                  currency: THB
+                  reorderPoint: 10
+                  minReorderQuantity: 20
+                  barcodeValue: null
+                  barcodeSymbologyId: null
+                  taxTypeId: null
+                  discountType: null
+                  discountValue: null
+                  lowStockNotifiedAt: null
+                  lotControlled: false
+                  warrantyPeriodDays: 0
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.690Z'
+                  updatedAt: '2026-08-18T02:39:41.690Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Create a new product - dimensions, weight, reorder point, lot-control flag, pricing/tax/discount.
+    tags:
+      - Products
+products__id:
+  get:
+    operationId: ProductsController_getById_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  sku: DEMO-SKU-001
+                  code: DEMO-SKU-001
+                  slug: demo-sku-001
+                  name: Cardboard Box 30x30x30
+                  description: null
+                  categoryId: f870ae79-783c-40d9-92cf-2676ddcfdf64
+                  unitOfMeasure: null
+                  isActive: true
+                  isDeleted: false
+                  isReturnable: false
+                  unitId: null
+                  brandId: null
+                  manufacturerId: null
+                  widthValue: 30
+                  lengthValue: 30
+                  heightValue: 30
+                  dimensionUnitId: null
+                  weightValue: null
+                  weightUnitId: null
+                  supplierId: null
+                  costPriceMinor: 15000
+                  sellingPriceMinor: 25000
+                  currency: THB
+                  reorderPoint: 10
+                  minReorderQuantity: 20
+                  barcodeValue: null
+                  barcodeSymbologyId: null
+                  taxTypeId: null
+                  discountType: null
+                  discountValue: null
+                  lowStockNotifiedAt: null
+                  lotControlled: false
+                  warrantyPeriodDays: 0
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.690Z'
+                  updatedAt: '2026-08-18T02:39:41.690Z'
+                  unit: null
+                  brand: null
+                  manufacturer: null
+                  dimensionUnit: null
+                  weightUnit: null
+                  supplier: null
+                  category:
+                    id: f870ae79-783c-40d9-92cf-2676ddcfdf64
+                    name: Packaging
+                  barcodeSymbology: null
+                  taxType: null
+                  images:
+                    - id: a1b2c3d4-e5f6-4a5b-8c7d-1e2f3a4b5c6d
+                      url: /uploads/products/a1b2c3d4.jpg
+                      isPrimary: true
+                      sortOrder: 0
+                  inStockCount: 42
+                  reservedCount: 5
+                  availableCount: 37
+                  isLowStock: false
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Get a single product by its internal id.
+    tags:
+      - Products
+  patch:
+    operationId: ProductsController_update_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/master-data.yaml#/UpdateProductDto
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  sku: DEMO-SKU-001
+                  code: DEMO-SKU-001
+                  slug: demo-sku-001
+                  name: Cardboard Box 30x30x30
+                  description: null
+                  categoryId: f870ae79-783c-40d9-92cf-2676ddcfdf64
+                  unitOfMeasure: null
+                  isActive: true
+                  isDeleted: false
+                  isReturnable: false
+                  unitId: null
+                  brandId: null
+                  manufacturerId: null
+                  widthValue: 30
+                  lengthValue: 30
+                  heightValue: 30
+                  dimensionUnitId: null
+                  weightValue: null
+                  weightUnitId: null
+                  supplierId: null
+                  costPriceMinor: 15000
+                  sellingPriceMinor: 25000
+                  currency: THB
+                  reorderPoint: 10
+                  minReorderQuantity: 20
+                  barcodeValue: null
+                  barcodeSymbologyId: null
+                  taxTypeId: null
+                  discountType: null
+                  discountValue: null
+                  lowStockNotifiedAt: null
+                  lotControlled: false
+                  warrantyPeriodDays: 0
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.690Z'
+                  updatedAt: '2026-08-18T02:39:41.690Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Update a product.
+    tags:
+      - Products
+  delete:
+    operationId: ProductsController_softDelete_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: fed2e82f-7ee9-465f-bd43-ac982a9675a7
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  sku: DEMO-SKU-001
+                  code: DEMO-SKU-001
+                  slug: demo-sku-001
+                  name: Cardboard Box 30x30x30
+                  description: null
+                  categoryId: f870ae79-783c-40d9-92cf-2676ddcfdf64
+                  unitOfMeasure: null
+                  isActive: true
+                  isDeleted: true
+                  isReturnable: false
+                  unitId: null
+                  brandId: null
+                  manufacturerId: null
+                  widthValue: 30
+                  lengthValue: 30
+                  heightValue: 30
+                  dimensionUnitId: null
+                  weightValue: null
+                  weightUnitId: null
+                  supplierId: null
+                  costPriceMinor: 15000
+                  sellingPriceMinor: 25000
+                  currency: THB
+                  reorderPoint: 10
+                  minReorderQuantity: 20
+                  barcodeValue: null
+                  barcodeSymbologyId: null
+                  taxTypeId: null
+                  discountType: null
+                  discountValue: null
+                  lowStockNotifiedAt: null
+                  lotControlled: false
+                  warrantyPeriodDays: 0
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: '2026-08-31T00:00:00.000Z'
+                  deletedByType: user
+                  deletedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  createdAt: '2026-08-18T02:39:41.690Z'
+                  updatedAt: '2026-08-18T02:39:41.690Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: 'Delete a product (soft-delete - isDeleted:true + deletedAt/deletedBy). One-way: it disappears from every list/detail/search/import-export response, but the row is kept for history and its sku/code/slug is freed for reuse. Use PATCH { isActive:false } for a reversible suspend instead.'
+    tags:
+      - Products
+products__id__images:
+  post:
+    operationId: ProductsController_uploadImages_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: a1b2c3d4-e5f6-4a5b-8c7d-1e2f3a4b5c6d
+                    url: /uploads/products/a1b2c3d4.jpg
+                    isPrimary: true
+                    sortOrder: 0
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Upload one or more photos (jpeg/png/webp, max 5MB each, 15 total per product).
+    tags:
+      - Products
+products__id__images__imageId:
+  delete:
+    operationId: ProductsController_deleteImage_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+      - name: imageId
+        required: true
+        in: path
+        schema:
+          type: string
+    responses:
+      '204':
+        description: ''
+    security:
+      - jwt: []
+    summary: Remove one photo from this product.
+    tags:
+      - Products
+products__id__images_reorder:
+  patch:
+    operationId: ProductsController_reorderImages_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/master-data.yaml#/ReorderProductImagesDto
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: a1b2c3d4-e5f6-4a5b-8c7d-1e2f3a4b5c6d
+                    url: /uploads/products/a1b2c3d4.jpg
+                    isPrimary: true
+                    sortOrder: 0
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Set display order for this product's photos - first id becomes the primary/thumbnail image.
+    tags:
+      - Products

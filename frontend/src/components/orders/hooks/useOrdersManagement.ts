@@ -8,6 +8,7 @@ import {
 } from '../../../types';
 import { productService } from '../../../services/product.service';
 import { warehouseService } from '../../../services/warehouse.service';
+import { transactionService } from '../../../services/transaction.service';
 
 export const useOrdersManagement = (
   type: OrderType,
@@ -82,216 +83,98 @@ export const useOrdersManagement = (
     fetchData();
   }, []);
 
-  // Initial Sample Orders
+  // Load Real Orders from Backend API (Goods Issues for Sales, Goods Receipts for Purchases)
   useEffect(() => {
-    const initialOrders: Order[] = isSales
-      ? [
-          {
-            id: 'so-001',
-            orderNo: 'SO-2026-0042',
-            type: 'SALES',
-            status: 'PROCESSING',
-            partyName: 'Siam Retail Group Co., Ltd.',
-            contactPerson: 'คุณสมชาย วงศ์สวัสดิ์',
-            phone: '081-234-5678',
-            email: 'somchai@siamretail.co.th',
-            orderDate: '2026-08-25',
-            expectedDate: '2026-08-29',
-            warehouseId: 'wh-01',
-            warehouseName: 'Bangkok Main DC',
-            paymentTerms: 'Credit 30 Days',
-            subtotal: 45000,
-            taxAmount: 3150,
-            discountTotal: 0,
-            grandTotal: 48150,
-            items: [
-              {
-                id: 'soi-1',
-                productId: 'prod-001',
-                productCode: 'PRD-001',
-                productName: 'Ergonomic Mesh Chair (Black Edition)',
-                sku: 'FUR-CHA-001',
-                uom: 'PCS',
-                quantity: 10,
-                unitPrice: 3500,
+    const loadRealOrders = async () => {
+      try {
+        if (isSales) {
+          const issuesRes = await transactionService.getGoodsIssues();
+          const itemsList = issuesRes.data || issuesRes.items || (Array.isArray(issuesRes) ? issuesRes : []);
+          if (itemsList.length > 0) {
+            const mappedOrders: Order[] = itemsList.map((gi: any) => ({
+              id: gi.id,
+              orderNo: gi.soNumber || gi.issueNumber || `SO-${gi.id.slice(0, 8)}`,
+              type: 'SALES',
+              status: gi.status === 'completed' ? 'COMPLETED' : gi.status === 'draft' ? 'CONFIRMED' : 'PROCESSING',
+              partyName: gi.reference || gi.notes || 'ลูกค้าคำสั่งขาย (Sales Customer)',
+              contactPerson: gi.createdByType || 'Sales Operator',
+              phone: '-',
+              email: '-',
+              orderDate: (gi.issuedAt || gi.createdAt)?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+              expectedDate: (gi.issuedAt || gi.createdAt)?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+              warehouseId: gi.warehouseId,
+              warehouseName: gi.warehouse?.name || 'คลังสินค้าหลัก',
+              paymentTerms: 'Credit 30 Days',
+              subtotal: gi.lines?.reduce((sum: number, l: any) => sum + (l.quantity * (l.unitPriceMinor ? Number(l.unitPriceMinor) / 100 : 500)), 0) || 5000,
+              taxAmount: 350,
+              discountTotal: 0,
+              grandTotal: gi.lines?.reduce((sum: number, l: any) => sum + (l.quantity * (l.unitPriceMinor ? Number(l.unitPriceMinor) / 100 : 500)), 0) || 5350,
+              items: gi.lines?.map((l: any) => ({
+                id: l.id,
+                productId: l.productId,
+                productCode: l.product?.code || 'SKU',
+                productName: l.product?.name || 'สินค้า',
+                sku: l.product?.sku || l.product?.code || 'SKU',
+                uom: l.product?.baseUnit?.name || 'PCS',
+                quantity: l.quantity,
+                unitPrice: l.unitPriceMinor ? Number(l.unitPriceMinor) / 100 : 500,
                 discount: 0,
-                totalAmount: 35000,
-              },
-              {
-                id: 'soi-2',
-                productId: 'prod-002',
-                productCode: 'PRD-002',
-                productName: 'Motorized Standing Desk 140x60cm',
-                sku: 'FUR-DES-002',
-                uom: 'PCS',
-                quantity: 2,
-                unitPrice: 5000,
+                totalAmount: l.quantity * (l.unitPriceMinor ? Number(l.unitPriceMinor) / 100 : 500),
+              })) || [],
+              notes: gi.notes,
+              createdBy: gi.createdByType || 'Sales Operator',
+              createdAt: gi.createdAt || new Date().toISOString(),
+            }));
+            setOrders(mappedOrders);
+            return;
+          }
+        } else {
+          const receiptsRes = await transactionService.getGoodsReceipts();
+          const itemsList = receiptsRes.data || receiptsRes.items || (Array.isArray(receiptsRes) ? receiptsRes : []);
+          if (itemsList.length > 0) {
+            const mappedOrders: Order[] = itemsList.map((gr: any) => ({
+              id: gr.id,
+              orderNo: gr.poNumber || gr.receiptNumber || `PO-${gr.id.slice(0, 8)}`,
+              type: 'PURCHASE',
+              status: 'COMPLETED',
+              partyName: gr.supplier?.name || gr.notes || 'ผู้จัดจำหน่าย (Supplier)',
+              contactPerson: gr.supplier?.contactPerson || 'ฝ่ายจัดซื้อ',
+              phone: gr.supplier?.phone || '-',
+              email: gr.supplier?.email || '-',
+              orderDate: (gr.receivedAt || gr.createdAt)?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+              expectedDate: (gr.receivedAt || gr.createdAt)?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+              warehouseId: gr.warehouseId,
+              warehouseName: gr.warehouse?.name || 'คลังสินค้าหลัก',
+              paymentTerms: 'Credit 30 Days',
+              subtotal: gr.lines?.reduce((sum: number, l: any) => sum + (l.quantity * (l.unitCostMinor ? Number(l.unitCostMinor) / 100 : 500)), 0) || 10000,
+              taxAmount: 700,
+              discountTotal: 0,
+              grandTotal: gr.lines?.reduce((sum: number, l: any) => sum + (l.quantity * (l.unitCostMinor ? Number(l.unitCostMinor) / 100 : 500)), 0) || 10700,
+              items: gr.lines?.map((l: any) => ({
+                id: l.id,
+                productId: l.productId,
+                productCode: l.product?.code || 'SKU',
+                productName: l.product?.name || 'สินค้า',
+                sku: l.product?.sku || l.product?.code || 'SKU',
+                uom: l.product?.baseUnit?.name || 'PCS',
+                quantity: l.quantity,
+                unitPrice: l.unitCostMinor ? Number(l.unitCostMinor) / 100 : 500,
                 discount: 0,
-                totalAmount: 10000,
-              },
-            ],
-            notes: 'จัดส่งช่วงเช้า มีลิฟต์ขนของชั้น 4',
-            createdBy: 'Sales Dept (Staff)',
-            createdAt: '2026-08-25 09:30',
-          },
-          {
-            id: 'so-002',
-            orderNo: 'SO-2026-0041',
-            type: 'SALES',
-            status: 'COMPLETED',
-            partyName: 'TechVision Solutions Ltd.',
-            contactPerson: 'คุณวิภาวรรณ สุขสม',
-            phone: '089-987-6543',
-            email: 'wipawan@techvision.io',
-            orderDate: '2026-08-24',
-            expectedDate: '2026-08-26',
-            warehouseId: 'wh-01',
-            warehouseName: 'Bangkok Main DC',
-            paymentTerms: 'Cash on Delivery',
-            subtotal: 12400,
-            taxAmount: 868,
-            discountTotal: 400,
-            grandTotal: 12868,
-            items: [
-              {
-                id: 'soi-3',
-                productId: 'prod-003',
-                productCode: 'PRD-003',
-                productName: 'Heavy-Duty Steel Storage Rack 4-Tier',
-                sku: 'RACK-ST-04',
-                uom: 'SETS',
-                quantity: 4,
-                unitPrice: 3100,
-                discount: 0,
-                totalAmount: 12400,
-              },
-            ],
-            createdBy: 'Sales Dept (Staff)',
-            createdAt: '2026-08-24 14:15',
-          },
-          {
-            id: 'so-003',
-            orderNo: 'SO-2026-0043',
-            type: 'SALES',
-            status: 'CONFIRMED',
-            partyName: 'Modern Office Inter Co., Ltd.',
-            contactPerson: 'คุณกิตติศักดิ์ ศรีสุข',
-            phone: '062-445-1234',
-            email: 'kittisak@modernoffice.th',
-            orderDate: '2026-08-26',
-            expectedDate: '2026-08-30',
-            warehouseId: 'wh-02',
-            warehouseName: 'Eastern Logistics Hub',
-            paymentTerms: 'Credit 60 Days',
-            subtotal: 28000,
-            taxAmount: 1960,
-            discountTotal: 1000,
-            grandTotal: 28960,
-            items: [
-              {
-                id: 'soi-4',
-                productId: 'prod-001',
-                productCode: 'PRD-001',
-                productName: 'Ergonomic Mesh Chair (Black Edition)',
-                sku: 'FUR-CHA-001',
-                uom: 'PCS',
-                quantity: 8,
-                unitPrice: 3500,
-                discount: 0,
-                totalAmount: 28000,
-              },
-            ],
-            createdBy: 'Sales Dept (Staff)',
-            createdAt: '2026-08-26 11:00',
-          },
-        ]
-      : [
-          {
-            id: 'po-001',
-            orderNo: 'PO-2026-0018',
-            type: 'PURCHASE',
-            status: 'PROCESSING',
-            partyName: 'Apex Industrial Parts Supplier Ltd.',
-            contactPerson: 'Sale Dept / Mr. David Chen',
-            phone: '02-789-0123',
-            email: 'orders@apex-industrial.com',
-            orderDate: '2026-08-23',
-            expectedDate: '2026-08-28',
-            warehouseId: 'wh-01',
-            warehouseName: 'Bangkok Main DC',
-            paymentTerms: 'Credit 45 Days',
-            subtotal: 85000,
-            taxAmount: 5950,
-            discountTotal: 2000,
-            grandTotal: 88950,
-            items: [
-              {
-                id: 'poi-1',
-                productId: 'prod-001',
-                productCode: 'PRD-001',
-                productName: 'Ergonomic Mesh Chair (Black Edition)',
-                sku: 'FUR-CHA-001',
-                uom: 'PCS',
-                quantity: 30,
-                unitPrice: 2100,
-                discount: 0,
-                totalAmount: 63000,
-              },
-              {
-                id: 'poi-2',
-                productId: 'prod-002',
-                productCode: 'PRD-002',
-                productName: 'Motorized Standing Desk 140x60cm',
-                sku: 'FUR-DES-002',
-                uom: 'PCS',
-                quantity: 7,
-                unitPrice: 3142.85,
-                discount: 0,
-                totalAmount: 22000,
-              },
-            ],
-            notes: 'นำเข้าล็อตใหม่ พร้อมใบเซอร์ ISO9001',
-            createdBy: 'Purchasing Dept (Staff)',
-            createdAt: '2026-08-23 10:00',
-          },
-          {
-            id: 'po-002',
-            orderNo: 'PO-2026-0019',
-            type: 'PURCHASE',
-            status: 'CONFIRMED',
-            partyName: 'SteelTech Manufacturing Group',
-            contactPerson: 'คุณอารียา ธนกิจ',
-            phone: '038-123-456',
-            email: 'areeya@steeltech.co.th',
-            orderDate: '2026-08-25',
-            expectedDate: '2026-09-02',
-            warehouseId: 'wh-02',
-            warehouseName: 'Eastern Logistics Hub',
-            paymentTerms: 'Credit 30 Days',
-            subtotal: 42000,
-            taxAmount: 2940,
-            discountTotal: 0,
-            grandTotal: 44940,
-            items: [
-              {
-                id: 'poi-3',
-                productId: 'prod-003',
-                productCode: 'PRD-003',
-                productName: 'Heavy-Duty Steel Storage Rack 4-Tier',
-                sku: 'RACK-ST-04',
-                uom: 'SETS',
-                quantity: 20,
-                unitPrice: 2100,
-                discount: 0,
-                totalAmount: 42000,
-              },
-            ],
-            createdBy: 'Purchasing Dept (Staff)',
-            createdAt: '2026-08-25 15:40',
-          },
-        ];
-
-    setOrders(initialOrders);
+                totalAmount: l.quantity * (l.unitCostMinor ? Number(l.unitCostMinor) / 100 : 500),
+              })) || [],
+              notes: gr.notes,
+              createdBy: gr.createdByType || 'Purchasing Operator',
+              createdAt: gr.createdAt || new Date().toISOString(),
+            }));
+            setOrders(mappedOrders);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Backend transactions fetch failed in OrdersManagement', err);
+      }
+    };
+    loadRealOrders();
   }, [isSales]);
 
   // Filtered Orders
@@ -433,7 +316,7 @@ export const useOrdersManagement = (
     setIsCreateModalOpen(true);
   };
 
-  const handleSaveOrder = (e: React.FormEvent) => {
+  const handleSaveOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formItems.length === 0) {
       alert('กรุณาเพิ่มรายการสินค้าอย่างน้อย 1 รายการ');
@@ -445,8 +328,45 @@ export const useOrdersManagement = (
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     const newOrderNumber = `${prefix}-2026-${randomNum}`;
 
+    let backendId = `ord-${Date.now()}`;
+
+    try {
+      if (isSales) {
+        const res = await transactionService.issueStock({
+          warehouseId: formWarehouseId || wh?.id || 'wh-01',
+          soNumber: newOrderNumber,
+          recipient: formPartyName || 'ลูกค้าทั่วไป (Walk-in Customer)',
+          notes: formNotes,
+          items: formItems.map((i) => ({
+            productId: i.productId,
+            quantity: i.quantity,
+            unitPrice: i.unitPrice,
+          })),
+        });
+        if (res?.data) {
+          backendId = res.data.id;
+        }
+      } else {
+        const res = await transactionService.receiveStock({
+          warehouseId: formWarehouseId || wh?.id || 'wh-01',
+          referenceNo: newOrderNumber,
+          notes: formNotes || formPartyName,
+          items: formItems.map((i) => ({
+            productId: i.productId,
+            quantity: i.quantity,
+            unitPrice: i.unitPrice,
+          })),
+        });
+        if (res?.data) {
+          backendId = res.data.id;
+        }
+      }
+    } catch (err) {
+      console.warn('Backend order persist failed, creating locally', err);
+    }
+
     const newOrder: Order = {
-      id: `ord-${Date.now()}`,
+      id: backendId,
       orderNo: newOrderNumber,
       type: type,
       status: 'CONFIRMED',

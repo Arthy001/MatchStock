@@ -1,0 +1,31 @@
+ingestion_readings:
+  post:
+    description: |-
+      Readers/edge agents should batch reads locally (e.g. every 100ms-1s) and POST here rather than sending one request per read. Rate-limited to 30 requests/sec per device (not per IP). timestamp must be within a few minutes of server time or the batch is rejected (422).
+
+      Authentication: the apiKey returned when a device is registered/rotated is "prefix.secret". Split it client-side - never send the secret half over the wire. For every request:
+        X-Device-Key-Id: <prefix>
+        X-Signature: hex(HMAC-SHA256(<exact raw JSON body bytes>, <secret>))
+      The signature must be computed over the exact bytes sent as the body (compute it from the same string passed to your HTTP client, not from a re-serialized object - key ordering/whitespace differences will produce a different signature and be rejected).
+    operationId: IngestionController_ingest_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/rfid.yaml#/IngestBatchDto
+    responses:
+      '202':
+        description: Accepted - queued for async processing, no response body.
+      '401':
+        description: Missing/invalid X-Device-Key-Id or X-Signature.
+      '422':
+        description: timestamp is outside the accepted freshness window.
+      '429':
+        description: Per-device rate limit exceeded (30 req/sec).
+    security:
+      - device-key: []
+    summary: Submit a batch of RFID reads from a device. Not user-JWT-authenticated - each request is signed with the device secret instead.
+    tags:
+      - Ingestion

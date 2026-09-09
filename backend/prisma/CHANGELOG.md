@@ -2,6 +2,86 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-04 (15) — Implement `CreateBinLocationDto` fields เข้า backend จริง (ตามที่ DevOps อัพเดท spec ของ `POST /warehouses/:id/bins`)
+
+ตรวจสอบ `docs/openapi.yaml` เทียบ backend จริงหลัง DevOps push commit `3c8417b` ("improve warehouse & bin location creation, shelf field...") พบว่า DevOps เพิ่ม request body ใหม่ (`CreateBinLocationDto`: `code`/`zoneName`/`rack`/`shelf`/`capacityKg`/`maxCapacity`) ให้ `POST /warehouses/:id/bins` (สร้าง bin เดี่ยว) **แต่ backend จริงยังรับแค่ `code`/`maxCapacity`/`zoneId` เท่านั้น** (`zoneName`/`rack`/`shelf`/`capacityKg` เคยเข้าได้ทางเดียวคือผ่าน `POST /warehouses/:id/bins/batch` ของงาน 3D Blueprint) — หลังคุยกับ user แล้ว **implement เข้า backend จริงครบ ทดสอบ end-to-end บน local Docker และ production แล้ว**:
+
+- ขยาย `CreateBinSchema` (Zod, `warehouse.schema.ts`) ให้รับ `zoneName`/`rack`/`shelf`/`capacityKg` เพิ่ม (optional ทั้งหมด ไม่ต้อง migrate schema ใหม่เลยเพราะ column มีอยู่แล้วบน `BinLocation` ตั้งแต่งาน 3D Blueprint) พร้อม validate ความยาว/ค่าติดลบตาม column constraint จริง (`zoneName` ≤100, `rack`/`shelf` ≤50, `capacityKg` ≥0)
+- `WarehousesService.createBin()` ส่งต่อ 4 field ใหม่นี้เข้า `BinLocation.create()`
+- **ไม่แตะ** `PATCH /warehouses/:id/bins/:binId` (`UpdateBinLocationDto`) เพราะ `docs/openapi.yaml` ไม่ได้ระบุ schema ใหม่ให้ endpoint นี้ในรอบนี้ (ต่างจาก prototype Express server แยกต่างหากที่ DevOps เก็บไว้ใน repo นี้เอง `backend/src/routes/masterData.routes.ts` ซึ่งแก้ทั้ง create และ update — ไฟล์นั้นเป็นคนละ codebase กับ backend จริงที่ deploy อยู่ที่ `match-stock.ddns.net` ไม่ใช่สิ่งที่ backend ทีมจริงต้องตามให้ตรง)
+
+**ทดสอบแล้วบน local Docker + production**: สร้าง bin พร้อม 4 field ใหม่ครบ ยืนยัน persist ถูกต้องทุกค่า, สร้าง bin แบบเดิม (ส่งแค่ `code`) ยังทำงานเหมือนเดิมทุกประการ (`zoneName`/`rack`/`shelf` เป็น `null`, `capacityKg` ใช้ default 500 ตาม schema), validate ความยาว `zoneName` เกิน 100 ตัวอักษรโดนบล็อกถูกต้อง, `PATCH` เดิมไม่กระทบ
+
+## 2026-09-03 (14) — Sync 2 จุดที่ backend จริงมีอยู่แล้วแต่ยังไม่เคยแก้เอกสาร (ตรวจสอบ backend เทียบ schema.prisma/openapi.yaml เต็มไฟล์)
+
+ตรวจสอบ backend จริงเทียบกับ `schema.prisma`/`docs/openapi.yaml` ของ repo นี้แบบเต็มไฟล์ (diff ทุกบรรทัด ไม่ใช่แค่ high-level) เจอ 2 จุดที่ backend จริง implement ไปแล้วตั้งแต่รอบก่อนหน้า (สอดคล้องกับ standing preference ที่หยุด sync เอกสารไว้ชั่วคราว) แต่ยังไม่เคย sync กลับมาที่นี่เลย:
+
+1. **`Supplier.email`** และ **`TaxType.code`/`isInclusive`** (จาก entry (11) MASTER_DATA_TEST_PLAN.md SUP-01/SUP-03/TAX-01) — เพิ่มเข้า `schema.prisma` ของ repo นี้ให้ตรงกับ backend จริงแล้ว
+2. **7 endpoint ของ `BillingController` ที่หายไปจาก `docs/openapi.yaml`** ตั้งแต่ตอนแก้บั๊ก `@ApiExcludeController()` ใน entry (10) — ตอนนั้นเพิ่มแค่ 5 path ที่ถูกถามถึงตรงๆ (`/billing/plans`, `/billing/current-subscription`, `/billing/subscribe`, `/billing/cancel`, `/billing/invoices`) ไม่ได้ sync ทั้ง controller: เพิ่ม `GET /billing/subscriptions`, `POST /billing/subscriptions`, `POST /billing/subscriptions/{id}/cancel`, `POST /billing/checkout`, `GET /billing/invoices/{id}`, `GET /billing/payments`, `POST /billing/_mock/complete/{chargeId}` (endpoint dev-only จริง ยังโผล่ใน Swagger spec ตามปกติเพราะ NestJS ไม่ได้ซ่อน route ระดับ decorator ตาม runtime env - แค่ throw 404 เมื่อเรียกใช้นอกโหมด mock) พร้อม schema `CreateSubscriptionDto`/`CheckoutDto` ที่ยังไม่เคยมีอยู่ใน `components/schemas`
+
+**ยืนยันแล้ว**: `npx prisma validate` ผ่านทั้งไฟล์, YAML parse ผ่านไม่มี duplicate key, diff path ระหว่าง `docs/openapi.yaml` กับ live `/api-docs-json` (normalize `/api/v1` prefix ออกแล้ว) เหลือ 0 จุดต่างกันทั้ง 170 endpoint, request/response field ของ Outbound Fulfillment (`pick`/`pack`/`stage-load`) ที่เพิ่มไปใน entry (13) ตรงกับ backend จริง 100% อยู่แล้วตั้งแต่ก่อนรอบนี้
+
+## 2026-09-03 (13) — Implement Outbound Fulfillment feature เข้า backend จริง (ตามที่ DevOps ร่าง spec ไว้ใน `OUTBOUND_FULFILLMENT_GUIDE.md`)
+
+ตรวจสอบตาม `docs/OUTBOUND_FULFILLMENT_GUIDE.md` (§5. Action Items เฉพาะ Backend) พบว่า DevOps ร่าง spec ฉบับเต็มไว้แล้ว (schema + endpoint ใหม่ 3 ตัว) สำหรับ flow เบิกสินค้าออกแบบหลายขั้นตอน (1/2/3/4-Step Pick→Pack→Load→Ship ตามระดับแพ็กเกจ) **แต่ backend ยังไม่มี implementation เลย** (ยิงจริง 404 ทั้ง 3 endpoint บน production ก่อนแก้ ไม่มี field ใหม่ในสคีมาเลย) — user ให้ทำก่อนโดยตั้งใจ (แจ้งว่า "ยังไม่ต้อง" ก่อนหน้านี้ในวันเดียวกัน แล้วกลับมาสั่งให้ "implement ตอนนี้" ในภายหลัง) **implement เข้า backend จริงครบ ทดสอบ end-to-end บน local Docker และ production แล้ว**:
+
+1. **`OutboundWorkflowMode` enum ใหม่** (`ONE_STEP_DIRECT`/`TWO_STEP_PICK_SHIP`/`THREE_STEP_PACK`/`FOUR_STEP_ENTERPRISE`) และ **`GoodsIssueStatus` enum ใหม่** (`draft`/`reserved`/`picking`/`picked`/`packing`/`packed`/`staged_for_loading`/`completed`/`cancelled`)
+2. **`Warehouse.outboundMode`**: ค่า default ต่อคลัง กำหนดว่าใบเบิกที่สร้างจากคลังนี้จะใช้ flow แบบไหน — **snapshot ค่านี้ลงบน `GoodsIssue.workflowMode` ตอนสร้างใบเบิกทันที** (ตั้งใจเลือกแบบนี้เพื่อไม่ให้การเปลี่ยนค่า default ของคลังทีหลังไปกระทบใบเบิกที่กำลังดำเนินการอยู่ - เป็นการตัดสินใจด้าน engineering ที่เอกสารไม่ได้ระบุไว้ตรงๆ)
+3. **`GoodsIssue`**: เพิ่ม `soNumber`/`salesOrderId` (plain field ไม่มี FK จริง - ตรงกับ convention เดิมของทั้งตระกูล GoodsReceipt/GoodsIssue/StockTransfer ที่ไม่มี relation บน field อ้างอิงข้ามโมดูล และตอนนี้ระบบยังไม่มี SalesOrder module ให้ validate อยู่ดี), `workflowMode`, `status`, `packageTrackingNo`/`shippingCarrier`/`cartonBarcode`/`stagingDockBarcode`/`totalWeightKg`/`boxCount`, `pickedAt`/`packedAt`/`stagedAt`/`dispatchedAt`
+4. **`GoodsIssueLine`**: เพิ่ม `pickedQuantity`/`packedQuantity`/`dispatchedQuantity` (แยกจาก `quantity` เดิมที่หมายถึงจำนวนที่ตั้งใจเบิก)
+5. **Behavior ของ `POST /goods-issues` เปลี่ยนแบบมีเงื่อนไข**: ถ้าคลังเป็น `ONE_STEP_DIRECT` (ค่า default) พฤติกรรมเดิมทุกอย่างไม่เปลี่ยน (หัก `StockBalance` ทันที, `status: completed`) — ถ้าเป็นโหมดหลายขั้นตอนจะ **จอง (reserve)** สต็อกแทนการหักทันที (`status: reserved`) และบังคับต้องส่ง `lines[]` มาด้วย (สร้างแบบไม่มี line ไม่ได้อีกต่อไปสำหรับโหมดนี้)
+6. **Endpoint ใหม่ 3 ตัว**:
+   - `POST /goods-issues/:id/pick` — บันทึกการหยิบสินค้าที่ชั้นวาง รองรับ resolve จาก `productBarcode`/`binBarcode` หรือ id ตรงๆ ก็ได้ หยิบบางส่วนได้ (partial pick, สถานะเปลี่ยนเป็น `picking` จนกว่าจะหยิบครบทุก line ถึงเปลี่ยนเป็น `picked`) กันการหยิบเกิน (`pickedQuantity` เกิน `quantity` ของ line) และกันการหยิบซ้อนพร้อมกันแบบ concurrent ด้วย atomic guard เดียวกับที่ `StockBalanceService` ใช้อยู่แล้ว
+   - `POST /goods-issues/:id/pack` — บันทึกการแพ็ค (carton barcode, น้ำหนัก, ผู้ขนส่ง, เลข tracking) ปฏิเสธถ้าใบเบิกเป็น `ONE_STEP_DIRECT`/`TWO_STEP_PICK_SHIP` (ไม่มีขั้นตอนแพ็คในสองโหมดนี้) หรือสถานะยังไม่ถึง `picked`
+   - `POST /goods-issues/:id/stage-load` — บันทึกการนำไปเตรียมที่จุดขึ้นรถ **เฉพาะ `FOUR_STEP_ENTERPRISE` เท่านั้น** ปฏิเสธโหมดอื่นทั้งหมด
+7. **`POST /goods-issues/:id/dispatch` ขยาย**: ยังรองรับ flow RFID เดิม (`tagIds`) เหมือนเดิมทุกประการ — เพิ่ม branch ใหม่สำหรับปิดงานแบบอิงจำนวน (ไม่ส่ง `tagIds`) ที่เช็คว่าสถานะปัจจุบันตรงกับขั้นตอนสุดท้ายที่โหมดนั้นต้องผ่านก่อน (`TWO_STEP_PICK_SHIP` ต้อง `picked`, `THREE_STEP_PACK` ต้อง `packed`, `FOUR_STEP_ENTERPRISE` ต้อง `staged_for_loading`) ปฏิเสธ `ONE_STEP_DIRECT` ตรงๆ (ปิดงานไปตั้งแต่ตอนสร้างแล้ว ไม่มีอะไรให้ dispatch อีก)
+8. **Feature gating ใหม่ 2 รหัส** (เพิ่มเข้า `PRO_MONTHLY`/`ULTRA_MONTHLY` ตามที่เอกสารระบุ): `outbound.pick_pack` (PRO ขึ้นไป) คุม `POST .../pack`, `outbound.enterprise_staging` (ULTRA เท่านั้น) คุม `POST .../stage-load` — **`POST .../pick` ตั้งใจไม่ gate ตามเอกสารระบุตรงๆ**
+9. **Migration ใหม่** (`20260903120000_outbound_fulfillment`): เพิ่ม enum + column ทั้งหมดข้างต้น พร้อม backfill ใบเบิกเก่าที่มีอยู่แล้วให้เป็น `status: completed`/`dispatchedAt: issuedAt` (เพราะทุกใบที่มีอยู่ก่อนหน้านี้ถูกสร้างภายใต้ flow แบบหักทันทีเดิมทั้งหมด)
+
+**ทดสอบแล้วบน local Docker + production**: ครบทั้ง 4 โหมดแบบ end-to-end จริง (เช็ค `StockBalance` ก่อน-หลังทุกขั้นตอน ไม่ใช่แค่ดู HTTP 200) — `ONE_STEP_DIRECT` ยืนยัน byte-for-byte เหมือนพฤติกรรมเดิมก่อนแก้ทุกจุด, `TWO_STEP_PICK_SHIP`/`THREE_STEP_PACK`/`FOUR_STEP_ENTERPRISE` ยืนยันครบ reserve→pick→(pack)→(stage-load)→dispatch พร้อมตัวเลข `quantityOnHand`/`quantityReserved` ถูกต้องทุกขั้น, หยิบบางส่วน (partial pick) แล้วสถานะค้างที่ `picking` จนกว่าจะครบ, resolve จาก barcode ถูกต้อง, หยิบเกินโดนบล็อก, เรียก endpoint ผิดลำดับ/ผิดสถานะโดนบล็อกทุกจุด (pack ก่อน pick, stage-load บนโหมดที่ไม่ใช่ enterprise, dispatch ก่อนถึงสถานะที่ต้องผ่าน, dispatch ซ้ำบนใบที่ `ONE_STEP_DIRECT` ปิดไปแล้ว), สร้างใบเบิกแบบไม่มี line บนคลังที่เป็นโหมดหลายขั้นตอนโดนบล็อก, feature-gating ยืนยันถูกต้อง (PRO ใช้ pack ได้แต่โดน 403 ที่ stage-load, ULTRA ใช้ได้ทั้งคู่)
+
+**ข้อสังเกตที่เจอระหว่างทดสอบ ไม่ใช่บั๊กของฟีเจอร์นี้**: tenant ที่ไม่มี subscription หรือ subscription ไม่ active สามารถเรียก `/pack`/`/stage-load` ผ่านได้อยู่ดีแม้ไม่มีสิทธิ์ตามแพ็กเกจ — สาเหตุมาจาก `EntitlementGuard` กลางของระบบตั้งค่า `ENTITLEMENT_ENFORCEMENT=warn` อยู่ (ทั้ง local และ production) ซึ่งเป็นกลไก safety valve เดิมของระบบสำหรับช่วง rollout (M4 grandfather migration) ที่ log แจ้งเตือนอย่างเดียวไม่บล็อกจริง จนกว่าจะ flip เป็น `enforce` — มีผลเหมือนกันกับทุก endpoint ที่ใช้ `@RequireFeature()` อยู่แล้วในระบบ ไม่ใช่เรื่องเฉพาะฟีเจอร์นี้ (เมื่อ subscription active จริง ระบบเช็คสิทธิ์ถูกต้อง 100% ตามที่ทดสอบยืนยันไว้ข้างต้น)
+
+_หมายเหตุ: entry นี้เป็นการบันทึก log การแก้ไข backend เท่านั้น ยังไม่ได้ sync `schema.prisma`/`docs/openapi.yaml` ของ repo นี้ให้ตรงกับ backend จริง (ตามที่ user ให้หยุด sync เอกสารไว้ชั่วคราวตั้งแต่ 2026-09-02 - จะ sync เมื่อถูกขอให้ทำ)_
+
+## 2026-09-03 (12) — Implement 3D Warehouse Blueprint feature เข้า backend จริง (ตามที่ DevOps ร่าง spec ไว้)
+
+ตรวจสอบ `schema.prisma`/`docs/openapi.yaml` เทียบ backend จริงหลัง DevOps push ของใหม่ (commit `6d8efd3`/`7ca0b14`) พบว่า DevOps ร่าง schema + API spec ของฟีเจอร์ **"3D Warehouse Blueprint"** ไว้แล้ว พร้อม frontend ที่สร้างไปเยอะมาก (`Warehouse3DCanvas.tsx` 540 บรรทัด, `WarehouseControlsHUD.tsx`, `BinDetailDrawer.tsx`, `warehouse-layout.calculator.ts`) **แต่ backend ยังไม่มี implementation เลย** (ยิงจริง 404 ทั้งคู่บน production ก่อนแก้) - หลังคุยกับ user แล้ว **implement เข้า backend จริงครบ ทดสอบ end-to-end บน local Docker และ production แล้ว**:
+
+1. **`Warehouse.blueprintUrl`/`blueprintCfg`**: URL รูปแปลน CAD/2D + JSON config การ calibrate โมเดล 3D (opacity, dimensions, zonesConfig, walls, doors) - รวมเป็น JSON blob เดียวตามที่ DevOps ออกแบบ `UpdateBlueprintDto` ไว้
+2. **`BinLocation.zoneName`/`rack`/`shelf`/`capacityKg`/`status`**: label แบบ free-text ที่ได้จากการสแกน 3D - **ตั้งใจแยกจาก `zoneId`** (ระบบ Zone ที่ implement ไปก่อนหน้านี้สำหรับ suggest-bin) เพราะ batch import จากการสแกนไม่ควรบังคับให้ต้องมี Zone entity จริงรองรับก่อน
+3. **`PUT /warehouses/:id/blueprint`**: อัปเดตรูปแปลน + ค่า calibration 3D
+4. **`POST /warehouses/:id/bins/batch`**: bulk สร้าง/แทนที่/merge bin จากการสแกน - `mode: overwrite` จะถูกบล็อกด้วย `400 CANNOT_OVERWRITE_ACTIVE_STOCK` ถ้ามี bin ไหนมีสต็อกอยู่จริง (`StockBalance.quantityOnHand > 0`) ใช้หลักการเดียวกับ WH-07 fix (ดู entry ก่อนหน้า) แค่เช็คก่อนแทนที่ layout แทนที่จะเช็คก่อนลบคลัง - `mode: merge` upsert ตาม `binCode` ไม่ลบอะไรเลยจึงไม่ต้องเช็ค stock lock - บล็อก duplicate `binCode` ภายในคำขอเดียวกันไว้ก่อนถึง DB ด้วย
+5. **Migration ใหม่** (`20260902120000_warehouse_3d_blueprint`)
+
+**ทดสอบแล้วบน local Docker + production**: อัปเดต blueprint สำเร็จ, batch overwrite สร้าง/แทนที่ bin ถูกต้อง, duplicate binCode ในคำขอเดียวกันโดนบล็อก, **stock lock protection ทำงานถูกต้อง** (มีสต็อกอยู่ → overwrite โดน 400, merge ยังทำงานได้ปกติ), merge mode upsert (สร้างใหม่/อัปเดตของเดิม) ถูกต้อง, RBAC (`owner`/`admin`/`manager` เท่านั้น) บล็อก `operator` ถูกต้องทั้ง 2 endpoint
+
+## 2026-09-02 (11) — แก้ 8 gap ที่เจอจากการทดสอบ `MASTER_DATA_TEST_PLAN.md` จริง
+
+ทดสอบ backend เทียบ `docs/MASTER_DATA_TEST_PLAN.md` ทั้งฉบับด้วยการยิง API จริง (ไม่ใช่แค่อ่านโค้ด) เจอ 8 จุดที่ไม่ตรงตามเงื่อนไข - หลังคุยกับ user แล้วให้แก้ทั้งหมด **implement เข้า backend จริงครบ ทดสอบ end-to-end บน local Docker และ production แล้ว**:
+
+1. **FREE plan quota ไม่เคยถูกบังคับใช้เลยในทางปฏิบัติ** (พบระหว่างทดสอบ PRD-08/WH-06): tenant ที่สมัคร FREE plan (ราคา 0 บาท ไม่มี trial) ผ่าน flow ปกติจะ**ค้างสถานะ `pending_payment` ตลอดไป** เพราะไม่มีอะไรให้ "จ่าย" - `EntitlementsService.getPlanForTenant()` resolve plan เฉพาะ subscription ที่ active/trialing/past_due เท่านั้น ทำให้โควตาทุกอย่างไม่ถูกเช็คเลยจนกว่าจะ active ด้วยมือ - **แก้**: `SubscriptionsService.createPending()` ให้ plan ราคา 0 บาท (ไม่มี trial) **active ทันที** เหมือน trial (พิสูจน์แล้วว่าพอ flip เป็น active โควตาทำงานถูกต้องทันที)
+2. **RBAC ไม่มีเลยในโมดูล Master Data เกือบทั้งหมด** (SEC-02): เพิ่ม `@Roles('owner','admin','manager')` ให้ครบทุก endpoint สร้าง/แก้/ลบใน `Products`, `Categories`, `Brands`, `Units`, `Suppliers`, `Manufacturers`, `TaxTypes`, `BarcodeSymbologies`, `Zones`, `Companies` (ก่อนแก้ role `operator` สร้าง/ลบ master data ได้อย่างไม่มีข้อจำกัดเลย ทดสอบจริงพบว่าลบ category ที่สินค้าอื่นผูกอยู่สำเร็จ)
+3. **WH-07**: บล็อกลบคลังสินค้าที่มีสต็อกค้างอยู่จริง (`StockBalance.quantityOnHand > 0`) ก่อนหน้านี้ลบสำเร็จไม่มีการป้องกันเลย
+4. **UNT-04**: บล็อกลบหน่วยนับ (`Unit`) ที่สินค้าอื่นผูกอยู่จริง (`unitId`/`dimensionUnitId`/`weightUnitId`) - ก่อนหน้านี้ลบสำเร็จไม่มี FK-restrict
+5. **COMP-04**: ตั้ง `isHeadquarter: true` ให้บริษัท/สาขาใหม่จะ**สลับ HQ เดิมออกให้อัตโนมัติ**ในทรานแซกชันเดียวกัน (ก่อนหน้านี้มี 2 HQ พร้อมกันได้ ไม่มีการป้องกัน/แจ้งเตือนเลย)
+6. **COMP-02**: validate `taxId` ต้องเป็นตัวเลข 13 หลักเป๊ะ (`Matches(/^\d{13}$/)`) - ก่อนหน้านี้รับ string อะไรก็ได้ไม่เกิน 20 ตัวอักษร
+7. **SUP-01/03**: เพิ่ม field `email` ให้ `Supplier` จริง (ไม่เคยมีมาก่อนเลยทั้งที่เอกสารอ้างถึง) พร้อม validate รูปแบบอีเมล
+8. **TAX-01**: เพิ่ม field `code` (auto-derive จาก name ถ้าไม่ระบุ ตาม convention เดียวกับ Category/Brand/Unit) และ `isInclusive` ให้ `TaxType` จริง (ไม่เคยมีมาก่อนเลยทั้งที่เอกสารอ้างถึง)
+9. **Migration ใหม่** (`20260902110000_master_data_test_plan_fixes`): เพิ่ม `suppliers.email`, `tax_types.code`+`is_inclusive` - ของเดิมที่มีอยู่ก่อน migration ได้ `code` แบบ auto-backfill (`tax-<8 หลักแรกของ id>`) อัตโนมัติ ไม่พัง
+
+**ทดสอบแล้วบน local Docker + production**: ครบทุกจุดข้างต้น ยืนยัน regression ผ่าน (owner/admin ยังสร้าง/แก้/ลบได้ปกติ, คลัง/หน่วยนับที่ไม่มีการอ้างอิงยังลบได้ปกติ, tax type/supplier เดิมที่ backfill ไม่พัง)
+
+## 2026-09-02 (10) — แก้ `BillingController` (`/billing/*`) ถูก `@ApiExcludeController()` โดยไม่ตั้งใจ (บั๊กเดียวกับ Menu/Rentals ใน PR #19)
+
+**ปัญหาที่พบ**: user ถามว่าทำไม `docs/openapi.yaml` มี `/billing/plans`, `/billing/current-subscription`, `/billing/subscribe`, `/billing/cancel`, `/billing/invoices` แต่ Swagger จริงไม่โผล่ - endpoint ทำงานได้ปกติทุกตัว แค่ไม่ขึ้น `/api-docs`/`/api-docs-json` เท่านั้น
+
+**สาเหตุ**: `BillingController` ติด `@ApiExcludeController()` อยู่ ตรวจสอบเทียบกับ `PlatformBillingController` (ตัวที่ควรซ่อนจริง - มี comment อธิบายเหตุผลชัดเจนว่า "super_admin/billing only เพราะเห็นข้อมูลข้าม tenant") พบว่า `BillingController` **ไม่มี comment อธิบายเหตุผลการซ่อนเลย** และมีลักษณะเป็น tenant-facing self-service ชัดเจน (`GET /billing/plans` ติด `@Public()` ไว้สำหรับหน้า signup ก่อน login ด้วยซ้ำ) - ตรงกับรูปแบบเดียวกับ `MenuController`/`RentalsController` ที่เจอใน PR #19 (copy-paste มาจาก controller ฝั่ง admin ที่อยู่ในไฟล์เดียวกัน)
+
+**การแก้ไข**: เอา `@ApiExcludeController()` ออกจาก `BillingController` เพิ่ม doc comment อธิบายเหตุผล (เหมือนที่ `RentalsController` มี) - หลัง user ยืนยันเพิ่มเติมให้เปิด `PlatformBillingController` (`/platform/billing/*`, `/platform/subscription-plans*`) ด้วยเช่นกัน แม้จะเป็นข้อมูลข้าม tenant จริง (ยอมรับ trade-off ที่ endpoint ของ platform admin จะโผล่ใน public Swagger)
+
+**ยืนยันแล้ว**: live `/api-docs-json` มี path เพิ่มจาก 98 เป็น 112, `GET /billing/plans` ยัง public เข้าถึงได้แบบไม่ต้อง login เหมือนเดิม, diff property/param ทุกจุดระหว่าง live กับ docs ที่แก้ไปแล้วเหลือ 0 จุดต่างกัน
+
 ## 2026-09-01 (9) — Implement putawayStatus filter + Zone system (suggest-bin category matching) เข้า backend จริง
 
 ต่อยอดจากการตรวจสอบ+ทดสอบ `RECEIVING_AND_PUTAWAY_DESIGN.md` ที่พบ 2 gap ระหว่างเอกสารกับ backend จริง - หลังคุยเรื่อง impact กับ user แล้วให้ทำทั้งคู่ **implement เข้า backend จริงครบ ทดสอบ end-to-end บน local Docker และ production แล้ว**:

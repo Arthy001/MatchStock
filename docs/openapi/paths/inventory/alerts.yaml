@@ -1,0 +1,23 @@
+alerts:
+  get:
+    operationId: AlertsController_getAlerts_v1
+    parameters:
+      - name: expiringDaysAhead
+        required: false
+        in: query
+        description: Window for the expiring-tag alert. Defaults to 30 days.
+        schema:
+          example: 30
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              type: object
+    security:
+      - jwt: []
+    summary: 'Computed inventory alerts: low-stock products (reorderPoint), tags expiring within the given window, and warehouses/bins over their maxCapacity. Pull-only - no push/email delivery exists in this system.'
+    tags:
+      - Alerts

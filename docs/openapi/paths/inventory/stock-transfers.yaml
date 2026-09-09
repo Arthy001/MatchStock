@@ -1,0 +1,232 @@
+stock_transfers:
+  get:
+    operationId: StockTransfersController_list_v1
+    parameters:
+      - name: page
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          default: 1
+          example: 1
+          type: number
+      - name: limit
+        required: false
+        in: query
+        schema:
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+          type: number
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  - id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                    tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                    transferNumber: ST-202608-001
+                    fromWarehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                    fromBinLocationId: null
+                    toWarehouseId: 7a848b5a-1473-47a7-bdcf-0d2534c93f3e
+                    toBinLocationId: null
+                    status: pending
+                    notes: null
+                    completedAt: null
+                    createdByType: user
+                    createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    updatedByType: user
+                    updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                    deletedAt: null
+                    deletedByType: null
+                    deletedById: null
+                    createdAt: '2026-08-18T02:39:41.574Z'
+                    updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+                meta:
+                  page: 1
+                  limit: 20
+                  totalCount: 1
+                  totalPages: 1
+    security:
+      - jwt: []
+    tags:
+      - Stock Transfers
+  post:
+    operationId: StockTransfersController_create_v1
+    parameters: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/inventory.yaml#/CreateStockTransferDto
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  transferNumber: ST-202608-001
+                  fromWarehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  fromBinLocationId: null
+                  toWarehouseId: 7a848b5a-1473-47a7-bdcf-0d2534c93f3e
+                  toBinLocationId: null
+                  status: pending
+                  notes: null
+                  completedAt: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Declare an intended transfer of specific tags between warehouses/bins - status starts "pending".
+    tags:
+      - Stock Transfers
+stock_transfers__id:
+  get:
+    operationId: StockTransfersController_getById_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '200':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  transferNumber: ST-202608-001
+                  fromWarehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  fromBinLocationId: null
+                  toWarehouseId: 7a848b5a-1473-47a7-bdcf-0d2534c93f3e
+                  toBinLocationId: null
+                  status: pending
+                  notes: null
+                  completedAt: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    tags:
+      - Stock Transfers
+stock_transfers__id__complete:
+  post:
+    operationId: StockTransfersController_complete_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  transferNumber: ST-202608-001
+                  fromWarehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  fromBinLocationId: null
+                  toWarehouseId: 7a848b5a-1473-47a7-bdcf-0d2534c93f3e
+                  toBinLocationId: null
+                  status: completed
+                  notes: null
+                  completedAt: '2026-08-18T03:15:00.000Z'
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    summary: Confirm the transfer happened - sets every declared tag's current location to the destination bin/warehouse.
+    tags:
+      - Stock Transfers
+stock_transfers__id__cancel:
+  post:
+    operationId: StockTransfersController_cancel_v1
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          example: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+          type: string
+    responses:
+      '201':
+        description: ''
+        content:
+          application/json:
+            schema:
+              example:
+                success: true
+                data:
+                  id: b3f1a2c4-5d6e-4f70-8a9b-1c2d3e4f5a6b
+                  tenantId: d01b933f-1a06-411a-9009-516a2a52c749
+                  transferNumber: ST-202608-001
+                  fromWarehouseId: 362fecaa-d3d7-4f42-b979-756fb8444d57
+                  fromBinLocationId: null
+                  toWarehouseId: 7a848b5a-1473-47a7-bdcf-0d2534c93f3e
+                  toBinLocationId: null
+                  status: cancelled
+                  notes: null
+                  completedAt: null
+                  createdByType: user
+                  createdById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  updatedByType: user
+                  updatedById: 81bd80da-6f05-4c6c-9015-a914d231f6a3
+                  deletedAt: null
+                  deletedByType: null
+                  deletedById: null
+                  createdAt: '2026-08-18T02:39:41.574Z'
+                  updatedAt: '2026-08-18T02:39:41.574Z'
+                message: Operation completed successfully
+    security:
+      - jwt: []
+    tags:
+      - Stock Transfers
