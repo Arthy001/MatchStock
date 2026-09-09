@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, ShieldCheck, Key, Lock, CheckCircle2 } from 'lucide-react';
+import { Users, ShieldCheck, Key, Lock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { DEMO_PLATFORM_ADMINS } from '../../../services/platformAuth.service';
 
 export const PlatformAdminsView: React.FC = () => {
@@ -9,13 +9,28 @@ export const PlatformAdminsView: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Users className="w-5 h-5 text-purple-400" />
-            <span>จัดการทีมงานส่วนกลาง (Platform Admin Team)</span>
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <Users className="w-5 h-5 text-purple-400" />
+              <span>จัดการทีมงานส่วนกลาง (Platform Admin Team)</span>
+            </h2>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3 text-amber-400" />
+              <span>Mockup Data (ข้อมูลจำลอง)</span>
+            </span>
+          </div>
           <p className="text-xs text-slate-400 mt-0.5">
             บัญชีผู้ดูแลระบบส่วนกลาง กำหนดบทบาทและระดับสิทธิ์การเข้าถึง Control Plane
           </p>
+        </div>
+      </div>
+
+      {/* Mockup Notice Banner */}
+      <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start sm:items-center gap-3 text-xs text-amber-200">
+        <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5 sm:mt-0" />
+        <div>
+          <span className="font-bold text-amber-300">หมายเหตุ (Notice): </span>
+          <span>รายชื่อทีมงานแอดมินด้านล่างเป็น<strong>ข้อมูลจำลอง (Mockup Data)</strong> สำหรับแสดงตัวอย่างโครงสร้างระดับสิทธิ์ (Super Admin, Billing, Support) เนื่องจาก Backend API เส้นจัดการแอดมินส่วนกลาง (<code className="px-1.5 py-0.5 rounded bg-amber-950/60 font-mono text-[11px] text-amber-300">/api/v1/platform/admins</code>) ยังอยู่ระหว่างการพัฒนา</span>
         </div>
       </div>
 

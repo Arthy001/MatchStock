@@ -28,7 +28,9 @@ export const PlatformBillingView: React.FC = () => {
   };
 
   const filtered = subscriptions.filter(
-    (s) => s.tenantName.toLowerCase().includes(search.toLowerCase()) || s.planCode.toLowerCase().includes(search.toLowerCase())
+    (s) =>
+      (s.tenantName || '').toLowerCase().includes(search.toLowerCase()) ||
+      (s.planCode || '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -93,12 +95,12 @@ export const PlatformBillingView: React.FC = () => {
                     <td className="p-4 font-bold text-white">
                       <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-purple-400 shrink-0" />
-                        <span>{sub.tenantName}</span>
+                        <span>{sub.tenantName || 'องค์กรไม่ระบุชื่อ'}</span>
                       </div>
                     </td>
                     <td className="p-4">
                       <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-purple-500/10 text-purple-300 border border-purple-500/30">
-                        {sub.planCode}
+                        {sub.planCode || 'CUSTOM'}
                       </span>
                     </td>
                     <td className="p-4 capitalize text-slate-300">{sub.billingCycle}</td>

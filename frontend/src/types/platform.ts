@@ -71,6 +71,7 @@ export interface PlatformDashboardMetrics {
   totalProducts: number;
   mrrMinor: number;
   currency: string;
+  isMock?: boolean;
   recentTenants: PlatformTenant[];
 }
 

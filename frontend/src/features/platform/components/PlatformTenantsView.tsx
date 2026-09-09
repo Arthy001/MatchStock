@@ -164,25 +164,25 @@ export const PlatformTenantsView: React.FC<PlatformTenantsViewProps> = ({ curren
                     </td>
                     <td className="p-4">
                       <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-purple-500/10 text-purple-300 border border-purple-500/30">
-                        {t.planCode}
+                        {t.planCode || 'PRO_MONTHLY'}
                       </span>
                     </td>
                     <td className="p-4 font-semibold text-slate-200">
                       <div className="flex items-center gap-1.5">
                         <Users className="w-3.5 h-3.5 text-blue-400" />
-                        <span>{t.userCount} คน</span>
+                        <span>{t.userCount ?? 0} คน</span>
                       </div>
                     </td>
                     <td className="p-4 font-semibold text-slate-200">
                       <div className="flex items-center gap-1.5">
                         <Warehouse className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>{t.warehouseCount} คลัง</span>
+                        <span>{t.warehouseCount ?? 0} คลัง</span>
                       </div>
                     </td>
                     <td className="p-4 font-semibold text-slate-200">
                       <div className="flex items-center gap-1.5">
                         <Boxes className="w-3.5 h-3.5 text-amber-400" />
-                        <span>{t.productCount.toLocaleString()} SKUs</span>
+                        <span>{(t.productCount ?? 0).toLocaleString()} SKUs</span>
                       </div>
                     </td>
                     <td className="p-4">
@@ -263,7 +263,7 @@ export const PlatformTenantsView: React.FC<PlatformTenantsViewProps> = ({ curren
                 </div>
                 <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
                   <p className="text-slate-400">แพ็กเกจที่สมัคร</p>
-                  <p className="font-bold text-purple-300 mt-1">{selectedTenant.planCode}</p>
+                  <p className="font-bold text-purple-300 mt-1">{selectedTenant.planCode || 'PRO_MONTHLY'}</p>
                 </div>
               </div>
 
@@ -271,15 +271,15 @@ export const PlatformTenantsView: React.FC<PlatformTenantsViewProps> = ({ curren
                 <h4 className="font-bold text-slate-300">สถิติการใช้งานโควตา (Usage Breakdown)</h4>
                 <div className="flex justify-between py-1 border-b border-slate-800">
                   <span className="text-slate-400">จำนวนพนักงาน (Users)</span>
-                  <span className="font-bold text-white">{selectedTenant.userCount} บัญชี</span>
+                  <span className="font-bold text-white">{selectedTenant.userCount ?? 0} บัญชี</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-800">
                   <span className="text-slate-400">จำนวนคลังสินค้า (Warehouses)</span>
-                  <span className="font-bold text-white">{selectedTenant.warehouseCount} คลัง</span>
+                  <span className="font-bold text-white">{selectedTenant.warehouseCount ?? 0} คลัง</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-800">
                   <span className="text-slate-400">รายการสินค้า (SKUs)</span>
-                  <span className="font-bold text-white">{selectedTenant.productCount.toLocaleString()} SKUs</span>
+                  <span className="font-bold text-white">{(selectedTenant.productCount ?? 0).toLocaleString()} SKUs</span>
                 </div>
                 <div className="flex justify-between py-1">
                   <span className="text-slate-400">วันที่ลงทะเบียนเข้าระบบ</span>

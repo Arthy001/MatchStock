@@ -62,7 +62,14 @@ export const PlatformDashboardView: React.FC<PlatformDashboardViewProps> = ({ cu
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
               PLATFORM OVERVIEW
             </span>
-            <span className="text-xs text-slate-400">อัปเดตข้อมูลแบบ Real-time</span>
+            {metrics.isMock ? (
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3 text-amber-400" />
+                <span>Mockup Data (ข้อมูลจำลอง)</span>
+              </span>
+            ) : (
+              <span className="text-xs text-slate-400">อัปเดตข้อมูลแบบ Real-time</span>
+            )}
           </div>
           <h2 className="text-2xl font-black text-white mt-1">
             แดชบอร์ดผู้ดูแลระบบส่วนกลาง (Platform Dashboard)
@@ -92,6 +99,17 @@ export const PlatformDashboardView: React.FC<PlatformDashboardViewProps> = ({ cu
           )}
         </div>
       </div>
+
+      {/* Mockup Notice Banner */}
+      {metrics.isMock && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start sm:items-center gap-3 text-xs text-amber-200">
+          <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5 sm:mt-0" />
+          <div>
+            <span className="font-bold text-amber-300">หมายเหตุ (Notice): </span>
+            <span>ตัวเลขสถิติและกราฟภาพรวมในหน้านี้เป็น<strong>ข้อมูลจำลอง (Mockup Data)</strong> ชั่วคราว เนื่องจาก Backend API เส้นสรุปภาพรวม (<code className="px-1.5 py-0.5 rounded bg-amber-950/60 font-mono text-[11px] text-amber-300">GET /api/v1/platform/dashboard/metrics</code>) ยังอยู่ระหว่างการพัฒนาจากทีมงาน Backend</span>
+          </div>
+        </div>
+      )}
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -253,11 +271,11 @@ export const PlatformDashboardView: React.FC<PlatformDashboardViewProps> = ({ cu
                     </td>
                     <td className="py-3">
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 border border-slate-700 text-purple-300">
-                        {tenant.planCode}
+                        {tenant.planCode || 'PRO_MONTHLY'}
                       </span>
                     </td>
-                    <td className="py-3 font-semibold">{tenant.userCount} คน</td>
-                    <td className="py-3 font-semibold">{tenant.warehouseCount} คลัง</td>
+                    <td className="py-3 font-semibold">{tenant.userCount ?? 0} คน</td>
+                    <td className="py-3 font-semibold">{tenant.warehouseCount ?? 0} คลัง</td>
                     <td className="py-3">
                       {tenant.status === 'active' ? (
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">

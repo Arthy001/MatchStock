@@ -223,7 +223,7 @@ export const platformAdminService = {
   getDashboardMetrics: async (): Promise<PlatformDashboardMetrics> => {
     try {
       const res = await platformApiClient.get('/platform/dashboard/metrics');
-      if (res.data?.data) return res.data.data;
+      if (res.data?.data) return { ...res.data.data, isMock: false };
     } catch {
       // Fallback
     }
@@ -248,6 +248,7 @@ export const platformAdminService = {
       totalProducts,
       mrrMinor,
       currency: 'THB',
+      isMock: true,
       recentTenants: MOCK_TENANTS.slice(0, 5),
     };
   },
@@ -256,7 +257,17 @@ export const platformAdminService = {
   getTenants: async (params?: { search?: string; status?: string; planCode?: string }): Promise<PlatformTenant[]> => {
     try {
       const res = await platformApiClient.get('/platform/tenants', { params });
-      if (Array.isArray(res.data?.data)) return res.data.data;
+      if (Array.isArray(res.data?.data)) {
+        return res.data.data.map((t: any) => ({
+          ...t,
+          contactEmail: t.contactEmail || '-',
+          contactPhone: t.contactPhone || '-',
+          planCode: t.planCode || t.subscription?.planCode || 'PRO_MONTHLY',
+          userCount: t.userCount ?? t._count?.users ?? 1,
+          warehouseCount: t.warehouseCount ?? t._count?.warehouses ?? 1,
+          productCount: t.productCount ?? t._count?.products ?? 0,
+        }));
+      }
     } catch {
       // Fallback
     }
@@ -316,7 +327,13 @@ export const platformAdminService = {
   getSubscriptions: async (): Promise<PlatformSubscription[]> => {
     try {
       const res = await platformApiClient.get('/platform/billing/subscriptions');
-      if (Array.isArray(res.data?.data)) return res.data.data;
+      if (Array.isArray(res.data?.data)) {
+        return res.data.data.map((s: any) => ({
+          ...s,
+          tenantName: s.tenantName || s.tenant?.name || `Tenant (${s.tenantId ? s.tenantId.slice(0, 8) : 'Unknown'}...)`,
+          planCode: s.planCode || 'CUSTOM',
+        }));
+      }
     } catch {
       // Fallback
     }
