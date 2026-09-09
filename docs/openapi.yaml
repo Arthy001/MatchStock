@@ -6711,7 +6711,7 @@ paths:
           description: List of all tenants
       security:
         - platform-jwt: []
-      summary: List all tenants across platform (Platform Roles: super_admin, support).
+      summary: "List all tenants across platform (Platform Roles: super_admin, support)."
       tags:
         - Platform Tenants
   /platform/tenants/{id}:
@@ -6728,7 +6728,7 @@ paths:
           description: Tenant detail with quota usage
       security:
         - platform-jwt: []
-      summary: Get tenant details (Platform Roles: super_admin, support).
+      summary: "Get tenant details (Platform Roles: super_admin, support)."
       tags:
         - Platform Tenants
   /platform/tenants/{id}/status:
@@ -6757,7 +6757,7 @@ paths:
           description: Tenant status updated
       security:
         - platform-jwt: []
-      summary: Suspend or activate tenant (Platform Role: super_admin only).
+      summary: "Suspend or activate tenant (Platform Role: super_admin only)."
       tags:
         - Platform Tenants
   /platform/billing/subscriptions:
@@ -6792,7 +6792,7 @@ paths:
                   message: Operation completed successfully
       security:
         - platform-jwt: []
-      summary: Cross-tenant subscriptions overview (Platform Roles: super_admin, billing).
+      summary: "Cross-tenant subscriptions overview (Platform Roles: super_admin, billing)."
       tags:
         - Platform Billing
   /platform/subscription-plans:
@@ -6803,7 +6803,7 @@ paths:
           description: List all subscription plans
       security:
         - platform-jwt: []
-      summary: List all subscription plans (Platform Roles: super_admin, billing).
+      summary: "List all subscription plans (Platform Roles: super_admin, billing)."
       tags:
         - Platform Billing
     post:
@@ -6819,7 +6819,7 @@ paths:
           description: Plan created
       security:
         - platform-jwt: []
-      summary: Create new subscription plan (Platform Role: super_admin only).
+      summary: "Create new subscription plan (Platform Role: super_admin only)."
       tags:
         - Platform Billing
   /platform/subscription-plans/{id}:
@@ -6842,7 +6842,7 @@ paths:
           description: Plan updated
       security:
         - platform-jwt: []
-      summary: Update subscription plan pricing/quotas (Platform Roles: super_admin, billing).
+      summary: "Update subscription plan pricing/quotas (Platform Roles: super_admin, billing)."
       tags:
         - Platform Billing
   /menu:
@@ -7236,6 +7236,11 @@ components:
           type: string
           format: uuid
           description: Restrict this user to one Company (branch/subsidiary) - omit/null to see every company in the tenant.
+        department:
+          type: string
+          maxLength: 100
+          example: Warehouse Operations
+          description: Free-text - display only, not validated against anything.
       required:
         - email
         - password
@@ -7243,6 +7248,10 @@ components:
     UpdateUserDto:
       type: object
       properties:
+        fullName:
+          type: string
+          maxLength: 100
+          example: Somchai Prasert
         role:
           type: string
           enum:
@@ -7261,6 +7270,11 @@ components:
           nullable: true
           format: uuid
           description: Restrict this user to one Company (branch/subsidiary) - null clears the restriction (sees every company in the tenant).
+        department:
+          type: string
+          maxLength: 100
+          example: Warehouse Operations
+          description: Free-text - display only, not validated against anything.
     UpdateProductDto:
       type: object
       properties:
@@ -9057,55 +9071,4 @@ components:
         isDeleted:
           type: boolean
           example: false
-    CreateUserDto:
-      type: object
-      properties:
-        fullName:
-          type: string
-          maxLength: 100
-          example: Somchai Prasert
-        email:
-          type: string
-          format: email
-          example: somchai@company.com
-        role:
-          type: string
-          enum:
-            - admin
-            - manager
-            - warehouse_staff
-            - purchasing_staff
-          example: warehouse_staff
-        department:
-          type: string
-          maxLength: 100
-          example: Warehouse Operations
-        password:
-          type: string
-          minLength: 8
-          example: Passw0rd!
-      required:
-        - fullName
-        - email
-        - role
-    UpdateUserDto:
-      type: object
-      properties:
-        fullName:
-          type: string
-          maxLength: 100
-        role:
-          type: string
-          enum:
-            - admin
-            - manager
-            - warehouse_staff
-            - purchasing_staff
-          example: manager
-        department:
-          type: string
-          maxLength: 100
-        isActive:
-          type: boolean
-          example: true
 
