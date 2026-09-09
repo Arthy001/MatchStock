@@ -203,7 +203,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   {!collapsed && isMasterDataOpen && (
                     <div className="ml-7 mt-1 space-y-0.5 border-l border-slate-800 pl-3">
                       {[
-                        { key: 'companies', label: t.tabCompanies },
+                        { key: 'companies', label: t.tabCompanies, isPro: true },
                         { key: 'products', label: t.tabProducts },
                         { key: 'categories', label: t.tabCategories },
                         { key: 'brands', label: t.tabBrands },
@@ -211,7 +211,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         { key: 'warehouses', label: t.tabWarehouses },
                         { key: 'suppliers', label: t.tabSuppliers },
                         { key: 'barcodes', label: t.tabBarcodes },
-                        { key: 'rbac', label: t.tabUserAccess },
+                        { key: 'rbac', label: t.tabUserAccess, isPro: true },
                       ].map((item) => {
                         const isSubActive = activeTab === 'masterData' && activeSubTab === item.key;
                         return (
@@ -227,13 +227,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               }
                               if (onMobileClose) onMobileClose();
                             }}
-                            className={`w-full text-left text-[13px] py-1 px-2.5 rounded-lg transition truncate block font-medium ${
+                            className={`w-full text-left text-[13px] py-1 px-2.5 rounded-lg transition flex items-center justify-between font-medium ${
                               isSubActive
                                 ? 'text-blue-400 font-bold bg-blue-500/15'
                                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                             }`}
                           >
-                            {item.label}
+                            <span className="truncate">{item.label}</span>
+                            {item.isPro && (
+                              <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0 ml-1.5" />
+                            )}
                           </button>
                         );
                       })}
@@ -277,13 +280,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       {[
                         { key: 'all', label: t.tabAllTransactions },
                         { key: 'receive', label: t.tabGoodsReceive },
-                        { key: 'putaway', label: t.tabPutaway, badge: 'NEW' },
+                        { key: 'putaway', label: t.tabPutaway, badge: 'NEW', isPro: true },
                         { key: 'balances', label: t.tabBalances, badge: 'LIVE' },
                         { key: 'issue', label: t.tabGoodsIssue },
-                        { key: 'transfer', label: t.tabStockTransfer },
-                        { key: 'adjustment', label: t.tabStockAdjustment },
+                        { key: 'transfer', label: t.tabStockTransfer, isPro: true },
+                        { key: 'adjustment', label: t.tabStockAdjustment, isPro: true },
                         { key: 'scanner', label: t.tabMobileScanner },
-                        { key: 'cycleCount', label: t.tabCycleCount },
+                        { key: 'cycleCount', label: t.tabCycleCount, isPro: true },
                       ].map((item) => {
                         const isSubActive = activeTab === 'inventory' && activeSubTab === item.key;
                         return (
@@ -306,17 +309,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             }`}
                           >
                             <span className="truncate">{item.label}</span>
-                            {item.badge && (
-                              <span
-                                className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded shrink-0 ${
-                                  item.badge === 'NEW'
-                                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
-                                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                                }`}
-                              >
-                                {item.badge}
-                              </span>
-                            )}
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {item.badge && (
+                                <span
+                                  className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded shrink-0 ${
+                                    item.badge === 'NEW'
+                                      ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
+                                      : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                  }`}
+                                >
+                                  {item.badge}
+                                </span>
+                              )}
+                              {item.isPro && (
+                                <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                              )}
+                            </div>
                           </button>
                         );
                       })}
@@ -331,11 +339,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleMenuItemClick('sales')}
                   title={t.sales}
                   className={`flex items-center ${
-                    collapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full gap-3 px-3 py-2'
+                    collapsed ? 'w-10 h-10 mx-auto justify-center' : 'w-full justify-between px-3 py-2'
                   } rounded-xl text-[16px] font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition`}
                 >
-                  <ShoppingCart className="w-5 h-5 shrink-0" />
-                  {!collapsed && <span className="truncate">{t.sales}</span>}
+                  <div className="flex items-center gap-3">
+                    <ShoppingCart className="w-5 h-5 shrink-0" />
+                    {!collapsed && <span className="truncate">{t.sales}</span>}
+                  </div>
+                  {!collapsed && (
+                    <Crown className="w-4 h-4 text-amber-400 shrink-0" />
+                  )}
                 </button>
               )}
 
