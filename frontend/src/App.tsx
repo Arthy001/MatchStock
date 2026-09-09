@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Language, ThemeMode, Tenant, User, MasterDataSubTab } from './types';
+import { Language, ThemeMode, Tenant, User, UserRole, MasterDataSubTab } from './types';
 import { LoginView } from './components/LoginView';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
@@ -19,6 +19,7 @@ import { getTranslation } from './i18n';
 import { LayoutDashboard, Boxes, ShoppingCart, ShoppingBag, BarChart3, Settings, Database, Menu, QrCode } from 'lucide-react';
 
 import { authService } from './services/auth.service';
+import { PlatformAdminPortal } from './features/platform/PlatformAdminPortal';
 
 const LIVE_TENANTS: Tenant[] = [
   {
@@ -160,14 +161,41 @@ export const App: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
-  const [user, setUser] = useState<User>({
-    id: '836da6be-afef-410b-9d2f-36d58e4c4109',
-    name: 'Kittisak Prasertkul (Admin)',
-    email: 'admin@matchstock.com',
-    role: 'admin',
-    tenantId: 'f97fe2dc-486e-4054-931c-aadf92823e69',
-    tenantName: 'WH-Bangkok Center (MatchStock Demo)',
+  const [user, setUser] = useState<User>(() => {
+    const saved = localStorage.getItem('matchstock_user');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {}
+    }
+    return {
+      id: '836da6be-afef-410b-9d2f-36d58e4c4109',
+      name: 'Kittisak Prasertkul (Admin)',
+      email: 'admin@matchstock.com',
+      role: 'admin',
+      tenantId: 'f97fe2dc-486e-4054-931c-aadf92823e69',
+      tenantName: 'WH-Bangkok Center (MatchStock Demo)',
+    };
   });
+
+  const handleRoleChange = (newRole: UserRole) => {
+    const roleDetails: Record<UserRole, { name: string; email: string }> = {
+      admin: { name: 'สมศักดิ์ ผู้ดูแลระบบ (Admin)', email: 'admin@matchstock.com' },
+      manager: { name: 'มนัส ผู้จัดการคลัง (Manager)', email: 'manager@matchstock.com' },
+      warehouse_staff: { name: 'วิชัย เจ้าหน้าที่คลัง (Staff)', email: 'whstaff@matchstock.com' },
+      purchasing_staff: { name: 'พรทิพย์ ฝ่ายจัดซื้อ (Purchaser)', email: 'purchasing@matchstock.com' },
+    };
+
+    const details = roleDetails[newRole] || { name: user.name, email: user.email };
+    const updated: User = {
+      ...user,
+      role: newRole,
+      name: details.name,
+      email: details.email,
+    };
+    setUser(updated);
+    localStorage.setItem('matchstock_user', JSON.stringify(updated));
+  };
 
   const t = getTranslation(lang);
 
@@ -395,6 +423,11 @@ export const App: React.FC = () => {
     setIsSidebarCollapsed((prev) => !prev);
   };
 
+  // If navigating to /platform route, render SuperAdmin Platform Admin Portal directly
+  if (location.pathname.toLowerCase().startsWith('/platform')) {
+    return <PlatformAdminPortal />;
+  }
+
   // If not logged in, show Clean Login Screen
   if (!isLoggedIn) {
     return (
@@ -470,6 +503,8 @@ export const App: React.FC = () => {
                 searchQuery={searchQuery}
                 activeSubTab={activeMasterSubTab}
                 onSubTabChange={handleMasterSubTabChange}
+                currentUser={user}
+                onRoleChange={handleRoleChange}
               />
             )}
 

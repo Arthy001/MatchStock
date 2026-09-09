@@ -82,13 +82,28 @@ export const Header: React.FC<HeaderProps> = ({
             <Menu className="w-4 h-4" />
           </button>
         )}
-        <h1
-          className={`text-sm md:text-base font-extrabold tracking-tight truncate max-w-[140px] sm:max-w-[220px] md:max-w-none ${
-            theme === 'dark' ? 'text-slate-50' : 'text-slate-900'
-          }`}
-        >
-          {lang === 'th' ? `สวัสดี, ${user.name.split(' ')[0]}!` : `Hello, ${user.name.split(' ')[0]}!`}
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1
+            className={`text-sm md:text-base font-extrabold tracking-tight truncate max-w-[140px] sm:max-w-[220px] md:max-w-none ${
+              theme === 'dark' ? 'text-slate-50' : 'text-slate-900'
+            }`}
+          >
+            {lang === 'th' ? `สวัสดี, ${user.name.split(' ')[0]}!` : `Hello, ${user.name.split(' ')[0]}!`}
+          </h1>
+          <span
+            className={`hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+              user.role === 'admin'
+                ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                : user.role === 'manager'
+                ? 'bg-purple-500/10 text-purple-500 border-purple-500/20'
+                : user.role === 'purchasing_staff'
+                ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+            }`}
+          >
+            {user.role}
+          </span>
+        </div>
       </div>
 
       {/* Center Search Input */}

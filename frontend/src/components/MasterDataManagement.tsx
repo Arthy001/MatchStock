@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, RefreshCw, CheckCircle2 } from 'lucide-react';
-import { ThemeMode, Language, MasterDataSubTab } from '../types';
+import { ThemeMode, Language, MasterDataSubTab, User, UserRole } from '../types';
+import { userService, TenantUserItem } from '../services/user.service';
 
 // Custom Master Data Loader Hook
 import { useMasterDataLoader } from './master-data/hooks/useMasterDataLoader';
@@ -22,12 +23,16 @@ interface MasterDataProps {
   searchQuery?: string;
   activeSubTab?: MasterDataSubTab;
   onSubTabChange?: (tab: MasterDataSubTab) => void;
+  currentUser?: User;
+  onRoleChange?: (role: UserRole) => void;
 }
 
 export const MasterDataManagement: React.FC<MasterDataProps> = ({
   theme,
   lang,
   activeSubTab = 'products',
+  currentUser,
+  onRoleChange,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -73,9 +78,61 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
     taxTypesList,
   } = useMasterDataLoader();
 
+  const [usersList, setUsersList] = useState<TenantUserItem[]>([]);
+  const [isUsersLoading, setIsUsersLoading] = useState(false);
+
+  const fetchUsers = async () => {
+    setIsUsersLoading(true);
+    try {
+      const data = await userService.getUsers();
+      setUsersList(data);
+    } catch {
+      // Handled inside userService fallback
+    } finally {
+      setIsUsersLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadTabData(activeSubTab);
+    if (activeSubTab === 'rbac') {
+      fetchUsers();
+    }
   }, [activeSubTab, loadTabData]);
+
+  const handleChangeUserRole = async (userItem: any, newRole: UserRole) => {
+    try {
+      await userService.updateUserRole(userItem.id, newRole);
+      setUsersList((prev) =>
+        prev.map((u) => (u.id === userItem.id ? { ...u, role: newRole } : u))
+      );
+      showToast(isEn ? `Updated role for ${userItem.name} to ${newRole}` : `อัปเดตสิทธิ์ของ ${userItem.name} เป็น ${newRole} สำเร็จ`);
+    } catch {
+      showToast(isEn ? 'Failed to update user role' : 'ไม่สามารถปรับเปลี่ยนสิทธิ์ได้');
+    }
+  };
+
+  const handleDeleteUser = async (userItem: any) => {
+    try {
+      await userService.deactivateUser(userItem.id);
+      setUsersList((prev) =>
+        prev.map((u) => (u.id === userItem.id ? { ...u, status: 'inactive' } : u))
+      );
+      showToast(isEn ? `Deactivated user ${userItem.name}` : `ระงับบัญชีผู้ใช้ ${userItem.name} สำเร็จ`);
+    } catch {
+      showToast(isEn ? 'Failed to deactivate user' : 'ไม่สามารถระงับบัญชีผู้ใช้ได้');
+    }
+  };
+
+  const handleAddUser = async (newUser: { name: string; email: string; role: UserRole; department: string }) => {
+    try {
+      const created = await userService.createUser(newUser);
+      setUsersList((prev) => [created, ...prev]);
+      showToast(isEn ? `Invited user ${newUser.name} successfully` : `เชิญผู้ใช้งาน ${newUser.name} สำเร็จ`);
+    } catch {
+      showToast(isEn ? 'Failed to invite user' : 'ไม่สามารถเชิญผู้ใช้งานได้');
+    }
+  };
 
   const isEn = lang === 'en';
 
@@ -175,8 +232,11 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
         <div className="flex items-center gap-2 shrink-0">
           {/* Quick Refresh Active Tab Button */}
           <button
-            onClick={() => loadTabData(activeSubTab, true)}
-            disabled={isLoading}
+            onClick={() => {
+              loadTabData(activeSubTab, true);
+              if (activeSubTab === 'rbac') fetchUsers();
+            }}
+            disabled={isLoading || isUsersLoading}
             className={`px-3 py-1.5 rounded-lg border text-xs sm:text-sm font-medium flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap shrink-0 ${
               theme === 'dark'
                 ? 'border-zinc-700 bg-zinc-800/90 text-zinc-200 hover:bg-zinc-700 disabled:opacity-50'
@@ -184,7 +244,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
             }`}
             title={lang === 'en' ? 'Refresh current tab data from server' : 'รีเฟรชข้อมูลแท็บนี้จากเซิร์ฟเวอร์'}
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-zinc-400 ${isLoading ? 'animate-spin text-blue-500' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-zinc-400 ${(isLoading || isUsersLoading) ? 'animate-spin text-blue-500' : ''}`} />
             <span className="hidden sm:inline">{lang === 'en' ? 'Refresh' : 'รีเฟรช'}</span>
           </button>
         </div>
@@ -226,6 +286,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
             theme={theme}
             lang={lang}
             searchQuery={searchQuery}
+            currentUserRole={currentUser?.role}
             categoriesList={categoriesList}
             brandsList={brandsList}
             unitsList={unitsList}
@@ -295,12 +356,21 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
             theme={theme}
             lang={lang}
             t={{
-              rbacTitle: isEn ? 'User Roles & Access Control' : 'กำหนดสิทธิ์และบทบาทผู้ใช้งาน',
-              rbacSubtitle: isEn ? 'Manage user roles and system privileges' : 'จัดการสิทธิ์และหน้าที่ของผู้ใช้ในระบบ',
+              rbacTitle: isEn ? 'User Roles & Access Control' : 'กำหนดสิทธิ์และบทบาทผู้ใช้งาน (Tenant RBAC)',
+              rbacSubtitle: isEn
+                ? 'Manage tenant user roles and system privileges across operations'
+                : 'จัดการสิทธิ์และหน้าที่ของผู้ใช้ในองค์กร (Admin, Manager, Warehouse Staff, Purchasing Staff)',
+              roleAdmin: isEn ? 'System Admin' : 'ผู้ดูแลระบบ (Admin)',
+              roleManager: isEn ? 'Operations Manager' : 'ผู้จัดการฝ่ายปฏิบัติการ (Manager)',
+              roleStaff: isEn ? 'Warehouse Staff' : 'เจ้าหน้าที่คลัง (Staff)',
+              rolePurchaser: isEn ? 'Purchasing Staff' : 'ฝ่ายจัดซื้อ (Purchasing)',
             }}
-            usersList={[]}
-            onChangeUserRole={() => {}}
-            onDeleteUser={() => {}}
+            usersList={usersList}
+            currentUserRole={currentUser?.role}
+            onChangeUserRole={handleChangeUserRole}
+            onDeleteUser={handleDeleteUser}
+            onAddUser={handleAddUser}
+            onSwitchRole={onRoleChange}
           />
         )}
 
