@@ -458,6 +458,20 @@ export const useStockTransactions = (
       const destBin = warehousesList.find((b) => b.id === toBinId);
       const supplier = suppliersList.find((s) => s.id === formSupplierId);
 
+      // ตรวจสอบสต็อกคงเหลือ สำหรับรายการเบิกจ่าย (ISSUE) และโอนย้าย (TRANSFER)
+      if ((formType === 'ISSUE' || formType === 'TRANSFER') && product) {
+        const available = Number(product.stockOnHand || 0);
+        const requested = Number(formQty || 0);
+        if (requested > available) {
+          showToast(
+            'error',
+            `ไม่สามารถทำรายการได้: จำนวนที่ระบุ (${requested} ${product.uom}) เกินสต็อกคงเหลือ (${available} ${product.uom})`
+          );
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       const docPrefix =
         formType === 'RECEIVE' ? 'GR' : formType === 'ISSUE' ? 'GI' : formType === 'TRANSFER' ? 'TR' : 'ADJ';
 

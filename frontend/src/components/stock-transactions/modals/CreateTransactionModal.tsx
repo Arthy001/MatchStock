@@ -114,6 +114,7 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
 }) => {
   if (!isOpen) return null;
   const isEn = lang === 'en';
+  const selectedProduct = productsList.find((p) => p.id === selectedProductId);
 
   const getModalTitle = () => {
     switch (formType) {
@@ -411,17 +412,38 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                    {t.quantity} *
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400">
+                      {t.quantity} *
+                    </label>
+                    {formType !== 'RECEIVE' && selectedProduct && (
+                      <span className={`text-[10px] font-bold ${
+                        Number(formQty) > (selectedProduct.stockOnHand || 0)
+                          ? 'text-rose-600 dark:text-rose-400 animate-pulse'
+                          : 'text-slate-500 dark:text-slate-400'
+                      }`}>
+                        สูงสุด: {selectedProduct.stockOnHand} {selectedProduct.uom}
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="number"
                     min="1"
+                    max={formType !== 'RECEIVE' && selectedProduct ? selectedProduct.stockOnHand : undefined}
                     value={formQty}
                     onChange={(e) => setFormQty(Math.max(1, Number(e.target.value)))}
                     required
-                    className="w-full h-[42px] px-3.5 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className={`w-full h-[42px] px-3.5 py-2 rounded-xl text-xs font-bold border focus:ring-2 focus:outline-none transition ${
+                      formType !== 'RECEIVE' && selectedProduct && Number(formQty) > (selectedProduct.stockOnHand || 0)
+                        ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-500 text-rose-600 dark:text-rose-400 focus:ring-rose-500'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:ring-blue-500'
+                    }`}
                   />
+                  {formType !== 'RECEIVE' && selectedProduct && Number(formQty) > (selectedProduct.stockOnHand || 0) && (
+                    <p className="text-[10px] font-semibold text-rose-500 mt-1 flex items-center gap-1">
+                      <span>⚠️ จำนวนเกินสต็อกคงเหลือที่มีอยู่จริง ({selectedProduct.stockOnHand} {selectedProduct.uom})</span>
+                    </p>
+                  )}
                 </div>
               </div>
 

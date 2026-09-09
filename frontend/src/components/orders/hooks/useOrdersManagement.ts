@@ -297,8 +297,20 @@ export const useOrdersManagement = (
     const product = products.find((p) => p.id === productId);
     if (!product) return;
 
+    // สำหรับใบสั่งขาย (Sales Order): ตรวจสอบสินค้าคงเหลือ
+    const available = Number(product.stockOnHand || 0);
+    if (isSales && available <= 0) {
+      alert(`สินค้า "${product.name}" ไม่มีในสต็อก (คงเหลือ 0 ${product.uom}) ไม่สามารถเพิ่มในใบสั่งขายได้`);
+      return;
+    }
+
     const existingIndex = formItems.findIndex((i) => i.productId === productId);
     if (existingIndex >= 0) {
+      const currentQty = formItems[existingIndex].quantity;
+      if (isSales && currentQty + 1 > available) {
+        alert(`ไม่สามารถเพิ่มจำนวนได้: สินค้า "${product.name}" มีในสต็อกเพียง ${available} ${product.uom}`);
+        return;
+      }
       const updated = [...formItems];
       updated[existingIndex].quantity += 1;
       updated[existingIndex].totalAmount =
@@ -327,6 +339,17 @@ export const useOrdersManagement = (
       setFormItems(formItems.filter((i) => i.id !== id));
       return;
     }
+
+    const targetItem = formItems.find((i) => i.id === id);
+    if (isSales && targetItem) {
+      const product = products.find((p) => p.id === targetItem.productId);
+      const available = Number(product?.stockOnHand || 0);
+      if (qty > available) {
+        alert(`จำนวนสินค้า "${targetItem.productName}" เกินสต็อกคงเหลือที่มีอยู่จริง (สูงสุด: ${available} ${targetItem.uom})`);
+        qty = available > 0 ? available : 1;
+      }
+    }
+
     setFormItems(
       formItems.map((i) =>
         i.id === id
@@ -381,10 +404,13 @@ export const useOrdersManagement = (
     setFormExpectedDate(new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
     setFormPaymentTerms('Credit 30 Days');
     setFormNotes('');
+    setFormItems([]);
     if (products.length > 0) {
-      handleAddItem(products[0].id);
-    } else {
-      setFormItems([]);
+      // หากเป็น Sales Order ให้เลือกสินค้าตัวแรกที่มีสต็อก > 0
+      const availableProd = isSales ? products.find((p) => (p.stockOnHand || 0) > 0) : products[0];
+      if (availableProd) {
+        handleAddItem(availableProd.id);
+      }
     }
     setIsCreateModalOpen(true);
   };
@@ -394,6 +420,18 @@ export const useOrdersManagement = (
     if (formItems.length === 0) {
       alert('กรุณาเพิ่มรายการสินค้าอย่างน้อย 1 รายการ');
       return;
+    }
+
+    // ตรวจสอบสต็อกคงเหลือสำหรับใบสั่งขาย (Sales Order)
+    if (isSales) {
+      for (const item of formItems) {
+        const product = products.find((p) => p.id === item.productId);
+        const available = Number(product?.stockOnHand || 0);
+        if (item.quantity > available) {
+          alert(`ไม่สามารถเปิดใบสั่งขายได้: สินค้า "${item.productName}" มีในสต็อกเพียง ${available} ${item.uom} (ระบุ ${item.quantity} ${item.uom})`);
+          return;
+        }
+      }
     }
 
     const wh = warehouses.find((w) => w.id === formWarehouseId) || warehouses[0];
