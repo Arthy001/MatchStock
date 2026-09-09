@@ -591,6 +591,7 @@ export const MasterDataManagement: React.FC<MasterDataProps> = ({
           lang={lang}
           t={t}
           binsList={binsList}
+          onUpdateBinsList={(updated) => setBinsList(updated)}
           onOpenEditBin={modals.openEditBin}
           onDeleteBin={modals.handleDeleteBin}
         />

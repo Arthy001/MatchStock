@@ -73,7 +73,7 @@ export const BinDetailDrawer: React.FC<BinDetailDrawerProps> = ({
   const availableTargetBins = allBins.filter((b) => b.id !== bin.id && b.isActive !== false && b.status !== 'full');
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-slate-900/95 backdrop-blur-xl border-l border-slate-800 shadow-2xl flex flex-col transition-all duration-300 animate-in slide-in-from-right">
+    <div className="absolute top-4 right-4 bottom-4 z-40 w-full max-w-[390px] bg-slate-900/95 backdrop-blur-2xl border border-slate-700/80 rounded-3xl shadow-2xl flex flex-col transition-all duration-300 animate-in fade-in slide-in-from-right-4 overflow-hidden pointer-events-auto">
       {/* Drawer Header */}
       <div className="p-5 border-b border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-3">

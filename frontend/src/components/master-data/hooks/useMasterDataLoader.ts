@@ -212,6 +212,21 @@ export const useMasterDataLoader = () => {
     fetchingRef.current['warehouses'] = true;
     setIsLoading(true);
     try {
+      // Check local persisted custom warehouse bins first (e.g. from Blueprint AI Save)
+      const savedCustom = localStorage.getItem('matchstock_custom_warehouse_bins');
+      if (savedCustom) {
+        try {
+          const parsed = JSON.parse(savedCustom);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setBinsList(parsed);
+            setLoadedTabs((prev) => new Set(prev).add('warehouses'));
+            setIsLoading(false);
+            fetchingRef.current['warehouses'] = false;
+            return;
+          }
+        } catch {}
+      }
+
       const res = await warehouseService.getBins();
       const raw = Array.isArray(res) ? res : Array.isArray((res as any)?.data) ? (res as any).data : [];
       

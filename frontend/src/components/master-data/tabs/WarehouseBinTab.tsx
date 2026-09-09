@@ -23,6 +23,7 @@ interface WarehouseBinTabProps {
   onOpenEditBin: (bin: WarehouseBin, isViewOnly?: boolean) => void;
   onDeleteBin: (bin: WarehouseBin) => void;
   onRelocateStock?: (sourceBinId: string, targetBinId: string, qty: number) => Promise<void>;
+  onUpdateBinsList?: (bins: WarehouseBin[]) => void;
 }
 
 export const WarehouseBinTab: React.FC<WarehouseBinTabProps> = ({
@@ -33,6 +34,7 @@ export const WarehouseBinTab: React.FC<WarehouseBinTabProps> = ({
   onOpenEditBin,
   onDeleteBin,
   onRelocateStock,
+  onUpdateBinsList,
 }) => {
   const isEn = lang === 'en';
   const safeBins = Array.isArray(binsList) ? binsList : [];
@@ -131,6 +133,7 @@ export const WarehouseBinTab: React.FC<WarehouseBinTabProps> = ({
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           onRelocateStock={onRelocateStock}
+          onUpdateBinsList={onUpdateBinsList}
         />
       )}
 
