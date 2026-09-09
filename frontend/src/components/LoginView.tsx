@@ -861,13 +861,27 @@ export const LoginView: React.FC<LoginViewProps> = ({
           </form>
 
           {/* Footer Notice */}
-          <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800 text-center">
+          <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800 text-center space-y-2">
             <p className="text-[11px] text-slate-400">
               MatchStock Enterprise WMS • Live Swagger API:{' '}
               <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-mono text-[10px]">
                 https://match-stock.ddns.net/api/v1
               </code>
             </p>
+
+            <div>
+              <a
+                href="/platform"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = '/platform';
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-xs font-bold border border-purple-500/20 transition cursor-pointer"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>เข้าสู่ระบบ Platform Admin (SuperAdmin Portal) →</span>
+              </a>
+            </div>
           </div>
         </div>
       </div>
