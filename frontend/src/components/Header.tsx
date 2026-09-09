@@ -88,20 +88,24 @@ export const Header: React.FC<HeaderProps> = ({
               theme === 'dark' ? 'text-slate-50' : 'text-slate-900'
             }`}
           >
-            {lang === 'th' ? `สวัสดี, ${user.name.split(' ')[0]}!` : `Hello, ${user.name.split(' ')[0]}!`}
+            {(() => {
+              const displayName = user?.name || (user?.email ? user.email.split('@')[0] : 'User');
+              const firstName = displayName.split(' ')[0] || displayName;
+              return lang === 'th' ? `สวัสดี, ${firstName}!` : `Hello, ${firstName}!`;
+            })()}
           </h1>
           <span
             className={`hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-              user.role === 'admin'
+              user?.role === 'admin'
                 ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
-                : user.role === 'manager'
+                : user?.role === 'manager'
                 ? 'bg-purple-500/10 text-purple-500 border-purple-500/20'
-                : user.role === 'purchasing_staff'
+                : user?.role === 'purchasing_staff'
                 ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
                 : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
             }`}
           >
-            {user.role}
+            {user?.role || 'User'}
           </span>
         </div>
       </div>

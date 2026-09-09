@@ -880,21 +880,19 @@ model Category {
   @@map("categories")
 }
 
-/**
- * Tenant-scoped storage-zone catalog (2026-09-01,
- * docs/RECEIVING_AND_PUTAWAY_DESIGN.md ยง3.2 "Suggested Putaway Helper").
- * A standalone classification tag - deliberately NOT scoped to one
- * Warehouse, matching Unit/Brand/Category's tenant-wide master-data
- * convention, so the same zone (e.g. "Cold Storage") can be reused across
- * every warehouse a tenant has, rather than redefined per warehouse.
- * `BinLocation.zoneId` marks which zone a shelf physically sits in;
- * `Category.zoneId` marks which zone that category's stock belongs in.
- * `suggest-bin` joins the two: given a productId, resolve its category's
- * zone, then only suggest bins in that zone with free capacity - falling
- * back to the old capacity-only search whenever productId is omitted, the
- * product has no category, the category has no zone, or no bin in that
- * zone has room (never a hard block, per ยง4.2's "soft suggestion" rule).
- */
+// Tenant-scoped storage-zone catalog (2026-09-01,
+// docs/RECEIVING_AND_PUTAWAY_DESIGN.md §3.2 "Suggested Putaway Helper").
+// A standalone classification tag - deliberately NOT scoped to one
+// Warehouse, matching Unit/Brand/Category's tenant-wide master-data
+// convention, so the same zone (e.g. "Cold Storage") can be reused across
+// every warehouse a tenant has, rather than redefined per warehouse.
+// `BinLocation.zoneId` marks which zone a shelf physically sits in;
+// `Category.zoneId` marks which zone that category's stock belongs in.
+// `suggest-bin` joins the two: given a productId, resolve its category's
+// zone, then only suggest bins in that zone with free capacity - falling
+// back to the old capacity-only search whenever productId is omitted, the
+// product has no category, the category has no zone, or no bin in that
+// zone has room (never a hard block, per §4.2's "soft suggestion" rule).
 model Zone {
   id        String  @id @default(uuid()) @db.Uuid
   tenantId  String  @map("tenant_id") @db.Uuid

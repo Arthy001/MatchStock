@@ -418,17 +418,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex items-center gap-3 overflow-hidden">
             <div className="relative shrink-0">
               <div className="w-9 h-9 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center shadow text-xs">
-                {user.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
+                {(() => {
+                  const safeName = user?.name || (user?.email ? user.email.split('@')[0] : 'U');
+                  return safeName
+                    .split(' ')
+                    .filter(Boolean)
+                    .map((n) => n[0])
+                    .join('')
+                    .slice(0, 2)
+                    .toUpperCase() || 'U';
+                })()}
               </div>
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-900 absolute -bottom-0.5 -right-0.5" />
             </div>
 
             {!collapsed && (
               <div className="truncate">
-                <p className="text-xs font-semibold text-white truncate">{user.name}</p>
+                <p className="text-xs font-semibold text-white truncate">{user?.name || user?.email || 'User'}</p>
                 <div className="flex items-center gap-1 mt-0.5">
                   <ShieldCheck className="w-3 h-3 text-blue-400 shrink-0" />
-                  <p className="text-[10px] text-slate-400 truncate">{user.role.toUpperCase()}</p>
+                  <p className="text-[10px] text-slate-400 truncate">{(user?.role || 'user').toUpperCase()}</p>
                 </div>
               </div>
             )}

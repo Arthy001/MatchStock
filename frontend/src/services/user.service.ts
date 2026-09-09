@@ -64,8 +64,8 @@ export const userService = {
       if (response.data && Array.isArray(response.data.data)) {
         return response.data.data.map((u: any) => ({
           id: u.id,
-          name: u.fullName || u.name || u.email.split('@')[0],
-          email: u.email,
+          name: u.fullName || u.name || (u.email ? u.email.split('@')[0] : 'User'),
+          email: u.email || '',
           department: u.department || 'ฝ่ายปฏิบัติการคลังสินค้า',
           role: (u.role as UserRole) || 'warehouse_staff',
           status: u.isActive ? 'active' : 'inactive',
@@ -111,7 +111,7 @@ export const userService = {
     role: UserRole;
     department?: string;
   }): Promise<TenantUserItem> => {
-    const finalName = payload.fullName || payload.name || payload.email.split('@')[0];
+    const finalName = payload.fullName || payload.name || (payload.email ? payload.email.split('@')[0] : 'User');
     try {
       const res = await apiClient.post('/users', {
         fullName: finalName,

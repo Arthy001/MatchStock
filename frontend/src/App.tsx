@@ -165,7 +165,18 @@ export const App: React.FC = () => {
     const saved = localStorage.getItem('matchstock_user');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed) {
+          return {
+            id: parsed.id || 'usr-001',
+            name: parsed.fullName || parsed.name || (parsed.email ? parsed.email.split('@')[0] : 'User'),
+            email: parsed.email || '',
+            role: parsed.role || 'admin',
+            tenantId: parsed.tenantId || parsed.tenant_id || 'f97fe2dc-486e-4054-931c-aadf92823e69',
+            tenantName: parsed.tenantName || parsed.tenant?.name || 'WH-Bangkok Center (MatchStock Demo)',
+            plan: parsed.plan || 'PRO_MONTHLY',
+          };
+        }
       } catch {}
     }
     return {
