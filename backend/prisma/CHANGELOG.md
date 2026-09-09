@@ -2,6 +2,21 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-09 (16) — แก้บั๊ก: ลบ master-data แล้วสร้างใหม่ด้วย code เดิมไม่ได้ (7 ตาราง)
+
+**ปัญหาที่พบ**: user รายงานว่าลบหน่วยนับ "PCS" แล้วสร้างใหม่ด้วย code เดิมไม่ได้ ขึ้น `409 Conflict: "A unit with code \"PCS\" already exists for this tenant"` ทั้งที่หน้ารายการแสดง 0 รายการ (แถวที่ลบไปแล้วถูกซ่อนถูกต้อง) - ตรวจสอบพบว่าเป็นบั๊กเดียวกันเป๊ะเกิดซ้ำใน **7 โมดูล**: `units`, `brands`, `manufacturers`, `suppliers`, `categories`, `barcode_symbologies`, `tax_types`
+
+**สาเหตุ**: ทุกโมดูลใช้ pattern เดียวกันจาก entry `20260831140000_master_data_is_deleted` migration (เพิ่ม `isDeleted` bare flag แบบไม่แก้ unique constraint ตามที่ตั้งใจไว้ตอนนั้น) แต่มี 2 จุดพลาดที่ไม่มีใครเจอมาก่อนจนตอนนี้:
+1. เมธอด `create()`'s duplicate-code pre-check (`findFirst({ where: { code } })`) **ลืมใส่ `isDeleted: false`** ทั้งที่ `list()`/`getByIdInCompany()` ของโมดูลเดียวกันใส่ถูกต้องทุกที่ - เจอ soft-deleted row เก่าแล้ว throw 409 ทันที ก่อนจะไปถึง DB เลยด้วยซ้ำ
+2. ต่อให้แก้ข้อ 1 แล้ว DB-level `@@unique([tenantId, code])` ก็ยังบล็อกอยู่ดี เพราะ `code` เป็น NOT NULL (ต่างจาก `Company.code` ที่ nullable และมีการแก้ให้ set เป็น `null` ตอนลบไปแล้วก่อนหน้านี้) - ค่า code เดิมยังคง "ครองที่" อยู่ใน unique index ตลอดไป
+
+**การแก้ไข** (ทั้ง 7 โมดูล):
+1. เพิ่ม `isDeleted: false` เข้า duplicate-check query ที่หายไป (และ `uniqueCode()` auto-gen loop ด้วย เพื่อไม่ให้ auto-gen ข้าม code ที่จริงๆ ว่างแล้ว)
+2. `softDelete()` เปลี่ยนชื่อ `code` เป็น `${code}__del_${id 8 ตัวแรก}` ก่อน set `isDeleted`/`deletedAt` (ตัด code เดิมให้พอดี VarChar(50)) - ปลดล็อกค่าเดิมให้สร้างซ้ำได้จริงในระดับ DB ไม่ใช่แค่ระดับ app
+3. **`tax_types` มีเคสพิเศษ**: มี unique constraint คู่ (`[tenantId, name]` และ `[tenantId, code]`) - แก้ทั้งสองจุด, `softDelete()` เปลี่ยนชื่อทั้ง `name` และ `code`
+
+**ทดสอบแล้วบน local Docker + production**: ลบแล้วสร้างซ้ำด้วย code เดิมสำเร็จทุกโมดูลที่ทดสอบ (units, brands, tax_types - รวมเคส name+code คู่), regression ยืนยันว่า code ซ้ำกับแถวที่ยัง active อยู่จริงยังโดนบล็อก 409 เหมือนเดิมถูกต้อง
+
 ## 2026-09-04 (15) — Implement `CreateBinLocationDto` fields เข้า backend จริง (ตามที่ DevOps อัพเดท spec ของ `POST /warehouses/:id/bins`)
 
 ตรวจสอบ `docs/openapi.yaml` เทียบ backend จริงหลัง DevOps push commit `3c8417b` ("improve warehouse & bin location creation, shelf field...") พบว่า DevOps เพิ่ม request body ใหม่ (`CreateBinLocationDto`: `code`/`zoneName`/`rack`/`shelf`/`capacityKg`/`maxCapacity`) ให้ `POST /warehouses/:id/bins` (สร้าง bin เดี่ยว) **แต่ backend จริงยังรับแค่ `code`/`maxCapacity`/`zoneId` เท่านั้น** (`zoneName`/`rack`/`shelf`/`capacityKg` เคยเข้าได้ทางเดียวคือผ่าน `POST /warehouses/:id/bins/batch` ของงาน 3D Blueprint) — หลังคุยกับ user แล้ว **implement เข้า backend จริงครบ ทดสอบ end-to-end บน local Docker และ production แล้ว**:
