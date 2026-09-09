@@ -6,6 +6,7 @@ import {
   Truck,
   CheckCircle2,
   Clock,
+  Boxes,
 } from 'lucide-react';
 import { ThemeMode, Language, Order, OrderStatus } from '../../../types';
 
@@ -17,8 +18,9 @@ interface OrderDetailDrawerProps {
   isOpen: boolean;
   order: Order | null;
   onClose: () => void;
-  onUpdateStatus: (orderId: string, status: OrderStatus) => void;
+  onUpdateStatus: (orderId: string, nextStatus: OrderStatus) => void;
   onNavigateToStockAction?: (actionType: 'RECEIVE' | 'ISSUE', order: Order) => void;
+  onOpenFulfillment?: (order: Order) => void;
 }
 
 export const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
@@ -30,6 +32,7 @@ export const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
   onClose,
   onUpdateStatus,
   onNavigateToStockAction,
+  onOpenFulfillment,
 }) => {
   if (!isOpen || !order) return null;
   const isEn = lang === 'en';
@@ -189,6 +192,21 @@ export const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
             </button>
           </div>
 
+          {isSales && onOpenFulfillment && (
+            <button
+              onClick={() => {
+                onClose();
+                onOpenFulfillment(order);
+              }}
+              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 transition cursor-pointer"
+            >
+              <Boxes className="w-4 h-4" />
+              <span>
+                {isEn ? 'Start Multi-Step Fulfillment (Pick-Pack-Ship)' : 'เริ่มกระบวนการเบิกจ่ายสินค้า (Pick-Pack-Ship)'}
+              </span>
+            </button>
+          )}
+
           <button
             onClick={() => {
               onClose();
@@ -196,12 +214,16 @@ export const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                 onNavigateToStockAction(isSales ? 'ISSUE' : 'RECEIVE', order);
               }
             }}
-            className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/20 transition cursor-pointer"
+            className={`w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer ${
+              isSales && onOpenFulfillment
+                ? 'border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20'
+            }`}
           >
             <Truck className="w-4 h-4" />
             <span>
               {isSales
-                ? (isEn ? 'Proceed to Goods Issue (GI)' : 'ส่งไปทำรายการเบิกจ่าย (GI)')
+                ? (isEn ? 'Direct Goods Issue (GI)' : 'ตัดจ่ายสต็อกโดยตรง (Direct GI)')
                 : (isEn ? 'Proceed to Goods Receipt (GR)' : 'ส่งไปทำรายการรับเข้า (GR)')}
             </span>
           </button>

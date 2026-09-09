@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Building, X, CheckCircle2, MapPin, Hash, ShieldCheck } from 'lucide-react';
+import { Building, X, CheckCircle2, MapPin, Hash, ShieldCheck, Boxes, Crown } from 'lucide-react';
 import { ThemeMode, Language } from '../../../types';
 import { warehouseService } from '../../../services/warehouse.service';
 
@@ -29,6 +29,7 @@ export const CreateWarehouseModal: React.FC<CreateWarehouseModalProps> = ({
   const [address, setAddress] = useState('');
   const [maxCapacity, setMaxCapacity] = useState('0');
   const [isActive, setIsActive] = useState(true);
+  const [outboundWorkflowMode, setOutboundWorkflowMode] = useState<'1-Step' | '2-Step' | '3-Step' | '4-Step'>('1-Step');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,6 +48,7 @@ export const CreateWarehouseModal: React.FC<CreateWarehouseModalProps> = ({
         code: code.trim() || undefined,
         address: address.trim() || undefined,
         isDefault: false,
+        outboundWorkflowMode,
       });
 
       showToast?.(isEn ? `Warehouse "${name}" created successfully` : `สร้างคลังสินค้า "${name}" สำเร็จ`);
@@ -58,6 +60,7 @@ export const CreateWarehouseModal: React.FC<CreateWarehouseModalProps> = ({
       setAddress('');
       setMaxCapacity('0');
       setIsActive(true);
+      setOutboundWorkflowMode('1-Step');
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || 'เกิดข้อผิดพลาดในการสร้างคลังสินค้า';
       setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
@@ -165,6 +168,122 @@ export const CreateWarehouseModal: React.FC<CreateWarehouseModalProps> = ({
               placeholder={isEn ? 'e.g. 123 Mittraphap Rd, Khon Kaen' : 'เช่น เลขที่ 123 ถ.มิตรภาพ อ.เมือง จ.ขอนแก่น'}
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-hidden transition resize-none"
             />
+          </div>
+
+          {/* Outbound Fulfillment Workflow Mode Switcher */}
+          <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Boxes className="w-4 h-4 text-indigo-500" />
+                <span>{isEn ? 'Outbound Fulfillment Workflow Mode' : 'กระบวนการเบิกจ่ายสินค้าประจำคลัง (Outbound Mode)'}</span>
+              </label>
+              <span className="text-[10px] text-slate-400">
+                {isEn ? 'Process complexity' : 'ขั้นตอนการเบิกจ่าย'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {/* 1-Step Direct */}
+              <div
+                onClick={() => setOutboundWorkflowMode('1-Step')}
+                className={`p-2.5 rounded-xl border transition cursor-pointer flex flex-col justify-between ${
+                  outboundWorkflowMode === '1-Step'
+                    ? 'border-indigo-500 bg-indigo-500/10 ring-1 ring-indigo-500/30'
+                    : 'border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50/50 dark:bg-slate-800/30'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
+                      1-Step Direct
+                    </span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      Free & All
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                    {isEn ? 'Scan once to deduct & dispatch.' : 'สแกน 1 ครั้ง ➔ ตัดสต็อกและส่งมอบทันที'}
+                  </p>
+                </div>
+                <div className="mt-1.5 text-[10px] font-mono text-slate-400">Scan ➔ Ship</div>
+              </div>
+
+              {/* 2-Step */}
+              <div
+                onClick={() => setOutboundWorkflowMode('2-Step')}
+                className={`p-2.5 rounded-xl border transition cursor-pointer flex flex-col justify-between ${
+                  outboundWorkflowMode === '2-Step'
+                    ? 'border-indigo-500 bg-indigo-500/10 ring-1 ring-indigo-500/30'
+                    : 'border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50/50 dark:bg-slate-800/30'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
+                      2-Step (Pick ➔ Ship)
+                    </span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                      Pro
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                    {isEn ? 'Pick at bin ➔ confirm dispatch.' : 'เดินหยิบตาม Bin ➔ ยืนยันปล่อยของ'}
+                  </p>
+                </div>
+                <div className="mt-1.5 text-[10px] font-mono text-slate-400">Pick ➔ Ship</div>
+              </div>
+
+              {/* 3-Step */}
+              <div
+                onClick={() => setOutboundWorkflowMode('3-Step')}
+                className={`p-2.5 rounded-xl border transition cursor-pointer flex flex-col justify-between ${
+                  outboundWorkflowMode === '3-Step'
+                    ? 'border-indigo-500 bg-indigo-500/10 ring-1 ring-indigo-500/30'
+                    : 'border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50/50 dark:bg-slate-800/30'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
+                      3-Step (Standard)
+                    </span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                      Recommended
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                    {isEn ? 'Pick ➔ Pack & QC ➔ Dispatch.' : 'หยิบตาม Bin ➔ บรรจุกล่อง QC ➔ จัดส่ง'}
+                  </p>
+                </div>
+                <div className="mt-1.5 text-[10px] font-mono text-slate-400">Pick ➔ Pack ➔ Ship</div>
+              </div>
+
+              {/* 4-Step Enterprise */}
+              <div
+                onClick={() => setOutboundWorkflowMode('4-Step')}
+                className={`p-2.5 rounded-xl border transition cursor-pointer flex flex-col justify-between ${
+                  outboundWorkflowMode === '4-Step'
+                    ? 'border-purple-500 bg-purple-500/10 ring-1 ring-purple-500/30'
+                    : 'border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50/50 dark:bg-slate-800/30'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="font-bold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1">
+                      <Crown className="w-3 h-3 text-amber-500" />
+                      4-Step Enterprise
+                    </span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                      Ultra
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                    {isEn ? 'Full cycle with Staging Dock validation.' : 'ครบวงจร มีจุดพักสินค้าหน้า Dock ประตู'}
+                  </p>
+                </div>
+                <div className="mt-1.5 text-[10px] font-mono text-slate-400">Pick ➔ Pack ➔ Stage ➔ Ship</div>
+              </div>
+            </div>
           </div>
 
           <div>

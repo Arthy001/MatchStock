@@ -5,6 +5,7 @@ import {
   Eye,
   Calendar,
   Package,
+  Boxes,
 } from 'lucide-react';
 import { ThemeMode, Language, Order, OrderStatus } from '../../../types';
 
@@ -17,6 +18,7 @@ interface OrdersTableProps {
   statusFilter: OrderStatus | 'ALL';
   setStatusFilter: (st: OrderStatus | 'ALL') => void;
   onOpenDetail: (order: Order) => void;
+  onOpenFulfillment?: (order: Order) => void;
 }
 
 export const OrdersTable: React.FC<OrdersTableProps> = ({
@@ -27,6 +29,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
   statusFilter,
   setStatusFilter,
   onOpenDetail,
+  onOpenFulfillment,
 }) => {
   const isEn = lang === 'en';
 
@@ -146,17 +149,34 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                     </span>
                   </td>
                   <td className="py-3 px-3.5 text-center">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onOpenDetail(order);
-                      }}
-                      className="px-2.5 py-1 rounded-lg text-xs font-bold text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition cursor-pointer"
-                    >
-                      <Eye className="w-4 h-4 inline-block mr-1" />
-                      {isEn ? 'View Details' : 'ดูรายละเอียด'}
-                    </button>
+                    <div className="flex items-center justify-center gap-1.5">
+                      {isSales && (order.status === 'CONFIRMED' || order.status === 'PROCESSING') && onOpenFulfillment && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onOpenFulfillment(order);
+                          }}
+                          className="px-2.5 py-1 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-xs transition cursor-pointer flex items-center gap-1 shrink-0"
+                          title={isEn ? 'Start Multi-Step Outbound Fulfillment' : 'เริ่มกระบวนการเบิกจ่ายสินค้า'}
+                        >
+                          <Boxes className="w-3.5 h-3.5" />
+                          <span>{isEn ? 'Fulfill' : 'เบิกสินค้า'}</span>
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenDetail(order);
+                        }}
+                        className="px-2.5 py-1 rounded-lg text-xs font-bold text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition cursor-pointer"
+                      >
+                        <Eye className="w-4 h-4 inline-block mr-1" />
+                        {isEn ? 'View' : 'ดูข้อมูล'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

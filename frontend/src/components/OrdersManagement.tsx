@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Language, ThemeMode, Order, OrderType } from '../types';
 import { getTranslation } from '../i18n';
 
@@ -8,6 +8,7 @@ import { OrderMetricsCards } from './orders/tabs/OrderMetricsCards';
 import { OrdersTable } from './orders/tabs/OrdersTable';
 import { OrderDetailDrawer } from './orders/modals/OrderDetailDrawer';
 import { CreateOrderModal } from './orders/modals/CreateOrderModal';
+import { OutboundFulfillmentModal } from './stock-transactions/modals/OutboundFulfillmentModal';
 
 interface OrdersManagementProps {
   type: OrderType;
@@ -61,6 +62,14 @@ export const OrdersManagement: React.FC<OrdersManagementProps> = ({
     handleUpdateOrderStatus,
   } = useOrdersManagement(type, searchQuery);
 
+  const [isFulfillmentModalOpen, setIsFulfillmentModalOpen] = useState(false);
+  const [fulfillmentOrder, setFulfillmentOrder] = useState<Order | null>(null);
+
+  const handleOpenFulfillment = (order: Order) => {
+    setFulfillmentOrder(order);
+    setIsFulfillmentModalOpen(true);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header & KPI Summary Cards */}
@@ -84,6 +93,7 @@ export const OrdersManagement: React.FC<OrdersManagementProps> = ({
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
         onOpenDetail={handleOpenDetail}
+        onOpenFulfillment={handleOpenFulfillment}
       />
 
       {/* 480px Slide-Over Detail Drawer */}
@@ -97,6 +107,7 @@ export const OrdersManagement: React.FC<OrdersManagementProps> = ({
         onClose={() => setIsDrawerOpen(false)}
         onUpdateStatus={handleUpdateOrderStatus}
         onNavigateToStockAction={onNavigateToStockAction}
+        onOpenFulfillment={handleOpenFulfillment}
       />
 
       {/* Create Order Modal */}
@@ -132,6 +143,23 @@ export const OrdersManagement: React.FC<OrdersManagementProps> = ({
         onUpdateItemQty={handleUpdateItemQty}
         onUpdateItemPrice={handleUpdateItemPrice}
         onRemoveItem={handleRemoveItem}
+      />
+
+      {/* Outbound Multi-Step Fulfillment Modal (Priority 1) */}
+      <OutboundFulfillmentModal
+        theme={theme}
+        lang={lang}
+        isOpen={isFulfillmentModalOpen}
+        order={fulfillmentOrder}
+        onClose={() => {
+          setIsFulfillmentModalOpen(false);
+          setFulfillmentOrder(null);
+        }}
+        onComplete={() => {
+          if (fulfillmentOrder) {
+            handleUpdateOrderStatus(fulfillmentOrder.id, 'COMPLETED');
+          }
+        }}
       />
     </div>
   );

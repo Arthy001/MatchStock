@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Warehouse as WarehouseIcon, X, CheckCircle2, Edit2, Eye, Building2, MapPin, Hash, ShieldCheck } from 'lucide-react';
+import { Warehouse as WarehouseIcon, X, CheckCircle2, Edit2, Eye, Building2, MapPin, Hash, ShieldCheck, Boxes, Crown } from 'lucide-react';
 import { ThemeMode, Language } from '../../../types';
 
 export interface WarehouseItem {
@@ -11,6 +11,7 @@ export interface WarehouseItem {
   isActive?: boolean;
   maxCapacity?: number | null;
   companyId?: string | null;
+  outboundWorkflowMode?: '1-Step' | '2-Step' | '3-Step' | '4-Step';
 }
 
 interface EditWarehouseModalProps {
@@ -33,6 +34,8 @@ interface EditWarehouseModalProps {
   setEditWhIsActive: (val: boolean) => void;
   editWhMaxCapacity: string;
   setEditWhMaxCapacity: (val: string) => void;
+  editWhOutboundMode?: '1-Step' | '2-Step' | '3-Step' | '4-Step';
+  setEditWhOutboundMode?: (val: '1-Step' | '2-Step' | '3-Step' | '4-Step') => void;
 }
 
 export const EditWarehouseModal: React.FC<EditWarehouseModalProps> = ({
@@ -54,6 +57,8 @@ export const EditWarehouseModal: React.FC<EditWarehouseModalProps> = ({
   setEditWhIsActive,
   editWhMaxCapacity,
   setEditWhMaxCapacity,
+  editWhOutboundMode = '1-Step',
+  setEditWhOutboundMode,
 }) => {
   if (!warehouse) return null;
   const isEn = lang === 'en';
@@ -187,6 +192,139 @@ export const EditWarehouseModal: React.FC<EditWarehouseModalProps> = ({
                 placeholder={isEn ? 'e.g. 123 Industrial Estate, Floor 1' : 'เช่น เลขที่ 123 นิคมอุตสาหกรรม ชั้น 1'}
                 className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-hidden transition resize-none ${disabledCls}`}
               />
+            </div>
+
+            {/* Outbound Fulfillment Workflow Mode Switcher */}
+            <div className="sm:col-span-2 pt-1 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <Boxes className="w-4 h-4 text-indigo-500" />
+                  <span>{isEn ? 'Outbound Fulfillment Workflow Mode' : 'กระบวนการเบิกจ่ายสินค้าประจำคลัง (Outbound Mode)'}</span>
+                </label>
+                <span className="text-[10px] text-slate-400">
+                  {isEn ? 'Pick-Pack-Ship process length' : 'ปรับความซับซ้อนของขั้นตอนการเบิก'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* 1-Step Direct */}
+                <div
+                  onClick={() => !isViewOnly && setEditWhOutboundMode?.('1-Step')}
+                  className={`p-3 rounded-xl border transition cursor-pointer flex flex-col justify-between ${
+                    editWhOutboundMode === '1-Step'
+                      ? 'border-indigo-500 bg-indigo-500/10 ring-1 ring-indigo-500/30'
+                      : 'border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50/50 dark:bg-slate-800/30'
+                  } ${isViewOnly ? 'pointer-events-none opacity-80' : ''}`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
+                        1-Step Direct
+                      </span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        Free & All
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      {isEn
+                        ? 'Scan once to deduct stock & dispatch. Ideal for front-store or flat storage.'
+                        : 'สแกน 1 ครั้ง ➔ ตัดสต็อกและส่งมอบทันที เหมาะกับคลังหน้าร้าน หรือไม่มีชั้นวาง'}
+                    </p>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1 text-[10px] font-mono text-slate-400">
+                    <span>Scan ➔ Ship</span>
+                  </div>
+                </div>
+
+                {/* 2-Step */}
+                <div
+                  onClick={() => !isViewOnly && setEditWhOutboundMode?.('2-Step')}
+                  className={`p-3 rounded-xl border transition cursor-pointer flex flex-col justify-between ${
+                    editWhOutboundMode === '2-Step'
+                      ? 'border-indigo-500 bg-indigo-500/10 ring-1 ring-indigo-500/30'
+                      : 'border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50/50 dark:bg-slate-800/30'
+                  } ${isViewOnly ? 'pointer-events-none opacity-80' : ''}`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
+                        2-Step (Pick ➔ Ship)
+                      </span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                        Pro Plan
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      {isEn
+                        ? 'Pick items at specific bin locations, then confirm departure.'
+                        : 'เดินหยิบตามชั้นวาง Bin ➔ ยืนยันปล่อยของส่งมอบ เหมาะกับคลังมีชั้นวาง'}
+                    </p>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1 text-[10px] font-mono text-slate-400">
+                    <span>Pick @ Bin ➔ Ship</span>
+                  </div>
+                </div>
+
+                {/* 3-Step (Recommended) */}
+                <div
+                  onClick={() => !isViewOnly && setEditWhOutboundMode?.('3-Step')}
+                  className={`p-3 rounded-xl border transition cursor-pointer flex flex-col justify-between ${
+                    editWhOutboundMode === '3-Step'
+                      ? 'border-indigo-500 bg-indigo-500/10 ring-1 ring-indigo-500/30'
+                      : 'border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50/50 dark:bg-slate-800/30'
+                  } ${isViewOnly ? 'pointer-events-none opacity-80' : ''}`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <span className="font-bold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1">
+                        <span>3-Step Standard</span>
+                        <span className="text-[9px] text-indigo-500 font-semibold">(แนะนำ)</span>
+                      </span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                        Pro Plan
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      {isEn
+                        ? 'Pick @ bin ➔ Packing station QC & waybill tracking ➔ Ship.'
+                        : 'เดินหยิบที่ชั้นวาง ➔ เข้าสถานีแพ็คกล่อง ชั่งน้ำหนัก & ออกเลขพัสดุ ➔ ส่งมอบ'}
+                    </p>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1 text-[10px] font-mono text-slate-400">
+                    <span>Pick ➔ Pack & QC ➔ Ship</span>
+                  </div>
+                </div>
+
+                {/* 4-Step Enterprise */}
+                <div
+                  onClick={() => !isViewOnly && setEditWhOutboundMode?.('4-Step')}
+                  className={`p-3 rounded-xl border transition cursor-pointer flex flex-col justify-between ${
+                    editWhOutboundMode === '4-Step'
+                      ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/30'
+                      : 'border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50/50 dark:bg-slate-800/30'
+                  } ${isViewOnly ? 'pointer-events-none opacity-80' : ''}`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <span className="font-bold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1">
+                        <Crown className="w-3.5 h-3.5 text-amber-500" />
+                        <span>4-Step Enterprise</span>
+                      </span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                        Ultra Only
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      {isEn
+                        ? 'Full Enterprise: Pick ➔ Pack ➔ Loading dock staging bay ➔ RFID dispatch.'
+                        : 'ระดับองค์กร: หยิบ ➔ แพ็ค ➔ พักลานท่าโหลดรถ (Dock Bay) ➔ ปล่อยรถ'}
+                    </p>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1 text-[10px] font-mono text-amber-500/80">
+                    <span>Pick ➔ Pack ➔ Stage ➔ Ship</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Active Status */}

@@ -47,13 +47,13 @@ export const warehouseService = {
   },
 
   // สร้างคลังสินค้าใหม่ (POST /warehouses)
-  createWarehouse: async (data: { code?: string; name: string; address?: string; isDefault?: boolean }) => {
+  createWarehouse: async (data: { code?: string; name: string; address?: string; isDefault?: boolean; outboundWorkflowMode?: string }) => {
     const response = await apiClient.post('/warehouses', data);
     return response.data?.data || response.data;
   },
 
   // อัปเดตคลังสินค้า (PATCH /warehouses/{id})
-  updateWarehouse: async (id: string, data: { name?: string; code?: string; address?: string; isDefault?: boolean; isActive?: boolean; maxCapacity?: number; companyId?: string | null }) => {
+  updateWarehouse: async (id: string, data: { name?: string; code?: string; address?: string; isDefault?: boolean; isActive?: boolean; maxCapacity?: number; companyId?: string | null; outboundWorkflowMode?: string }) => {
     const remotePayload: any = {};
     if (data.name !== undefined) remotePayload.name = data.name;
     if (data.code !== undefined) remotePayload.code = data.code;
@@ -62,6 +62,7 @@ export const warehouseService = {
     if (data.isActive !== undefined) remotePayload.isActive = data.isActive;
     if (data.maxCapacity !== undefined) remotePayload.maxCapacity = data.maxCapacity;
     if (data.companyId !== undefined) remotePayload.companyId = data.companyId;
+    if (data.outboundWorkflowMode !== undefined) remotePayload.outboundWorkflowMode = data.outboundWorkflowMode;
 
     const response = await apiClient.patch(`/warehouses/${id}`, remotePayload);
     return response.data?.data || response.data;

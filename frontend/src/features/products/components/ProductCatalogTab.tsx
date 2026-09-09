@@ -13,6 +13,7 @@ import {
   Package,
   RefreshCw,
   Plus,
+  Radio,
 } from 'lucide-react';
 import { ThemeMode, Language, ProductItem, CategoryItem, BrandItem, Supplier, BarcodeSymbologyItem, TaxTypeItem } from '../../../types';
 import { resolveImageUrl } from '../../../services/product.service';
@@ -22,6 +23,7 @@ import { CreateProductModal } from './CreateProductModal';
 import { BarcodeModal } from '../../../components/master-data/modals/BarcodeModal';
 import { ConfirmDeleteModal } from '../../../components/master-data/modals/ConfirmDeleteModal';
 import { UnitItem } from '../../../components/master-data/hooks/useMasterDataLoader';
+import { RfidTagBindingModal } from '../../../components/rfid/RfidTagBindingModal';
 
 interface ProductCatalogTabProps {
   theme: ThemeMode;
@@ -69,6 +71,8 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'IN_STOCK' | 'LOW' | 'OUT' | 'INACTIVE'>('ALL');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isRfidModalOpen, setIsRfidModalOpen] = useState(false);
+  const [selectedRfidProductId, setSelectedRfidProductId] = useState<string | undefined>(undefined);
 
   const isDark = theme === 'dark';
   const isEn = lang === 'en';
@@ -279,6 +283,18 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
           >
             <RefreshCw className={`w-3.5 h-3.5 ${hook.isLoading ? 'animate-spin text-blue-500' : 'text-zinc-400'}`} />
             <span className="hidden sm:inline text-[11px]">{isEn ? 'Refresh' : 'รีเฟรชสต็อก'}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setSelectedRfidProductId(undefined);
+              setIsRfidModalOpen(true);
+            }}
+            className="px-2.5 py-1.5 rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-xs font-semibold shadow-xs flex items-center gap-1.5 transition cursor-pointer shrink-0"
+            title={isEn ? 'RFID EPC Tag Binding & Management' : 'จัดการและผูกแท็ก RFID'}
+          >
+            <Radio className="w-3.5 h-3.5" />
+            <span>{isEn ? 'RFID Tags' : 'แท็ก RFID'}</span>
           </button>
 
           <button
@@ -500,6 +516,16 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                         </button>
                         <button
                           onClick={() => {
+                            setSelectedRfidProductId(prod.id);
+                            setIsRfidModalOpen(true);
+                          }}
+                          className="p-1 rounded text-zinc-400 hover:text-purple-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+                          title={isEn ? 'Bind RFID Tag' : 'ผูกแท็ก RFID'}
+                        >
+                          <Radio className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => {
                             if (externalOpenDrawer) externalOpenDrawer(prod);
                             else hook.openDrawerForProduct(prod);
                           }}
@@ -636,6 +662,18 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
         isDeleting={hook.isDeleting}
         data={hook.deleteConfirmData}
         onClose={() => hook.setDeleteConfirmData(null)}
+      />
+
+      <RfidTagBindingModal
+        isOpen={isRfidModalOpen}
+        onClose={() => {
+          setIsRfidModalOpen(false);
+          setSelectedRfidProductId(undefined);
+        }}
+        theme={theme}
+        lang={lang}
+        initialProductId={selectedRfidProductId}
+        showToast={showToast}
       />
     </div>
   );

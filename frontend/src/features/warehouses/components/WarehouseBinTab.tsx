@@ -529,6 +529,8 @@ export const WarehouseBinTab: React.FC<WarehouseBinTabProps> = ({
         setEditWhIsActive={hook.setEditWhIsActive}
         editWhMaxCapacity={hook.editWhMaxCapacity}
         setEditWhMaxCapacity={hook.setEditWhMaxCapacity}
+        editWhOutboundMode={hook.editWhOutboundMode}
+        setEditWhOutboundMode={hook.setEditWhOutboundMode}
       />
 
       <EditBinLocationModal

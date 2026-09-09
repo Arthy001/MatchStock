@@ -41,6 +41,7 @@ export const useWarehouses = (showToast?: (msg: string) => void) => {
   const [editWhAddress, setEditWhAddress] = useState('');
   const [editWhIsActive, setEditWhIsActive] = useState(true);
   const [editWhMaxCapacity, setEditWhMaxCapacity] = useState('0');
+  const [editWhOutboundMode, setEditWhOutboundMode] = useState<'1-Step' | '2-Step' | '3-Step' | '4-Step'>('1-Step');
 
   // Bin Modal States
   const [editingBin, setEditingBin] = useState<WarehouseBin | null>(null);
@@ -138,6 +139,7 @@ export const useWarehouses = (showToast?: (msg: string) => void) => {
     setEditWhAddress(warehouse.address || '');
     setEditWhIsActive(warehouse.isActive !== false);
     setEditWhMaxCapacity(String(warehouse.maxCapacity || 0));
+    setEditWhOutboundMode((warehouse.outboundWorkflowMode as any) || '1-Step');
   };
 
   // Save Edit Warehouse
@@ -152,6 +154,7 @@ export const useWarehouses = (showToast?: (msg: string) => void) => {
         address: editWhAddress.trim() || undefined,
         isActive: editWhIsActive,
         maxCapacity: parseInt(editWhMaxCapacity) || 0,
+        outboundWorkflowMode: editWhOutboundMode,
       });
 
       // Optimistically update binsList
@@ -322,6 +325,8 @@ export const useWarehouses = (showToast?: (msg: string) => void) => {
     setEditWhIsActive,
     editWhMaxCapacity,
     setEditWhMaxCapacity,
+    editWhOutboundMode,
+    setEditWhOutboundMode,
     openEditWarehouse,
     handleSaveEditWarehouse,
     handleDeleteWarehouse,
