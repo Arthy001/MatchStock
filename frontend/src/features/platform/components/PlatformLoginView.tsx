@@ -42,6 +42,16 @@ export const PlatformLoginView: React.FC<PlatformLoginViewProps> = ({
   };
 
   const handleQuickLogin = (role: PlatformAdminRole) => {
+    if (role === 'super_admin') {
+      setEmail('superadmin@matchstock.internal');
+      setPassword('SmyeQPTmCRmvb2RpUFzMVmtOAa1!');
+    } else if (role === 'billing') {
+      setEmail('billing@matchstock.com');
+      setPassword('Passw0rd!');
+    } else if (role === 'support') {
+      setEmail('support@matchstock.com');
+      setPassword('Passw0rd!');
+    }
     const admin = platformAuthService.quickLoginAs(role);
     onLoginSuccess(admin);
   };
@@ -154,7 +164,7 @@ export const PlatformLoginView: React.FC<PlatformLoginViewProps> = ({
                 <p className="text-xs font-bold text-slate-200 group-hover:text-amber-300 transition">
                   {DEMO_PLATFORM_ADMINS.super_admin.fullName}
                 </p>
-                <p className="text-[10px] text-slate-400">สิทธิ์สูงสุด (ทุกระบบ, Quotas, Plans, Admins)</p>
+                <p className="text-[10px] text-slate-400 font-mono">superadmin@matchstock.internal</p>
               </div>
             </div>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">
