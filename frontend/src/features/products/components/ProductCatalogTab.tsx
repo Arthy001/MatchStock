@@ -77,7 +77,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
   const [isRfidModalOpen, setIsRfidModalOpen] = useState(false);
   const [selectedRfidProductId, setSelectedRfidProductId] = useState<string | undefined>(undefined);
 
-  const canManageProducts = currentUserRole === 'admin' || currentUserRole === 'manager';
+  const canManageProducts = currentUserRole === 'admin' || currentUserRole === 'owner' || currentUserRole === 'manager';
   const isDark = theme === 'dark';
   const isEn = lang === 'en';
   const safeT = t || {

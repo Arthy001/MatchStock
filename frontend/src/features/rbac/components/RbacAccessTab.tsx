@@ -36,7 +36,7 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
 }) => {
   const isEn = lang === 'en';
   const safeUsers = Array.isArray(usersList) ? usersList : [];
-  const isAdmin = currentUserRole === 'admin';
+  const isAdmin = currentUserRole === 'admin' || currentUserRole === 'owner';
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newName, setNewName] = useState('');
@@ -81,7 +81,7 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
                 }`}
               >
                 <Lock className="w-3.5 h-3.5" />
-                <span>โหมดดูอย่างเดียว (สิทธิ์เฉพาะ Admin ในการแก้ไข)</span>
+                <span>โหมดดูอย่างเดียว (สิทธิ์เฉพาะ Admin/Owner ในการแก้ไข)</span>
               </span>
             )}
             {isAdmin && (
@@ -96,54 +96,37 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
           </div>
         </div>
 
-        {onSwitchRole && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
           <div
-            className={`mb-5 p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition ${
+            className={`p-4 rounded-xl border ${
               theme === 'dark'
-                ? 'bg-slate-800/40 border-slate-700/60'
-                : 'bg-slate-50 border-slate-200'
+                ? 'border-amber-500/30 bg-amber-500/5'
+                : 'border-amber-200 bg-amber-50/50'
             }`}
           >
-            <div className="flex items-center gap-2 text-xs font-medium">
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shrink-0" />
-              <span className={theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}>
-                {isEn
-                  ? 'QA Role Simulator (Test SEC-02 Action Guards):'
-                  : 'สลับบทบาทเพื่อทดสอบสิทธิ์ (QA Role Simulator - SEC-02):'}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {(
-                [
-                  { role: 'admin', label: isEn ? 'Admin' : 'ผู้ดูแลระบบ (Admin)' },
-                  { role: 'manager', label: isEn ? 'Manager' : 'ผู้จัดการ (Manager)' },
-                  { role: 'warehouse_staff', label: isEn ? 'Warehouse Staff' : 'เจ้าหน้าที่คลัง (Staff)' },
-                  { role: 'purchasing_staff', label: isEn ? 'Purchasing Staff' : 'จัดซื้อ (Purchaser)' },
-                ] as const
-              ).map(({ role, label }) => {
-                const isActive = currentUserRole === role;
-                return (
-                  <button
-                    key={role}
-                    type="button"
-                    onClick={() => onSwitchRole(role)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      isActive
-                        ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-500/30'
-                        : theme === 'dark'
-                        ? 'bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700'
-                        : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200 shadow-xs'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
+            <p
+              className={`text-xs font-medium ${
+                theme === 'dark' ? 'text-amber-300' : 'text-amber-700'
+              }`}
+            >
+              {isEn ? 'Owner' : 'เจ้าขององค์กร (Owner)'}
+            </p>
+            <p
+              className={`text-lg font-bold mt-1 ${
+                theme === 'dark' ? 'text-amber-400' : 'text-amber-600'
+              }`}
+            >
+              Account Owner
+            </p>
+            <p
+              className={`text-xs font-normal mt-1 ${
+                theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
+              }`}
+            >
+              {isEn ? 'Full ownership & billing management' : 'สิทธิ์สูงสุดระดับเจ้าขององค์กร'}
+            </p>
           </div>
-        )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div
             className={`p-4 rounded-xl border ${
               theme === 'dark'
@@ -329,6 +312,7 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
                               : 'bg-slate-50 border-slate-300 text-slate-900'
                           }`}
                         >
+                          <option value="owner">OWNER</option>
                           <option value="admin">ADMIN</option>
                           <option value="manager">MANAGER</option>
                           <option value="warehouse_staff">WAREHOUSE STAFF</option>
@@ -337,13 +321,15 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
                       ) : (
                         <span
                           className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
-                            usr.role === 'admin'
+                            usr.role === 'owner'
+                              ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                              : usr.role === 'admin'
                               ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
                               : usr.role === 'manager'
                               ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30'
                               : usr.role === 'warehouse_staff'
                               ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                              : 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                              : 'bg-slate-500/15 text-slate-400 border-slate-500/30'
                           }`}
                         >
                           {usr.role.replace('_', ' ').toUpperCase()}
@@ -473,6 +459,7 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
                   <option value="purchasing_staff">PURCHASING STAFF (จัดซื้อ/ผู้จัดจำหน่าย)</option>
                   <option value="manager">MANAGER (ผู้จัดการ/อนุมัติ)</option>
                   <option value="admin">ADMIN (ผู้ดูแลระบบ)</option>
+                  <option value="owner">OWNER (เจ้าขององค์กร)</option>
                 </select>
               </div>
             </div>

@@ -96,7 +96,9 @@ export const Header: React.FC<HeaderProps> = ({
           </h1>
           <span
             className={`hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-              user?.role === 'admin'
+              user?.role === 'owner'
+                ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                : user?.role === 'admin'
                 ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
                 : user?.role === 'manager'
                 ? 'bg-purple-500/10 text-purple-500 border-purple-500/20'

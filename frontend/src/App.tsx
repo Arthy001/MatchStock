@@ -23,6 +23,13 @@ import { PlatformAdminPortal } from './features/platform/PlatformAdminPortal';
 
 const LIVE_TENANTS: Tenant[] = [
   {
+    id: '0ebb619c-75e3-4a95-9c88-f6d95d5a02d5',
+    name: 'Siam Foods Distribution Co., Ltd.',
+    code: 'SIAM-01',
+    plan: 'Free Plan',
+    features: { masterData: true, inventory: true, sales: true, purchases: true, reports: true, settings: true },
+  },
+  {
     id: 'f97fe2dc-486e-4054-931c-aadf92823e69',
     name: 'WH-Bangkok Center (MatchStock Demo)',
     code: 'WH-BKK-01',
@@ -152,7 +159,7 @@ export const App: React.FC = () => {
     const saved = localStorage.getItem('matchstock_theme');
     return (saved === 'dark' || saved === 'light') ? (saved as ThemeMode) : 'light';
   });
-  const [selectedTenantId, setSelectedTenantId] = useState<string>('f97fe2dc-486e-4054-931c-aadf92823e69');
+  const [selectedTenantId, setSelectedTenantId] = useState<string>('0ebb619c-75e3-4a95-9c88-f6d95d5a02d5');
 
   const [activeTab, setActiveTab] = useState<string>(() => getInitialNavState(location.pathname).tab);
   const [activeMasterSubTab, setActiveMasterSubTab] = useState<MasterDataSubTab>(() => getInitialNavState(location.pathname).masterSub);
@@ -171,30 +178,32 @@ export const App: React.FC = () => {
             id: parsed.id || 'usr-001',
             name: parsed.fullName || parsed.name || (parsed.email ? parsed.email.split('@')[0] : 'User'),
             email: parsed.email || '',
-            role: parsed.role || 'admin',
-            tenantId: parsed.tenantId || parsed.tenant_id || 'f97fe2dc-486e-4054-931c-aadf92823e69',
-            tenantName: parsed.tenantName || parsed.tenant?.name || 'WH-Bangkok Center (MatchStock Demo)',
-            plan: parsed.plan || 'PRO_MONTHLY',
+            role: parsed.role || 'owner',
+            tenantId: parsed.tenantId || parsed.tenant_id || '0ebb619c-75e3-4a95-9c88-f6d95d5a02d5',
+            tenantName: parsed.tenantName || parsed.tenant?.name || 'Siam Foods Distribution Co., Ltd.',
+            plan: parsed.plan || 'FREE',
           };
         }
       } catch {}
     }
     return {
-      id: '836da6be-afef-410b-9d2f-36d58e4c4109',
-      name: 'Kittisak Prasertkul (Admin)',
-      email: 'admin@matchstock.com',
-      role: 'admin',
-      tenantId: 'f97fe2dc-486e-4054-931c-aadf92823e69',
-      tenantName: 'WH-Bangkok Center (MatchStock Demo)',
+      id: '60d8caec-4ad1-422c-8e99-21cd60a2a6da',
+      name: 'สมชาย ใจดี (Owner)',
+      email: 'owner@siamfoods.demo',
+      role: 'owner',
+      tenantId: '0ebb619c-75e3-4a95-9c88-f6d95d5a02d5',
+      tenantName: 'Siam Foods Distribution Co., Ltd.',
+      plan: 'FREE',
     };
   });
 
   const handleRoleChange = (newRole: UserRole) => {
     const roleDetails: Record<UserRole, { name: string; email: string }> = {
-      admin: { name: 'สมศักดิ์ ผู้ดูแลระบบ (Admin)', email: 'admin@matchstock.com' },
-      manager: { name: 'มนัส ผู้จัดการคลัง (Manager)', email: 'manager@matchstock.com' },
-      warehouse_staff: { name: 'วิชัย เจ้าหน้าที่คลัง (Staff)', email: 'whstaff@matchstock.com' },
-      purchasing_staff: { name: 'พรทิพย์ ฝ่ายจัดซื้อ (Purchaser)', email: 'purchasing@matchstock.com' },
+      owner: { name: 'สมชาย เจ้าขององค์กร (Owner)', email: 'owner@siamfoods.demo' },
+      admin: { name: 'สมหญิง ผู้ดูแลระบบ (Admin)', email: 'admin@siamfoods.demo' },
+      manager: { name: 'ประยุทธ์ ผู้จัดการคลัง (Manager)', email: 'manager@siamfoods.demo' },
+      warehouse_staff: { name: 'มานพ เจ้าหน้าที่คลัง (Staff)', email: 'warehouse@siamfoods.demo' },
+      purchasing_staff: { name: 'พรทิพย์ ฝ่ายจัดซื้อ (Purchaser)', email: 'purchasing@siamfoods.demo' },
     };
 
     const details = roleDetails[newRole] || { name: user.name, email: user.email };
