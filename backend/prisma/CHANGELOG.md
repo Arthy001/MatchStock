@@ -2,6 +2,16 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-09 (19) — ตรวจสอบ RBAC ตามที่ DevOps ขอ (Master Data SEC-02 / User Management / Platform Admin) - เจอ+แก้ 1 จุด
+
+DevOps ส่งคำขอตรวจสอบ/บังคับใช้ RBAC 3 จุด หลังประกาศว่าต่อ `GET/POST/PATCH /users`+`PATCH /users/{id}/deactivate` เข้า frontend แล้ว (พร้อม `CreateUserDto`/`UpdateUserDto` ใน openapi.yaml) - ทดสอบจริงด้วยการสร้าง user จริงแต่ละ role แล้วยิง API ตรง ไม่ใช่แค่อ่านโค้ด:
+
+1. **Master Data (SEC-02)**: `POST/PATCH/DELETE /products` บล็อก `warehouse_staff`/`purchasing_staff` ถูกต้องอยู่แล้ว (403 ทุกจุด) - ไม่ต้องแก้อะไร
+2. **User Management**: `POST/PATCH /users`, `PATCH /users/{id}/deactivate` จำกัด `owner`/`admin` ถูกต้องอยู่แล้ว **แต่ `GET /users` (ดึงรายชื่อพนักงาน) ไม่เคยมีการจำกัด role เลย** - ทุก role รวมถึง `warehouse_staff`/`viewer` เห็นรายชื่อ+อีเมลพนักงานทั้งหมดในเครือได้ - **แก้แล้ว**: เพิ่ม `@Roles('owner', 'admin')` ให้ `GET /users` ด้วย ตรงตามที่ DevOps ระบุว่าทั้ง 4 endpoint (รวม GET) ควรจำกัดเฉพาะ admin/owner
+3. **Platform Admin**: ตรวจสอบ JWT claim แยก 3 role (`super_admin`/`billing`/`support`) ถูกต้องอยู่แล้ว - ทดสอบสร้าง platform admin role `support` จริงแล้วยิง `/platform/billing/*` (ต้องการ `super_admin`หรือ`billing`) โดน 403 ถูกต้อง, endpoint ที่ไม่จำกัด role เฉพาะยังเข้าได้ปกติ, ยืนยันเพิ่มว่า tenant JWT ธรรมดาใช้ยิง `/platform/*` ไม่ได้เลย (401 - แยกระบบ token คนละชุดจริงตามที่ `PlatformJwtStrategy` ออกแบบไว้) - ไม่ต้องแก้อะไร
+
+**ทดสอบแล้วบน local Docker + production**: สร้าง user จริงแต่ละ role (`warehouse_staff`/`purchasing_staff`) ยิงทุก endpoint ที่เกี่ยวข้องยืนยัน 403 ถูกต้อง, `GET /users` หลังแก้ยืนยัน owner ยังเข้าได้ปกติ + warehouse_staff โดน 403 ถูกต้อง
+
 ## 2026-09-09 (18) — Implement bin-belongs-to-warehouse validation ที่ DevOps เพิ่มเข้า openapi.yaml (commit `50947c2`)
 
 ตรวจสอบ `docs/openapi.yaml` เทียบ backend จริงหลัง DevOps push commit `50947c2` ("enforce strict master data creation, warehouse-bin cascading binding, and OpenAPI validation contract") พบว่า DevOps เพิ่ม response `400` ใหม่ให้ `POST /goods-receipts` และ `POST /putaway/confirm` พร้อม description ระบุชัดว่า `binLocationId` ต้องอยู่ในคลัง (`warehouseId`) ที่ระบุ ไม่งั้นต้อง 400 พร้อมข้อความ "ตำแหน่งชั้นวางที่เลือกไม่ได้อยู่ในคลังสินค้านี้" **แต่ backend จริงยังไม่เช็คเรื่องนี้เลย** - ทดสอบยืนยันแล้วว่าส่ง bin จากคนละคลังไปตอนสร้าง goods receipt สำเร็จ 201 ผ่านฉลุยโดยไม่มีการเตือนใดๆ (bin ยังคง valid เพราะเป็นของ tenant เดียวกันจริง แค่ไม่ใช่คลังที่ระบุ)
