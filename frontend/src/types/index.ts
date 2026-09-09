@@ -11,6 +11,7 @@ export interface User {
   avatarUrl?: string;
   tenantId: string;
   tenantName: string;
+  plan?: 'FREE' | 'PRO_MONTHLY' | 'ULTRA_MONTHLY' | string;
 }
 
 export interface SubscriptionFeatures {

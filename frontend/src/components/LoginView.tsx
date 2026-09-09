@@ -35,6 +35,7 @@ interface DemoAccount {
   email: string;
   role: string;
   badge: string;
+  planCode: 'FREE' | 'PRO_MONTHLY' | 'ULTRA_MONTHLY';
   password?: string;
 }
 
@@ -44,6 +45,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     email: 'owner@siamfoods.demo',
     role: 'Siam Foods',
     badge: 'Free Plan',
+    planCode: 'FREE',
     password: 'Demo1234!',
   },
   {
@@ -51,6 +53,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     email: 'owner@thaielec.demo',
     role: 'Thai Electronics',
     badge: 'Pro Plan',
+    planCode: 'PRO_MONTHLY',
     password: 'Demo1234!',
   },
   {
@@ -58,6 +61,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     email: 'owner@greenfarm.demo',
     role: 'Green Farm',
     badge: 'Ultra Plan',
+    planCode: 'ULTRA_MONTHLY',
     password: 'Demo1234!',
   },
   {
@@ -65,6 +69,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     email: 'admin@matchstock.com',
     role: 'Admin',
     badge: 'Enterprise',
+    planCode: 'PRO_MONTHLY',
     password: 'Passw0rd!',
   },
   {
@@ -72,6 +77,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     email: 'manager@matchstock.com',
     role: 'Manager',
     badge: 'Operations',
+    planCode: 'PRO_MONTHLY',
     password: 'Passw0rd!',
   },
   {
@@ -79,6 +85,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     email: 'whstaff@matchstock.com',
     role: 'Warehouse Staff',
     badge: 'Inventory',
+    planCode: 'PRO_MONTHLY',
     password: 'Passw0rd!',
   },
   {
@@ -86,6 +93,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     email: 'purchasing@matchstock.com',
     role: 'Purchasing Staff',
     badge: 'Procurement',
+    planCode: 'PRO_MONTHLY',
     password: 'Passw0rd!',
   },
 ];
@@ -114,6 +122,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
     setEmail(account.email);
     setPassword(account.password || 'Demo1234!');
     setErrorMsg('');
+    localStorage.setItem('matchstock_active_plan', account.planCode);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -132,6 +141,18 @@ export const LoginView: React.FC<LoginViewProps> = ({
         const userObj = res.user || res.data?.user;
         const tenantObj = res.tenant || res.data?.tenant;
 
+        // ดึง Plan Code จาก API หรือหาจาก Demo Account
+        const matchedDemo = DEMO_ACCOUNTS.find(
+          (a) => a.email.toLowerCase() === email.trim().toLowerCase()
+        );
+        const resolvedPlan: 'FREE' | 'PRO_MONTHLY' | 'ULTRA_MONTHLY' =
+          (res.subscription?.planCode as any) ||
+          (res.data?.subscription?.planCode as any) ||
+          matchedDemo?.planCode ||
+          (email.includes('siamfoods') ? 'FREE' : email.includes('greenfarm') ? 'ULTRA_MONTHLY' : 'PRO_MONTHLY');
+
+        localStorage.setItem('matchstock_active_plan', resolvedPlan);
+
         if (userObj) {
           const loggedUser: User = {
             id: userObj.id,
@@ -139,7 +160,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
             email: userObj.email,
             role: (userObj.role as any) || 'admin',
             tenantId: userObj.tenantId || (userObj as any).tenant_id || tenantObj?.id || '',
-            tenantName: tenantObj?.name || 'MatchStock Tenant',
+            tenantName: tenantObj?.name || matchedDemo?.tenantName || 'MatchStock Tenant',
+            plan: resolvedPlan,
           };
           onLoginSuccess(loggedUser);
           return;
