@@ -63,34 +63,57 @@ export const useStockTransactions = (
   const loadLiveData = async () => {
     setIsLoading(true);
     try {
-      const [prodRes, whRes, supRes, txRes] = await Promise.allSettled([
+      const [prodRes, whRes, supRes, txRes, balRes] = await Promise.allSettled([
         productService.getProducts(),
         warehouseService.getWarehouses(),
         masterDataService.getSuppliers(),
         transactionService.getTransactions(),
+        transactionService.getStockBalances({ limit: 100 }),
       ]);
+
+      const balData = balRes.status === 'fulfilled' ? (balRes.value?.data || []) : [];
+      const stockMap = new Map<string, number>();
+      balData.forEach((b: any) => {
+        if (b.productId) {
+          const current = stockMap.get(b.productId) || 0;
+          const qty = typeof b.availableQuantity === 'number'
+            ? b.availableQuantity
+            : typeof b.quantityOnHand === 'number'
+            ? b.quantityOnHand
+            : 0;
+          stockMap.set(b.productId, current + qty);
+        }
+      });
 
       let mappedProds: ProductItem[] = [];
       if (prodRes.status === 'fulfilled') {
         const prodData = (prodRes.value as any)?.data || (prodRes.value as any)?.items || (Array.isArray(prodRes.value) ? prodRes.value : []);
         if (Array.isArray(prodData) && prodData.length > 0) {
-          mappedProds = prodData.map((p: any) => ({
-            id: p.id,
-            code: p.code || 'PRD-000',
-            sku: p.sku || p.code || 'SKU-000',
-            name: p.name || 'Product',
-            category: p.category?.name || p.categoryName || '-',
-            price: Number(p.price || (p.sellingPriceMinor ? p.sellingPriceMinor / 100 : 0)),
-            stockOnHand: Number(p.stockOnHand ?? p.currentStock ?? 0),
-            uom: p.baseUnit?.name || p.uom || 'PCS',
-            weightKg: Number(p.weightKg || 0),
-            widthCm: Number(p.widthCm || 0),
-            lengthCm: Number(p.lengthCm || 0),
-            heightCm: Number(p.heightCm || 0),
-            reorderLevel: Number(p.reorderLevel || p.reorderPoint || 10),
-            minReorderQty: Number(p.minReorderQty || 5),
-          }));
+          mappedProds = prodData.map((p: any) => {
+            const realBal = stockMap.has(p.id) ? stockMap.get(p.id)! : undefined;
+            const fallback = p.inStockCount ?? p.availableCount ?? p.stockOnHand ?? p.currentStock ?? 0;
+
+            return {
+              id: p.id,
+              code: p.code || 'PRD-000',
+              sku: p.sku || p.code || 'SKU-000',
+              name: p.name || 'Product',
+              category: p.category?.name || p.categoryName || '-',
+              price: Number(p.price || (p.sellingPriceMinor ? p.sellingPriceMinor / 100 : 0)),
+              stockOnHand: realBal !== undefined ? realBal : Number(fallback),
+              uom: p.unit?.name || p.baseUnit?.name || p.uom || 'PCS',
+              weightKg: Number(p.weightKg || 0),
+              widthCm: Number(p.widthCm || 0),
+              lengthCm: Number(p.lengthCm || 0),
+              heightCm: Number(p.heightCm || 0),
+              reorderLevel: Number(p.reorderLevel || p.reorderPoint || 10),
+              minReorderQty: Number(p.minReorderQty || 5),
+            };
+          });
           setProductsList(mappedProds);
+          if (mappedProds.length > 0 && !selectedProductId) {
+            setSelectedProductId(mappedProds[0].id);
+          }
         }
       }
 

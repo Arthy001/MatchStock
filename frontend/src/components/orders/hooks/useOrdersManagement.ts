@@ -28,6 +28,7 @@ export const useOrdersManagement = (
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [stockBalances, setStockBalances] = useState<any[]>([]);
 
   // Create Form State
   const [formPartyName, setFormPartyName] = useState<string>('');
@@ -104,6 +105,7 @@ export const useOrdersManagement = (
 
         const supList = supRes.data || supRes.items || (Array.isArray(supRes) ? supRes : []);
         setSuppliers(supList);
+        setStockBalances(balancesList);
       } catch (err) {
         console.error('Failed to load products/warehouses/suppliers in OrdersManagement:', err);
       }
@@ -403,16 +405,28 @@ export const useOrdersManagement = (
 
     try {
       if (isSales) {
+        const targetWhId = formWarehouseId || wh?.id || 'wh-01';
         const res = await transactionService.issueStock({
-          warehouseId: formWarehouseId || wh?.id || 'wh-01',
+          warehouseId: targetWhId,
           soNumber: newOrderNumber,
           recipient: formPartyName || 'ลูกค้าทั่วไป (Walk-in Customer)',
           notes: formNotes,
-          items: formItems.map((i) => ({
-            productId: i.productId,
-            quantity: i.quantity,
-            unitPrice: i.unitPrice,
-          })),
+          items: formItems.map((i) => {
+            // Find bin with stock for this product in the selected warehouse
+            const matchedBal = stockBalances.find(
+              (b: any) =>
+                b.productId === i.productId &&
+                b.warehouseId === targetWhId &&
+                b.binLocationId &&
+                (b.availableQuantity > 0 || b.quantityOnHand > 0)
+            );
+            return {
+              productId: i.productId,
+              binLocationId: matchedBal?.binLocationId || undefined,
+              quantity: i.quantity,
+              unitPrice: i.unitPrice,
+            };
+          }),
         });
         if (res?.data) {
           backendId = res.data.id;
