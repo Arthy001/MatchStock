@@ -2,6 +2,55 @@
 
 บันทึกการเปลี่ยนแปลงทุกครั้งที่ `schema.prisma` หรือ `docs/openapi.yaml` ใน repo นี้ถูก sync จากโค้ด backend ตัวจริง
 
+## 2026-09-09 (20) — Implement Platform Tenants management + `department` field + แก้ syntax error จริงใน openapi.yaml (commit `20962db`)
+
+ตรวจสอบ `docs/openapi.yaml` เทียบ backend จริงหลัง DevOps push commit `20962db` ("implement platform admin roles and tenant RBAC with SEC-02 action guards") พบ 4 จุดที่ backend ยังไม่มี - หลังคุยกับ user แล้ว **implement ครบทั้ง 4 จุด ทดสอบ end-to-end บน local Docker และ production แล้ว**:
+
+1. **`PlatformTenantsController` ใหม่ทั้งหมด** (`GET/PATCH /platform/tenants*`) - ไม่เคยมีมาก่อนเลย: `GET /platform/tenants` (list พร้อม search/status/planCode filter, role `super_admin`+`support`), `GET /platform/tenants/:id` (รายละเอียด + subscription + quota usage แบบเดียวกับที่ tenant เองเห็นใน `GET /billing/current-subscription`), `PATCH /platform/tenants/:id/status` (suspend/reactivate, `super_admin` เท่านั้น) - ใช้ `Tenant.status` field ที่มีอยู่แล้วในสคีมา ไม่ต้อง migrate
+2. **`Tenant.status = 'suspended'` ไม่เคยมีผลอะไรเลยมาก่อน** - ตรวจพบว่าไม่มีที่ไหนในระบบเช็คค่านี้เลยทั้งที่ field มีมานานแล้ว การ implement ข้อ 1 เฉยๆ จะได้ปุ่ม "suspend" ที่กดแล้วไม่มีผลจริง (cosmetic bug) - **แก้เพิ่มเติมนอกเหนือจากที่ขอ**: เพิ่ม `AuthService.assertTenantActive()` เช็คใน `login()` และ `refresh()` ทั้งคู่ - tenant ที่ถูก suspend ล็อกอิน/ต่ออายุ session ไม่ได้อีก (401) เป็นการตัดสินใจด้าน engineering ที่ตั้งใจจำกัดแค่จุด login/refresh เท่านั้น (ไม่เช็คทุก request เพื่อไม่เพิ่ม DB round-trip ให้ hot path) - session ที่ค้างอยู่ก่อนแล้วจะหมดอายุเองภายใน 15 นาที (`JWT_ACCESS_EXPIRES_IN`)
+3. **`GET /platform/subscription-plans` (list) ไม่มีมาก่อน** - มีแค่ POST (create)/PATCH (update) - เพิ่ม `PlansService.listAll()` (ต่างจาก `listActive()` เดิมที่ใช้หน้า signup สาธารณะ - เวอร์ชัน admin นี้เห็น plan ที่ถูกปิดใช้งานด้วย) และ endpoint ใหม่
+4. **role ของ `POST /platform/subscription-plans` (create) แคบกว่าที่มีอยู่จริง** - เดิมใช้ class-level `@PlatformAuth('super_admin', 'billing')` เหมือนทั้ง controller ตาม doc ใหม่ต้องเป็น `super_admin` เท่านั้น (billing แก้ราคา/quota ของแผนเดิมได้ แต่สร้างแผนใหม่ทำไม่ได้) - แก้เป็น method-level override
+5. **`User.department` field ไม่มีอยู่จริง** - `CreateUserDto`/`UpdateUserDto` ใหม่ที่ DevOps ระบุต้องการ field นี้ (free-text, ไม่ validate กับอะไร) - เพิ่มเข้า schema (migration `20260909130000_user_department_field`) + DTO ทั้งสอง + wiring เข้า service ครบ (พบเพิ่มว่า `UpdateUserDto` เดิมไม่มี `fullName` เลยทั้งที่ doc ใหม่ต้องการ - เพิ่มให้ด้วย)
+
+**เจอบั๊กจริงเพิ่มเติมระหว่างตรวจสอบ (ไม่เกี่ยวกับ backend แต่เป็นไฟล์เอกสารตัวนี้เอง) - แก้ไปด้วย**:
+- **`docs/openapi.yaml` parse ไม่ได้เลยทั้งไฟล์** (YAML syntax error) - commit `20962db` เพิ่ม `summary:` 7 จุดที่มีข้อความรูปแบบ `"...(Platform Roles: super_admin, billing)."` โดยไม่ครอบด้วย quote - เครื่องหมาย `:` ตามด้วย space ข้างในทำให้ YAML parser งง (ตีความเป็น nested mapping) พังทั้งไฟล์ ไม่ใช่แค่บรรทัดนั้น - แก้โดยครอบทั้ง 7 จุดด้วย double quote
+- **`CreateUserDto`/`UpdateUserDto` ถูกประกาศซ้ำ 2 รอบ** ในไฟล์เดียวกัน (`duplicated mapping key`) - เวอร์ชันเก่า (ตรงกับ backend ก่อนหน้า มี `companyId`/role enum เต็ม) กับเวอร์ชันใหม่ของ DevOps (มี `department`/`fullName` แต่ role enum แคบกว่าและไม่มี `companyId`) - แก้โดย **รวมทั้งสองเวอร์ชันเข้าด้วยกัน** เป็นนิยามเดียว (ตรงกับ backend จริงที่มีครบทั้ง `companyId` และ `department`) แล้วลบส่วนซ้ำทิ้ง
+
+**ทดสอบแล้วบน local Docker + production**: สร้าง platform admin ทดสอบครบ 3 role (`super_admin`/`billing`/`support`) ยิงทุก endpoint ยืนยัน role restriction ถูกต้องทุกจุด, suspend tenant จริงแล้วยืนยัน login ถูกบล็อก 401 ทันที + reactivate แล้ว login กลับมาใช้ได้ปกติ, สร้าง/แก้ user พร้อม `department`/`fullName` สำเร็จ, `docs/openapi.yaml` parse ผ่านสมบูรณ์แล้ว (170+ paths, 70 schemas, ไม่มี duplicate key), diff path เทียบ live `/api-docs-json` เหลือ 0 จุดต่างกันจริง (2 จุดที่ต่างเป็น `/platform/auth/*` ที่ตั้งใจซ่อนจาก public Swagger อยู่แล้ว ไม่ใช่ gap)
+
+## 2026-09-09 (19) — ตรวจสอบ RBAC ตามที่ DevOps ขอ (Master Data SEC-02 / User Management / Platform Admin) - เจอ+แก้ 1 จุด
+
+DevOps ส่งคำขอตรวจสอบ/บังคับใช้ RBAC 3 จุด หลังประกาศว่าต่อ `GET/POST/PATCH /users`+`PATCH /users/{id}/deactivate` เข้า frontend แล้ว (พร้อม `CreateUserDto`/`UpdateUserDto` ใน openapi.yaml) - ทดสอบจริงด้วยการสร้าง user จริงแต่ละ role แล้วยิง API ตรง ไม่ใช่แค่อ่านโค้ด:
+
+1. **Master Data (SEC-02)**: `POST/PATCH/DELETE /products` บล็อก `warehouse_staff`/`purchasing_staff` ถูกต้องอยู่แล้ว (403 ทุกจุด) - ไม่ต้องแก้อะไร
+2. **User Management**: `POST/PATCH /users`, `PATCH /users/{id}/deactivate` จำกัด `owner`/`admin` ถูกต้องอยู่แล้ว **แต่ `GET /users` (ดึงรายชื่อพนักงาน) ไม่เคยมีการจำกัด role เลย** - ทุก role รวมถึง `warehouse_staff`/`viewer` เห็นรายชื่อ+อีเมลพนักงานทั้งหมดในเครือได้ - **แก้แล้ว**: เพิ่ม `@Roles('owner', 'admin')` ให้ `GET /users` ด้วย ตรงตามที่ DevOps ระบุว่าทั้ง 4 endpoint (รวม GET) ควรจำกัดเฉพาะ admin/owner
+3. **Platform Admin**: ตรวจสอบ JWT claim แยก 3 role (`super_admin`/`billing`/`support`) ถูกต้องอยู่แล้ว - ทดสอบสร้าง platform admin role `support` จริงแล้วยิง `/platform/billing/*` (ต้องการ `super_admin`หรือ`billing`) โดน 403 ถูกต้อง, endpoint ที่ไม่จำกัด role เฉพาะยังเข้าได้ปกติ, ยืนยันเพิ่มว่า tenant JWT ธรรมดาใช้ยิง `/platform/*` ไม่ได้เลย (401 - แยกระบบ token คนละชุดจริงตามที่ `PlatformJwtStrategy` ออกแบบไว้) - ไม่ต้องแก้อะไร
+
+**ทดสอบแล้วบน local Docker + production**: สร้าง user จริงแต่ละ role (`warehouse_staff`/`purchasing_staff`) ยิงทุก endpoint ที่เกี่ยวข้องยืนยัน 403 ถูกต้อง, `GET /users` หลังแก้ยืนยัน owner ยังเข้าได้ปกติ + warehouse_staff โดน 403 ถูกต้อง
+
+## 2026-09-09 (18) — Implement bin-belongs-to-warehouse validation ที่ DevOps เพิ่มเข้า openapi.yaml (commit `50947c2`)
+
+ตรวจสอบ `docs/openapi.yaml` เทียบ backend จริงหลัง DevOps push commit `50947c2` ("enforce strict master data creation, warehouse-bin cascading binding, and OpenAPI validation contract") พบว่า DevOps เพิ่ม response `400` ใหม่ให้ `POST /goods-receipts` และ `POST /putaway/confirm` พร้อม description ระบุชัดว่า `binLocationId` ต้องอยู่ในคลัง (`warehouseId`) ที่ระบุ ไม่งั้นต้อง 400 พร้อมข้อความ "ตำแหน่งชั้นวางที่เลือกไม่ได้อยู่ในคลังสินค้านี้" **แต่ backend จริงยังไม่เช็คเรื่องนี้เลย** - ทดสอบยืนยันแล้วว่าส่ง bin จากคนละคลังไปตอนสร้าง goods receipt สำเร็จ 201 ผ่านฉลุยโดยไม่มีการเตือนใดๆ (bin ยังคง valid เพราะเป็นของ tenant เดียวกันจริง แค่ไม่ใช่คลังที่ระบุ)
+
+**การแก้ไข**: เพิ่ม `GoodsReceiptsService.assertBinBelongsToWarehouse()` private helper ตรวจ `bin.warehouseId === warehouseId` (throw 400 ถ้าไม่ตรง แทนที่จะปล่อยผ่าน) ต่อจาก `getBinByIdInCompany()` เดิมที่เช็คแค่ว่า bin เป็นของ tenant นี้จริง (ไม่ได้เช็คคลัง) - เรียกใช้ครบ 3 จุดตามที่ DevOps ระบุ:
+1. `POST /goods-receipts` - `binLocationId` ระดับ header (default putaway bin)
+2. `POST /goods-receipts` - `lines[].binLocationId` แต่ละบรรทัด (1-Step Direct Putaway)
+3. `POST /putaway/confirm` - `binLocationId` ที่สแกนจริง เทียบกับคลังของใบรับสินค้าต้นทาง (2-Step flow)
+
+**ทดสอบแล้วบน local Docker + production**: สร้างคลัง A/B แยกกัน ยิง bin จากคลัง B ไปตอนสร้าง receipt ของคลัง A โดน 400 ถูกต้องทั้ง 3 จุด (header/line/putaway-confirm), regression ยืนยันว่า bin ที่ตรงคลังจริงยังสร้าง/ยืนยันได้ปกติทุกประการ
+
+## 2026-09-09 (17) — ตามแก้ entry (16): backfill แถวที่ถูกลบไปแล้วก่อนจะแก้ (500 error จริงบน production) + เพิ่ม defense-in-depth
+
+**เหตุการณ์**: ทันทีหลัง deploy entry (16) user รายงานว่าเพิ่มหน่วยนับขึ้น **500 Internal Server Error** จริง (ไม่ใช่ 409 ที่ตั้งใจ) - log production โชว์ `PrismaClientKnownRequestError: Unique constraint failed on the fields: (tenant_id, code)` หลุดออกมาแบบไม่มีใคร catch เลย
+
+**สาเหตุที่แท้จริง**: entry (16)'s fix แก้ถูกแล้วสำหรับการลบ**ครั้งใหม่**หลังจากนั้น แต่แถวที่ถูก soft-delete ไปแล้ว**ก่อน** deploy entry (16) ยังมีค่า `code`/`name` เดิมไม่ถูก rename (เพราะตอนลบตอนนั้นยังไม่มี logic นี้) - ตรวจพบว่า tenant ของ user เอง (`greenfarm.demo`) มีหน่วยนับที่ลบไปแล้ว 5 ตัว (`PCS`, `KG`, `BAG`, `EACH`, ...) ค้างแบบนี้อยู่พอดี พอ `create()`'s pre-check (ที่กรอง `isDeleted:false` ถูกต้องแล้ว) หาไม่เจอ ก็ยิง INSERT ตรงเข้า DB แล้วชนกับแถวเก่าที่ยังไม่ถูก backfill
+
+**แก้ไข**:
+1. รัน one-off backfill script บน production (และ local) rename ทุกแถวที่ `is_deleted=true` แต่ยังไม่มี `__del_` suffix ใน `code`/`name` ให้ตรงตาม convention ใหม่ - เจอทั้งหมด 10 แถวกระจายทั้ง 5 ตาราง (units 6, brands 1, suppliers 1, categories 2) บน production
+2. เพิ่ม **defense-in-depth**: ห่อ `create()`'s actual `.create()` call ทั้ง 7 โมดูลด้วย `try/catch` ดักจับ `Prisma.PrismaClientKnownRequestError` code `P2002` แล้วโยน `ConflictException` (409) แทนที่จะปล่อยให้หลุดเป็น 500 - กันทั้งเคส race condition ของการสร้างพร้อมกัน 2 คำขอ และเคส legacy data ที่อาจหลงเหลืออยู่โดยไม่รู้ตัวในอนาคต (ยึด pattern เดียวกับที่ `CompanyMasterDataService.create()` มีอยู่แล้วตั้งแต่แรก)
+
+**ทดสอบแล้ว**: จำลอง legacy stale row ด้วยมือ (SQL ตรงๆ) แล้วยืนยันว่าตอนนี้ได้ 409 ที่อ่านง่ายแทน 500 ดิบ, ยืนยันบน production ว่า `owner@greenfarm.demo` สร้างหน่วยนับ "PCS" ได้จริงแล้ว, รัน backfill-finder script ซ้ำยืนยัน 0 แถวค้างในทุกตารางหลัง backfill
+
 ## 2026-09-09 (16) — แก้บั๊ก: ลบ master-data แล้วสร้างใหม่ด้วย code เดิมไม่ได้ (7 ตาราง)
 
 **ปัญหาที่พบ**: user รายงานว่าลบหน่วยนับ "PCS" แล้วสร้างใหม่ด้วย code เดิมไม่ได้ ขึ้น `409 Conflict: "A unit with code \"PCS\" already exists for this tenant"` ทั้งที่หน้ารายการแสดง 0 รายการ (แถวที่ลบไปแล้วถูกซ่อนถูกต้อง) - ตรวจสอบพบว่าเป็นบั๊กเดียวกันเป๊ะเกิดซ้ำใน **7 โมดูล**: `units`, `brands`, `manufacturers`, `suppliers`, `categories`, `barcode_symbologies`, `tax_types`

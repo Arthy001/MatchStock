@@ -20,6 +20,7 @@ import {
 import { Language, ThemeMode, Tenant, User } from '../types';
 import { getTranslation } from '../i18n';
 import { authService } from '../services/auth.service';
+import { platformAuthService } from '../services/platformAuth.service';
 
 interface LoginViewProps {
   lang: Language;
@@ -63,6 +64,14 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     badge: 'Ultra Plan',
     planCode: 'ULTRA_MONTHLY',
     password: 'Demo1234!',
+  },
+  {
+    tenantName: 'MatchStock Platform HQ (Super Admin)',
+    email: 'superadmin@matchstock.internal',
+    role: 'Super Admin',
+    badge: 'Platform Root',
+    planCode: 'ULTRA_MONTHLY',
+    password: 'SmyeQPTmCRmvb2RpUFzMVmtOAa1!',
   },
   {
     tenantName: 'MatchStock Demo (Enterprise)',
@@ -130,8 +139,42 @@ export const LoginView: React.FC<LoginViewProps> = ({
     setIsLoading(true);
     setErrorMsg('');
 
+    // กรณีเป็นบัญชี Platform Super Admin -> ยิงตรวจสอบสิทธิ์ผ่าน Platform Auth API (/platform/auth/login)
+    if (email.trim().toLowerCase() === 'superadmin@matchstock.internal') {
+      try {
+        const res = await platformAuthService.login({
+          email: email.trim(),
+          password: password,
+        });
+
+        if (res.success && (res.token || res.admin)) {
+          // ไปยังพอร์ทัลส่วนกลาง Platform Admin Control Plane
+          window.location.href = '/platform';
+          return;
+        } else {
+          setErrorMsg(
+            res.message ||
+              (lang === 'en'
+                ? 'Super Admin authentication failed. Check credentials.'
+                : 'เข้าสู่ระบบ Super Admin ไม่สำเร็จ ตรวจสอบรหัสผ่าน')
+          );
+        }
+      } catch (err: any) {
+        console.error('Platform Super Admin Login Error:', err);
+        setErrorMsg(
+          err.response?.data?.message ||
+            (lang === 'en'
+              ? 'Invalid password for Platform Super Admin.'
+              : 'รหัสผ่านสำหรับ Super Admin ไม่ถูกต้อง')
+        );
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     try {
-      // 1. ยิง Login ไปยัง Live Backend API (Strict Mode)
+      // 1. ยิง Login ไปยัง Live Backend API (Strict Mode สำหรับ Tenant User)
       const res = await authService.login({
         email: email.trim(),
         password: password,
@@ -170,6 +213,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
       setErrorMsg(res?.message || (lang === 'en' ? 'Authentication failed. Please check credentials.' : 'เข้าสู่ระบบไม่สำเร็จ ข้อมูลไม่ถูกต้อง'));
     } catch (err: any) {
       console.error('Strict Login Error from Backend API:', err.response?.data || err.message);
+
       const status = err.response?.status;
       const apiErrMsg = err.response?.data?.message || err.response?.data?.error || err.response?.data?.errors?.[0];
 
@@ -733,6 +777,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
                               ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                               : acc.badge.includes('Ultra')
                               ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                              : acc.badge.includes('Root')
+                              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                               : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                           }`}
                         >
@@ -861,13 +907,27 @@ export const LoginView: React.FC<LoginViewProps> = ({
           </form>
 
           {/* Footer Notice */}
-          <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800 text-center">
+          <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800 text-center space-y-2">
             <p className="text-[11px] text-slate-400">
               MatchStock Enterprise WMS • Live Swagger API:{' '}
               <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-mono text-[10px]">
                 https://match-stock.ddns.net/api/v1
               </code>
             </p>
+
+            <div>
+              <a
+                href="/platform"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = '/platform';
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-xs font-bold border border-purple-500/20 transition cursor-pointer"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>เข้าสู่ระบบ Platform Admin (SuperAdmin Portal) →</span>
+              </a>
+            </div>
           </div>
         </div>
       </div>

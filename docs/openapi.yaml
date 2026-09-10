@@ -6641,6 +6641,125 @@ paths:
       summary: DEV ONLY - simulates a real gateway settling a charge. Marks the mock charge succeeded and returns a mock event id; POST that id to /webhooks/omise to simulate the webhook delivery a real provider would send. 404s unless PAYMENT_PROVIDER=mock and not production.
       tags:
         - Billing
+  /platform/auth/login:
+    post:
+      operationId: PlatformAuthController_login_v1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: superadmin@matchstock.com
+                password:
+                  type: string
+                  example: AdminSecret123!
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: Platform admin login successful
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  admin:
+                    id: c1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d
+                    email: superadmin@matchstock.com
+                    fullName: Super Admin
+                    role: super_admin
+      summary: Platform Admin Login (returns platform-jwt).
+      tags:
+        - Platform Auth
+  /platform/auth/me:
+    get:
+      operationId: PlatformAuthController_me_v1
+      responses:
+        '200':
+          description: Current platform admin profile
+      security:
+        - platform-jwt: []
+      summary: Get current authenticated platform admin.
+      tags:
+        - Platform Auth
+  /platform/tenants:
+    get:
+      operationId: PlatformTenantsController_list_v1
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, suspended]
+        - name: planCode
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of all tenants
+      security:
+        - platform-jwt: []
+      summary: "List all tenants across platform (Platform Roles: super_admin, support)."
+      tags:
+        - Platform Tenants
+  /platform/tenants/{id}:
+    get:
+      operationId: PlatformTenantsController_get_v1
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tenant detail with quota usage
+      security:
+        - platform-jwt: []
+      summary: "Get tenant details (Platform Roles: super_admin, support)."
+      tags:
+        - Platform Tenants
+  /platform/tenants/{id}/status:
+    patch:
+      operationId: PlatformTenantsController_updateStatus_v1
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [active, suspended]
+              required:
+                - status
+      responses:
+        '200':
+          description: Tenant status updated
+      security:
+        - platform-jwt: []
+      summary: "Suspend or activate tenant (Platform Role: super_admin only)."
+      tags:
+        - Platform Tenants
   /platform/billing/subscriptions:
     get:
       operationId: PlatformBillingController_listSubscriptions_v1
@@ -6673,10 +6792,20 @@ paths:
                   message: Operation completed successfully
       security:
         - platform-jwt: []
-      summary: Cross-tenant subscriptions overview (Platform Admin).
+      summary: "Cross-tenant subscriptions overview (Platform Roles: super_admin, billing)."
       tags:
         - Platform Billing
   /platform/subscription-plans:
+    get:
+      operationId: PlatformBillingController_listPlans_v1
+      responses:
+        '200':
+          description: List all subscription plans
+      security:
+        - platform-jwt: []
+      summary: "List all subscription plans (Platform Roles: super_admin, billing)."
+      tags:
+        - Platform Billing
     post:
       operationId: PlatformBillingController_createPlan_v1
       requestBody:
@@ -6690,7 +6819,7 @@ paths:
           description: Plan created
       security:
         - platform-jwt: []
-      summary: Create new subscription plan (Platform Super Admin).
+      summary: "Create new subscription plan (Platform Role: super_admin only)."
       tags:
         - Platform Billing
   /platform/subscription-plans/{id}:
@@ -6713,7 +6842,7 @@ paths:
           description: Plan updated
       security:
         - platform-jwt: []
-      summary: Update subscription plan pricing/quotas (Platform Super Admin).
+      summary: "Update subscription plan pricing/quotas (Platform Roles: super_admin, billing)."
       tags:
         - Platform Billing
   /menu:
@@ -7107,6 +7236,11 @@ components:
           type: string
           format: uuid
           description: Restrict this user to one Company (branch/subsidiary) - omit/null to see every company in the tenant.
+        department:
+          type: string
+          maxLength: 100
+          example: Warehouse Operations
+          description: Free-text - display only, not validated against anything.
       required:
         - email
         - password
@@ -7114,6 +7248,10 @@ components:
     UpdateUserDto:
       type: object
       properties:
+        fullName:
+          type: string
+          maxLength: 100
+          example: Somchai Prasert
         role:
           type: string
           enum:
@@ -7132,6 +7270,11 @@ components:
           nullable: true
           format: uuid
           description: Restrict this user to one Company (branch/subsidiary) - null clears the restriction (sees every company in the tenant).
+        department:
+          type: string
+          maxLength: 100
+          example: Warehouse Operations
+          description: Free-text - display only, not validated against anything.
     UpdateProductDto:
       type: object
       properties:
@@ -8928,3 +9071,4 @@ components:
         isDeleted:
           type: boolean
           example: false
+

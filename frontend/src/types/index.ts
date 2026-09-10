@@ -1,7 +1,7 @@
 export type Language = 'th' | 'en';
 export type ThemeMode = 'light' | 'dark';
 
-export type UserRole = 'admin' | 'manager' | 'warehouse_staff' | 'purchasing_staff';
+export type UserRole = 'owner' | 'admin' | 'manager' | 'warehouse_staff' | 'purchasing_staff';
 
 export interface User {
   id: string;

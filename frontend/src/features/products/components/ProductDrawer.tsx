@@ -16,6 +16,8 @@ import {
   Link2,
   Layers,
   RotateCcw,
+  Lock,
+  Eye,
 } from 'lucide-react';
 import { ThemeMode, Language, ProductItem, CategoryItem, BrandItem, BarcodeSymbologyItem, TaxTypeItem, Supplier } from '../../../types';
 import { productService, resolveImageUrl } from '../../../services/product.service';
@@ -33,6 +35,7 @@ interface ProductDrawerProps {
   lang?: Language;
   t: any;
   product: ProductItem | null;
+  readOnly?: boolean;
   onClose: () => void;
   onSave: (e: React.FormEvent) => void;
   onDelete: (product: ProductItem) => void;
@@ -102,6 +105,7 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
   lang = 'th',
   t,
   product,
+  readOnly = false,
   onClose,
   onSave,
   onDelete,
@@ -242,8 +246,8 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
             }`}
           >
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
-                <Edit2 className="w-5 h-5" />
+              <div className={`p-2 rounded-xl ${readOnly ? 'bg-amber-500/10 text-amber-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                {readOnly ? <Eye className="w-5 h-5" /> : <Edit2 className="w-5 h-5" />}
               </div>
               <div>
                 <h3
@@ -251,7 +255,9 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
                     theme === 'dark' ? 'text-slate-50' : 'text-slate-900'
                   }`}
                 >
-                  {lang === 'en' ? 'Product Details & Edit' : 'แก้ไขข้อมูลสินค้า (Edit Product)'}
+                  {readOnly
+                    ? (lang === 'en' ? 'Product Details (View Only)' : 'รายละเอียดสินค้า (View Only)')
+                    : (lang === 'en' ? 'Product Details & Edit' : 'แก้ไขข้อมูลสินค้า (Edit Product)')}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {product.sku || product.code}
@@ -270,6 +276,17 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          {readOnly && (
+            <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs flex items-center gap-2">
+              <Lock className="w-4 h-4 shrink-0" />
+              <span>
+                {lang === 'en'
+                  ? 'Read-only mode: Editing and deletion restricted to Admin and Manager roles (SEC-02).'
+                  : 'โหมดดูรายละเอียดสินค้า (View Only): สิทธิ์เฉพาะ Admin หรือ Manager ในการแก้ไขหรือลบสินค้า (SEC-02)'}
+              </span>
+            </div>
+          )}
 
           {/* Drawer Content Body */}
           <div className="mt-5 space-y-4 text-sm pb-6 px-4 flex-1 overflow-y-auto">
@@ -940,11 +957,11 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
             theme === 'dark' ? 'border-slate-800' : 'border-slate-200'
           }`}
         >
-          <div className="flex items-center gap-3">
+          {readOnly ? (
             <button
               type="button"
               onClick={onClose}
-              className={`w-1/2 py-2.5 rounded-xl border font-semibold text-xs transition cursor-pointer ${
+              className={`w-full py-2.5 rounded-xl border font-semibold text-xs transition cursor-pointer ${
                 theme === 'dark'
                   ? 'border-slate-700 text-slate-200 hover:bg-slate-800'
                   : 'border-slate-300 text-slate-700 hover:bg-slate-100'
@@ -952,25 +969,41 @@ export const ProductDrawer: React.FC<ProductDrawerProps> = ({
             >
               {t?.close || (lang === 'en' ? 'Close' : 'ปิด')}
             </button>
-            <button
-              type="button"
-              onClick={onSave}
-              disabled={isSaving}
-              className="w-1/2 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-xs shadow-md shadow-blue-600/30 transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>{isSaving ? (lang === 'en' ? 'Saving...' : 'กำลังบันทึก...') : (t?.save || (lang === 'en' ? 'Save Changes' : 'บันทึกการแก้ไข'))}</span>
-            </button>
-          </div>
-          <button
-            type="button"
-            onClick={() => onDelete(product)}
-            disabled={isSaving}
-            className="w-full py-2 rounded-xl text-rose-600 hover:bg-rose-500/10 font-semibold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>{lang === 'en' ? 'Delete Product from System' : 'ลบสินค้านี้ออกจากระบบ (Delete)'}</span>
-          </button>
+          ) : (
+            <>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className={`w-1/2 py-2.5 rounded-xl border font-semibold text-xs transition cursor-pointer ${
+                    theme === 'dark'
+                      ? 'border-slate-700 text-slate-200 hover:bg-slate-800'
+                      : 'border-slate-300 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  {t?.close || (lang === 'en' ? 'Close' : 'ปิด')}
+                </button>
+                <button
+                  type="button"
+                  onClick={onSave}
+                  disabled={isSaving}
+                  className="w-1/2 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-xs shadow-md shadow-blue-600/30 transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{isSaving ? (lang === 'en' ? 'Saving...' : 'กำลังบันทึก...') : (t?.save || (lang === 'en' ? 'Save Changes' : 'บันทึกการแก้ไข'))}</span>
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => onDelete(product)}
+                disabled={isSaving}
+                className="w-full py-2 rounded-xl text-rose-600 hover:bg-rose-500/10 font-semibold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{lang === 'en' ? 'Delete Product from System' : 'ลบสินค้านี้ออกจากระบบ (Delete)'}</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>,

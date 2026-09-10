@@ -1,8 +1,8 @@
-import React from 'react';
-import { CheckCircle2, Trash2, Eye, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle2, Trash2, Eye, ShieldCheck, UserPlus, Lock, X } from 'lucide-react';
 import { ThemeMode, Language, UserRole } from '../../../types';
 
-interface RbacUser {
+export interface RbacUser {
   id: string;
   name: string;
   email: string;
@@ -16,8 +16,11 @@ interface RbacAccessTabProps {
   lang?: Language;
   t: any;
   usersList: RbacUser[];
+  currentUserRole?: UserRole;
   onChangeUserRole: (user: RbacUser, newRole: UserRole) => void;
   onDeleteUser: (user: RbacUser) => void;
+  onAddUser?: (newUser: { name: string; email: string; role: UserRole; department: string }) => void;
+  onSwitchRole?: (role: UserRole) => void;
 }
 
 export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
@@ -25,11 +28,21 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
   lang = 'th',
   t,
   usersList = [],
+  currentUserRole = 'admin',
   onChangeUserRole,
   onDeleteUser,
+  onAddUser,
+  onSwitchRole,
 }) => {
   const isEn = lang === 'en';
   const safeUsers = Array.isArray(usersList) ? usersList : [];
+  const isAdmin = currentUserRole === 'admin' || currentUserRole === 'owner';
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newDepartment, setNewDepartment] = useState('');
+  const [newRole, setNewRole] = useState<UserRole>('warehouse_staff');
 
   return (
     <div className="space-y-6">
@@ -58,18 +71,62 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
               {t.rbacSubtitle}
             </p>
           </div>
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-medium border ${
-              theme === 'dark'
-                ? 'bg-slate-800 text-slate-200 border-slate-700'
-                : 'bg-slate-100 text-slate-700 border-slate-300'
-            }`}
-          >
-            Multi-Tenant Context
-          </span>
+          <div className="flex items-center gap-2">
+            {!isAdmin && (
+              <span
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${
+                  theme === 'dark'
+                    ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                    : 'bg-amber-50 text-amber-700 border-amber-300'
+                }`}
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>โหมดดูอย่างเดียว (สิทธิ์เฉพาะ Admin/Owner ในการแก้ไข)</span>
+              </span>
+            )}
+            {isAdmin && (
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-600/30 transition cursor-pointer"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>{isEn ? '+ Invite User' : '+ เชิญผู้ใช้งานใหม่'}</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+          <div
+            className={`p-4 rounded-xl border ${
+              theme === 'dark'
+                ? 'border-amber-500/30 bg-amber-500/5'
+                : 'border-amber-200 bg-amber-50/50'
+            }`}
+          >
+            <p
+              className={`text-xs font-medium ${
+                theme === 'dark' ? 'text-amber-300' : 'text-amber-700'
+              }`}
+            >
+              {isEn ? 'Owner' : 'เจ้าขององค์กร (Owner)'}
+            </p>
+            <p
+              className={`text-lg font-bold mt-1 ${
+                theme === 'dark' ? 'text-amber-400' : 'text-amber-600'
+              }`}
+            >
+              Account Owner
+            </p>
+            <p
+              className={`text-xs font-normal mt-1 ${
+                theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
+              }`}
+            >
+              {isEn ? 'Full ownership & billing management' : 'สิทธิ์สูงสุดระดับเจ้าขององค์กร'}
+            </p>
+          </div>
+
           <div
             className={`p-4 rounded-xl border ${
               theme === 'dark'
@@ -243,22 +300,41 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
                     </td>
                     <td className="p-3 font-medium">{usr.department}</td>
                     <td className="p-3">
-                      <select
-                        value={usr.role}
-                        onChange={(e) =>
-                          onChangeUserRole(usr, e.target.value as UserRole)
-                        }
-                        className={`px-2 py-1 rounded text-xs font-semibold border outline-hidden ${
-                          theme === 'dark'
-                            ? 'bg-slate-800 border-slate-700 text-white'
-                            : 'bg-slate-50 border-slate-300 text-slate-900'
-                        }`}
-                      >
-                        <option value="admin">ADMIN</option>
-                        <option value="manager">MANAGER</option>
-                        <option value="warehouse_staff">WAREHOUSE STAFF</option>
-                        <option value="purchasing_staff">PURCHASING</option>
-                      </select>
+                      {isAdmin ? (
+                        <select
+                          value={usr.role}
+                          onChange={(e) =>
+                            onChangeUserRole(usr, e.target.value as UserRole)
+                          }
+                          className={`px-2 py-1 rounded text-xs font-semibold border outline-hidden ${
+                            theme === 'dark'
+                              ? 'bg-slate-800 border-slate-700 text-white'
+                              : 'bg-slate-50 border-slate-300 text-slate-900'
+                          }`}
+                        >
+                          <option value="owner">OWNER</option>
+                          <option value="admin">ADMIN</option>
+                          <option value="manager">MANAGER</option>
+                          <option value="warehouse_staff">WAREHOUSE STAFF</option>
+                          <option value="purchasing_staff">PURCHASING</option>
+                        </select>
+                      ) : (
+                        <span
+                          className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
+                            usr.role === 'owner'
+                              ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                              : usr.role === 'admin'
+                              ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
+                              : usr.role === 'manager'
+                              ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30'
+                              : usr.role === 'warehouse_staff'
+                              ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                              : 'bg-slate-500/15 text-slate-400 border-slate-500/30'
+                          }`}
+                        >
+                          {usr.role.replace('_', ' ').toUpperCase()}
+                        </span>
+                      )}
                     </td>
                     <td className="p-3">
                       <span
@@ -283,17 +359,23 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
                       >
                         <Eye className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => onDeleteUser(usr)}
-                        className={`p-1.5 rounded-lg transition cursor-pointer ${
-                          theme === 'dark'
-                            ? 'text-slate-400 hover:text-rose-400 hover:bg-slate-800'
-                            : 'text-slate-500 hover:text-rose-600 hover:bg-slate-100'
-                        }`}
-                        title={isEn ? 'Delete User' : 'ลบผู้ใช้งาน (Delete)'}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {isAdmin ? (
+                        <button
+                          onClick={() => onDeleteUser(usr)}
+                          className={`p-1.5 rounded-lg transition cursor-pointer ${
+                            theme === 'dark'
+                              ? 'text-slate-400 hover:text-rose-400 hover:bg-slate-800'
+                              : 'text-slate-500 hover:text-rose-600 hover:bg-slate-100'
+                          }`}
+                          title={isEn ? 'Delete User' : 'ลบผู้ใช้งาน (Delete)'}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <span className="p-1.5 text-slate-500 opacity-30 cursor-not-allowed inline-block" title="สิทธิ์เฉพาะ Admin ในการลบ">
+                          <Trash2 className="w-4 h-4" />
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -302,6 +384,112 @@ export const RbacAccessTab: React.FC<RbacAccessTabProps> = ({
           </table>
         </div>
       </div>
+
+      {/* Invite User Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div
+            className={`w-full max-w-md rounded-3xl p-6 shadow-2xl border space-y-4 ${
+              theme === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
+            }`}
+          >
+            <div className="flex items-center justify-between border-b pb-3 border-slate-700/50">
+              <h3 className="font-bold text-sm flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-blue-500" />
+                <span>{isEn ? 'Invite New User' : 'เชิญ / เพิ่มผู้ใช้งานใหม่'}</span>
+              </h3>
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold mb-1 text-slate-300">ชื่อ-นามสกุล (Full Name)</label>
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="เช่น กานดา ปฏิบัติการ"
+                  className={`w-full px-3 py-2 rounded-xl border focus:outline-none focus:border-blue-500 ${
+                    theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300'
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold mb-1 text-slate-300">อีเมล (Email Address)</label>
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  placeholder="user@siamfoods.co.th"
+                  className={`w-full px-3 py-2 rounded-xl border focus:outline-none focus:border-blue-500 ${
+                    theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300'
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold mb-1 text-slate-300">แผนก (Department)</label>
+                <input
+                  type="text"
+                  value={newDepartment}
+                  onChange={(e) => setNewDepartment(e.target.value)}
+                  placeholder="เช่น ฝ่ายคลังสินค้าและจัดส่ง"
+                  className={`w-full px-3 py-2 rounded-xl border focus:outline-none focus:border-blue-500 ${
+                    theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300'
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold mb-1 text-slate-300">บทบาทสิทธิ์ (Role)</label>
+                <select
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value as UserRole)}
+                  className={`w-full px-3 py-2 rounded-xl border focus:outline-none focus:border-blue-500 font-bold ${
+                    theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-300'
+                  }`}
+                >
+                  <option value="warehouse_staff">WAREHOUSE STAFF (ปฏิบัติการคลัง/สแกน)</option>
+                  <option value="purchasing_staff">PURCHASING STAFF (จัดซื้อ/ผู้จัดจำหน่าย)</option>
+                  <option value="manager">MANAGER (ผู้จัดการ/อนุมัติ)</option>
+                  <option value="admin">ADMIN (ผู้ดูแลระบบ)</option>
+                  <option value="owner">OWNER (เจ้าขององค์กร)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-700/50">
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700 transition cursor-pointer"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={() => {
+                  if (!newName || !newEmail) return alert('กรุณาระบุชื่อและอีเมล');
+                  if (onAddUser) {
+                    onAddUser({ name: newName, email: newEmail, role: newRole, department: newDepartment });
+                  }
+                  setIsAddModalOpen(false);
+                  setNewName('');
+                  setNewEmail('');
+                  setNewDepartment('');
+                }}
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-600/30 transition cursor-pointer"
+              >
+                บันทึกและส่งคำเชิญ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

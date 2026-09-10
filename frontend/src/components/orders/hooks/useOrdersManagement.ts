@@ -9,6 +9,7 @@ import {
 import { productService } from '../../../services/product.service';
 import { warehouseService } from '../../../services/warehouse.service';
 import { transactionService } from '../../../services/transaction.service';
+import { masterDataService } from '../../../services/masterData.service';
 
 export const useOrdersManagement = (
   type: OrderType,
@@ -23,9 +24,11 @@ export const useOrdersManagement = (
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
 
-  // Products & Warehouses Cache
+  // Products, Warehouses & Suppliers Cache
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
+  const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [stockBalances, setStockBalances] = useState<any[]>([]);
 
   // Create Form State
   const [formPartyName, setFormPartyName] = useState<string>('');
@@ -41,34 +44,57 @@ export const useOrdersManagement = (
   const [formNotes, setFormNotes] = useState<string>('');
   const [formItems, setFormItems] = useState<OrderItem[]>([]);
 
-  // Load Products & Warehouses on mount
+  // Load Products, Warehouses & Suppliers on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [prodRes, whRes] = await Promise.all([
+        const [prodRes, whRes, supRes, balRes] = await Promise.all([
           productService.getProducts({ limit: 100 }),
           warehouseService.getWarehouses(),
+          masterDataService.getSuppliers({ limit: 100 }),
+          transactionService.getStockBalances({ limit: 100 }),
         ]);
 
         const prodList = prodRes.data || prodRes.items || (Array.isArray(prodRes) ? prodRes : []);
-        const mappedProducts: ProductItem[] = prodList.map((p: any) => ({
-          id: p.id,
-          code: p.code || p.sku || 'N/A',
-          sku: p.sku || p.code || 'N/A',
-          name: p.name || 'Product',
-          category: p.category?.name || p.categoryName || 'General',
-          brand: p.brand?.name || p.brandName || 'Standard',
-          uom: p.baseUnit?.name || p.uom || 'Unit',
-          weightKg: p.weightKg || 0,
-          widthCm: p.widthCm || 0,
-          lengthCm: p.lengthCm || 0,
-          heightCm: p.heightCm || 0,
-          price: p.sellingPriceMinor ? p.sellingPriceMinor / 100 : p.price || 0,
-          costPrice: p.costPriceMinor ? p.costPriceMinor / 100 : p.costPrice || 0,
-          stockOnHand: p.stockOnHand || p.currentStock || 0,
-          reorderLevel: p.reorderLevel || p.reorderPoint || 10,
-          minReorderQty: p.minReorderQty || 5,
-        }));
+        const balancesList = balRes?.data || [];
+
+        // Build stock lookup map by productId
+        const stockMap = new Map<string, number>();
+        balancesList.forEach((bal: any) => {
+          if (bal.productId) {
+            const current = stockMap.get(bal.productId) || 0;
+            const qty = typeof bal.availableQuantity === 'number'
+              ? bal.availableQuantity
+              : typeof bal.quantityOnHand === 'number'
+              ? bal.quantityOnHand
+              : 0;
+            stockMap.set(bal.productId, current + qty);
+          }
+        });
+
+        const mappedProducts: ProductItem[] = prodList.map((p: any) => {
+          const realBalance = stockMap.has(p.id) ? stockMap.get(p.id)! : undefined;
+          const fallbackStock = p.inStockCount ?? p.availableCount ?? p.stockOnHand ?? p.currentStock ?? 0;
+
+          return {
+            id: p.id,
+            code: p.code || p.sku || 'N/A',
+            sku: p.sku || p.code || 'N/A',
+            name: p.name || 'Product',
+            category: p.category?.name || p.categoryName || 'General',
+            brand: p.brand?.name || p.brandName || 'Standard',
+            uom: p.unit?.name || p.baseUnit?.name || p.uom || 'Unit',
+            weightKg: p.weightKg || 0,
+            widthCm: p.widthCm || 0,
+            lengthCm: p.lengthCm || 0,
+            heightCm: p.heightCm || 0,
+            price: p.sellingPriceMinor ? p.sellingPriceMinor / 100 : p.price || 0,
+            costPrice: p.costPriceMinor ? p.costPriceMinor / 100 : p.costPrice || 0,
+            stockOnHand: realBalance !== undefined ? realBalance : fallbackStock,
+            reorderLevel: p.reorderLevel || p.reorderPoint || 10,
+            minReorderQty: p.minReorderQty || 5,
+          };
+        });
         setProducts(mappedProducts);
 
         const whList = whRes.data || whRes.items || (Array.isArray(whRes) ? whRes : []);
@@ -76,8 +102,12 @@ export const useOrdersManagement = (
         if (whList.length > 0) {
           setFormWarehouseId(whList[0].id);
         }
+
+        const supList = supRes.data || supRes.items || (Array.isArray(supRes) ? supRes : []);
+        setSuppliers(supList);
+        setStockBalances(balancesList);
       } catch (err) {
-        console.error('Failed to load products/warehouses in OrdersManagement:', err);
+        console.error('Failed to load products/warehouses/suppliers in OrdersManagement:', err);
       }
     };
     fetchData();
@@ -91,40 +121,46 @@ export const useOrdersManagement = (
           const issuesRes = await transactionService.getGoodsIssues();
           const itemsList = issuesRes.data || issuesRes.items || (Array.isArray(issuesRes) ? issuesRes : []);
           if (itemsList.length > 0) {
-            const mappedOrders: Order[] = itemsList.map((gi: any) => ({
-              id: gi.id,
-              orderNo: gi.soNumber || gi.issueNumber || `SO-${gi.id.slice(0, 8)}`,
-              type: 'SALES',
-              status: gi.status === 'completed' ? 'COMPLETED' : gi.status === 'draft' ? 'CONFIRMED' : 'PROCESSING',
-              partyName: gi.reference || gi.notes || 'ลูกค้าคำสั่งขาย (Sales Customer)',
-              contactPerson: gi.createdByType || 'Sales Operator',
-              phone: '-',
-              email: '-',
-              orderDate: (gi.issuedAt || gi.createdAt)?.slice(0, 10) || new Date().toISOString().slice(0, 10),
-              expectedDate: (gi.issuedAt || gi.createdAt)?.slice(0, 10) || new Date().toISOString().slice(0, 10),
-              warehouseId: gi.warehouseId,
-              warehouseName: gi.warehouse?.name || 'คลังสินค้าหลัก',
-              paymentTerms: 'Credit 30 Days',
-              subtotal: gi.lines?.reduce((sum: number, l: any) => sum + (l.quantity * (l.unitPriceMinor ? Number(l.unitPriceMinor) / 100 : 500)), 0) || 5000,
-              taxAmount: 350,
-              discountTotal: 0,
-              grandTotal: gi.lines?.reduce((sum: number, l: any) => sum + (l.quantity * (l.unitPriceMinor ? Number(l.unitPriceMinor) / 100 : 500)), 0) || 5350,
-              items: gi.lines?.map((l: any) => ({
-                id: l.id,
-                productId: l.productId,
-                productCode: l.product?.code || 'SKU',
-                productName: l.product?.name || 'สินค้า',
-                sku: l.product?.sku || l.product?.code || 'SKU',
-                uom: l.product?.baseUnit?.name || 'PCS',
-                quantity: l.quantity,
-                unitPrice: l.unitPriceMinor ? Number(l.unitPriceMinor) / 100 : 500,
-                discount: 0,
-                totalAmount: l.quantity * (l.unitPriceMinor ? Number(l.unitPriceMinor) / 100 : 500),
-              })) || [],
-              notes: gi.notes,
-              createdBy: gi.createdByType || 'Sales Operator',
-              createdAt: gi.createdAt || new Date().toISOString(),
-            }));
+            const mappedOrders: Order[] = itemsList.map((gi: any) => {
+              const matchedWh = warehouses.find((w) => w.id === gi.warehouseId);
+              return {
+                id: gi.id,
+                orderNo: gi.soNumber || gi.issueNumber || `SO-${gi.id.slice(0, 8)}`,
+                type: 'SALES',
+                status: gi.status === 'completed' ? 'COMPLETED' : gi.status === 'draft' ? 'CONFIRMED' : 'PROCESSING',
+                partyName: gi.reference || gi.notes || 'ลูกค้าคำสั่งขาย (Sales Customer)',
+                contactPerson: gi.createdByType || 'Sales Operator',
+                phone: '-',
+                email: '-',
+                orderDate: (gi.issuedAt || gi.createdAt)?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+                expectedDate: (gi.issuedAt || gi.createdAt)?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+                warehouseId: gi.warehouseId,
+                warehouseName: gi.warehouse?.name || matchedWh?.name || 'คลังสินค้าหลัก',
+                paymentTerms: 'Credit 30 Days',
+                subtotal: gi.lines?.reduce((sum: number, l: any) => sum + (l.quantity * (l.unitPriceMinor ? Number(l.unitPriceMinor) / 100 : 500)), 0) || 5000,
+                taxAmount: 350,
+                discountTotal: 0,
+                grandTotal: gi.lines?.reduce((sum: number, l: any) => sum + (l.quantity * (l.unitPriceMinor ? Number(l.unitPriceMinor) / 100 : 500)), 0) || 5350,
+                items: gi.lines?.map((l: any) => {
+                  const matchedProd = products.find((p) => p.id === l.productId);
+                  return {
+                    id: l.id,
+                    productId: l.productId,
+                    productCode: matchedProd?.code || l.product?.code || 'SKU',
+                    productName: matchedProd?.name || l.product?.name || 'สินค้า',
+                    sku: matchedProd?.sku || l.product?.sku || l.product?.code || 'SKU',
+                    uom: matchedProd?.uom || l.product?.baseUnit?.name || 'PCS',
+                    quantity: l.quantity,
+                    unitPrice: l.unitPriceMinor ? Number(l.unitPriceMinor) / 100 : matchedProd?.price || 500,
+                    discount: 0,
+                    totalAmount: l.quantity * (l.unitPriceMinor ? Number(l.unitPriceMinor) / 100 : matchedProd?.price || 500),
+                  };
+                }) || [],
+                notes: gi.notes,
+                createdBy: gi.createdByType || 'Sales Operator',
+                createdAt: gi.createdAt || new Date().toISOString(),
+              };
+            });
             setOrders(mappedOrders);
             return;
           }
@@ -132,40 +168,77 @@ export const useOrdersManagement = (
           const receiptsRes = await transactionService.getGoodsReceipts();
           const itemsList = receiptsRes.data || receiptsRes.items || (Array.isArray(receiptsRes) ? receiptsRes : []);
           if (itemsList.length > 0) {
-            const mappedOrders: Order[] = itemsList.map((gr: any) => ({
-              id: gr.id,
-              orderNo: gr.poNumber || gr.receiptNumber || `PO-${gr.id.slice(0, 8)}`,
-              type: 'PURCHASE',
-              status: 'COMPLETED',
-              partyName: gr.supplier?.name || gr.notes || 'ผู้จัดจำหน่าย (Supplier)',
-              contactPerson: gr.supplier?.contactPerson || 'ฝ่ายจัดซื้อ',
-              phone: gr.supplier?.phone || '-',
-              email: gr.supplier?.email || '-',
-              orderDate: (gr.receivedAt || gr.createdAt)?.slice(0, 10) || new Date().toISOString().slice(0, 10),
-              expectedDate: (gr.receivedAt || gr.createdAt)?.slice(0, 10) || new Date().toISOString().slice(0, 10),
-              warehouseId: gr.warehouseId,
-              warehouseName: gr.warehouse?.name || 'คลังสินค้าหลัก',
-              paymentTerms: 'Credit 30 Days',
-              subtotal: gr.lines?.reduce((sum: number, l: any) => sum + (l.quantity * (l.unitCostMinor ? Number(l.unitCostMinor) / 100 : 500)), 0) || 10000,
-              taxAmount: 700,
-              discountTotal: 0,
-              grandTotal: gr.lines?.reduce((sum: number, l: any) => sum + (l.quantity * (l.unitCostMinor ? Number(l.unitCostMinor) / 100 : 500)), 0) || 10700,
-              items: gr.lines?.map((l: any) => ({
-                id: l.id,
-                productId: l.productId,
-                productCode: l.product?.code || 'SKU',
-                productName: l.product?.name || 'สินค้า',
-                sku: l.product?.sku || l.product?.code || 'SKU',
-                uom: l.product?.baseUnit?.name || 'PCS',
-                quantity: l.quantity,
-                unitPrice: l.unitCostMinor ? Number(l.unitCostMinor) / 100 : 500,
-                discount: 0,
-                totalAmount: l.quantity * (l.unitCostMinor ? Number(l.unitCostMinor) / 100 : 500),
-              })) || [],
-              notes: gr.notes,
-              createdBy: gr.createdByType || 'Purchasing Operator',
-              createdAt: gr.createdAt || new Date().toISOString(),
-            }));
+            // Hydrate receipts with line details and suppliers
+            const hydratedReceipts = await Promise.all(
+              itemsList.map(async (gr: any) => {
+                let lines = gr.lines;
+                if (!lines || lines.length === 0) {
+                  try {
+                    const detail = await transactionService.getGoodsReceiptById(gr.id);
+                    if (detail && Array.isArray(detail.lines)) {
+                      lines = detail.lines;
+                    }
+                  } catch {
+                    lines = [];
+                  }
+                }
+                return { ...gr, lines: lines || [] };
+              })
+            );
+
+            const mappedOrders: Order[] = hydratedReceipts.map((gr: any) => {
+              const matchedSupplier = suppliers.find((s) => s.id === gr.supplierId);
+              const matchedWh = warehouses.find((w) => w.id === gr.warehouseId);
+
+              const subtotal = gr.lines && gr.lines.length > 0
+                ? gr.lines.reduce((sum: number, l: any) => {
+                    const matchedProd = products.find((p) => p.id === l.productId);
+                    const unitPrice = l.unitCostMinor ? Number(l.unitCostMinor) / 100 : matchedProd?.costPrice || matchedProd?.price || 100;
+                    return sum + (Number(l.quantity) * unitPrice);
+                  }, 0)
+                : 0;
+              const tax = Math.round(subtotal * 0.07);
+              const total = subtotal + tax;
+
+              return {
+                id: gr.id,
+                orderNo: gr.poNumber || gr.receiptNumber || `PO-${gr.id.slice(0, 8)}`,
+                type: 'PURCHASE',
+                status: 'COMPLETED',
+                partyName: gr.supplier?.name || matchedSupplier?.name || gr.notes || 'ผู้จัดจำหน่ายทั่วไป',
+                contactPerson: gr.supplier?.contactPerson || matchedSupplier?.contactPerson || 'ฝ่ายจัดซื้อ',
+                phone: gr.supplier?.phone || matchedSupplier?.phone || '-',
+                email: gr.supplier?.email || matchedSupplier?.email || '-',
+                orderDate: (gr.receivedAt || gr.createdAt)?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+                expectedDate: (gr.receivedAt || gr.createdAt)?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+                warehouseId: gr.warehouseId,
+                warehouseName: gr.warehouse?.name || matchedWh?.name || 'คลังสินค้าหลัก',
+                paymentTerms: 'Credit 30 Days',
+                subtotal: subtotal,
+                taxAmount: tax,
+                discountTotal: 0,
+                grandTotal: total,
+                items: gr.lines?.map((l: any) => {
+                  const matchedProd = products.find((p) => p.id === l.productId);
+                  const unitPrice = l.unitCostMinor ? Number(l.unitCostMinor) / 100 : matchedProd?.costPrice || matchedProd?.price || 100;
+                  return {
+                    id: l.id,
+                    productId: l.productId,
+                    productCode: matchedProd?.code || l.product?.code || 'SKU',
+                    productName: matchedProd?.name || l.product?.name || 'สินค้า',
+                    sku: matchedProd?.sku || l.product?.sku || l.product?.code || 'SKU',
+                    uom: matchedProd?.uom || l.product?.baseUnit?.name || 'PCS',
+                    quantity: Number(l.quantity),
+                    unitPrice: unitPrice,
+                    discount: 0,
+                    totalAmount: Number(l.quantity) * unitPrice,
+                  };
+                }) || [],
+                notes: gr.notes,
+                createdBy: gr.createdByType || 'Purchasing Operator',
+                createdAt: gr.createdAt || new Date().toISOString(),
+              };
+            });
             setOrders(mappedOrders);
             return;
           }
@@ -175,7 +248,7 @@ export const useOrdersManagement = (
       }
     };
     loadRealOrders();
-  }, [isSales]);
+  }, [isSales, products, warehouses, suppliers]);
 
   // Filtered Orders
   const filteredOrders = useMemo(() => {
@@ -224,8 +297,20 @@ export const useOrdersManagement = (
     const product = products.find((p) => p.id === productId);
     if (!product) return;
 
+    // สำหรับใบสั่งขาย (Sales Order): ตรวจสอบสินค้าคงเหลือ
+    const available = Number(product.stockOnHand || 0);
+    if (isSales && available <= 0) {
+      alert(`สินค้า "${product.name}" ไม่มีในสต็อก (คงเหลือ 0 ${product.uom}) ไม่สามารถเพิ่มในใบสั่งขายได้`);
+      return;
+    }
+
     const existingIndex = formItems.findIndex((i) => i.productId === productId);
     if (existingIndex >= 0) {
+      const currentQty = formItems[existingIndex].quantity;
+      if (isSales && currentQty + 1 > available) {
+        alert(`ไม่สามารถเพิ่มจำนวนได้: สินค้า "${product.name}" มีในสต็อกเพียง ${available} ${product.uom}`);
+        return;
+      }
       const updated = [...formItems];
       updated[existingIndex].quantity += 1;
       updated[existingIndex].totalAmount =
@@ -254,6 +339,17 @@ export const useOrdersManagement = (
       setFormItems(formItems.filter((i) => i.id !== id));
       return;
     }
+
+    const targetItem = formItems.find((i) => i.id === id);
+    if (isSales && targetItem) {
+      const product = products.find((p) => p.id === targetItem.productId);
+      const available = Number(product?.stockOnHand || 0);
+      if (qty > available) {
+        alert(`จำนวนสินค้า "${targetItem.productName}" เกินสต็อกคงเหลือที่มีอยู่จริง (สูงสุด: ${available} ${targetItem.uom})`);
+        qty = available > 0 ? available : 1;
+      }
+    }
+
     setFormItems(
       formItems.map((i) =>
         i.id === id
@@ -308,10 +404,13 @@ export const useOrdersManagement = (
     setFormExpectedDate(new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
     setFormPaymentTerms('Credit 30 Days');
     setFormNotes('');
+    setFormItems([]);
     if (products.length > 0) {
-      handleAddItem(products[0].id);
-    } else {
-      setFormItems([]);
+      // หากเป็น Sales Order ให้เลือกสินค้าตัวแรกที่มีสต็อก > 0
+      const availableProd = isSales ? products.find((p) => (p.stockOnHand || 0) > 0) : products[0];
+      if (availableProd) {
+        handleAddItem(availableProd.id);
+      }
     }
     setIsCreateModalOpen(true);
   };
@@ -323,6 +422,18 @@ export const useOrdersManagement = (
       return;
     }
 
+    // ตรวจสอบสต็อกคงเหลือสำหรับใบสั่งขาย (Sales Order)
+    if (isSales) {
+      for (const item of formItems) {
+        const product = products.find((p) => p.id === item.productId);
+        const available = Number(product?.stockOnHand || 0);
+        if (item.quantity > available) {
+          alert(`ไม่สามารถเปิดใบสั่งขายได้: สินค้า "${item.productName}" มีในสต็อกเพียง ${available} ${item.uom} (ระบุ ${item.quantity} ${item.uom})`);
+          return;
+        }
+      }
+    }
+
     const wh = warehouses.find((w) => w.id === formWarehouseId) || warehouses[0];
     const prefix = isSales ? 'SO' : 'PO';
     const randomNum = Math.floor(1000 + Math.random() * 9000);
@@ -332,16 +443,28 @@ export const useOrdersManagement = (
 
     try {
       if (isSales) {
+        const targetWhId = formWarehouseId || wh?.id || 'wh-01';
         const res = await transactionService.issueStock({
-          warehouseId: formWarehouseId || wh?.id || 'wh-01',
+          warehouseId: targetWhId,
           soNumber: newOrderNumber,
           recipient: formPartyName || 'ลูกค้าทั่วไป (Walk-in Customer)',
           notes: formNotes,
-          items: formItems.map((i) => ({
-            productId: i.productId,
-            quantity: i.quantity,
-            unitPrice: i.unitPrice,
-          })),
+          items: formItems.map((i) => {
+            // Find bin with stock for this product in the selected warehouse
+            const matchedBal = stockBalances.find(
+              (b: any) =>
+                b.productId === i.productId &&
+                b.warehouseId === targetWhId &&
+                b.binLocationId &&
+                (b.availableQuantity > 0 || b.quantityOnHand > 0)
+            );
+            return {
+              productId: i.productId,
+              binLocationId: matchedBal?.binLocationId || undefined,
+              quantity: i.quantity,
+              unitPrice: i.unitPrice,
+            };
+          }),
         });
         if (res?.data) {
           backendId = res.data.id;

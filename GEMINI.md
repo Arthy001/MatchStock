@@ -17,4 +17,5 @@
 2. การปรับปรุงโมเดลฐานข้อมูลต้องคำนึงถึง Data Integrity, Multi-Tenancy (`tenantId`), และการทำ Soft-Delete เสมอ
 3. รักษาความเข้ากันได้ของ API (Backward Compatibility) ป้องกันไม่ให้ Front-End ที่ใช้งานอยู่เกิดข้อผิดพลาด
 4. **Backend API Constraint Rule:** ไม่ต้องทำการปรับแต่งโค้ดส่วน Backend ใน `backend/` เองโดยตรง หากมีการปรับปรุง API ให้ทำการอัปเดตสัญญาอินเทอร์เฟซใน `docs/openapi.yaml` เท่านั้น (Backend implementation เป็นหน้าที่ของทีม Backend/ระบบอื่น)
+   - **No Backend CI/CD:** Repository นี้ไม่มี Backend CI/CD (ไม่มีการรัน workflow ของ backend/Cloud Run ใน GitHub Actions โดยมีเฉพาะ Frontend CI สำหรับ Firebase Hosting เท่านั้น)
 

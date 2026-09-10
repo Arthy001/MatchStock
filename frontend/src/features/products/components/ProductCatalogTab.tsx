@@ -14,8 +14,9 @@ import {
   RefreshCw,
   Plus,
   Radio,
+  Lock,
 } from 'lucide-react';
-import { ThemeMode, Language, ProductItem, CategoryItem, BrandItem, Supplier, BarcodeSymbologyItem, TaxTypeItem } from '../../../types';
+import { ThemeMode, Language, ProductItem, CategoryItem, BrandItem, Supplier, BarcodeSymbologyItem, TaxTypeItem, UserRole } from '../../../types';
 import { resolveImageUrl } from '../../../services/product.service';
 import { useProducts } from '../hooks/useProducts';
 import { ProductDrawer } from './ProductDrawer';
@@ -30,6 +31,7 @@ interface ProductCatalogTabProps {
   lang?: Language;
   t?: any;
   searchQuery?: string;
+  currentUserRole?: UserRole;
   products?: ProductItem[];
   categoriesList?: CategoryItem[];
   brandsList?: BrandItem[];
@@ -56,6 +58,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
   lang = 'th',
   t,
   searchQuery = '',
+  currentUserRole = 'admin',
   products: externalProducts,
   categoriesList = [],
   brandsList = [],
@@ -74,6 +77,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
   const [isRfidModalOpen, setIsRfidModalOpen] = useState(false);
   const [selectedRfidProductId, setSelectedRfidProductId] = useState<string | undefined>(undefined);
 
+  const canManageProducts = currentUserRole === 'admin' || currentUserRole === 'owner' || currentUserRole === 'manager';
   const isDark = theme === 'dark';
   const isEn = lang === 'en';
   const safeT = t || {
@@ -297,13 +301,27 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
             <span>{isEn ? 'RFID Tags' : 'แท็ก RFID'}</span>
           </button>
 
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-semibold shadow-xs flex items-center gap-1.5 transition cursor-pointer shrink-0"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>{isEn ? 'Add Product' : 'เพิ่มสินค้าใหม่'}</span>
-          </button>
+          {canManageProducts ? (
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-semibold shadow-xs flex items-center gap-1.5 transition cursor-pointer shrink-0"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{isEn ? 'Add Product' : 'เพิ่มสินค้าใหม่'}</span>
+            </button>
+          ) : (
+            <div
+              className={`px-2.5 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 select-none shrink-0 ${
+                isDark
+                  ? 'border-zinc-800 bg-zinc-900 text-zinc-400'
+                  : 'border-zinc-200 bg-zinc-100 text-zinc-500'
+              }`}
+              title={isEn ? 'Restricted to Admin and Manager roles (SEC-02)' : 'สิทธิ์เพิ่มสินค้าเฉพาะ Admin และ Manager (SEC-02)'}
+            >
+              <Lock className="w-3.5 h-3.5 text-amber-500" />
+              <span className="hidden sm:inline">{isEn ? 'View Only (SEC-02)' : 'โหมดดูอย่างเดียว (SEC-02)'}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -524,26 +542,30 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
                         >
                           <Radio className="w-3.5 h-3.5" />
                         </button>
-                        <button
-                          onClick={() => {
-                            if (externalOpenDrawer) externalOpenDrawer(prod);
-                            else hook.openDrawerForProduct(prod);
-                          }}
-                          className="p-1 rounded text-zinc-400 hover:text-blue-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
-                          title={isEn ? 'Edit Product' : 'แก้ไขสินค้า'}
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (externalDeleteProduct) externalDeleteProduct(prod);
-                            else hook.handleDeleteProduct(prod);
-                          }}
-                          className="p-1 rounded text-zinc-400 hover:text-rose-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
-                          title={isEn ? 'Delete Product' : 'ลบสินค้า'}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {canManageProducts && (
+                          <>
+                            <button
+                              onClick={() => {
+                                if (externalOpenDrawer) externalOpenDrawer(prod);
+                                else hook.openDrawerForProduct(prod);
+                              }}
+                              className="p-1 rounded text-zinc-400 hover:text-blue-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+                              title={isEn ? 'Edit Product' : 'แก้ไขสินค้า'}
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (externalDeleteProduct) externalDeleteProduct(prod);
+                                else hook.handleDeleteProduct(prod);
+                              }}
+                              className="p-1 rounded text-zinc-400 hover:text-rose-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+                              title={isEn ? 'Delete Product' : 'ลบสินค้า'}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -573,6 +595,7 @@ export const ProductCatalogTab: React.FC<ProductCatalogTabProps> = ({
         lang={lang}
         t={safeT}
         product={hook.drawerProduct}
+        readOnly={!canManageProducts}
         categoriesList={categoriesList}
         brandsList={brandsList}
         unitsList={unitsList}

@@ -162,33 +162,57 @@ export const masterDataService = {
   },
 
   // Suppliers
-  getSuppliers: async () => {
-    const response = await apiClient.get('/suppliers');
+  getSuppliers: async (params?: { page?: number; limit?: number }) => {
+    const cleanParams: Record<string, any> = {
+      page: params?.page ?? 1,
+      limit: params?.limit ?? 100,
+    };
+    const response = await apiClient.get('/suppliers', { params: cleanParams });
     return response.data?.data || response.data || [];
   },
 
-  createSupplier: async (data: { name: string; code?: string; contactPerson?: string; phone?: string; email?: string; taxId?: string; address?: string }) => {
+  createSupplier: async (data: {
+    name: string;
+    code?: string;
+    contactPerson?: string;
+    phone?: string;
+    email?: string;
+    taxId?: string;
+    address?: string;
+    companyId?: string;
+  }) => {
     const payload: any = {
-      name: data.name?.trim(),
+      name: data.name.trim(),
     };
     if (data.code?.trim()) payload.code = data.code.trim();
     if (data.contactPerson?.trim()) payload.contactPerson = data.contactPerson.trim();
     if (data.phone?.trim()) payload.phone = data.phone.trim();
-    if (data.email?.trim()) payload.email = data.email.trim();
-    if (data.taxId?.trim()) payload.taxId = data.taxId.trim();
-    if (data.address?.trim()) payload.address = data.address.trim();
+    if (data.companyId) payload.companyId = data.companyId;
 
     const response = await apiClient.post('/suppliers', payload);
     return response.data?.data || response.data;
   },
 
-  updateSupplier: async (id: string, data: { name?: string; code?: string; contactPerson?: string; phone?: string; email?: string; taxId?: string; address?: string; isActive?: boolean }) => {
+  updateSupplier: async (
+    id: string,
+    data: {
+      name?: string;
+      code?: string;
+      contactPerson?: string;
+      phone?: string;
+      email?: string;
+      taxId?: string;
+      address?: string;
+      isActive?: boolean;
+      isDeleted?: boolean;
+    }
+  ) => {
     const payload: any = {};
     if (data.name !== undefined) payload.name = data.name.trim();
-    // code, email, taxId, address are not accepted by UpdateSupplierDto — omit them
-    if (data.contactPerson?.trim()) payload.contactPerson = data.contactPerson.trim();
-    if (data.phone?.trim()) payload.phone = data.phone.trim();
+    if (data.contactPerson !== undefined) payload.contactPerson = data.contactPerson.trim();
+    if (data.phone !== undefined) payload.phone = data.phone.trim();
     if (data.isActive !== undefined) payload.isActive = data.isActive;
+    if (data.isDeleted !== undefined) payload.isDeleted = data.isDeleted;
 
     const response = await apiClient.patch(`/suppliers/${id}`, payload);
     return response.data?.data || response.data;

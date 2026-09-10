@@ -73,32 +73,49 @@ import {
 } from '../types';
 
 export const transactionService = {
-  // ดึงรายการประวัติ Transactions / Goods Receipts
+  // ดึงรายการประวัติ Transactions (รวม Goods Receipts และ Goods Issues)
   getTransactions: async (params?: { type?: string; search?: string; page?: number; limit?: number }) => {
     try {
-      const response = await apiClient.get('/goods-receipts', { params });
-      const data = response.data?.data || response.data || [];
-      if (Array.isArray(data) && data.length > 0) {
-        // Hydrate lines for receipts where lines array is omitted in list view
-        const hydrated = await Promise.all(
-          data.map(async (item: any) => {
-            if (!item.lines || (Array.isArray(item.lines) && item.lines.length === 0)) {
-              try {
-                const detailRes = await apiClient.get(`/goods-receipts/${item.id}`);
-                const fullItem = detailRes.data?.data || detailRes.data;
-                if (fullItem && Array.isArray(fullItem.lines) && fullItem.lines.length > 0) {
-                  return { ...item, lines: fullItem.lines };
-                }
-              } catch {
-                // Silent fallback to item if detail fetch fails
+      const [grRes, giRes] = await Promise.allSettled([
+        apiClient.get('/goods-receipts', { params }),
+        apiClient.get('/goods-issues', { params }),
+      ]);
+
+      let grList = grRes.status === 'fulfilled' ? (grRes.value.data?.data || grRes.value.data || []) : [];
+      let giList = giRes.status === 'fulfilled' ? (giRes.value.data?.data || giRes.value.data || []) : [];
+
+      if (!Array.isArray(grList)) grList = [];
+      if (!Array.isArray(giList)) giList = [];
+
+      // Tag types explicitly
+      const taggedGr = grList.map((item: any) => ({ ...item, type: 'RECEIVE' }));
+      const taggedGi = giList.map((item: any) => ({ ...item, type: 'ISSUE' }));
+
+      const allData = [...taggedGr, ...taggedGi].sort((a: any, b: any) => {
+        const dateA = new Date(a.createdAt || a.receivedAt || a.issuedAt || 0).getTime();
+        const dateB = new Date(b.createdAt || b.receivedAt || b.issuedAt || 0).getTime();
+        return dateB - dateA;
+      });
+
+      // Hydrate lines for items where lines array is omitted in list view
+      const hydrated = await Promise.all(
+        allData.map(async (item: any) => {
+          if (!item.lines || (Array.isArray(item.lines) && item.lines.length === 0)) {
+            try {
+              const endpoint = item.type === 'ISSUE' ? `/goods-issues/${item.id}` : `/goods-receipts/${item.id}`;
+              const detailRes = await apiClient.get(endpoint);
+              const fullItem = detailRes.data?.data || detailRes.data;
+              if (fullItem && Array.isArray(fullItem.lines) && fullItem.lines.length > 0) {
+                return { ...item, lines: fullItem.lines };
               }
+            } catch {
+              // Silent fallback to item if detail fetch fails
             }
-            return item;
-          })
-        );
-        return hydrated;
-      }
-      return data;
+          }
+          return item;
+        })
+      );
+      return hydrated;
     } catch {
       try {
         const response = await apiClient.get('/inventory/transactions', { params });
@@ -288,20 +305,33 @@ export const transactionService = {
 
   // บันทึก Goods Issue (GI) -> POST /goods-issues
   issueStock: async (data: IssueStockInput) => {
+    let fallbackBinId = data.items?.[0]?.binLocationId || null;
+    if (!fallbackBinId && data.warehouseId) {
+      try {
+        const binsRes = await apiClient.get(`/warehouses/${data.warehouseId}/bins`);
+        const bins = binsRes.data?.data || binsRes.data || [];
+        if (bins.length > 0) {
+          fallbackBinId = bins[0].id;
+        }
+      } catch {
+        // Silent fallback
+      }
+    }
+
     const payload: any = {
-      issueNumber: data.referenceNo || `GI-${Date.now()}`,
+      issueNumber: data.referenceNo || data.soNumber || `GI-${Date.now()}`,
       warehouseId: data.warehouseId,
-      binLocationId: data.items?.[0]?.binLocationId || null,
-      reference: data.referenceNo || data.recipient || null,
-      soNumber: data.soNumber || data.referenceNo || null,
-      salesOrderId: data.salesOrderId || null,
-      notes: data.notes || data.reason || '',
-      items: data.items,
+      binLocationId: fallbackBinId || undefined,
+      reference: data.recipient || data.referenceNo || undefined,
+      soNumber: data.soNumber || data.referenceNo || undefined,
+      salesOrderId: data.salesOrderId || undefined,
+      notes: data.notes || data.reason || undefined,
       lines: data.items?.map((it) => ({
         productId: it.productId,
-        quantity: it.quantity,
-        binLocationId: it.binLocationId || null,
-        unitCostMinor: it.unitPrice ? Math.round(it.unitPrice * 100) : undefined,
+        quantity: Number(it.quantity),
+        binLocationId: it.binLocationId || fallbackBinId || undefined,
+        lotNumber: it.lotId || undefined,
+        unitPriceMinor: it.unitPrice ? Math.round(it.unitPrice * 100) : undefined,
       })),
     };
     try {

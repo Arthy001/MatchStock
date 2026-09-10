@@ -254,22 +254,45 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                 >
                   <div className="sm:col-span-5">
                     <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">{item.productName}</p>
-                    <p className="text-[10px] font-mono text-slate-500">{item.sku}</p>
+                    <div className="flex items-center gap-2 text-[10px]">
+                      <span className="font-mono text-slate-500">{item.sku}</span>
+                      {(() => {
+                        const matchedProd = products.find((p) => p.id === item.productId);
+                        if (!isSales || !matchedProd) return null;
+                        const maxStock = Number(matchedProd.stockOnHand || 0);
+                        const isOver = item.quantity > maxStock;
+                        return (
+                          <span className={`font-semibold ${isOver ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}`}>
+                            • คงเหลือ: {matchedProd.stockOnHand} {matchedProd.uom}
+                          </span>
+                        );
+                      })()}
+                    </div>
                   </div>
 
                   <div className="sm:col-span-2">
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => onUpdateItemQty(item.id, parseInt(e.target.value, 10) || 1)}
-                      placeholder={isEn ? 'Qty' : 'จำนวน'}
-                      className={`w-full text-center px-2 py-1.5 rounded-lg border font-mono font-bold text-xs ${
-                        theme === 'dark'
-                          ? 'bg-slate-800 border-slate-700 text-slate-100'
-                          : 'bg-white border-slate-300 text-slate-900'
-                      }`}
-                    />
+                    {(() => {
+                      const matchedProd = products.find((p) => p.id === item.productId);
+                      const maxStock = isSales && matchedProd ? Number(matchedProd.stockOnHand || 0) : undefined;
+                      const isOver = maxStock !== undefined && item.quantity > maxStock;
+                      return (
+                        <input
+                          type="number"
+                          min="1"
+                          max={maxStock}
+                          value={item.quantity}
+                          onChange={(e) => onUpdateItemQty(item.id, parseInt(e.target.value, 10) || 1)}
+                          placeholder={isEn ? 'Qty' : 'จำนวน'}
+                          className={`w-full text-center px-2 py-1.5 rounded-lg border font-mono font-bold text-xs transition ${
+                            isOver
+                              ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-600 dark:text-rose-400 focus:ring-rose-500'
+                              : theme === 'dark'
+                              ? 'bg-slate-800 border-slate-700 text-slate-100'
+                              : 'bg-white border-slate-300 text-slate-900'
+                          }`}
+                        />
+                      );
+                    })()}
                   </div>
 
                   <div className="sm:col-span-2">
