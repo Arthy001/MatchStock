@@ -286,7 +286,7 @@ export const WarehouseControlsHUD: React.FC<WarehouseControlsHUDProps> = ({
               {blueprintImage && onScanBlueprint && (
                 <div className="pl-1 border-l border-slate-700/60 ml-1">
                   <button
-                    onClick={onScanBlueprint}
+                    onClick={() => onScanBlueprint()}
                     disabled={isScanningBlueprint}
                     className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer shadow-md ${
                       isScanningBlueprint

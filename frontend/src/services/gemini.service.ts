@@ -75,8 +75,18 @@ export async function parseWarehouseBlueprintWithGemini(
   imageBase64: string,
   mimeType: string = 'image/jpeg'
 ): Promise<BlueprintAnalysisResult> {
-  if (!GEMINI_API_KEY) {
+  const activeKey =
+    (typeof window !== 'undefined'
+      ? localStorage.getItem('gemini_api_key') || localStorage.getItem('VITE_GEMINI_API_KEY')
+      : null) || GEMINI_API_KEY;
+
+  if (!activeKey) {
     throw new Error('กรุณาระบุ VITE_GEMINI_API_KEY ในไฟล์ .env');
+  }
+
+  // ป้องกันกรณีส่งค่าที่ไม่ใช่ string หรือ Event Object เข้ามา
+  if (!imageBase64 || typeof imageBase64 !== 'string') {
+    throw new Error('ไม่พบข้อมูลรูปภาพแบบแปลน หรือรูปแบบข้อมูลรูปภาพไม่ถูกต้อง');
   }
 
   // Handle URL string if passed (e.g. /sample-blueprint.jpg or blob:...)
@@ -185,7 +195,7 @@ Return ONLY a valid JSON object matching this schema:
   "summary": "Thai summary of detected layout"
 }`;
 
-  const requestUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const requestUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${activeKey}`;
 
   const requestBody = {
     contents: [

@@ -293,9 +293,18 @@ export const Warehouse3DCanvas: React.FC<Warehouse3DCanvasProps> = ({
   };
 
   // Trigger Gemini AI Blueprint Scanning
-  const handleScanBlueprint = async (overrideImage?: string) => {
-    const targetImage = overrideImage || blueprintImage;
-    if (!targetImage) return;
+  const handleScanBlueprint = async (overrideImage?: string | unknown) => {
+    // ป้องกันปัญหา React Event Object หรือค่าที่ไม่ใช่ string ถูกส่งเข้ามา
+    const targetImage =
+      typeof overrideImage === 'string' && overrideImage.trim().length > 0
+        ? overrideImage
+        : blueprintImage;
+
+    if (!targetImage || typeof targetImage !== 'string') {
+      setMoveToast('⚠️ กรุณาอัปโหลดหรือเลือกรูปภาพแบบแปลนก่อนกดสแกน AI');
+      setTimeout(() => setMoveToast(null), 4000);
+      return;
+    }
 
     try {
       setIsScanningBlueprint(true);
@@ -1452,7 +1461,7 @@ export const Warehouse3DCanvas: React.FC<Warehouse3DCanvasProps> = ({
         blueprintOpacity={blueprintOpacity}
         onBlueprintOpacityChange={handleUpdateBlueprintOpacity}
         isScanningBlueprint={isScanningBlueprint}
-        onScanBlueprint={handleScanBlueprint}
+        onScanBlueprint={() => handleScanBlueprint()}
         onLoadSampleBlueprint={handleLoadSampleBlueprint}
         onOpenSketchPad={() => setIsSketchPadOpen(true)}
         selectedZone={selectedZone}
